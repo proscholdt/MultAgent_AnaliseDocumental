@@ -15,8 +15,10 @@ cp .env.example .env        # preencha OPENAI_API_KEY e JWT_SECRET
 docker compose up --build   # kafka, postgres, qdrant, api, parse-worker, index-worker
 ```
 
-A primeira construção demora: a imagem do parse-worker inclui PyTorch (CPU) e já baixa os
-modelos do Docling, para que nada seja baixado em execução.
+A primeira construção demora (cerca de 25 minutos na máquina de desenvolvimento): a imagem do
+parse-worker tem 4,3 GB, com PyTorch só-CPU e os modelos do Docling já baixados, para que nada
+seja baixado em execução. A imagem da API e do index-worker tem 786 MB. As construções
+seguintes reaproveitam as camadas e levam segundos.
 
 Depois, no Swagger (`/docs`):
 
@@ -39,7 +41,7 @@ O dashboard do Qdrant fica em `http://localhost:6333/dashboard`.
 ```bash
 docker compose up -d kafka postgres qdrant
 uv sync                                    # inclui Docling/torch (grupo "parse")
-uv run pytest                              # 64 testes, sem rede nem contêiner
+uv run pytest                              # 67 testes, sem rede nem contêiner
 uv run python -m app.warmup                # baixa os modelos uma vez
 uv run uvicorn app.main:app --port 8000
 uv run python -m app.workers.parse_worker
@@ -132,6 +134,13 @@ reconstrói a estrutura dessas tabelas (TableFormer) e informa a página de cada
 que permite citar a origem. O resultado é gravado em `parsed.json`, num esquema próprio do
 projeto — por isso o index-worker não precisa de Docling.
 
+- **Fontes de sistema são obrigatórias no Linux.** O modelo de layout trabalha sobre a página
+  renderizada, e estes PDFs referenciam Arial sem embutir a fonte em várias páginas. Numa imagem
+  `python:slim`, sem nenhuma fonte, as letras viram "caixinhas", o modelo classifica páginas
+  inteiras como figura e as tabelas somem — sem erro nenhum, porque o texto extraído continua
+  certo. Na Millet isso derrubava de 37 para 8 tabelas. A imagem do parse-worker instala
+  `fonts-liberation` (mesmas métricas de Arial/Times/Courier) e o worker se recusa a subir num
+  Linux sem fontes.
 - OCR só é ligado quando o documento tem página sem texto nativo.
 - A camada de texto de cada página também é guardada (via `pypdf`), para conferir gráficos.
 - O parse fica em cache por arquivo: retry, correção de metadados e reindexação não o repetem.
@@ -267,12 +276,17 @@ O que foi verificado de ponta a ponta com Kafka, Postgres e Qdrant reais:
 - Chave da OpenAI inválida: três tentativas, mensagem na DLQ, job `failed`; após corrigir,
   `POST /api/jobs/{id}/retry` concluiu sem refazer o parse.
 - Segundo usuário não lista, não lê e não encontra na busca os documentos do primeiro.
+- **Tudo em contêineres** (`docker compose up --build`, os seis serviços): a Millet foi indexada
+  de ponta a ponta em 218 s de parse, com 121 chunks (84 de texto / 37 tabelas). As 37 tabelas
+  batem com a execução fora do Docker; os 5 chunks de texto a menos vêm da fonte substituta
+  (Liberation no lugar da Arial), que muda um pouco a segmentação de parágrafos. Brasal e Light
+  não foram repetidas dentro dos contêineres.
 
 ## Premissas e limitações
 
 - Os três PDFs fornecidos são demonstrações **anuais de 2022**, não trimestrais; `period` sai como `2022`.
 - A página citada é a do arquivo PDF (1-based), não a numeração impressa, que diverge na Light.
-- O parse em CPU leva minutos por documento na primeira vez (ver medições abaixo).
+- O parse em CPU leva minutos por documento na primeira vez (ver medições acima).
 - Valor de gráfico que não aparece na camada de texto (gráfico em imagem rasterizada) não é
   indexado como número; fica só em `unverified_values`.
 - A hierarquia de seções depende da numeração das notas. Subtítulo sem numeração em página onde

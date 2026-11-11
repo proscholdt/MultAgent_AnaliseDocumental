@@ -36,5 +36,13 @@ RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-default-grou
 # de rede para subir e o primeiro PDF não paga o download.
 RUN python -c "import tiktoken; tiktoken.get_encoding('cl100k_base')" \
  && python -c "from docling.datamodel.base_models import InputFormat; from docling.document_converter import DocumentConverter; DocumentConverter().initialize_pipeline(InputFormat.PDF)"
+# Fontes de sistema. Demonstrações financeiras costumam referenciar Arial/Times sem embutir
+# a fonte; sem um substituto instalado, a página é renderizada com "caixinhas" no lugar das
+# letras e o modelo de layout passa a classificar páginas inteiras como figura (na Millet,
+# 8 tabelas detectadas em vez de 37). Liberation tem as mesmas métricas de Arial/Times/Courier.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends fontconfig fonts-liberation fonts-dejavu-core \
+ && rm -rf /var/lib/apt/lists/* \
+ && fc-cache -f
 COPY app ./app
 CMD ["python", "-m", "app.workers.parse_worker"]

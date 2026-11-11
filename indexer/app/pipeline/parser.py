@@ -6,6 +6,7 @@ para que as etapas seguintes não dependam do Docling.
 """
 import logging
 import os
+import sys
 from collections.abc import Callable
 from importlib.metadata import version
 from pathlib import Path
@@ -41,10 +42,35 @@ _HEADING_LABELS = {DocItemLabel.TITLE, DocItemLabel.SECTION_HEADER}
 _SKIP_LABELS = {DocItemLabel.PAGE_HEADER, DocItemLabel.PAGE_FOOTER, DocItemLabel.CAPTION}
 
 
+_LINUX_FONT_DIRS = ("/usr/share/fonts", "/usr/local/share/fonts", "~/.fonts", "~/.local/share/fonts")
+
+
+def check_system_fonts() -> None:
+    """Falha cedo se o Linux não tiver nenhuma fonte instalada.
+
+    O modelo de layout trabalha sobre a página renderizada. PDF que referencia Arial ou Times
+    sem embutir a fonte é renderizado com "caixinhas" quando não há substituto no sistema, e o
+    layout degrada em silêncio: páginas inteiras viram "figura" e as tabelas somem. O texto
+    extraído continua certo, então o erro não apareceria em lugar nenhum. Windows e macOS já
+    trazem essas fontes.
+    """
+    if not sys.platform.startswith("linux"):
+        return
+    for directory in _LINUX_FONT_DIRS:
+        root = Path(directory).expanduser()
+        if root.is_dir() and any(root.rglob("*.[to]tf")):
+            return
+    raise RuntimeError(
+        "Nenhuma fonte de sistema encontrada. Instale fontes (ex.: apt-get install fonts-liberation) "
+        "antes de subir o parse-worker; sem elas o layout das páginas é detectado errado."
+    )
+
+
 class PdfParser:
     """Mantém os conversores carregados: os modelos sobem uma vez por processo, não por PDF."""
 
     def __init__(self, settings: Settings) -> None:
+        check_system_fonts()
         self._settings = settings
         self._converters: dict[bool, DocumentConverter] = {}
 
