@@ -8,7 +8,8 @@ Não tem frontend: tudo é testável pelo Swagger em `http://localhost:8000/docs
 
 ## Como rodar
 
-Pré-requisitos: Docker com Compose.
+Pré-requisitos: Docker com Compose e pelo menos 8 GB de memória disponíveis para o Docker (o
+parse-worker chega a 4 GB; no Docker Desktop com WSL 2 o padrão é metade da RAM da máquina).
 
 ```bash
 cp .env.example .env        # preencha OPENAI_API_KEY e JWT_SECRET
@@ -41,7 +42,7 @@ O dashboard do Qdrant fica em `http://localhost:6333/dashboard`.
 ```bash
 docker compose up -d kafka postgres qdrant
 uv sync                                    # inclui Docling/torch (grupo "parse")
-uv run pytest                              # 67 testes, sem rede nem contêiner
+uv run pytest                              # 70 testes, sem rede nem contêiner
 uv run python -m app.warmup                # baixa os modelos uma vez
 uv run uvicorn app.main:app --port 8000
 uv run python -m app.workers.parse_worker
@@ -141,6 +142,12 @@ projeto — por isso o index-worker não precisa de Docling.
   certo. Na Millet isso derrubava de 37 para 8 tabelas. A imagem do parse-worker instala
   `fonts-liberation` (mesmas métricas de Arial/Times/Courier) e o worker se recusa a subir num
   Linux sem fontes.
+- **Conversão em lotes de 10 páginas** (`PARSE_PAGE_BATCH`). O Docling guarda as páginas
+  renderizadas até o fim de cada conversão; com a Light (124 páginas) convertida de uma vez, o
+  worker passou de 5,7 GB e esgotou a memória e o swap do Docker. Em lotes, o pico ficou em
+  4,0 GB nos três documentos e não cresce com o número de páginas.
+- **Marcador de lista preservado.** O Docling separa o marcador ("3.1", "b)") do texto de um
+  item de lista numerada; o parser junta os dois de novo, porque a numeração define a seção.
 - OCR só é ligado quando o documento tem página sem texto nativo.
 - A camada de texto de cada página também é guardada (via `pypdf`), para conferir gráficos.
 - O parse fica em cache por arquivo: retry, correção de metadados e reindexação não o repetem.
@@ -174,6 +181,11 @@ Segue a estrutura do documento em vez de cortar por tamanho fixo:
   o cabeçalho em cada parte. Uma tabela nunca é cortada no meio de uma linha.
 - **Seções:** a hierarquia vem da numeração das notas ("22." > "22.1" > "a)"), que é explícita.
   Títulos com "--Continuação" no topo da página seguinte não abrem seção nova.
+  O rótulo "título" vem do modelo de layout e muda com o ambiente (no Linux, com outra fonte,
+  "3.1 Políticas contábeis" saiu como item de lista). Por isso uma linha curta, numerada,
+  iniciada por maiúscula e sem pontuação final também é tratada como título, desde que continue
+  a sequência das notas — o que impede uma enumeração qualquer ("1. Identificar o contrato") de
+  virar seção.
 - **Cabeçalhos corridos** (nome da empresa e "Notas explicativas..." no topo de toda página) são
   removidos; senão virariam "seção" de tudo e gerariam dezenas de chunks idênticos.
 - **Cabeçalho de contexto:** cada chunk é embutido com um prefixo determinístico, por exemplo
@@ -246,41 +258,49 @@ client.query_points(
 
 ## Medições
 
-Feitas em 11/11/2026 num Intel Core i5-10400 (12 threads, sem GPU), com a aplicação fora do
-Docker, `TABLE_MODE=accurate` e um parse-worker.
+Feitas em 11/11/2026 num Intel Core i5-10400 (12 threads, 16 GB, sem GPU), com os seis serviços
+em contêineres (`docker compose up`), OpenAI real (`text-embedding-3-small` e `gpt-4o-mini`),
+`TABLE_MODE=accurate` e um parse-worker.
 
-| Documento | Páginas | Parse (Docling) | Indexação | Chunks (texto / tabela) | Tokens de embedding | Custo de embedding |
-|---|---|---|---|---|---|---|
-| Brasal | 51 | 241 s (4,7 s/pág) | 0,9 s | 147 (83 / 64) | 40.651 | US$ 0,0008 |
-| Millet | 43 | 173 s (4,0 s/pág) | 0,7 s | 126 (89 / 37) | 39.610 | US$ 0,0008 |
-| Light | 124 | 932 s (7,5 s/pág) | 7,7 s | 397 (268 / 129) | 138.591 | US$ 0,0028 |
-| **Total** | 218 | 22 min | 9 s | 670 | 218.852 | **US$ 0,0044** |
+| Documento | Páginas | Parse (Docling) | Indexação | Chunks (texto / tabela / figura) | Tokens de embedding | Tokens de LLM (entrada / saída) | Custo |
+|---|---|---|---|---|---|---|---|
+| Brasal | 51 | 303 s (5,9 s/pág) | 9 s | 143 (80 / 63 / 0) | 40.270 | 9.938 / 97 | US$ 0,0023 |
+| Millet | 43 | 219 s (5,1 s/pág) | 7 s | 126 (89 / 37 / 0) | 39.796 | 1.074 / 89 | US$ 0,0010 |
+| Light | 124 | 1.027 s (8,3 s/pág) | 31 s | 403 (269 / 129 / 5) | 139.887 | 143.954 / 1.913 | US$ 0,0255 |
+| **Total** | 218 | 26 min | 47 s | 672 | 219.953 | 154.966 / 2.099 | **US$ 0,029** |
 
-- O parse é 99% do tempo e é a etapa que escala com mais parse-workers (ou GPU). Reenviar um
-  arquivo já parseado leva menos de um segundo (cache).
-- **Estas medições foram feitas com `EMBEDDING_PROVIDER=fake`**, porque o ambiente de
-  desenvolvimento não tinha chave da OpenAI. Os tokens foram contados com o `tiktoken` sobre o
-  texto exato que seria enviado, e o custo usa US$ 0,02 por milhão de tokens do
-  `text-embedding-3-small`. O tempo de indexação com a OpenAI será maior (chamadas de rede).
-- Ainda **não medido**: custo e tempo das duas chamadas de LLM (metadados: uma por documento;
-  figuras: 9 recortes candidatos na Light, nenhum na Brasal e na Millet). O job registra
-  `llm_input_tokens`, `llm_output_tokens` e `cost_usd` em `usage` quando roda com a chave.
+- O parse é 97% do tempo e é a etapa que escala com mais parse-workers (ou GPU). Reenviar um
+  arquivo já parseado leva segundos: parse, transcrição de figuras e metadados ficam em cache.
+- O custo é dominado pelos gráficos da Light: cada recorte enviado ao modelo de visão custa
+  de 9 a 16 mil tokens de entrada. Os embeddings dos três documentos somam US$ 0,0044.
+- Pico de memória do parse-worker: 4,0 GB.
+- Fora do Docker (Windows, mesma máquina) o parse levou 241 s, 173 s e 932 s. A contagem de
+  chunks varia um pouco entre os dois ambientes (Brasal 147 no Windows, 143 no Linux) porque a
+  fonte substituta muda a segmentação de alguns parágrafos; as tabelas batem (uma diferença: o
+  índice da p. 2 da Brasal sai como tabela no Windows e como texto no Linux).
 
-O que foi verificado de ponta a ponta com Kafka, Postgres e Qdrant reais:
+O que foi verificado de ponta a ponta, em contêineres e com a OpenAI real:
 
 - Os três PDFs indexados; a DRE da Brasal (p. 8) é um único chunk de tabela; a gestão de capital
   da Millet (p. 42) e o endividamento da Light (p. 10, "3,32x") estão nos chunks esperados.
 - Na Light, o relatório da administração sai com `unit = "R$ milhões"` e as demonstrações com `"R$ mil"`.
+- **Metadados pelo LLM com evidência:** empresa e tipo dos três documentos aceitos com o trecho
+  literal da p. 1. O período da Millet veio do regex, porque o trecho citado pelo modelo não
+  existia literalmente na página — o fallback funcionou como desenhado.
+- **Gráficos da Light:** 9 recortes passaram no filtro de área; 2 foram classificados como
+  decorativos e 7 transcritos. Em 3 deles todos os valores existem no texto da página e foram
+  indexados (perdas totais na p. 6, 72 de 72 valores, incluindo "26,51%" e "21,53%";
+  arrecadação na p. 6; PECLD/ROB na p. 7). Nos outros 4 os valores lidos pelo modelo não estão
+  na camada de texto (gráfico rasterizado ou leitura errada) e foram omitidos: 2 viraram chunk
+  só com o título e `verified_ratio = 0`, 2 não geraram chunk.
+- **Busca híbrida:** "alavancagem dívida líquida EBITDA covenants" traz a Light p. 10 no topo,
+  seguida das notas de covenants; "Lei 14.385" (termo exato) traz as páginas 114 e 28 da Light;
+  "risco de liquidez e vencimento das dívidas" traz a nota de risco de liquidez da Light e da Millet.
 - Reenvio do mesmo PDF: mesmo `doc_id`, mesma contagem de pontos.
 - parse-worker derrubado no meio de um documento: a mensagem foi reentregue e o job terminou.
 - Chave da OpenAI inválida: três tentativas, mensagem na DLQ, job `failed`; após corrigir,
   `POST /api/jobs/{id}/retry` concluiu sem refazer o parse.
 - Segundo usuário não lista, não lê e não encontra na busca os documentos do primeiro.
-- **Tudo em contêineres** (`docker compose up --build`, os seis serviços): a Millet foi indexada
-  de ponta a ponta em 218 s de parse, com 121 chunks (84 de texto / 37 tabelas). As 37 tabelas
-  batem com a execução fora do Docker; os 5 chunks de texto a menos vêm da fonte substituta
-  (Liberation no lugar da Arial), que muda um pouco a segmentação de parágrafos. Brasal e Light
-  não foram repetidas dentro dos contêineres.
 
 ## Premissas e limitações
 

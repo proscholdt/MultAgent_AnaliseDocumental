@@ -9,7 +9,7 @@ from pypdf import PdfWriter
 from qdrant_client import AsyncQdrantClient
 
 from app import db
-from app.config import get_settings
+from app.config import PIPELINE_VERSION, get_settings
 from app.main import create_app
 from app.pipeline.embedder import FakeDenseEmbedder, FakeSparseEmbedder
 from app.pipeline.vector_store import VectorStore
@@ -126,4 +126,4 @@ def parsed_doc() -> ParsedDocument:
         ParsedPage(page=3, native_text="Endividamento R$9.032 milhões 3,32x"),
     ]
     return ParsedDocument(doc_id="abcdef0123456789", file_name="exemplo.pdf", page_count=3,
-                          parser="teste", pipeline_version="1", items=items, pages=pages)
+                          parser="teste", pipeline_version=PIPELINE_VERSION, items=items, pages=pages)

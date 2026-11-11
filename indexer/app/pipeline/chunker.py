@@ -36,7 +36,9 @@ _ANY_CONTINUATION = re.compile(r"\s*[-–—]*\s*\(?continua[cç][aã]o\)?", re.
 _CONTINUATION = re.compile(r"\s*(?:[-–—]{1,2}\s*continua[cç][aã]o|\(continua[cç][aã]o\))\s*$", re.IGNORECASE)
 _NUMBERED = re.compile(r"^(\d{1,2}(?:\.\d{1,2}){0,3})\.?\s+\S")
 _LETTERED = re.compile(r"^(?:[a-z]\)|\([a-z]\)|\([ivx]+\))\s+\S", re.IGNORECASE)
-_TABLE_SEPARATOR = re.compile(r"^\s*\|?\s*:?-{2,}")
+_LETTERED_TITLE = re.compile(r"^[a-z]\)\s+[A-ZÀ-Ý]")  # "b) Receitas de contratos com clientes"
+_HEADING_MAX_CHARS = 120
+_TABLE_SEPARATOR =re.compile(r"^\s*\|?\s*:?-{2,}")
 _SENTENCE_END = re.compile(r"(?<=[.!?;])\s+")
 _INJECTION = re.compile(
     r"ignore\s+(?:all\s+|any\s+)?(?:previous|prior|above)\s+instructions"
@@ -197,6 +199,7 @@ class _Builder:
         self.sections: list[str] = []  # caminho completo da seção atual
         self.numbered: list[str] = []  # só a cadeia numerada ("22." > "22.1")
         self.numbered_page: int | None = None  # última página em que a cadeia numerada apareceu
+        self.last_note: int | None = None  # número da última nota de primeiro nível vista
         self.buffer: list[tuple[str, int, int]] = []  # (parágrafo, página, tokens)
 
     # -- emissão ------------------------------------------------------------
@@ -251,6 +254,7 @@ class _Builder:
         depth = numbering_depth(title)
 
         if depth is not None:
+            self.last_note = int(_NUMBERED.match(title).group(1).split(".")[0])
             # "6. Contas a receber--Continuação" no topo da página seguinte não abre seção nova.
             if len(self.numbered) >= depth and self.numbered[depth - 1] == title:
                 self.numbered_page = page
@@ -276,9 +280,43 @@ class _Builder:
             self.numbered_page = None
             self.sections = [title]
 
+    def is_note_heading(self, text: str) -> bool:
+        """Parágrafo que na verdade é título de nota.
+
+        O rótulo de título vem do modelo de layout, que olha a página renderizada e varia com
+        o ambiente: com outra fonte, "3.1 Políticas contábeis" sai como item de lista. A
+        numeração está no texto e não varia, então uma linha curta, numerada, iniciada por
+        maiúscula e sem pontuação final é tratada como título — desde que continue a sequência
+        das notas. Essa última condição evita que uma enumeração qualquer ("1. Identificar o
+        contrato", "2. ...") seja confundida com a nota 1 ou 2.
+        """
+        line = text.strip()
+        if not line or "\n" in line or len(line) > _HEADING_MAX_CHARS or line[-1] in ".;:,":
+            return False
+        numbered = _NUMBERED.match(line)
+        if numbered:
+            if not numbered.group(0)[-1].isupper():
+                return False
+            parts = numbered.group(1).split(".")
+            note = int(parts[0])
+            if len(parts) > 1:  # "3.1 ...": subitem da nota atual
+                return note == self.last_note
+            if line[len(numbered.group(1))] != ".":  # "5 anos" não é a nota 5
+                return False
+            if self.last_note is None:
+                return note == 1
+            if note == self.last_note:  # só como continuação da nota aberta ("3. ...--Continuação")
+                return bool(self.numbered) and _CONTINUATION.sub("", line).strip() == self.numbered[0]
+            return note == self.last_note + 1
+        lettered = _LETTERED_TITLE.match(line)
+        return bool(lettered and self.numbered)
+
     def add_text(self, text: str, page: int) -> None:
         text = text.strip()
         if not text:
+            return
+        if self.is_note_heading(text):
+            self.add_heading(text, page)
             return
         tokens = count_tokens(text)
         if tokens > self.settings.chunk_max_tokens:

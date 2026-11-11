@@ -6,7 +6,7 @@ from typing import Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Muda sempre que parse/chunking mudam de forma incompatível; invalida o cache de parse.
-PIPELINE_VERSION = "1"
+PIPELINE_VERSION = "2"
 
 INSECURE_JWT_SECRET = "troque-este-segredo"
 
@@ -64,6 +64,9 @@ class Settings(BaseSettings):
 
     # --- Parser (Docling) ---
     table_mode: Literal["accurate", "fast"] = "accurate"
+    # Páginas por chamada ao Docling. Ele guarda as páginas renderizadas até o fim da conversão;
+    # num PDF de 124 páginas convertido de uma vez o worker passou de 5,7 GB. Em lotes, o pico
+    # de memória depende do lote, não do tamanho do documento.
     parse_page_batch: int = 10
     parse_threads: int = 0  # 0 = todos os núcleos
     figure_min_area_ratio: float = 0.04  # figuras menores que 4% da página são logotipos

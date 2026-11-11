@@ -56,8 +56,13 @@ def main() -> int:
             started = time.time()
             last = None
             while True:
-                job = client.get(f"/api/jobs/{ids['job_id']}").json()
-                line = f"{job['status']} {job['stage'] or ''} {job['progress_current']}/{job['progress_total']}"
+                try:
+                    job = client.get(f"/api/jobs/{ids['job_id']}").json()
+                except httpx.TransportError as exc:  # API ocupada ou reiniciando: o job segue no worker
+                    print(f"  [{name}] consulta falhou ({type(exc).__name__}), tentando de novo")
+                    time.sleep(5)
+                    continue
+                line =f"{job['status']} {job['stage'] or ''} {job['progress_current']}/{job['progress_total']}"
                 if line != last:
                     print(f"  [{name}] {line}")
                     last = line

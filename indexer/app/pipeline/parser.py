@@ -4,6 +4,7 @@ O Docling entrega os elementos na ordem de leitura, com rótulo (título, parág
 tabela, figura) e página. Aqui eles são convertidos para o esquema próprio do projeto,
 para que as etapas seguintes não dependam do Docling.
 """
+import gc
 import logging
 import os
 import sys
@@ -22,6 +23,7 @@ from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling_core.types.doc import (
     DocItemLabel,
     DoclingDocument,
+    ListItem,
     PictureItem,
     SectionHeaderItem,
     TableItem,
@@ -103,13 +105,29 @@ class PdfParser:
               on_progress: ProgressCallback | None = None) -> ParsedDocument:
         pages = _native_pages(pdf_path)
         ocr_pages = [p.page for p in pages if len(p.native_text.strip()) < _MIN_NATIVE_CHARS]
+        converter = self._converter(ocr=bool(ocr_pages))
+        total = len(pages)
+        batch = max(1, self._settings.parse_page_batch)
 
-        def callback(event) -> None:  # eventos de progresso do Docling
-            if on_progress and getattr(event, "kind", None) == "page_completed":
-                on_progress(event.completed_pages, event.total_pages)
+        # Em lotes de páginas: o Docling mantém as páginas renderizadas até o fim de cada
+        # conversão, então converter o PDF inteiro de uma vez faz a memória crescer com o
+        # número de páginas. O layout é detectado página a página, o lote não muda o resultado.
+        items: list[ParsedItem] = []
+        figure_count = 0
+        for start in range(1, total + 1, batch):
+            end = min(start + batch - 1, total)
 
-        result = self._converter(ocr=bool(ocr_pages)).convert(pdf_path, progress_callback=callback)
-        items = _convert_items(result.document, out_dir)
+            def callback(event, done_before: int = start - 1) -> None:  # progresso do Docling
+                if on_progress and getattr(event, "kind", None) == "page_completed":
+                    on_progress(min(done_before + event.completed_pages, total), total)
+
+            result = converter.convert(pdf_path, page_range=(start, end), progress_callback=callback)
+            batch_items, figure_count = _convert_items(result.document, out_dir, figure_count)
+            items.extend(batch_items)
+            del result
+            gc.collect()
+            if on_progress:
+                on_progress(end, total)
         return ParsedDocument(
             doc_id=doc_id,
             file_name=file_name,
@@ -137,10 +155,25 @@ def _native_pages(pdf_path: Path) -> list[ParsedPage]:
     return pages
 
 
-def _convert_items(document: DoclingDocument, out_dir: Path) -> list[ParsedItem]:
+def _item_text(node: TextItem) -> str:
+    """Texto do item, com o marcador de lista numerada de volta.
+
+    O Docling separa o marcador ("3.1", "b)") do texto do item de lista. Título de nota que o
+    layout rotula como item de lista perderia a numeração, e é ela que define a seção.
+    """
+    if isinstance(node, ListItem) and node.enumerated:
+        marker = (node.marker or "").strip()
+        if marker and not node.text.lstrip().startswith(marker):
+            return f"{marker} {node.text.strip()}"
+    return node.text
+
+
+def _convert_items(document: DoclingDocument, out_dir: Path,
+                   figure_count: int = 0) -> tuple[list[ParsedItem], int]:
+    """Itens do documento (ou de um lote de páginas) no esquema próprio. `figure_count` é o
+    total de figuras já gravadas nos lotes anteriores; devolve o total atualizado."""
     figures_dir = out_dir / "figures"
     items: list[ParsedItem] = []
-    figure_count = 0
 
     for node, _depth in document.iterate_items():
         prov = getattr(node, "prov", None)
@@ -176,5 +209,5 @@ def _convert_items(document: DoclingDocument, out_dir: Path) -> list[ParsedItem]
                 level = node.level if isinstance(node, SectionHeaderItem) else 1
                 items.append(ParsedItem(type="heading", text=node.text, page=page_no, level=level))
             else:
-                items.append(ParsedItem(type="text", text=node.text, page=page_no))
-    return items
+                items.append(ParsedItem(type="text", text=_item_text(node), page=page_no))
+    return items, figure_count

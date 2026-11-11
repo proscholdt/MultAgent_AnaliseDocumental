@@ -126,6 +126,32 @@ def test_numbered_headings_build_a_hierarchy(settings):
     assert numbering_depth("2022 foi um ano desafiador") is None  # ano não é número de nota
 
 
+def test_numbered_line_labelled_as_text_still_opens_its_section(settings):
+    """O layout às vezes rotula título de nota como item de lista; a numeração decide."""
+    body = "Descrição da política contábil adotada pelo Grupo. " * 8
+    doc = make_doc([
+        ParsedItem(type="heading", text="3. Sumário das principais práticas contábeis", page=1),
+        ParsedItem(type="text", text="3.1 Políticas contábeis", page=1),
+        ParsedItem(type="text", text="b) Receitas de contratos com clientes--Continuação", page=1),
+        ParsedItem(type="text", text=body, page=1),
+        # Enumeração dentro da nota: não continua a sequência das notas, fica como texto.
+        ParsedItem(type="text", text="1. Identificar o contrato com o cliente", page=1),
+        ParsedItem(type="text", text="a) se espera realizá-lo no ciclo operacional normal;", page=1),
+        ParsedItem(type="text", text="5 anos de vida útil estimada", page=1),
+        ParsedItem(type="text", text="4. Caixa e equivalentes de caixa", page=2),
+        ParsedItem(type="text", text=body, page=2),
+    ])
+    chunks = chunk_document(doc, {}, settings)
+    assert [c.section_path for c in chunks] == [
+        ["3. Sumário das principais práticas contábeis", "3.1 Políticas contábeis",
+         "b) Receitas de contratos com clientes"],
+        ["4. Caixa e equivalentes de caixa"],
+    ]
+    assert "1. Identificar o contrato com o cliente" in chunks[0].text
+    assert "a) se espera realizá-lo" in chunks[0].text
+    assert "5 anos de vida útil" in chunks[0].text
+
+
 def test_lettered_and_unnumbered_headings_attach_to_the_current_note(settings):
     doc = make_doc([
         ParsedItem(type="heading", text="Relatório do auditor independente", page=3),
