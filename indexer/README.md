@@ -235,6 +235,39 @@ client.query_points(
   `suspicious = true` — são indexados, mas marcados para o agente tratar. Nas chamadas de LLM, o
   conteúdo vai em mensagem de usuário delimitada e nada do que o modelo devolve é executado.
 
+## Medições
+
+Feitas em 11/11/2026 num Intel Core i5-10400 (12 threads, sem GPU), com a aplicação fora do
+Docker, `TABLE_MODE=accurate` e um parse-worker.
+
+| Documento | Páginas | Parse (Docling) | Indexação | Chunks (texto / tabela) | Tokens de embedding | Custo de embedding |
+|---|---|---|---|---|---|---|
+| Brasal | 51 | 241 s (4,7 s/pág) | 0,9 s | 147 (83 / 64) | 40.651 | US$ 0,0008 |
+| Millet | 43 | 173 s (4,0 s/pág) | 0,7 s | 126 (89 / 37) | 39.610 | US$ 0,0008 |
+| Light | 124 | 932 s (7,5 s/pág) | 7,7 s | 397 (268 / 129) | 138.591 | US$ 0,0028 |
+| **Total** | 218 | 22 min | 9 s | 670 | 218.852 | **US$ 0,0044** |
+
+- O parse é 99% do tempo e é a etapa que escala com mais parse-workers (ou GPU). Reenviar um
+  arquivo já parseado leva menos de um segundo (cache).
+- **Estas medições foram feitas com `EMBEDDING_PROVIDER=fake`**, porque o ambiente de
+  desenvolvimento não tinha chave da OpenAI. Os tokens foram contados com o `tiktoken` sobre o
+  texto exato que seria enviado, e o custo usa US$ 0,02 por milhão de tokens do
+  `text-embedding-3-small`. O tempo de indexação com a OpenAI será maior (chamadas de rede).
+- Ainda **não medido**: custo e tempo das duas chamadas de LLM (metadados: uma por documento;
+  figuras: 9 recortes candidatos na Light, nenhum na Brasal e na Millet). O job registra
+  `llm_input_tokens`, `llm_output_tokens` e `cost_usd` em `usage` quando roda com a chave.
+
+O que foi verificado de ponta a ponta com Kafka, Postgres e Qdrant reais:
+
+- Os três PDFs indexados; a DRE da Brasal (p. 8) é um único chunk de tabela; a gestão de capital
+  da Millet (p. 42) e o endividamento da Light (p. 10, "3,32x") estão nos chunks esperados.
+- Na Light, o relatório da administração sai com `unit = "R$ milhões"` e as demonstrações com `"R$ mil"`.
+- Reenvio do mesmo PDF: mesmo `doc_id`, mesma contagem de pontos.
+- parse-worker derrubado no meio de um documento: a mensagem foi reentregue e o job terminou.
+- Chave da OpenAI inválida: três tentativas, mensagem na DLQ, job `failed`; após corrigir,
+  `POST /api/jobs/{id}/retry` concluiu sem refazer o parse.
+- Segundo usuário não lista, não lê e não encontra na busca os documentos do primeiro.
+
 ## Premissas e limitações
 
 - Os três PDFs fornecidos são demonstrações **anuais de 2022**, não trimestrais; `period` sai como `2022`.

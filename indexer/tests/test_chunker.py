@@ -234,6 +234,18 @@ def test_injection_like_text_is_flagged_not_dropped(settings):
     assert second.suspicious is False
 
 
+def test_layout_leftovers_do_not_become_chunks(settings):
+    doc = make_doc([
+        ParsedItem(type="heading", text="Índice", page=2),
+        ParsedItem(type="text", text="e", page=2),  # letra solta que sobrou do sumário da Millet
+        ParsedItem(type="heading", text="1. Contexto operacional", page=3),
+        ParsedItem(type="text", text="A Companhia foi constituída em 2018.", page=3),
+    ])
+    chunks = chunk_document(doc, {}, settings)
+    assert [c.text for c in chunks] == ["A Companhia foi constituída em 2018."]
+    assert chunks[0].chunk_index == 0
+
+
 def test_context_header_format():
     header = build_context_header("Brasal Brasília Holding S.A.", "2022", "R$ mil",
                                   ["Notas", "21. Receita operacional líquida"], 43, 43)

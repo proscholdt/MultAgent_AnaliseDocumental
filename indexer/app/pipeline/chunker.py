@@ -22,6 +22,7 @@ _OVERLAP_MAX_TOKENS = 120  # só repete o último parágrafo no chunk seguinte s
 _PREAMBLE_MAX_TOKENS = 80  # linha curta antes de uma tabela é tratada como título dela
 _PREAMBLE_MAX_LINES = 4
 _PREAMBLE_BUDGET = 160  # tokens somados das linhas de título
+_MIN_TEXT_TOKENS = 3
 
 # Cabeçalho/rodapé corrido: mesma linha curta, no topo ou no pé, em muitas páginas.
 _RUNNING_MAX_TOKENS = 60
@@ -203,7 +204,9 @@ class _Builder:
     def emit(self, chunk_type: ChunkType, method: str, text: str, page_start: int, page_end: int,
              result: FigureResult | None = None) -> None:
         text = text.strip()
-        if not text:
+        tokens = count_tokens(text) if text else 0
+        # Resto de layout (uma letra solta de um sumário, por exemplo) não vira chunk.
+        if not text or (chunk_type == "text" and tokens < _MIN_TEXT_TOKENS):
             return
         self.chunks.append(Chunk(
             chunk_index=len(self.chunks),
@@ -214,7 +217,7 @@ class _Builder:
             page_start=page_start,
             page_end=page_end,
             unit=resolve_unit(text, page_start, self.units_by_page),
-            token_count=count_tokens(text),
+            token_count=tokens,
             verified_ratio=result.verified_ratio if result else None,
             unverified_values=list(result.unverified_values) if result else [],
             suspicious=bool(_INJECTION.search(text)),
