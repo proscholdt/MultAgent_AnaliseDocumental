@@ -22,14 +22,14 @@ UNIT_BILLION = "R$ bilhões"
 # Declarações explícitas de unidade, como aparecem em cabeçalhos de tabelas e notas.
 _DECLARED: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"em\s+milhares|milhares\s+de\s+reais|\(\s*(?:em\s+)?R\$\s*mil\s*\)"
-                r"|\bmil\s+reais\b|\bmil\s+R\$|R\$\s*mil\b(?!h)", re.I), UNIT_THOUSAND),
+                r"|\bmil\s+reais\b|\bmil\s+R\$|R\$\s*mil\b(?!h)", re.IGNORECASE), UNIT_THOUSAND),
     (re.compile(r"em\s+milh[õo]es|milh[õo]es\s+de\s+reais|\(\s*(?:em\s+)?R\$\s*(?:milh[õo]es|MM)\s*\)"
-                r"|R\$\s*milh[õo]es\b", re.I), UNIT_MILLION),
-    (re.compile(r"em\s+bilh[õo]es|bilh[õo]es\s+de\s+reais|R\$\s*bilh[õo]es\b", re.I), UNIT_BILLION),
+                r"|R\$\s*milh[õo]es\b", re.IGNORECASE), UNIT_MILLION),
+    (re.compile(r"em\s+bilh[õo]es|bilh[õo]es\s+de\s+reais|R\$\s*bilh[õo]es\b", re.IGNORECASE), UNIT_BILLION),
 ]
 
 # Menções em texto corrido: "R$1.817 milhões", "R$ 1,7 bilhão", "R$5.672.203 mil".
-_MENTION = re.compile(r"R\$\s?-?[\d.,]+\s*(milh(?:ão|ões)|bilh(?:ão|ões)|mil(?!h))\b", re.I)
+_MENTION = re.compile(r"R\$\s?-?[\d.,]+\s*(milh(?:ão|ões)|bilh(?:ão|ões)|mil(?!h))\b", re.IGNORECASE)
 
 
 def detect_declared_unit(text: str) -> str | None:
@@ -94,7 +94,7 @@ _FIELDS = ("company", "period", "doc_type")
 _MONTH_TO_QUARTER = {"março": "1T", "marco": "1T", "junho": "2T", "setembro": "3T"}
 _COMPANY_LINE = re.compile(r"^[A-ZÀ-Ú][\wÀ-ú .,&'’/-]{1,80}?\s(?:S\.\s?A\.?|S/A|Ltda\.?)$")
 _DATE = re.compile(r"(\d{1,2})\s+de\s+(janeiro|fevereiro|mar[cç]o|abril|maio|junho|julho|agosto"
-                   r"|setembro|outubro|novembro|dezembro)\s+de\s+(\d{4})", re.I)
+                   r"|setembro|outubro|novembro|dezembro)\s+de\s+(\d{4})", re.IGNORECASE)
 
 
 class FieldEvidence(BaseModel):

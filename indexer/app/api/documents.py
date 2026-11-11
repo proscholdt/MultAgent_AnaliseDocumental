@@ -39,7 +39,7 @@ async def publish_or_fail(publisher, topic: str, message, session, job_id: str, 
     """Publica o job; se o Kafka recusar, o job fica `failed` em vez de "na fila" sem estar."""
     try:
         await publisher.publish(topic, message.user_id, message)
-    except Exception as exc:  # noqa: BLE001 - qualquer falha do broker
+    except Exception as exc:
         log.exception("Falha ao publicar em %s", topic)
         await repo.mark_job_failed(session, job_id, stage, f"Fila indisponível: {exc}")
         await session.commit()

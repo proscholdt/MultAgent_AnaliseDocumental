@@ -3,7 +3,12 @@ import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.pool import StaticPool
 
 from app.config import get_settings
@@ -46,7 +51,7 @@ async def init_db() -> None:
             async with _engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
             return
-        except Exception:  # noqa: BLE001 - banco ainda subindo ou corrida de criação
+        except Exception:
             if attempt == 10:
                 raise
             await asyncio.sleep(2)

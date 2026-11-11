@@ -30,11 +30,11 @@ _RUNNING_MIN_PAGE_SHARE = 0.08
 _RUNNING_TOP_ITEMS = 4
 _RUNNING_BOTTOM_ITEMS = 2
 _RUNNING_EDGE_SHARE = 0.8
-_ANY_CONTINUATION = re.compile(r"\s*[-–—]*\s*\(?continua[cç][aã]o\)?", re.I)
+_ANY_CONTINUATION = re.compile(r"\s*[-–—]*\s*\(?continua[cç][aã]o\)?", re.IGNORECASE)
 
-_CONTINUATION = re.compile(r"\s*(?:[-–—]{1,2}\s*continua[cç][aã]o|\(continua[cç][aã]o\))\s*$", re.I)
+_CONTINUATION = re.compile(r"\s*(?:[-–—]{1,2}\s*continua[cç][aã]o|\(continua[cç][aã]o\))\s*$", re.IGNORECASE)
 _NUMBERED = re.compile(r"^(\d{1,2}(?:\.\d{1,2}){0,3})\.?\s+\S")
-_LETTERED = re.compile(r"^(?:[a-z]\)|\([a-z]\)|\([ivx]+\))\s+\S", re.I)
+_LETTERED = re.compile(r"^(?:[a-z]\)|\([a-z]\)|\([ivx]+\))\s+\S", re.IGNORECASE)
 _TABLE_SEPARATOR = re.compile(r"^\s*\|?\s*:?-{2,}")
 _SENTENCE_END = re.compile(r"(?<=[.!?;])\s+")
 _INJECTION = re.compile(
@@ -42,7 +42,7 @@ _INJECTION = re.compile(
     r"|(?:ignore|desconsidere|esque[cç]a)\s+(?:todas\s+)?as\s+instru[cç][oõ]es"
     r"|system\s+prompt|prompt\s+do\s+sistema|you\s+are\s+now|voc[eê]\s+agora\s+[eé]"
     r"|<\s*/?\s*system\s*>|jailbreak",
-    re.I,
+    re.IGNORECASE,
 )
 
 _encoding = None

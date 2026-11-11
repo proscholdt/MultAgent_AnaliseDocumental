@@ -11,7 +11,12 @@ from app.config import Settings, get_settings
 from app.db import session_scope
 from app.messaging import KafkaPublisher, Publisher, run_consumer, wait_for_kafka
 from app.models import utcnow
-from app.pipeline.embedder import DenseEmbedder, SparseEmbedder, build_dense_embedder, build_sparse_embedder
+from app.pipeline.embedder import (
+    DenseEmbedder,
+    SparseEmbedder,
+    build_dense_embedder,
+    build_sparse_embedder,
+)
 from app.pipeline.indexing import index_document, load_parsed
 from app.pipeline.llm import LLMClient
 from app.pipeline.vector_store import VectorStore

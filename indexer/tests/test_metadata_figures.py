@@ -92,14 +92,14 @@ PAGE_TEXT = "Perdas Totais/Carga Fio 26,51% 21,53% 9.101 dez/22"
 
 
 def transcription(**overrides) -> FigureTranscription:
-    base = dict(
-        tipo="grafico", titulo="Evolução das Perdas Totais [GWh]", legivel=True, notas=[],
-        series=[FigureSeries(nome="Perdas Totais/Carga Fio", pontos=[
+    base = {
+        "tipo": "grafico", "titulo": "Evolução das Perdas Totais [GWh]", "legivel": True, "notas": [],
+        "series": [FigureSeries(nome="Perdas Totais/Carga Fio", pontos=[
             FigurePoint(rotulo="Dez/22", valor="26,51%"),
             FigurePoint(rotulo="Patamar regulatório", valor="21.53%"),  # ponto no lugar da vírgula
             FigurePoint(rotulo="Set/22", valor="25,98%"),  # não existe no texto da página
         ])],
-    )
+    }
     return FigureTranscription(**{**base, **overrides})
 
 

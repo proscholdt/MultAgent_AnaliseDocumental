@@ -32,7 +32,7 @@ async def test_index_writes_dense_and_sparse_with_full_payload(store, settings, 
     assert result.metadata.company == "Empresa Exemplo S.A." and result.metadata.period == "2022"
     assert result.usage["chunks"]["table"] == 1
 
-    record = (await store._client.retrieve(  # noqa: SLF001 - inspeção direta do ponto gravado
+    record = (await store._client.retrieve(
         settings.qdrant_collection, ids=[point_id(USER_A, parsed_doc.doc_id, 0)],
         with_payload=True, with_vectors=True))[0]
     assert set(record.vector) == {"dense", "bm25"}

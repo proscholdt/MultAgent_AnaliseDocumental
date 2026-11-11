@@ -8,7 +8,7 @@ import asyncio
 import json
 import logging
 from collections.abc import Awaitable, Callable
-from typing import Protocol, TypeVar
+from typing import Protocol
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 from aiokafka.admin import AIOKafkaAdminClient, NewTopic
@@ -18,8 +18,6 @@ from pydantic import BaseModel, ValidationError
 from app.config import Settings, get_settings
 
 log = logging.getLogger(__name__)
-
-M = TypeVar("M", bound=BaseModel)
 
 
 class PermanentError(Exception):
@@ -110,7 +108,7 @@ async def wait_for_kafka(settings: Settings | None = None, attempts: int = 30, d
     raise RuntimeError(f"Kafka não respondeu após {attempts} tentativas: {last}")
 
 
-async def run_consumer(
+async def run_consumer[M: BaseModel](
     *,
     topic: str,
     group_id: str,
@@ -151,7 +149,7 @@ async def run_consumer(
         await consumer.stop()
 
 
-async def handle_record(
+async def handle_record[M: BaseModel](
     *,
     raw: bytes,
     topic: str,
@@ -178,7 +176,7 @@ async def handle_record(
         log.error("Erro permanente em %s: %s", topic, exc)
         await _to_dlq(publisher, settings, topic, raw, key=key, error=str(exc))
         await on_dead(message, exc)
-    except Exception as exc:  # noqa: BLE001 - qualquer falha de etapa entra na política de retry
+    except Exception as exc:
         if attempt < settings.max_attempts:
             log.warning("Falha em %s (tentativa %d/%d): %s", topic, attempt, settings.max_attempts, exc)
             await on_retry(message, exc)

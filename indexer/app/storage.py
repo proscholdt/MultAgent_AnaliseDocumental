@@ -66,7 +66,7 @@ def validate_pdf(data: bytes) -> int:
         pages = len(reader.pages)
     except (FileNotDecryptedError, WrongPasswordError):
         raise InvalidPdf("PDF protegido por senha de abertura não é aceito.") from None
-    except Exception as exc:  # noqa: BLE001 - pypdf levanta vários tipos para arquivo corrompido
+    except Exception as exc:
         raise InvalidPdf(f"PDF corrompido ou ilegível: {exc}") from exc
     if pages == 0:
         raise InvalidPdf("PDF sem páginas.")

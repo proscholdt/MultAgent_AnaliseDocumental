@@ -7,6 +7,7 @@ para que as etapas seguintes não dependam do Docling.
 import logging
 import os
 from collections.abc import Callable
+from importlib.metadata import version
 from pathlib import Path
 
 from docling.datamodel.base_models import InputFormat
@@ -25,7 +26,6 @@ from docling_core.types.doc import (
     TableItem,
     TextItem,
 )
-from importlib.metadata import version
 from pypdf import PdfReader
 
 from app.config import PIPELINE_VERSION, Settings

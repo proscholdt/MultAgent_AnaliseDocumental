@@ -68,7 +68,7 @@ class VectorStore:
                 # esparso um BM25 de verdade, e não só frequência de termos.
                 sparse_vectors_config={SPARSE: models.SparseVectorParams(modifier=models.Modifier.IDF)},
             )
-        except Exception as exc:  # noqa: BLE001 - API e workers podem criar ao mesmo tempo
+        except Exception as exc:
             if not await self._client.collection_exists(self._collection):
                 raise
             log.info("Coleção já criada por outro processo: %s", exc)

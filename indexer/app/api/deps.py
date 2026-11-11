@@ -8,7 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import Settings, get_settings
 from app.db import get_session
 from app.messaging import Publisher
-from app.pipeline.embedder import DenseEmbedder, SparseEmbedder, build_dense_embedder, build_sparse_embedder
+from app.pipeline.embedder import (
+    DenseEmbedder,
+    SparseEmbedder,
+    build_dense_embedder,
+    build_sparse_embedder,
+)
 from app.pipeline.vector_store import VectorStore
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
