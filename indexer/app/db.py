@@ -1,0 +1,78 @@
+"""Engine e sessões assíncronas. A API e os dois workers usam o mesmo módulo."""
+import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
+
+from app.config import get_settings
+from app.models import Base
+
+_engine: AsyncEngine | None = None
+_sessionmaker: async_sessionmaker[AsyncSession] | None = None
+
+
+def configure(database_url: str | None = None) -> AsyncEngine:
+    """Cria (ou recria) o engine. Os testes chamam com SQLite em memória."""
+    global _engine, _sessionmaker
+    url = database_url or get_settings().database_url
+    kwargs: dict = {}
+    if url.startswith("sqlite") and ":memory:" in url:
+        # Uma única conexão compartilhada, senão cada sessão veria um banco vazio.
+        kwargs = {"poolclass": StaticPool, "connect_args": {"check_same_thread": False}}
+    else:
+        kwargs = {"pool_pre_ping": True}
+    _engine = create_async_engine(url, **kwargs)
+    _sessionmaker = async_sessionmaker(_engine, expire_on_commit=False)
+    return _engine
+
+
+def _maker() -> async_sessionmaker[AsyncSession]:
+    if _sessionmaker is None:
+        configure()
+    assert _sessionmaker is not None
+    return _sessionmaker
+
+
+async def init_db() -> None:
+    """Cria as tabelas se não existirem. API e workers sobem juntos e podem tentar criar ao
+    mesmo tempo; quem perder a corrida tenta de novo e encontra as tabelas prontas."""
+    if _engine is None:
+        configure()
+    assert _engine is not None
+    for attempt in range(1, 11):
+        try:
+            async with _engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            return
+        except Exception:  # noqa: BLE001 - banco ainda subindo ou corrida de criação
+            if attempt == 10:
+                raise
+            await asyncio.sleep(2)
+
+
+async def dispose() -> None:
+    global _engine, _sessionmaker
+    if _engine is not None:
+        await _engine.dispose()
+    _engine = None
+    _sessionmaker = None
+
+
+async def get_session() -> AsyncIterator[AsyncSession]:
+    """Dependência do FastAPI."""
+    async with _maker()() as session:
+        yield session
+
+
+@asynccontextmanager
+async def session_scope() -> AsyncIterator[AsyncSession]:
+    """Sessão com commit/rollback automáticos, usada pelos workers."""
+    async with _maker()() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise

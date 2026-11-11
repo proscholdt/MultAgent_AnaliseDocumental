@@ -1,0 +1,54 @@
+[project]
+name = "indexer"
+version = "0.1.0"
+description = "Indexador multiusuário de demonstrações financeiras (FastAPI + Kafka + Qdrant híbrido)"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "python-multipart>=0.0.9",
+    "pydantic-settings>=2.4",
+    "sqlalchemy[asyncio]>=2.0.30",
+    "asyncpg>=0.30",
+    "aiokafka>=0.12",
+    "pyjwt>=2.9",
+    "pwdlib[argon2]>=0.2",
+    "qdrant-client>=1.12",
+    "fastembed>=0.5",
+    "openai>=1.60",
+    "tiktoken>=0.8",
+    # [crypto]: PDFs com restrição de permissões (AES, senha de usuário vazia) são comuns
+    # em demonstrações financeiras — o da Brasal é um deles.
+    "pypdf[crypto]>=5.0",
+    "httpx>=0.27",
+]
+
+[dependency-groups]
+# Só o parse-worker precisa de Docling/torch; API e index-worker ficam leves.
+parse = ["docling>=2.15", "torch", "torchvision"]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "aiosqlite>=0.20", "ruff>=0.6"]
+
+[tool.uv]
+package = false
+# Fora do Docker, `uv sync` instala tudo. As imagens escolhem os grupos (ver Dockerfile).
+default-groups = ["dev", "parse"]
+
+# No Linux (imagem Docker) usa as rodas só-CPU do PyTorch, bem menores que as com CUDA.
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+torchvision = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

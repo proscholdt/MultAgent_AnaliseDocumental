@@ -1,0 +1,12 @@
+# Segredos
+.env
+
+# Dados gerados em execução
+storage/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
