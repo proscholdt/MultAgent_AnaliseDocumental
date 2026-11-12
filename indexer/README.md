@@ -76,7 +76,7 @@ O dashboard do Qdrant fica em `http://localhost:6333/dashboard`.
 ```bash
 docker compose up -d kafka postgres qdrant
 uv sync                                    # inclui Docling, torch e RapidOCR (grupo "parse")
-uv run pytest                              # 96 testes, sem rede nem contêiner
+uv run pytest                              # 111 testes, sem rede nem contêiner
 uv run python -m app.warmup                # baixa os modelos uma vez
 uv run uvicorn app.main:app --port 8000
 uv run python -m app.workers.parse_worker
@@ -185,6 +185,17 @@ O que foi preciso tratar:
   4,0 GB nos três documentos e não cresce com o número de páginas.
 - **Marcador de lista.** O Docling separa o marcador ("3.1", "b)") do texto de um item de lista
   numerada. O parser junta os dois de novo, porque a numeração define a seção.
+- **Parágrafo que atravessa a quebra de página.** O Docling junta num item só o parágrafo que
+  começa numa página e termina na seguinte. O parser guarda as duas páginas, e o chunk cita o
+  intervalo. Guardando só a primeira, um trecho da p. 28 da Light seria citado como p. 27.
+- **Cabeçalho de tabela com a marca na coluna errada.** Na Brasal, só as colunas de 2021 trazem
+  "(não auditado)". Em 11 das 64 tabelas o modelo de tabelas estendia essa célula para a coluna
+  de 2022, ou a partia em "(não" e "auditado)", e o cabeçalho da DRE dizia que 2022 também não
+  foi auditado. A correção usa a posição: a célula que está na linha logo abaixo dos anos e é
+  estreita demais para cobrir duas colunas volta para a coluna sobre a qual está escrita. Um
+  cabeçalho de grupo ("Controladora"), que fica acima das colunas, nunca é alterado. A regra foi
+  conferida rodando o Docling nos três PDFs e comparando as 227 tabelas antes e depois: mudaram
+  as 11 da Brasal e nenhuma outra.
 
 Além disso:
 
@@ -277,18 +288,38 @@ O corte segue a estrutura do documento, não um tamanho fixo:
 - **Texto:** parágrafos da mesma seção agrupados até cerca de 450 tokens, com corte em fronteira
   de parágrafo.
 - **Tabela:** um chunk por tabela, em Markdown, com as linhas de título que a antecedem (período,
-  "Valores expressos em milhares de reais"). Tabela muito grande é dividida por linhas, repetindo
+  "Valores expressos em milhares de reais") e as notas de rodapé que vêm logo abaixo ("(a) Não
+  auditado pelos auditores independentes"). Tabela muito grande é dividida por linhas, repetindo
   o cabeçalho em cada parte. Uma tabela nunca é cortada no meio de uma linha.
 - **Gráfico:** um chunk por gráfico, só com o que foi conferido na etapa 2.
-- **Seções:** a hierarquia vem da numeração das notas ("22." > "22.1" > "a)"), que é explícita.
-  Título com "--Continuação" no topo da página seguinte não abre seção nova.
+- **Cabeçalhos e rodapés corridos** (nome da empresa, "Notas explicativas...", "As notas
+  explicativas são parte integrante...", o logotipo do auditor lido como título) são removidos.
+  Senão virariam "seção" de tudo e gerariam dezenas de chunks idênticos.
+- **Índice.** O índice do documento não é indexado: ele repete o nome de todas as seções e
+  aparecia como resultado de qualquer busca por elas.
+
+A seção de cada chunk (`section_path`) vem destas regras:
+
+- **Notas numeradas.** A hierarquia vem da numeração ("22." > "22.1" > "a)"), que é explícita.
+  O pai de uma nota é a nota cujo número é prefixo do dela: o pai de "3.4" é a "3", nunca a
+  "3.3" que veio antes. Se a nota-mãe não foi vista, a nota fica sem pai.
+- **O que conta como número de nota.** Depois do número tem de vir um título: ponto ou espaço e
+  uma maiúscula. "31 de dezembro de 2022 e 2021" e "5 anos" começam com número e não são notas.
+- **Continuação.** Título com "--Continuação" no topo da página seguinte não abre seção nova. A
+  comparação ignora caixa, espaços e pontuação ("7.Investimentos" = "7. Investimentos").
+- **Subtítulo sem número.** Fica dentro da nota atual enquanto houver, mais adiante, um título
+  numerado que continue essa nota ou abra a seguinte. Quando a numeração acaba ou recomeça, ele
+  abre outra parte do documento (o parecer do auditor depois das notas, por exemplo).
+- **Título quebrado em linhas.** Dois títulos sem número seguidos, sem nada entre eles, são
+  juntados: "LIGHT S.A. · DEMONSTRAÇÕES DE RESULTADOS · PARA OS EXERCÍCIOS FINDOS...". O mesmo
+  vale para título e subtítulo: "Holding (Light S.A.) · Desempenho Financeiro".
 - **Título que o layout não reconheceu.** O rótulo "título" vem do modelo de layout e muda com o
   ambiente: no Linux, com outra fonte, "3.1 Políticas contábeis" saiu como item de lista. Por
   isso uma linha curta, numerada, iniciada por maiúscula e sem pontuação final também é tratada
   como título, desde que continue a sequência das notas. Essa condição impede uma enumeração
-  qualquer ("1. Identificar o contrato") de virar seção.
-- **Cabeçalhos corridos** (nome da empresa e "Notas explicativas..." no topo de toda página) são
-  removidos. Senão virariam "seção" de tudo e gerariam dezenas de chunks idênticos.
+  qualquer ("1. Identificar o contrato") de virar seção. O nome de uma demonstração primária
+  ("Balanços patrimoniais...", "Demonstrações dos fluxos de caixa...") também abre seção quando
+  vem rotulado como texto.
 - **Cabeçalho de contexto.** Cada chunk é vetorizado com um prefixo determinístico, por exemplo
   `[Brasal Brasília Holding S.A. | 2022 | R$ mil | 21. Receita operacional líquida | p. 43]`.
   Uma tabela sozinha não diz de que empresa, período ou nota é. O campo `text` do payload fica
@@ -305,7 +336,7 @@ antigos do documento são apagados, então reindexar não deixa sobra.
 
 ## Onde o LLM entra e como é controlado
 
-O LLM é usado em dois pontos, e só neles. Texto e tabelas, que são 667 dos 674 chunks, não passam
+O LLM é usado em dois pontos, e só neles. Texto e tabelas, que são 634 dos 641 chunks, não passam
 por LLM: são extraídos pelo Docling e montados por regras.
 
 | Chamada | Para que serve | Como é conferida | Se não confere |
@@ -380,26 +411,28 @@ client.query_points(
 
 ## Resultados medidos
 
-Feitos em 11/11/2026 num Intel Core i5-10400 (12 threads, 16 GB, sem GPU), com os seis serviços
-em contêineres, OpenAI real (`text-embedding-3-small` e `gpt-4o-mini`), `TABLE_MODE=accurate` e
-um parse-worker. Os gráficos foram reindexados em 12/11/2026 com a conferência por posição.
+Feitos num Intel Core i5-10400 (12 threads, 16 GB, sem GPU), com os seis serviços em
+contêineres, OpenAI real (`text-embedding-3-small` e `gpt-4o-mini`), `TABLE_MODE=accurate` e um
+parse-worker. Tempos, tokens de LLM e custo são da execução completa de 11/11/2026, com a máquina
+livre. Chunks e tokens de embedding são da reindexação de 12/11/2026, depois da auditoria
+descrita abaixo.
 
 | Documento | Páginas | Parse (Docling) | Indexação | Chunks (texto / tabela / gráfico) | Tokens de embedding | Tokens de LLM (entrada / saída) | Custo |
 |---|---|---|---|---|---|---|---|
-| Brasal | 51 | 303 s (5,9 s/pág) | 9 s | 143 (80 / 63 / 0) | 40.270 | 9.938 / 97 | US$ 0,0023 |
-| Millet | 43 | 219 s (5,1 s/pág) | 7 s | 126 (89 / 37 / 0) | 39.796 | 1.074 / 89 | US$ 0,0010 |
-| Light | 124 | 1.027 s (8,3 s/pág) | 31 s | 405 (269 / 129 / 7) | 140.674 | 143.954 / 1.913 | US$ 0,0255 |
-| **Total** | 218 | 26 min | 47 s | 674 | 220.740 | 154.966 / 2.099 | **US$ 0,029** |
+| Brasal | 51 | 303 s (5,9 s/pág) | 9 s | 139 (76 / 63 / 0) | 40.210 | 9.938 / 97 | US$ 0,0023 |
+| Millet | 43 | 219 s (5,1 s/pág) | 7 s | 124 (88 / 36 / 0) | 39.512 | 1.074 / 89 | US$ 0,0010 |
+| Light | 124 | 1.027 s (8,3 s/pág) | 31 s | 378 (243 / 128 / 7) | 137.359 | 143.954 / 1.913 | US$ 0,0255 |
+| **Total** | 218 | 26 min | 47 s | 641 | 217.081 | 154.966 / 2.099 | **US$ 0,029** |
 
 - O parse é 97% do tempo e é a etapa que escala com mais parse-workers ou com GPU. Reenviar um
   arquivo já parseado leva segundos: parse, transcrição de gráficos e metadados ficam em cache.
 - O custo é dominado pelos gráficos da Light: cada recorte enviado ao modelo de visão custa de 9
   a 16 mil tokens de entrada. Os embeddings dos três documentos somam US$ 0,0044.
 - Pico de memória do parse-worker: 4,0 GB.
-- Fora do Docker (Windows, mesma máquina) o parse levou 241 s, 173 s e 932 s. A contagem de
-  chunks varia um pouco entre os dois ambientes (Brasal 147 no Windows, 143 no Linux), porque a
-  fonte substituta muda a segmentação de alguns parágrafos. As tabelas batem, com uma exceção: o
-  índice da p. 2 da Brasal sai como tabela no Windows e como texto no Linux.
+- Fora do Docker (Windows, mesma máquina) o parse levou 241 s, 173 s e 932 s. O layout varia um
+  pouco entre os dois ambientes, porque a fonte substituta muda a segmentação de alguns
+  parágrafos. As tabelas batem, com uma exceção: o índice da p. 2 da Brasal sai como tabela no
+  Windows (64 tabelas) e como texto no Linux (63).
 
 ### O que foi verificado de ponta a ponta
 
@@ -411,9 +444,9 @@ Em contêineres e com a OpenAI real:
 
   | Documento | No chunk | Na página | Por menções | Herdada | Sem unidade |
   |---|---|---|---|---|---|
-  | Brasal | 6 | 128 | 0 | 0 | 9 |
-  | Millet | 7 | 110 | 0 | 0 | 9 |
-  | Light | 7 | 25 | 18 | 318 | 37 |
+  | Brasal | 6 | 124 | 0 | 0 | 9 |
+  | Millet | 7 | 109 | 0 | 0 | 8 |
+  | Light | 7 | 16 | 18 | 300 | 37 |
 
   Brasal e Millet repetem "em milhares de reais" em toda página; a Light declara uma vez, na
   abertura das notas, e por isso depende da convenção herdada. Os chunks sem unidade são capas e
@@ -434,6 +467,59 @@ Em contêineres e com a OpenAI real:
   Depois de corrigir a chave, `POST /api/jobs/{id}/retry` concluiu sem refazer o parse.
 - **Isolamento.** Um segundo usuário não lista, não lê e não encontra na busca os documentos do
   primeiro.
+
+### Auditoria do índice
+
+Feita em 12/11/2026 sobre o índice em execução, comparando cada chunk com a camada de texto do
+PDF. Ela achou os defeitos corrigidos nesta versão; os números abaixo são os de depois. Para
+repetir, com os serviços no ar e os três PDFs indexados pelo `smoke.py`:
+
+```bash
+uv run python scripts/audit_index.py    # chunks contra o texto do PDF
+uv run python scripts/eval_search.py    # 38 perguntas com página esperada
+```
+
+| Checagem | Resultado |
+|---|---|
+| Números das tabelas que existem no texto da página | 6.831 de 6.831 (Brasal 1.524, Millet 999, Light 4.308) |
+| Números do PDF (4 dígitos ou mais) presentes nos chunks | 6.934 de 7.018 |
+| Páginas com texto e sem nenhum chunk | 2: os índices da Millet (p. 2) e da Light (p. 17), removidos de propósito |
+| Chunks acima do limite de tokens | 0 |
+| Chunks com menos de 15 tokens | 2 |
+| Tabelas da Brasal com "(não auditado)" na coluna de 2022 ou partido entre duas colunas | 0 |
+| Parágrafos repetidos dentro de um chunk | 0 |
+| Checagens de ponta a ponta (401 sem token, 404 para recurso alheio, contagem do Postgres igual à do Qdrant, arquivo que não é PDF recusado) | 14 de 14 |
+
+- Dos 84 números do PDF que não estão no texto dos chunks, 82 são de cabeçalho e rodapé
+  removidos (a data no cabeçalho de cada página, endereço, telefone, registro do contador), de
+  número de nota (que fica em `section_path`) e das duas páginas de índice. Os outros 2 são um
+  defeito real: na tabela do balanço social da Light (p. 15), o modelo de tabelas deixou de fora
+  a receita líquida de 2022 e de 2021. Os dois valores estão na DRE (p. 20).
+- **Defeitos de seção que a auditoria achou**, todos corrigidos:
+  - Light: 34 chunks das políticas contábeis estavam sob "3.3 Caixa e equivalentes de caixa",
+    porque um subtítulo sem número zerava a cadeia e a nota 3.3 virava "pai" das seguintes. Hoje
+    os 40 chunks das notas 3.x estão sob "3. PRINCIPAIS POLÍTICAS CONTÁBEIS".
+  - Light: a DRE estava na seção "PARA OS EXERCÍCIOS FINDOS EM...", sem o nome da demonstração.
+  - Brasal: o balanço patrimonial estava na seção "Responsabilidades do auditor".
+  - Millet: a nota 1 inteira estava na seção "Demonstrações dos fluxos de caixa", porque a data
+    "31 de dezembro de 2022 e 2021" tinha sido lida como nota 31.
+- **Página de parágrafo que atravessa a quebra:** na Light, 21 parágrafos começam numa página e
+  terminam na seguinte. Os chunks que os contêm passaram a citar as duas páginas; antes citavam
+  só a primeira. Na Brasal e na Millet não há nenhum caso.
+
+**Busca.** Conjunto de 38 perguntas com a página esperada (indicadores do teste, demonstrações,
+riscos, notas), em `scripts/eval_search.py`, rodado pela `POST /api/search` com os 8 primeiros
+resultados:
+
+| | Antes da auditoria | Depois |
+|---|---|---|
+| Chunk certo entre os 8 primeiros | 38 de 38 | 38 de 38 |
+| Chunk certo em 1º lugar | 21 | 23 |
+| MRR | 0,71 | 0,74 |
+
+A busca acha o chunk certo, mas nem sempre em primeiro: para "receita operacional líquida", a
+nota explicativa da receita vem antes da DRE na Brasal e na Millet. O agente deve combinar a
+busca com filtro por `section_path` e `chunk_type`, não depender só da ordem.
 
 ### Gráficos da Light
 
@@ -474,9 +560,19 @@ Sobre os documentos:
 Sobre o parse e os chunks:
 
 - O parse em CPU leva minutos por documento na primeira vez (ver a tabela acima).
-- A hierarquia de seções depende da numeração das notas. Subtítulo sem numeração, em página onde
-  o título da nota não aparece, fica sem a seção-mãe. A escolha foi perder a seção-mãe a exibir
-  uma errada.
+- **Subtítulos sem numeração fora das notas.** No relatório da administração os subtítulos não
+  são numerados, então não há como saber qual está dentro de qual. Cada um vale sozinho, a não
+  ser quando vem colado no título anterior. Na Light há três seções chamadas "Desempenho
+  Financeiro" (distribuidora, geradora e comercializadora); o texto do chunk diz de qual empresa
+  fala, a seção não.
+- **Seção de gráfico.** O gráfico fica na seção do último título lido antes dele, que nem sempre
+  é o assunto dele: o gráfico de perdas totais da Light (p. 6) está sob "Efeito médio para o
+  consumidor". O título do próprio gráfico está no texto do chunk.
+- **Tabela muito irregular.** No balanço social da Light (p. 15) o modelo de tabelas juntou o
+  primeiro bloco ao cabeçalho e deixou duas células de fora (ver a auditoria acima).
+- **Correção de cabeçalho de tabela.** Só trata os dois padrões descritos na etapa 1. Outro erro
+  de estrutura do modelo de tabelas, se houver, passa sem ser notado: a auditoria confere se os
+  números existem na página, não se cada número está na coluna certa.
 
 Sobre a unidade:
 
@@ -514,7 +610,7 @@ Sobre a aplicação:
 indexer/
 ├─ docker-compose.yml, Dockerfile     # alvos "light" (api, index-worker) e "parse" (Docling + OCR)
 ├─ data/pdfs/                         # os três PDFs do teste
-├─ scripts/smoke.py                   # fluxo completo pela API
+├─ scripts/                           # smoke.py (fluxo completo), audit_index.py, eval_search.py
 ├─ app/
 │  ├─ main.py, config.py, schemas.py
 │  ├─ db.py, models.py, repo.py       # Postgres: usuários, documentos, jobs
@@ -530,7 +626,7 @@ indexer/
 │     ├─ chunker.py                   # seções, texto, tabelas
 │     ├─ embedder.py, vector_store.py # vetores e Qdrant
 │     └─ indexing.py                  # junta as etapas da indexação
-└─ tests/                             # 96 testes, sem rede nem contêiner
+└─ tests/                             # 111 testes, sem rede nem contêiner
 ```
 
 ## Caminho para produção no Azure

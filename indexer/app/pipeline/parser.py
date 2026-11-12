@@ -10,6 +10,7 @@ import os
 import sys
 from collections.abc import Callable
 from importlib.metadata import version
+from itertools import pairwise
 from pathlib import Path
 
 from docling.datamodel.base_models import InputFormat
@@ -26,6 +27,7 @@ from docling_core.types.doc import (
     ListItem,
     PictureItem,
     SectionHeaderItem,
+    TableData,
     TableItem,
     TextItem,
 )
@@ -42,6 +44,9 @@ ProgressCallback = Callable[[int, int], None]  # (páginas concluídas, total)
 _MIN_NATIVE_CHARS = 20
 _HEADING_LABELS = {DocItemLabel.TITLE, DocItemLabel.SECTION_HEADER}
 _SKIP_LABELS = {DocItemLabel.PAGE_HEADER, DocItemLabel.PAGE_FOOTER, DocItemLabel.CAPTION}
+# Correção de cabeçalho de tabela (ver fix_header_spans e merge_split_cells), em pontos do PDF.
+_SPAN_MAX_WIDTH = 1.5  # texto mais estreito que isto, em colunas, não cobre duas colunas
+_WORD_GAP_MAX = 8.0  # espaço entre duas palavras de um mesmo texto
 
 
 _LINUX_FONT_DIRS = ("/usr/share/fonts", "/usr/local/share/fonts", "~/.fonts", "~/.local/share/fonts")
@@ -168,6 +173,99 @@ def _item_text(node: TextItem) -> str:
     return node.text
 
 
+def fix_header_spans(data: TableData) -> int:
+    """Corrige célula de cabeçalho que o modelo de tabelas estendeu por colunas demais.
+
+    Na DRE da Brasal o cabeçalho tem três linhas: "Controladora | Consolidado", depois
+    "2022 | 2021 | 2022 | 2021" e, só sob as colunas de 2021, "(não auditado)". O modelo às
+    vezes dá a essa última célula a largura de duas colunas, e o cabeçalho passa a dizer que
+    2022 também não foi auditado.
+
+    Só é candidata a célula que está na linha logo *abaixo* de cabeçalhos de uma coluna só:
+    cabeçalho de grupo ("Controladora") fica acima das colunas que agrupa, nunca abaixo. (Um
+    segundo bloco no meio da tabela, com o seu próprio "Consolidado", tem linhas de dados logo
+    acima, não cabeçalhos, e por isso não é candidato.) A célula é reduzida a uma coluna quando
+    o texto é estreito demais para cobrir duas e está escrito em cima de uma delas. Devolve
+    quantas mudou."""
+    headers = [cell for cell in data.table_cells if cell.column_header and cell.bbox is not None]
+    changed = 0
+    for cell in headers:
+        first, last = cell.start_col_offset_idx, cell.end_col_offset_idx
+        if last - first < 2:
+            continue
+        # Referência: os cabeçalhos de uma coluna só na linha de cima, dentro da largura da célula.
+        columns: dict[int, float] = {}
+        for other in headers:
+            column = other.start_col_offset_idx
+            if (other.end_col_offset_idx - column == 1 and first <= column < last
+                    and other.end_row_offset_idx == cell.start_row_offset_idx and column not in columns):
+                columns[column] = _center(other)
+        if len(columns) != last - first:
+            continue
+        pitch = min(b - a for a, b in pairwise(sorted(columns.values())))
+        column, distance = min(((col, abs(_center(cell) - x)) for col, x in columns.items()),
+                               key=lambda pair: pair[1])
+        if cell.bbox.r - cell.bbox.l < _SPAN_MAX_WIDTH * pitch and distance < pitch / 2:
+            cell.start_col_offset_idx, cell.end_col_offset_idx, cell.col_span = column, column + 1, 1
+            changed += 1
+    return changed
+
+
+def merge_split_cells(data: TableData) -> int:
+    """Junta um texto que o modelo de tabelas partiu entre duas colunas vizinhas.
+
+    "(não auditado)", escrito sobre a coluna de 2021, às vezes sai como "(não" na coluna de
+    2022 e "auditado)" na de 2021. O sinal é estreito de propósito: uma célula que é só o
+    começo de um parêntese ("(não"), a célula ao lado, na mesma linha, que é só o fim dele
+    ("auditado)"), e um espaço de palavra entre as duas. Um formulário com várias opções
+    "( ) direção ( X ) gerências" na mesma linha não se encaixa e fica como está. O texto
+    inteiro vai para a coluna sobre a qual ele está centrado. Devolve quantos juntou."""
+    cells = [cell for cell in data.table_cells if cell.bbox is not None
+             and cell.end_col_offset_idx - cell.start_col_offset_idx == 1]
+    merged = 0
+    for left in cells:
+        opening = left.text.strip()
+        if not opening.startswith("(") or ")" in opening:
+            continue
+        for right in cells:
+            closing = right.text.strip()
+            if (right.start_row_offset_idx != left.start_row_offset_idx
+                    or right.start_col_offset_idx != left.end_col_offset_idx
+                    or not closing.endswith(")") or "(" in closing
+                    or not 0 <= right.bbox.l - left.bbox.r <= _WORD_GAP_MAX):
+                continue
+            centers = {}
+            for side in (left, right):
+                others = [_center(c) for c in cells if c is not side and c.text.strip()
+                          and c.start_col_offset_idx == side.start_col_offset_idx
+                          and c.start_row_offset_idx != side.start_row_offset_idx]
+                centers[id(side)] = sorted(others)[len(others) // 2] if others else _center(side)
+            middle = (left.bbox.l + right.bbox.r) / 2
+            keep, drop = ((left, right) if abs(middle - centers[id(left)]) < abs(middle - centers[id(right)])
+                          else (right, left))
+            keep.text = f"{left.text.strip()} {right.text.strip()}"
+            keep.bbox.l, keep.bbox.r = left.bbox.l, right.bbox.r
+            drop.text = ""
+            merged += 1
+            break
+    return merged
+
+
+def _center(cell) -> float:
+    return (cell.bbox.l + cell.bbox.r) / 2
+
+
+def _page_span(prov: list) -> tuple[int, int | None]:
+    """Página em que o item começa e, se ele atravessa a quebra, a página em que termina.
+
+    O Docling junta num item só o parágrafo que começa numa página e continua na seguinte, com
+    uma procedência por página. Guardar só a primeira faria um trecho da página 28 ser citado
+    como página 27."""
+    first = prov[0].page_no
+    last = max(entry.page_no for entry in prov)
+    return first, (last if last > first else None)
+
+
 def _convert_items(document: DoclingDocument, out_dir: Path,
                    figure_count: int = 0) -> tuple[list[ParsedItem], int]:
     """Itens do documento (ou de um lote de páginas) no esquema próprio. `figure_count` é o
@@ -179,10 +277,12 @@ def _convert_items(document: DoclingDocument, out_dir: Path,
         prov = getattr(node, "prov", None)
         if not prov:
             continue
-        page_no = prov[0].page_no
+        page_no, page_end = _page_span(prov)
         label = getattr(node, "label", None)
 
         if isinstance(node, TableItem):
+            merge_split_cells(node.data)
+            fix_header_spans(node.data)
             markdown = node.export_to_markdown(doc=document)
             if markdown.strip():
                 items.append(ParsedItem(type="table", text=markdown, page=page_no))
@@ -209,5 +309,5 @@ def _convert_items(document: DoclingDocument, out_dir: Path,
                 level = node.level if isinstance(node, SectionHeaderItem) else 1
                 items.append(ParsedItem(type="heading", text=node.text, page=page_no, level=level))
             else:
-                items.append(ParsedItem(type="text", text=_item_text(node), page=page_no))
+                items.append(ParsedItem(type="text", text=_item_text(node), page=page_no, page_end=page_end))
     return items, figure_count

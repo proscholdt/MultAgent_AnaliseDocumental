@@ -58,6 +58,7 @@ class ParsedItem(BaseModel):
     type: ItemType
     text: str = ""  # parágrafo, título, tabela em Markdown ou legenda da figura
     page: int  # página do PDF, 1-based
+    page_end: int | None = None  # última página, quando o parágrafo continua na página seguinte
     level: int | None = None  # nível do título, quando o parser informa
     image_path: str | None = None  # recorte da figura, relativo à pasta do documento
     area_ratio: float | None = None  # área da figura / área da página

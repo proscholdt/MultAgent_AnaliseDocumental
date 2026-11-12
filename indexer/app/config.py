@@ -6,7 +6,7 @@ from typing import Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Muda sempre que parse/chunking mudam de forma incompatível; invalida o cache de parse.
-PIPELINE_VERSION = "2"
+PIPELINE_VERSION = "4"
 
 INSECURE_JWT_SECRET = "troque-este-segredo"
 

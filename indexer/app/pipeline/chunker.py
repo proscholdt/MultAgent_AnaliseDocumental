@@ -34,7 +34,24 @@ _RUNNING_EDGE_SHARE = 0.8
 _ANY_CONTINUATION = re.compile(r"\s*[-–—]*\s*\(?continua[cç][aã]o\)?", re.IGNORECASE)
 
 _CONTINUATION = re.compile(r"\s*(?:[-–—]{1,2}\s*continua[cç][aã]o|\(continua[cç][aã]o\))\s*$", re.IGNORECASE)
-_NUMBERED = re.compile(r"^(\d{1,2}(?:\.\d{1,2}){0,3})\.?\s+\S")
+# Numeração de nota: "22.", "22.1", "3.14.2", "7.Investimentos". Grupos: número, ponto final,
+# espaço e o primeiro caractere do título.
+_NUMBERED = re.compile(r"^(\d{1,2}(?:\.\d{1,2}){0,3})(\.?)(\s*)(\S)")
+_TITLE_OPENERS = "\"“'(["
+# As demonstrações primárias têm nome fixo. Quando o layout rotula o título como texto comum,
+# é por esse nome que ele é reconhecido.
+_STATEMENT_TITLE = re.compile(
+    r"^(?:balanços?\s+patrimonia(?:l|is)"
+    r"|demonstraç(?:ão|ões)\s+d[aeo]s?\s+(?:resultados?(?:\s+abrangentes?)?|fluxos?\s+de\s+caixa"
+    r"|mutaç(?:ão|ões)\s+d[eo]\s+patrimônio\s+líquido|valor(?:es)?\s+adicionados?))\b",
+    re.IGNORECASE,
+)
+_STATEMENT_TITLE_MAX_CHARS = 200
+_MERGED_TITLE_MAX_CHARS = 240
+_TOC_LEADER = re.compile(r"\.{5,}")
+_TOC_MIN_LINES = 5
+_FOOTNOTE = re.compile(r"^(?:\(\w{1,3}\)|\*{1,3}|\d{1,2}\))\s*\S")
+_FOOTNOTE_MAX_TOKENS = 80
 _LETTERED = re.compile(r"^(?:[a-z]\)|\([a-z]\)|\([ivx]+\))\s+\S", re.IGNORECASE)
 _LETTERED_TITLE = re.compile(r"^[a-z]\)\s+[A-ZÀ-Ý]")  # "b) Receitas de contratos com clientes"
 _HEADING_MAX_CHARS = 120
@@ -86,10 +103,44 @@ class Chunk:
     suspicious: bool = False
 
 
+def note_number(title: str) -> str | None:
+    """Número de nota no início do título ("22.1 Provisões" → "22.1"), ou None.
+
+    Depois do número tem de vir um título: ponto ou espaço, e uma maiúscula. "31 de dezembro
+    de 2022" e "5 anos" começam com número e não são notas."""
+    numbered = _NUMBERED.match(title)
+    if not numbered:
+        return None
+    number, dot, space, first = numbered.groups()
+    if not (dot or space) or not (first.isupper() or first in _TITLE_OPENERS):
+        return None
+    return number
+
+
 def numbering_depth(title: str) -> int | None:
     """Profundidade pela numeração: "22." → 1, "22.1" → 2, "22.1.4" → 3. None se não numerado."""
-    numbered = _NUMBERED.match(title)
-    return numbered.group(1).count(".") + 1 if numbered else None
+    number = note_number(title)
+    return number.count(".") + 1 if number else None
+
+
+def _same_title(a: str, b: str) -> bool:
+    """Mesmo título, ignorando caixa, espaços e pontuação ("7.Investimentos" = "7. Investimentos")."""
+    return re.sub(r"\W+", "", a).casefold() == re.sub(r"\W+", "", b).casefold()
+
+
+def _looks_like_note_title(text: str) -> str | None:
+    """Número da nota se a linha tem cara de título numerado: curta, sem pontuação final."""
+    line = text.strip()
+    if not line or "\n" in line or len(line) > _HEADING_MAX_CHARS or line[-1] in ".;:,":
+        return None
+    return note_number(line)
+
+
+def is_table_of_contents(text: str) -> bool:
+    """Índice: a maioria das linhas termina em pontilhado e número de página."""
+    lines = [line for line in text.splitlines() if line.strip()]
+    leaders = sum(1 for line in lines if _TOC_LEADER.search(line))
+    return leaders >= _TOC_MIN_LINES and leaders >= len(lines) / 2
 
 
 def _running_key(text: str) -> str:
@@ -102,7 +153,11 @@ def drop_running_headers(items: list[ParsedItem], page_count: int) -> list[Parse
     Ex.: o nome da empresa e "Notas explicativas às demonstrações financeiras" no topo de
     cada página. Se ficassem, virariam "seção" de tudo e gerariam dezenas de chunks iguais.
     Critério: linha curta que se repete em muitas páginas e quase sempre na borda da página.
-    Tabelas e figuras nunca são removidas.
+    Num documento longo, "muitas páginas" é uma fração dele. Em dois casos bastam cinco: linha
+    no pé da página (ali só há rodapé, como "As notas explicativas são parte integrante das
+    demonstrações financeiras") e linha que o layout rotulou como título (o logotipo "Deloitte."
+    no alto de cada página do parecer). Uma linha de texto repetida no topo pode ser o título
+    de uma tabela, e por isso continua exigindo a fração. Tabelas e figuras nunca são removidas.
     """
     by_page: dict[int, list[ParsedItem]] = {}
     for item in items:
@@ -110,6 +165,8 @@ def drop_running_headers(items: list[ParsedItem], page_count: int) -> list[Parse
 
     pages_seen: dict[str, set[int]] = {}
     at_edge: dict[str, int] = {}
+    at_bottom: dict[str, int] = {}
+    as_heading: dict[str, int] = {}
     occurrences: dict[str, int] = {}
     for page, page_items in by_page.items():
         for position, item in enumerate(page_items):
@@ -118,17 +175,24 @@ def drop_running_headers(items: list[ParsedItem], page_count: int) -> list[Parse
             key = _running_key(item.text)
             # Título numerado que se repete ("3. Sumário...--Continuação" em dez páginas) é
             # continuação de nota, não cabeçalho corrido: é ele que mantém a seção certa.
-            if not key or _NUMBERED.match(item.text) or _LETTERED.match(item.text):
+            if not key or note_number(item.text) or _LETTERED.match(item.text):
                 continue
             pages_seen.setdefault(key, set()).add(page)
             occurrences[key] = occurrences.get(key, 0) + 1
-            edge = position < _RUNNING_TOP_ITEMS or position >= len(page_items) - _RUNNING_BOTTOM_ITEMS
-            at_edge[key] = at_edge.get(key, 0) + int(edge)
+            bottom = position >= len(page_items) - _RUNNING_BOTTOM_ITEMS
+            at_bottom[key] = at_bottom.get(key, 0) + int(bottom)
+            at_edge[key] = at_edge.get(key, 0) + int(bottom or position < _RUNNING_TOP_ITEMS)
+            as_heading[key] = as_heading.get(key, 0) + int(item.type == "heading")
+
+    def mostly(counter: dict[str, int], key: str) -> bool:
+        return counter[key] / occurrences[key] >= _RUNNING_EDGE_SHARE
 
     min_pages = max(_RUNNING_MIN_PAGES, math.ceil(page_count * _RUNNING_MIN_PAGE_SHARE))
     running = {
         key for key, pages in pages_seen.items()
-        if len(pages) >= min_pages and at_edge[key] / occurrences[key] >= _RUNNING_EDGE_SHARE
+        if (len(pages) >= min_pages and mostly(at_edge, key))
+        or (len(pages) >= _RUNNING_MIN_PAGES and (mostly(at_bottom, key)
+                                                  or (mostly(at_edge, key) and mostly(as_heading, key))))
     }
     return [item for item in items
             if item.type not in ("heading", "text") or _running_key(item.text) not in running]
@@ -204,7 +268,11 @@ class _Builder:
         self.numbered: list[str] = []  # só a cadeia numerada ("22." > "22.1")
         self.numbered_page: int | None = None  # última página em que a cadeia numerada apareceu
         self.last_note: int | None = None  # número da última nota de primeiro nível vista
-        self.buffer: list[tuple[str, int, int]] = []  # (parágrafo, página, tokens)
+        self.seen: dict[str, str] = {}  # número da nota → título, para achar o pai pelo número
+        self.fresh = False  # o último item foi um título sem número e nada veio depois dele
+        self.items: list[ParsedItem] = []  # itens na ordem de leitura, para olhar adiante
+        self.position = 0  # índice do item em processamento
+        self.buffer: list[tuple[str, int, int, int]] = []  # (parágrafo, página, tokens, página final)
 
     # -- emissão ------------------------------------------------------------
 
@@ -214,6 +282,9 @@ class _Builder:
         tokens = count_tokens(text) if text else 0
         # Resto de layout (uma letra solta de um sumário, por exemplo) não vira chunk.
         if not text or (chunk_type == "text" and tokens < _MIN_TEXT_TOKENS):
+            return
+        # O índice repete o nome de todas as seções e casaria com qualquer busca por elas.
+        if chunk_type != "figure" and is_table_of_contents(text):
             return
         if chunk_type == "figure":
             # A unidade de um gráfico é a que está escrita nele (GWh, %, R$ milhões). A unidade
@@ -243,9 +314,9 @@ class _Builder:
     def flush(self, keep_overlap: bool = False) -> None:
         if not self.buffer:
             return
-        text = "\n\n".join(paragraph for paragraph, _, _ in self.buffer)
-        pages = [page for _, page, _ in self.buffer]
-        self.emit("text", "native_text", text, min(pages), max(pages))
+        text = "\n\n".join(paragraph for paragraph, _, _, _ in self.buffer)
+        self.emit("text", "native_text", text, min(start for _, start, _, _ in self.buffer),
+                  max(end for _, _, _, end in self.buffer))
         last = self.buffer[-1]
         self.buffer = [last] if keep_overlap and last[2] <= _OVERLAP_MAX_TOKENS else []
 
@@ -256,43 +327,89 @@ class _Builder:
         explícita; o nível de título inferido pelo parser a partir do estilo não é confiável
         (colocava a DRE "dentro" do relatório do auditor).
 
-        - Numerado ("22.1 ..."): entra na cadeia numerada pela profundidade.
+        - Numerado ("22.1 ..."): os ancestrais são as notas já vistas cujo número é prefixo
+          do dele ("22"). O pai de "3.4" é a nota "3", nunca a "3.3" que veio antes; se a
+          nota "3" não foi vista, "3.4" fica sem pai.
         - Letra ("a) ..."): filho da cadeia numerada atual.
-        - Sem numeração: filho da cadeia numerada se ela apareceu nesta mesma página
-          (subtítulo de nota); senão abre uma parte nova do documento e zera a cadeia.
-          Na dúvida prefere-se perder o ancestral a exibir um ancestral errado.
+        - Sem numeração: filho da cadeia numerada se ainda estamos dentro das notas (a cadeia
+          apareceu nesta página, ou mais adiante há um título que continua a nota atual ou
+          abre a seguinte); senão abre uma parte nova do documento e zera a cadeia.
+        - Sem numeração logo depois de outro sem numeração, sem nada entre os dois: é o mesmo
+          título quebrado em linhas ("LIGHT S.A." / "DEMONSTRAÇÕES DE RESULTADOS" / "PARA OS
+          EXERCÍCIOS FINDOS..."), e as linhas são juntadas.
         """
         title = _CONTINUATION.sub("", text).strip()
-        if not title:
+        if len(title) < 2:
             return
-        depth = numbering_depth(title)
+        number = note_number(title)
 
-        if depth is not None:
-            self.last_note = int(_NUMBERED.match(title).group(1).split(".")[0])
-            # "6. Contas a receber--Continuação" no topo da página seguinte não abre seção nova.
-            if len(self.numbered) >= depth and self.numbered[depth - 1] == title:
+        if number is not None:
+            self.fresh = False
+            parts = number.split(".")
+            top = int(parts[0])
+            # "6. Contas a receber--Continuação" no topo da página seguinte não abre seção nova
+            # nem desfaz a subseção em que o texto está.
+            if any(_same_title(known, title) for known in self.numbered):
                 self.numbered_page = page
+                self.last_note = top
                 return
             self.flush()
-            self.numbered = self.numbered[: depth - 1] + [title]
+            if len(parts) == 1 and self.last_note is not None and top < self.last_note:
+                self.seen.clear()  # a numeração recomeçou: é outra sequência de notas
+            self.last_note = top
+            self.seen[number] = title
+            ancestors = [self.seen[prefix] for k in range(1, len(parts))
+                         if (prefix := ".".join(parts[:k])) in self.seen]
+            self.numbered = [*ancestors, title]
             self.numbered_page = page
             self.sections = list(self.numbered)
             return
 
-        if self.sections and self.sections[-1] == title:
+        if self.sections and _same_title(self.sections[-1], title):
             if self.numbered:
                 self.numbered_page = page
             return
+        lettered = bool(_LETTERED.match(title))
+        if (self.fresh and not lettered
+                and len(self.sections[-1]) + len(title) + 3 <= _MERGED_TITLE_MAX_CHARS):
+            self.sections[-1] = f"{self.sections[-1]} · {title}"
+            return
         self.flush()
-        if _LETTERED.match(title) and self.numbered:
+        if lettered and self.numbered:
             self.numbered_page = page
             self.sections = [*self.numbered, title]
-        elif self.numbered and self.numbered_page == page:
+            self.fresh = False
+        elif self.numbered and (self.numbered_page == page or self._inside_notes()):
             self.sections = [*self.numbered, title]
+            self.fresh = True
         else:
             self.numbered = []
             self.numbered_page = None
             self.sections = [title]
+            self.fresh = True
+
+    def _inside_notes(self) -> bool:
+        """Há, mais adiante, um título numerado que continua a nota atual ou abre a seguinte?
+
+        Se há, o subtítulo sem número que está sendo lido ainda pertence às notas, mesmo numa
+        página em que o título da nota não aparece. Se a numeração acaba ou recomeça, ele abre
+        outra parte do documento (o parecer do auditor depois das notas, por exemplo)."""
+        if self.last_note is None:
+            return False
+        for item in self.items[self.position + 1:]:
+            if item.type == "heading":
+                number = note_number(_CONTINUATION.sub("", item.text).strip())
+            elif item.type == "text":
+                number = _looks_like_note_title(item.text)
+            else:
+                continue
+            if number is None:
+                continue
+            if int(number.split(".")[0]) in (self.last_note, self.last_note + 1):
+                return True
+            if item.type == "heading":
+                return False
+        return False
 
     def is_note_heading(self, text: str) -> bool:
         """Parágrafo que na verdade é título de nota.
@@ -309,39 +426,68 @@ class _Builder:
             return False
         numbered = _NUMBERED.match(line)
         if numbered:
-            if not numbered.group(0)[-1].isupper():
+            number, dot, _space, first = numbered.groups()
+            if note_number(line) is None or not first.isupper():
                 return False
-            parts = numbered.group(1).split(".")
+            parts = number.split(".")
             note = int(parts[0])
             if len(parts) > 1:  # "3.1 ...": subitem da nota atual
                 return note == self.last_note
-            if line[len(numbered.group(1))] != ".":  # "5 anos" não é a nota 5
+            if not dot:  # "5 Anos" não é a nota 5
                 return False
             if self.last_note is None:
                 return note == 1
             if note == self.last_note:  # só como continuação da nota aberta ("3. ...--Continuação")
-                return bool(self.numbered) and _CONTINUATION.sub("", line).strip() == self.numbered[0]
+                return bool(self.numbered) and _same_title(_CONTINUATION.sub("", line), self.numbered[0])
             return note == self.last_note + 1
         lettered = _LETTERED_TITLE.match(line)
         return bool(lettered and self.numbered)
 
-    def add_text(self, text: str, page: int) -> None:
+    def add_text(self, text: str, page: int, page_end: int | None = None) -> None:
+        """`page_end` é a última página de um parágrafo que continua na página seguinte."""
+        end = max(page, page_end or page)
         text = text.strip()
-        if not text:
+        if len(text) < 2:  # letra solta de um logotipo ou de um sumário
             return
         if self.is_note_heading(text):
             self.add_heading(text, page)
             return
+        if self._follows_table(page):
+            # "(a) Não auditado pelos auditores independentes" logo abaixo da tabela explica uma
+            # marca que está dentro dela. O parser costuma entregar a nota duas vezes: dentro do
+            # texto da tabela e de novo como parágrafo. A cópia é descartada; se a nota não
+            # veio na tabela, é anexada a ela, em vez de virar um chunk solto de dez tokens.
+            table = self.chunks[-1]
+            if " ".join(text.split()) in " ".join(table.text.split()):
+                return
+            if _FOOTNOTE.match(text) and count_tokens(text) <= _FOOTNOTE_MAX_TOKENS:
+                table.text = f"{table.text}\n\n{text}"
+                table.token_count = count_tokens(table.text)
+                table.page_end = max(table.page_end, end)
+                return
+        if (len(text) <= _STATEMENT_TITLE_MAX_CHARS and "\n" not in text and text[-1] not in ".;:,"
+                and _STATEMENT_TITLE.match(text)):
+            # "Balanços patrimoniais Em 31 de dezembro de 2022 e 2021" rotulado como texto comum:
+            # abre a seção da demonstração e continua no texto, como título da tabela.
+            self.add_heading(text, page)
+        self.fresh = False
         tokens = count_tokens(text)
         if tokens > self.settings.chunk_max_tokens:
             self.flush()
             for piece in split_long_text(text, self.settings.chunk_max_tokens):
-                self.emit("text", "native_text", piece, page, page)
+                self.emit("text", "native_text", piece, page, end)
             return
-        buffered = sum(t for _, _, t in self.buffer)
+        buffered = sum(t for _, _, t, _ in self.buffer)
         if self.buffer and buffered + tokens > self.settings.chunk_target_tokens:
             self.flush(keep_overlap=True)
-        self.buffer.append((text, page, tokens))
+        self.buffer.append((text, page, tokens, end))
+
+    def _follows_table(self, page: int) -> bool:
+        """O texto vem logo depois de uma tabela, na mesma página e seção, sem nada entre os dois?"""
+        return bool(
+            not self.buffer and self.chunks and self.chunks[-1].chunk_type == "table"
+            and self.chunks[-1].page_end == page and self.chunks[-1].section_path == self.sections
+        )
 
     def take_preamble(self, page: int) -> str:
         """Retira do buffer as linhas curtas imediatamente anteriores à tabela, na mesma
@@ -351,7 +497,7 @@ class _Builder:
         while (self.buffer and len(lines) < _PREAMBLE_MAX_LINES
                and self.buffer[-1][1] == page and self.buffer[-1][2] <= _PREAMBLE_MAX_TOKENS
                and used + self.buffer[-1][2] <= _PREAMBLE_BUDGET):
-            text, _, tokens = self.buffer.pop()
+            text, _, tokens, _ = self.buffer.pop()
             lines.insert(0, text)
             used += tokens
         return "\n".join(lines)
@@ -359,6 +505,7 @@ class _Builder:
     def add_table(self, markdown: str, page: int) -> None:
         if not markdown.strip():
             return
+        self.fresh = False
         preamble = self.take_preamble(page)
         self.flush()
         for part in split_table(markdown, preamble, self.settings.table_max_tokens):
@@ -368,6 +515,7 @@ class _Builder:
         result = self.figures.get(image_path or "")
         if result is None:
             return
+        self.fresh = False
         self.flush()
         text = f"{result.text}\nLegenda: {caption.strip()}" if caption.strip() else result.text
         self.emit("figure", "vision_llm", text, page, page, result)
@@ -375,11 +523,13 @@ class _Builder:
 
 def chunk_document(parsed: ParsedDocument, figures: dict[str, FigureResult], settings: Settings) -> list[Chunk]:
     builder = _Builder(parsed, figures, settings)
-    for item in drop_running_headers(parsed.items, parsed.page_count):
+    builder.items = drop_running_headers(parsed.items, parsed.page_count)
+    for position, item in enumerate(builder.items):
+        builder.position = position
         if item.type == "heading":
             builder.add_heading(item.text, item.page)
         elif item.type == "text":
-            builder.add_text(item.text, item.page)
+            builder.add_text(item.text, item.page, item.page_end)
         elif item.type == "table":
             builder.add_table(item.text, item.page)
         elif item.type == "figure":
