@@ -42,7 +42,7 @@ O dashboard do Qdrant fica em `http://localhost:6333/dashboard`.
 ```bash
 docker compose up -d kafka postgres qdrant
 uv sync                                    # inclui Docling/torch (grupo "parse")
-uv run pytest                              # 74 testes, sem rede nem contêiner
+uv run pytest                              # 87 testes, sem rede nem contêiner
 uv run python -m app.warmup                # baixa os modelos uma vez
 uv run uvicorn app.main:app --port 8000
 uv run python -m app.workers.parse_worker
@@ -154,21 +154,31 @@ projeto — por isso o index-worker não precisa de Docling.
 
 ### 2. Figuras (visão + conferência)
 
-Cada gráfico é recortado e transcrito por um modelo de visão com saída estruturada. Como um
-modelo de visão pode ler um número errado, **cada valor só entra no índice se os mesmos dígitos
-aparecerem numa segunda fonte independente**:
+Cada gráfico é recortado e transcrito por um modelo de visão com saída estruturada: para cada
+valor, o número e os rótulos que dizem a que ele se refere. O modelo pode ler um número errado,
+inventar um rótulo ou ligar o número ao rótulo errado (nos gráficos da Light ele fez as três
+coisas), então **nada do que ele devolve entra no índice sem ser conferido por uma fonte que não
+é o LLM**. As fontes são o texto nativo da página e o OCR do recorte (RapidOCR, rodado no
+parse-worker, que guarda cada texto lido com a sua posição na imagem).
 
-1. **o texto nativo da página** — gráfico vetorial, em que os rótulos são texto do PDF; ou
-2. **o OCR do recorte** (RapidOCR, rodado no parse-worker) — gráfico colado no PDF como imagem,
-   em que os números são só pixels. Um segundo leitor, de outra tecnologia, precisa ter lido o
-   mesmo número; um dígito solto no OCR não vale como prova.
+| O que o modelo afirma | Como é conferido |
+|---|---|
+| **O número** | Tem de existir no texto da página ou no OCR com os mesmos grupos de dígitos: "26,51" confere com "26.51", mas não com "2.651". Um dígito solto no OCR não vale. Quando só o OCR confirma e o número é do tipo "1.234" (milhar ou decimal?), o separador também tem de ser o mesmo. O número é gravado como a fonte o escreve, não como o modelo o devolveu. |
+| **O texto** (título, rótulo, nota) | As palavras têm de existir na figura ou na página. Rótulo tem de estar escrito no recorte. Nota com número não entra. |
+| **A ligação rótulo → número** | Tem de aparecer na posição. O rótulo vale para um número quando é o texto mais próximo dele na linha do eixo (colunas) ou está na mesma linha (barras horizontais). Além disso, a região do rótulo tem de conter os números que o modelo ligou a ele e não conter números ligados a outro rótulo. |
 
-O que não confere em nenhuma das duas é descartado do texto e registrado em `unverified_values`.
-O chunk guarda `verified_ratio`, `verified_by_ocr` (quantos valores só o OCR confirmou) e
-`extraction_method = "vision_llm"`, e o próprio texto diz quantos valores vieram de cada fonte.
-A conferência garante que o número está no gráfico; a associação entre número e rótulo
-continua sendo a do modelo de visão. Logotipos são filtrados
-por área antes de qualquer chamada.
+O que não confere é omitido do texto e registrado em `unverified_values`. Um valor cujo rótulo
+não conferiu continua no chunk, na linha "Valores sem rótulo conferido".
+
+**Legenda de cores não é indexada como ligação.** Saber que a barra laranja é "Uso Rede" depende
+da cor, e nenhuma das duas fontes confere cor. Os nomes da legenda entram no chunk como "Outros
+textos da figura, sem ligação conferida com os valores", para a busca achar o gráfico, mas o
+índice não afirma qual valor é de qual série.
+
+O chunk guarda `verified_ratio` (valores conferidos), `verified_by_ocr` (quantos só o OCR
+confirmou), `verified_labels_ratio` (ligações rótulo-valor conferidas) e
+`extraction_method = "vision_llm"`; o próprio texto traz essas contagens. Logotipos são
+filtrados por área antes de qualquer chamada.
 
 ### 3. Metadados
 
@@ -223,7 +233,7 @@ Coleção `financial_docs`:
 
 Payload: `user_id`, `doc_id`, `file_name`, `company`, `period`, `doc_type`, `unit`, `chunk_index`,
 `chunk_type` (`text` \| `table` \| `figure`), `extraction_method` (`native_text` \| `table_model` \|
-`vision_llm`), `verified_ratio`, `verified_by_ocr`, `unverified_values`, `section_path`, `page_start`, `page_end`,
+`vision_llm`), `verified_ratio`, `verified_by_ocr`, `verified_labels_ratio`, `unverified_values`, `section_path`, `page_start`, `page_end`,
 `text`, `context_header`, `token_count`, `suspicious`, `indexed_at`, `pipeline_version`.
 
 Índices de payload: `user_id` (tenant), `doc_id`, `company`, `chunk_type`, `extraction_method`,
@@ -248,8 +258,9 @@ client.query_points(
 
 - Texto e tabelas são extraídos de forma determinística; o LLM não reescreve nem resume nada.
 - As duas únicas chamadas de LLM (figuras e metadados) têm saída validada por schema e são
-  conferidas contra uma fonte que não é o LLM: o texto nativo do PDF e, para gráficos em
-  imagem, o OCR do recorte. O que não confere não entra.
+  conferidas contra uma fonte que não é o LLM: o texto nativo do PDF e o OCR do recorte, com a
+  posição de cada texto. Nos gráficos isso vale para o número, para o rótulo e para a ligação
+  entre os dois. O que não confere não entra.
 - O texto é preservado como está no documento, inclusive erros da fonte (ex.: "1;061;410" na
   nota 3.3 da Brasal). Sinalizar inconsistência é papel do agente, não do indexador.
 - Todo chunk carrega página e seção; cada origem pode ser aberta no PDF.
@@ -298,13 +309,25 @@ O que foi verificado de ponta a ponta, em contêineres e com a OpenAI real:
   literal da p. 1. O período da Millet veio do regex, porque o trecho citado pelo modelo não
   existia literalmente na página — o fallback funcionou como desenhado.
 - **Gráficos da Light:** 9 recortes passaram no filtro de área; 2 foram classificados como
-  decorativos e 7 transcritos, todos com `verified_ratio = 1`. Em 3 deles os valores existem no
-  texto da página (perdas totais na p. 6, incluindo "26,51%" e "21,53%"; arrecadação na p. 6;
-  PECLD/ROB na p. 7). Os outros 4 são imagens e foram confirmados pelo OCR do recorte: efeito
-  médio do reajuste tarifário (p. 5, 7 valores), consumo por classe (p. 5), carga fio e perda
-  não-técnica (p. 6, 10 valores) e composição acionária (p. 11, 4 valores). Antes do OCR esses
-  4 ficavam fora do índice. O OCR dos 9 recortes levou 17 s e não refaz o parse nem a chamada
-  ao modelo de visão.
+  decorativos e 7 transcritos, todos com `verified_ratio = 1` (105 valores). Em 3 deles os
+  valores existem no texto da página (perdas totais, arrecadação e PECLD/ROB, p. 6 e 7); os
+  outros 4 são imagens e foram confirmados pelo OCR do recorte (efeito médio do reajuste e
+  consumo por classe na p. 5, carga fio na p. 6, composição acionária na p. 11). O OCR dos 9
+  recortes levou cerca de 15 s e não refaz o parse.
+- **Ligação rótulo → valor nos mesmos 7 gráficos** (reindexação de 12/11/2026): das 211 ligações
+  que o modelo de visão afirmou, 120 foram conferidas pela posição e indexadas; as outras 91
+  foram omitidas. Todas as 120 foram comparadas com as imagens e estão corretas. Entre as
+  omitidas há erros reais do modelo, que a versão anterior indexava:
+  - no consumo por classe (p. 5), ele trocava Cativo e Uso Rede na classe Industrial;
+  - nas perdas totais (p. 6), atribuía à série errada as curvas de percentual;
+  - numa das execuções leu "Efetivo médio" onde está escrito "Efeito médio" e "27,76%" onde
+    está "27,27%"; o rótulo e o número foram barrados.
+
+  O custo da regra: a série da legenda não é indexada como ligação (as 91 omissões são quase todas
+  isso). O chunk da arrecadação, por exemplo, traz "Varejo: 94,2%; 94,0%" sem dizer qual é de
+  dez/21 e qual é de dez/22.
+- No gráfico de arrecadação (p. 6) o modelo devolveu os oito valores com ponto ("94.2%"); o
+  índice guarda "94,2%", a forma que está na página.
 - **Busca híbrida:** "alavancagem dívida líquida EBITDA covenants" traz a Light p. 10 no topo,
   seguida das notas de covenants; "Lei 14.385" (termo exato) traz as páginas 114 e 28 da Light;
   "risco de liquidez e vencimento das dívidas" traz a nota de risco de liquidez da Light e da Millet.
@@ -321,7 +344,18 @@ O que foi verificado de ponta a ponta, em contêineres e com a OpenAI real:
 - O parse em CPU leva minutos por documento na primeira vez (ver medições acima).
 - Valor de gráfico só é indexado se confirmado pelo texto da página ou pelo OCR do recorte. Se
   o gráfico é uma imagem e o OCR não lê o número (texto muito pequeno, por exemplo), ele fica só
-  em `unverified_values`. A conferência também não valida a qual rótulo o número pertence.
+  em `unverified_values`.
+- A ligação entre rótulo e valor depende de o OCR ter localizado os dois no recorte. Em gráfico
+  pequeno o OCR não acha tudo: no PECLD/ROB (p. 7) dois dos quatro valores ficam sem rótulo.
+- A ligação por cor (legenda) não é conferida e por isso não é indexada: o chunk lista os nomes
+  da legenda, mas não diz qual valor é de qual série. Quem precisar disso tem de olhar a imagem.
+- A conferência por posição é uma regra geométrica, não uma leitura do gráfico. Ela foi
+  calibrada nos 7 gráficos da Light; um layout muito diferente (pizza com legenda lateral,
+  rótulos inclinados) tende a perder rótulos, não a aceitar rótulo errado, mas isso não foi medido.
+- Um recorte com dois gráficos lado a lado (carga fio e perda não-técnica, p. 6) gera um chunk
+  só; o título de cada gráfico só fica ligado aos valores mais próximos dele.
+- A transcrição do modelo de visão varia entre execuções; ela fica em cache por documento, então
+  o índice só muda se o cache for apagado.
 - A hierarquia de seções depende da numeração das notas. Subtítulo sem numeração em página onde
   o título da nota não aparece fica sem o ancestral — a escolha foi perder o ancestral a exibir
   um ancestral errado.

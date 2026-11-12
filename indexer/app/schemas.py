@@ -44,6 +44,16 @@ class DocumentEvent(BaseModel):
 ItemType = Literal["heading", "text", "table", "figure"]
 
 
+class OcrWord(BaseModel):
+    """Trecho de texto lido por OCR num recorte de figura, com a caixa em pixels do recorte."""
+
+    text: str
+    x0: float
+    y0: float
+    x1: float
+    y1: float
+
+
 class ParsedItem(BaseModel):
     type: ItemType
     text: str = ""  # parágrafo, título, tabela em Markdown ou legenda da figura
@@ -51,8 +61,9 @@ class ParsedItem(BaseModel):
     level: int | None = None  # nível do título, quando o parser informa
     image_path: str | None = None  # recorte da figura, relativo à pasta do documento
     area_ratio: float | None = None  # área da figura / área da página
-    # Texto lido por OCR no recorte da figura. None = ainda não lido; "" = lido, nada encontrado.
-    ocr_text: str | None = None
+    # Textos lidos por OCR no recorte da figura, com a posição de cada um.
+    # None = ainda não lido; [] = lido, nada encontrado.
+    ocr_words: list[OcrWord] | None = None
 
 
 class ParsedPage(BaseModel):
@@ -168,6 +179,7 @@ class ChunkOut(BaseModel):
     token_count: int
     verified_ratio: float | None = None
     verified_by_ocr: int | None = None
+    verified_labels_ratio: float | None = None
     suspicious: bool = False
     context_header: str
     text: str
