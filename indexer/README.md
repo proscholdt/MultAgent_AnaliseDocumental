@@ -76,7 +76,7 @@ O dashboard do Qdrant fica em `http://localhost:6333/dashboard`.
 ```bash
 docker compose up -d kafka postgres qdrant
 uv sync                                    # inclui Docling, torch e RapidOCR (grupo "parse")
-uv run pytest                              # 87 testes, sem rede nem contêiner
+uv run pytest                              # 96 testes, sem rede nem contêiner
 uv run python -m app.warmup                # baixa os modelos uma vez
 uv run uvicorn app.main:app --port 8000
 uv run python -m app.workers.parse_worker
@@ -248,10 +248,27 @@ O que não conferiu fica registrado em `unverified_values`. O chunk guarda `veri
   Para cada campo ele precisa informar a página e um trecho copiado dela. O valor só é aceito se
   o trecho existir literalmente naquela página; senão vale o regex e, por fim, `null`.
   Precedência: valor informado pelo usuário > LLM com evidência > regex.
-- **Unidade (R$ mil / R$ milhões):** regex determinística, **por chunk**. No relatório da Light o
-  texto da administração está em milhões e as demonstrações em milhares; uma unidade por
-  documento estaria errada em metade dele.
 - `PATCH /api/documents/{doc_id}` corrige um metadado e reindexa a partir do cache.
+
+**Unidade (R$ mil / R$ milhões)** é decidida por chunk, por regra fixa, sem LLM. No relatório da
+Light o texto da administração cita valores em milhões e as demonstrações estão em milhares; uma
+unidade por documento estaria errada em parte dele. O sistema procura a unidade escrita no
+próprio documento, nesta ordem, e para na primeira que achar:
+
+| `unit_source` | Onde a unidade foi achada | Exemplo |
+|---|---|---|
+| `chunk` | Declaração dentro do próprio chunk. É o caso típico de tabela, que leva junto as linhas de título acima dela. | "(Valores expressos em milhares de reais)", "Valor (mil R$)" |
+| `page` | Declaração no texto da página do chunk. | cabeçalho "(Em milhares de reais)" |
+| `mentions` | Valores citados no texto do chunk; vale a unidade que mais aparece. | "R$1.817 milhões" |
+| `inherited` | Convenção declarada numa página anterior, que vale até a próxima. | "(Em milhares de Reais - R$, exceto quando indicado de outra forma)" na abertura das notas |
+| vazio | Nenhuma das anteriores. | texto sobre perdas em GWh |
+
+- **Não há chute.** Se nada for achado, `unit` fica vazio. Uma versão anterior usava a unidade
+  mais comum do documento como reserva e carimbava "R$ mil" em chunks sem valor em reais.
+- **Convenção herdada.** Só vale como convenção a frase "em milhares/milhões de reais". Um
+  cabeçalho de coluna "(R$ mil)" vale para a tabela e a página dele, não para as páginas seguintes.
+- **Gráfico.** A unidade de um gráfico é só a que está escrita nele. Um gráfico de perdas em GWh
+  não recebe a unidade monetária da página nem do documento.
 
 ### 4. Chunks
 
@@ -321,7 +338,7 @@ Payload de cada ponto:
 |---|---|
 | `user_id`, `doc_id`, `file_name` | Dono e documento |
 | `company`, `period`, `doc_type` | Metadados do documento |
-| `unit` | Unidade monetária do chunk (`R$ mil`, `R$ milhões`) |
+| `unit`, `unit_source` | Unidade monetária do chunk (`R$ mil`, `R$ milhões`, ou vazio) e de onde ela veio: `chunk`, `page`, `mentions` ou `inherited` |
 | `chunk_index`, `chunk_type` | Posição no documento e tipo: `text`, `table` ou `figure` |
 | `extraction_method` | `native_text`, `table_model` ou `vision_llm` |
 | `section_path`, `page_start`, `page_end` | Seção e páginas de origem (página do arquivo PDF, 1-based) |
@@ -390,8 +407,20 @@ Em contêineres e com a OpenAI real:
 
 - **Conteúdo.** A DRE da Brasal (p. 8) é um único chunk de tabela. A gestão de capital da Millet
   (p. 42) e o endividamento da Light (p. 10, "3,32x") estão nos chunks esperados.
-- **Unidade.** Na Light, o relatório da administração sai com `unit = "R$ milhões"` e as
-  demonstrações com `"R$ mil"`.
+- **Unidade** (reindexação de 12/11/2026). Origem da unidade nos chunks de cada documento:
+
+  | Documento | No chunk | Na página | Por menções | Herdada | Sem unidade |
+  |---|---|---|---|---|---|
+  | Brasal | 6 | 128 | 0 | 0 | 9 |
+  | Millet | 7 | 110 | 0 | 0 | 9 |
+  | Light | 7 | 25 | 18 | 318 | 37 |
+
+  Brasal e Millet repetem "em milhares de reais" em toda página; a Light declara uma vez, na
+  abertura das notas, e por isso depende da convenção herdada. Os chunks sem unidade são capas e
+  parecer do auditor nos três documentos e, na Light, o relatório da administração: os sete
+  gráficos, duas tabelas operacionais (DEC/FEC e energia em MWm) e o texto sem valores em reais. No mesmo relatório, os 14
+  chunks que citam valores em milhões saem com `"R$ milhões"` (por exemplo, o do endividamento
+  na p. 10).
 - **Metadados.** Empresa e tipo dos três documentos foram aceitos com o trecho literal da p. 1.
   O período da Millet veio do regex, porque o trecho citado pelo modelo não existia literalmente
   na página. O fallback funcionou como desenhado.
@@ -449,6 +478,15 @@ Sobre o parse e os chunks:
   o título da nota não aparece, fica sem a seção-mãe. A escolha foi perder a seção-mãe a exibir
   uma errada.
 
+Sobre a unidade:
+
+- **Unidade herdada é convenção, não leitura.** Uma tabela das notas que esteja em outra unidade
+  (quantidade de ações, MWh) e não diga isso recebe a unidade vigente do documento. O campo
+  `unit_source = "inherited"` avisa o agente de que a unidade não foi lida no próprio chunk.
+- **Ordem do documento.** A convenção vale da página em que é declarada em diante. Se um
+  documento trouxer as demonstrações antes de um relatório em outra unidade, sem nova
+  declaração, as tabelas desse relatório herdam a unidade errada.
+
 Sobre os gráficos:
 
 - **Legenda de cores.** A ligação de um valor com a série da legenda não é conferida e por isso
@@ -492,7 +530,7 @@ indexer/
 │     ├─ chunker.py                   # seções, texto, tabelas
 │     ├─ embedder.py, vector_store.py # vetores e Qdrant
 │     └─ indexing.py                  # junta as etapas da indexação
-└─ tests/                             # 87 testes, sem rede nem contêiner
+└─ tests/                             # 96 testes, sem rede nem contêiner
 ```
 
 ## Caminho para produção no Azure

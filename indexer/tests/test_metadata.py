@@ -4,6 +4,7 @@ from app.pipeline.metadata import (
     DocMetaLLM,
     FieldEvidence,
     detect_declared_unit,
+    detect_scope_unit,
     infer_unit_from_mentions,
     is_grounded,
     merge_metadata,
@@ -34,6 +35,18 @@ def test_unit_from_mentions_picks_the_dominant_one():
     assert infer_unit_from_mentions(text) == "R$ milhões"
     assert infer_unit_from_mentions("prejuízo líquido de R$5.672.203 mil") == "R$ mil"
     assert infer_unit_from_mentions("sem valores monetários") is None
+
+
+@pytest.mark.parametrize(("text", "unit"), [
+    ("(Em milhares de Reais - R$, exceto quando indicado de outra forma)", "R$ mil"),
+    ("(Valores expressos em milhares de reais)", "R$ mil"),
+    ("Valores em milhões de reais", "R$ milhões"),
+    ("Valor (mil R$)", None),  # cabeçalho de coluna vale para a tabela, não para o documento
+    ("Efeitos no balanço patrimonial R$ mil", None),
+    ("investimento de 300 milhões de reais em redes", None),  # prosa, não convenção
+])
+def test_scope_unit_is_only_a_declared_convention(text, unit):
+    assert detect_scope_unit(text) == unit
 
 
 # --- empresa / período -----------------------------------------------------

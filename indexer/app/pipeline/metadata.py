@@ -28,6 +28,14 @@ _DECLARED: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"em\s+bilh[õo]es|bilh[õo]es\s+de\s+reais|R\$\s*bilh[õo]es\b", re.IGNORECASE), UNIT_BILLION),
 ]
 
+# Convenção declarada para o trecho seguinte do documento. Exige "em ... de reais" para não
+# casar com prosa como "investimento de 300 milhões de reais".
+_SCOPE: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"\bem\s+milhares\s+de\s+reais", re.IGNORECASE), UNIT_THOUSAND),
+    (re.compile(r"\bem\s+milh[õo]es\s+de\s+reais", re.IGNORECASE), UNIT_MILLION),
+    (re.compile(r"\bem\s+bilh[õo]es\s+de\s+reais", re.IGNORECASE), UNIT_BILLION),
+]
+
 # Menções em texto corrido: "R$1.817 milhões", "R$ 1,7 bilhão", "R$5.672.203 mil".
 _MENTION = re.compile(r"R\$\s?-?[\d.,]+\s*(milh(?:ão|ões)|bilh(?:ão|ões)|mil(?!h))\b", re.IGNORECASE)
 
@@ -66,11 +74,46 @@ def page_units(parsed: ParsedDocument) -> dict[int, str]:
     return units
 
 
-def resolve_unit(chunk_text: str, page: int, units_by_page: dict[int, str]) -> str | None:
-    """Ordem: declaração no próprio chunk > declaração na página > menções no texto."""
-    return (detect_declared_unit(chunk_text)
-            or units_by_page.get(page)
-            or infer_unit_from_mentions(chunk_text))
+def detect_scope_unit(text: str) -> str | None:
+    """Convenção de unidade que o documento declara para o que vem a seguir, como
+    "(Em milhares de reais, exceto quando indicado de outra forma)". Um cabeçalho de coluna
+    "(R$ mil)" não é convenção: vale só para a tabela dele."""
+    best: tuple[int, str] | None = None
+    for pattern, unit in _SCOPE:
+        match = pattern.search(text)
+        if match and (best is None or match.start() < best[0]):
+            best = (match.start(), unit)
+    return best[1] if best else None
+
+
+def scope_units(parsed: ParsedDocument) -> dict[int, str]:
+    """Unidade vigente em cada página: a última convenção declarada até ali. Na Light a
+    convenção aparece uma vez, na abertura das notas, e vale para as cem páginas seguintes.
+    Páginas anteriores à primeira declaração não têm unidade vigente."""
+    units: dict[int, str] = {}
+    current: str | None = None
+    for page in sorted(parsed.pages, key=lambda p: p.page):
+        current = detect_scope_unit(page.native_text) or current
+        if current:
+            units[page.page] = current
+    return units
+
+
+def resolve_unit(chunk_text: str, page: int, units_by_page: dict[int, str],
+                 scope_by_page: dict[int, str] | None = None) -> tuple[str | None, str | None]:
+    """Unidade do chunk e de onde ela veio. Ordem: declaração no próprio chunk ("chunk") >
+    declaração na página ("page") > menções de valores no texto ("mentions") > convenção
+    declarada numa página anterior ("inherited"). Sem nenhuma delas, a unidade fica vazia:
+    não há chute."""
+    if unit := detect_declared_unit(chunk_text):
+        return unit, "chunk"
+    if unit := units_by_page.get(page):
+        return unit, "page"
+    if unit := infer_unit_from_mentions(chunk_text):
+        return unit, "mentions"
+    if unit := (scope_by_page or {}).get(page):
+        return unit, "inherited"
+    return None, None
 
 
 # ---------------------------------------------------------------------------

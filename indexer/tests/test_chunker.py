@@ -233,7 +233,71 @@ def test_page_declared_unit_applies_to_tables_without_own_declaration(settings):
         [ParsedItem(type="table", text="| Caixa | 96.453 |\n|---|---|\n| Bancos | 1.346 |", page=2)],
         pages=[ParsedPage(page=2, native_text="Notas explicativas\n(Em milhares de reais, exceto se indicado)")],
     )
-    assert chunk_document(doc, {}, settings)[0].unit == "R$ mil"
+    chunk = chunk_document(doc, {}, settings)[0]
+    assert (chunk.unit, chunk.unit_source) == ("R$ mil", "page")
+
+
+def unit_doc() -> ParsedDocument:
+    """Relatório da administração sem convenção de unidade (p. 1-2), depois as demonstrações,
+    que declaram a convenção uma vez (p. 3) e seguem sem repeti-la (p. 4)."""
+    return make_doc(
+        [
+            ParsedItem(type="heading", text="Desempenho operacional", page=1),
+            ParsedItem(type="text", text="As perdas totais dos últimos 12 meses foram de 9.101 GWh, "
+                                         "contra 9.105 GWh no ano anterior, uma redução pequena.", page=1),
+            ParsedItem(type="table", text="| Energia (MWm) | 2022 | 2021 |\n|---|---|---|\n| Venda | 604 | 667 |", page=1),
+            ParsedItem(type="heading", text="Resultado", page=2),
+            ParsedItem(type="text", text="O EBITDA foi de R$1.817 milhões, redução de R$2.996 milhões "
+                                         "em relação ao exercício anterior.", page=2),
+            ParsedItem(type="figure", page=2, image_path="figures/perdas.png", area_ratio=0.2),
+            ParsedItem(type="heading", text="1. Contexto operacional", page=3),
+            ParsedItem(type="text", text="A Companhia tem por objeto social a participação em outras "
+                                         "sociedades, como sócia-quotista ou acionista.", page=3),
+            ParsedItem(type="heading", text="2. Caixa e equivalentes", page=4),
+            ParsedItem(type="table", text="| Caixa | 96.453 |\n|---|---|\n| Bancos | 1.346 |", page=4),
+        ],
+        pages=[
+            ParsedPage(page=1, native_text="Desempenho operacional. Perdas de 9.101 GWh."),
+            ParsedPage(page=2, native_text="Resultado. EBITDA de R$1.817 milhões."),
+            ParsedPage(page=3, native_text="Notas explicativas\n(Em milhares de reais, exceto quando indicado)"),
+            ParsedPage(page=4, native_text="2. Caixa e equivalentes\nCaixa 96.453 Bancos 1.346"),
+        ],
+    )
+
+
+def test_unit_is_never_guessed(settings):
+    """Texto e tabela sem valor em reais, antes de qualquer convenção: a unidade fica vazia,
+    em vez de receber a unidade mais comum do documento."""
+    chunks = chunk_document(unit_doc(), {}, settings)
+    losses = next(c for c in chunks if "9.101 GWh" in c.text)
+    energy = next(c for c in chunks if "MWm" in c.text)
+    assert (losses.unit, losses.unit_source) == (None, None)
+    assert (energy.unit, energy.unit_source) == (None, None)
+    ebitda = next(c for c in chunks if "EBITDA" in c.text)
+    assert (ebitda.unit, ebitda.unit_source) == ("R$ milhões", "mentions")
+
+
+def test_unit_convention_declared_once_is_inherited_by_later_pages(settings):
+    chunks = chunk_document(unit_doc(), {}, settings)
+    context = next(c for c in chunks if "objeto social" in c.text)
+    cash = next(c for c in chunks if "96.453" in c.text)
+    assert (context.unit, context.unit_source) == ("R$ mil", "page")
+    assert (cash.unit, cash.unit_source) == ("R$ mil", "inherited")
+
+
+def test_figure_unit_comes_only_from_the_figure_itself(settings):
+    """Um gráfico em GWh numa página (ou num documento) em R$ não herda a unidade monetária."""
+    doc = unit_doc()
+    doc.pages[1].native_text += "\n(Em milhões de reais)"
+    gwh = {"figures/perdas.png": FigureResult(text="[Figura: grafico] Perdas Totais [GWh]\ndez/22: 9.101",
+                                               verified_ratio=1.0)}
+    figure = next(c for c in chunk_document(doc, gwh, settings) if c.chunk_type == "figure")
+    assert (figure.unit, figure.unit_source) == (None, None)
+
+    money = {"figures/perdas.png": FigureResult(text="[Figura: grafico] Dívida líquida (R$ milhões)\n2022: 9.032",
+                                                 verified_ratio=1.0)}
+    figure = next(c for c in chunk_document(doc, money, settings) if c.chunk_type == "figure")
+    assert (figure.unit, figure.unit_source) == ("R$ milhões", "chunk")
 
 
 def test_figure_chunk_only_when_transcribed(settings):

@@ -13,7 +13,7 @@ from typing import Literal
 
 from app.config import Settings
 from app.pipeline.figures import FigureResult
-from app.pipeline.metadata import page_units, resolve_unit
+from app.pipeline.metadata import detect_declared_unit, page_units, resolve_unit, scope_units
 from app.schemas import ParsedDocument, ParsedItem
 
 ChunkType = Literal["text", "table", "figure"]
@@ -77,6 +77,7 @@ class Chunk:
     page_start: int
     page_end: int
     unit: str | None = None
+    unit_source: str | None = None  # "chunk" | "page" | "mentions" | "inherited"
     token_count: int = 0
     verified_ratio: float | None = None
     unverified_values: list[str] = field(default_factory=list)
@@ -197,6 +198,7 @@ class _Builder:
         self.figures = figures
         self.settings = settings
         self.units_by_page = page_units(parsed)
+        self.scope_by_page = scope_units(parsed)
         self.chunks: list[Chunk] = []
         self.sections: list[str] = []  # caminho completo da seção atual
         self.numbered: list[str] = []  # só a cadeia numerada ("22." > "22.1")
@@ -213,6 +215,13 @@ class _Builder:
         # Resto de layout (uma letra solta de um sumário, por exemplo) não vira chunk.
         if not text or (chunk_type == "text" and tokens < _MIN_TEXT_TOKENS):
             return
+        if chunk_type == "figure":
+            # A unidade de um gráfico é a que está escrita nele (GWh, %, R$ milhões). A unidade
+            # monetária da página ou do documento não se aplica a um gráfico de perdas em GWh.
+            unit = detect_declared_unit(text)
+            unit_source = "chunk" if unit else None
+        else:
+            unit, unit_source = resolve_unit(text, page_start, self.units_by_page, self.scope_by_page)
         self.chunks.append(Chunk(
             chunk_index=len(self.chunks),
             chunk_type=chunk_type,
@@ -221,7 +230,8 @@ class _Builder:
             section_path=list(self.sections),
             page_start=page_start,
             page_end=page_end,
-            unit=resolve_unit(text, page_start, self.units_by_page),
+            unit=unit,
+            unit_source=unit_source,
             token_count=tokens,
             verified_ratio=result.verified_ratio if result else None,
             unverified_values=list(result.unverified_values) if result else [],

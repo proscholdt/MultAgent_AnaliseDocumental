@@ -44,13 +44,16 @@ async def _load_llm_metadata(parsed: ParsedDocument, cache_path: Path, llm: LLMC
 
 
 def build_payload(chunk: Chunk, *, file_name: str, meta: DocMetadata, indexed_at: str) -> dict[str, Any]:
-    unit = chunk.unit or meta.default_unit
+    # Sem unidade encontrada o campo fica vazio. A unidade predominante do documento
+    # (meta.default_unit) é só um resumo para a listagem, não um valor de reserva.
+    unit = chunk.unit
     return {
         "file_name": file_name,
         "company": meta.company,
         "period": meta.period,
         "doc_type": meta.doc_type,
         "unit": unit,
+        "unit_source": chunk.unit_source,
         "chunk_index": chunk.chunk_index,
         "chunk_type": chunk.chunk_type,
         "extraction_method": chunk.extraction_method,

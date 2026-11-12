@@ -176,6 +176,7 @@ class ChunkOut(BaseModel):
     page_end: int
     section_path: list[str]
     unit: str | None
+    unit_source: str | None = None
     token_count: int
     verified_ratio: float | None = None
     verified_by_ocr: int | None = None
