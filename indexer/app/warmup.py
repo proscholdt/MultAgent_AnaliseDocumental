@@ -33,6 +33,12 @@ def main() -> None:
     PdfParser(settings).warmup()
     print(f"modelos do Docling ok ({time.perf_counter() - started:.1f}s)")
 
+    started = time.perf_counter()
+    from app.pipeline.figure_ocr import FigureOcr
+
+    FigureOcr().warmup()
+    print(f"modelos de OCR ok ({time.perf_counter() - started:.1f}s)")
+
 
 if __name__ == "__main__":
     main()

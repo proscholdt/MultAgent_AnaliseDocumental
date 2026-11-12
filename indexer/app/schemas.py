@@ -51,6 +51,8 @@ class ParsedItem(BaseModel):
     level: int | None = None  # nível do título, quando o parser informa
     image_path: str | None = None  # recorte da figura, relativo à pasta do documento
     area_ratio: float | None = None  # área da figura / área da página
+    # Texto lido por OCR no recorte da figura. None = ainda não lido; "" = lido, nada encontrado.
+    ocr_text: str | None = None
 
 
 class ParsedPage(BaseModel):
@@ -165,6 +167,7 @@ class ChunkOut(BaseModel):
     unit: str | None
     token_count: int
     verified_ratio: float | None = None
+    verified_by_ocr: int | None = None
     suspicious: bool = False
     context_header: str
     text: str

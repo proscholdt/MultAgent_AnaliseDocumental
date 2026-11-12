@@ -80,6 +80,7 @@ class Chunk:
     token_count: int = 0
     verified_ratio: float | None = None
     unverified_values: list[str] = field(default_factory=list)
+    verified_by_ocr: int | None = None  # só em figuras: valores confirmados apenas por OCR
     suspicious: bool = False
 
 
@@ -223,6 +224,7 @@ class _Builder:
             token_count=tokens,
             verified_ratio=result.verified_ratio if result else None,
             unverified_values=list(result.unverified_values) if result else [],
+            verified_by_ocr=result.verified_by_ocr if result else None,
             suspicious=bool(_INJECTION.search(text)),
         ))
 

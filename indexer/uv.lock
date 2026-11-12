@@ -1250,6 +1250,7 @@ dev = [
 ]
 parse = [
     { name = "docling" },
+    { name = "rapidocr" },
     { name = "torch", version = "2.15.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux'" },
     { name = "torch", version = "2.15.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform == 'linux'" },
     { name = "torchvision", version = "0.29.2", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux'" },
@@ -1284,6 +1285,7 @@ dev = [
 ]
 parse = [
     { name = "docling", specifier = ">=2.15" },
+    { name = "rapidocr", specifier = ">=3.9" },
     { name = "torch", marker = "sys_platform != 'linux'" },
     { name = "torch", marker = "sys_platform == 'linux'", index = "https://download.pytorch.org/whl/cpu" },
     { name = "torchvision", marker = "sys_platform != 'linux'" },

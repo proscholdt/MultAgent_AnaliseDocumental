@@ -25,7 +25,7 @@ dependencies = [
 
 [dependency-groups]
 # Só o parse-worker precisa de Docling/torch; API e index-worker ficam leves.
-parse = ["docling>=2.15", "torch", "torchvision"]
+parse = ["docling>=2.15", "torch", "torchvision", "rapidocr>=3.9"]  # rapidocr: OCR dos gráficos
 dev = ["pytest>=8", "pytest-asyncio>=0.24", "aiosqlite>=0.20", "ruff>=0.6"]
 
 [tool.uv]

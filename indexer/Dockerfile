@@ -36,6 +36,8 @@ RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-default-grou
 # de rede para subir e o primeiro PDF não paga o download.
 RUN python -c "import tiktoken; tiktoken.get_encoding('cl100k_base')" \
  && python -c "from docling.datamodel.base_models import InputFormat; from docling.document_converter import DocumentConverter; DocumentConverter().initialize_pipeline(InputFormat.PDF)"
+# Modelos do OCR dos recortes de gráfico (RapidOCR), também baixados no build.
+RUN python -c "import numpy as np; from rapidocr import RapidOCR; RapidOCR()(np.full((64, 256, 3), 255, dtype=np.uint8))"
 # Fontes de sistema. Demonstrações financeiras costumam referenciar Arial/Times sem embutir
 # a fonte; sem um substituto instalado, a página é renderizada com "caixinhas" no lugar das
 # letras e o modelo de layout passa a classificar páginas inteiras como figura (na Millet,

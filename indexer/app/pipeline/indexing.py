@@ -56,6 +56,7 @@ def build_payload(chunk: Chunk, *, file_name: str, meta: DocMetadata, indexed_at
         "extraction_method": chunk.extraction_method,
         "verified_ratio": chunk.verified_ratio,
         "unverified_values": chunk.unverified_values,
+        "verified_by_ocr": chunk.verified_by_ocr,
         "section_path": chunk.section_path,
         "page_start": chunk.page_start,
         "page_end": chunk.page_end,

@@ -42,7 +42,7 @@ O dashboard do Qdrant fica em `http://localhost:6333/dashboard`.
 ```bash
 docker compose up -d kafka postgres qdrant
 uv sync                                    # inclui Docling/torch (grupo "parse")
-uv run pytest                              # 70 testes, sem rede nem contêiner
+uv run pytest                              # 74 testes, sem rede nem contêiner
 uv run python -m app.warmup                # baixa os modelos uma vez
 uv run uvicorn app.main:app --port 8000
 uv run python -m app.workers.parse_worker
@@ -77,7 +77,7 @@ flowchart TD
 | Peça | Papel |
 |---|---|
 | **api** | Autentica, valida o PDF, grava o arquivo e o job, publica no Kafka e responde `202`. Não processa nada. |
-| **parse-worker** | Docling: PDF → elementos com página (títulos, parágrafos, tabelas em Markdown, recortes de figuras). Pesado em CPU. |
+| **parse-worker** | Docling: PDF → elementos com página (títulos, parágrafos, tabelas em Markdown, recortes de figuras) e OCR dos recortes. Pesado em CPU. |
 | **index-worker** | Figuras, metadados, chunking, embeddings e gravação no Qdrant. Quase só rede; não depende de Docling nem de torch. |
 | **Kafka** | Duas filas de trabalho, uma de eventos e uma de mensagens mortas. |
 | **PostgreSQL** | Usuários, documentos e jobs (estado, progresso, tempos, tokens, custo). |
@@ -156,9 +156,18 @@ projeto — por isso o index-worker não precisa de Docling.
 
 Cada gráfico é recortado e transcrito por um modelo de visão com saída estruturada. Como um
 modelo de visão pode ler um número errado, **cada valor só entra no índice se os mesmos dígitos
-existirem no texto nativo da página** (os gráficos destes relatórios são vetoriais, então os
-rótulos estão lá). O que não confere é descartado do texto e registrado em `unverified_values`;
-o chunk guarda `verified_ratio` e `extraction_method = "vision_llm"`. Logotipos são filtrados
+aparecerem numa segunda fonte independente**:
+
+1. **o texto nativo da página** — gráfico vetorial, em que os rótulos são texto do PDF; ou
+2. **o OCR do recorte** (RapidOCR, rodado no parse-worker) — gráfico colado no PDF como imagem,
+   em que os números são só pixels. Um segundo leitor, de outra tecnologia, precisa ter lido o
+   mesmo número; um dígito solto no OCR não vale como prova.
+
+O que não confere em nenhuma das duas é descartado do texto e registrado em `unverified_values`.
+O chunk guarda `verified_ratio`, `verified_by_ocr` (quantos valores só o OCR confirmou) e
+`extraction_method = "vision_llm"`, e o próprio texto diz quantos valores vieram de cada fonte.
+A conferência garante que o número está no gráfico; a associação entre número e rótulo
+continua sendo a do modelo de visão. Logotipos são filtrados
 por área antes de qualquer chamada.
 
 ### 3. Metadados
@@ -214,7 +223,7 @@ Coleção `financial_docs`:
 
 Payload: `user_id`, `doc_id`, `file_name`, `company`, `period`, `doc_type`, `unit`, `chunk_index`,
 `chunk_type` (`text` \| `table` \| `figure`), `extraction_method` (`native_text` \| `table_model` \|
-`vision_llm`), `verified_ratio`, `unverified_values`, `section_path`, `page_start`, `page_end`,
+`vision_llm`), `verified_ratio`, `verified_by_ocr`, `unverified_values`, `section_path`, `page_start`, `page_end`,
 `text`, `context_header`, `token_count`, `suspicious`, `indexed_at`, `pipeline_version`.
 
 Índices de payload: `user_id` (tenant), `doc_id`, `company`, `chunk_type`, `extraction_method`,
@@ -239,7 +248,8 @@ client.query_points(
 
 - Texto e tabelas são extraídos de forma determinística; o LLM não reescreve nem resume nada.
 - As duas únicas chamadas de LLM (figuras e metadados) têm saída validada por schema e são
-  conferidas contra o texto nativo do PDF. O que não confere não entra.
+  conferidas contra uma fonte que não é o LLM: o texto nativo do PDF e, para gráficos em
+  imagem, o OCR do recorte. O que não confere não entra.
 - O texto é preservado como está no documento, inclusive erros da fonte (ex.: "1;061;410" na
   nota 3.3 da Brasal). Sinalizar inconsistência é papel do agente, não do indexador.
 - Todo chunk carrega página e seção; cada origem pode ser aberta no PDF.
@@ -266,8 +276,8 @@ em contêineres (`docker compose up`), OpenAI real (`text-embedding-3-small` e `
 |---|---|---|---|---|---|---|---|
 | Brasal | 51 | 303 s (5,9 s/pág) | 9 s | 143 (80 / 63 / 0) | 40.270 | 9.938 / 97 | US$ 0,0023 |
 | Millet | 43 | 219 s (5,1 s/pág) | 7 s | 126 (89 / 37 / 0) | 39.796 | 1.074 / 89 | US$ 0,0010 |
-| Light | 124 | 1.027 s (8,3 s/pág) | 31 s | 403 (269 / 129 / 5) | 139.887 | 143.954 / 1.913 | US$ 0,0255 |
-| **Total** | 218 | 26 min | 47 s | 672 | 219.953 | 154.966 / 2.099 | **US$ 0,029** |
+| Light | 124 | 1.027 s (8,3 s/pág) | 31 s | 405 (269 / 129 / 7) | 140.674 | 143.954 / 1.913 | US$ 0,0255 |
+| **Total** | 218 | 26 min | 47 s | 674 | 220.740 | 154.966 / 2.099 | **US$ 0,029** |
 
 - O parse é 97% do tempo e é a etapa que escala com mais parse-workers (ou GPU). Reenviar um
   arquivo já parseado leva segundos: parse, transcrição de figuras e metadados ficam em cache.
@@ -288,11 +298,13 @@ O que foi verificado de ponta a ponta, em contêineres e com a OpenAI real:
   literal da p. 1. O período da Millet veio do regex, porque o trecho citado pelo modelo não
   existia literalmente na página — o fallback funcionou como desenhado.
 - **Gráficos da Light:** 9 recortes passaram no filtro de área; 2 foram classificados como
-  decorativos e 7 transcritos. Em 3 deles todos os valores existem no texto da página e foram
-  indexados (perdas totais na p. 6, 72 de 72 valores, incluindo "26,51%" e "21,53%";
-  arrecadação na p. 6; PECLD/ROB na p. 7). Nos outros 4 os valores lidos pelo modelo não estão
-  na camada de texto (gráfico rasterizado ou leitura errada) e foram omitidos: 2 viraram chunk
-  só com o título e `verified_ratio = 0`, 2 não geraram chunk.
+  decorativos e 7 transcritos, todos com `verified_ratio = 1`. Em 3 deles os valores existem no
+  texto da página (perdas totais na p. 6, incluindo "26,51%" e "21,53%"; arrecadação na p. 6;
+  PECLD/ROB na p. 7). Os outros 4 são imagens e foram confirmados pelo OCR do recorte: efeito
+  médio do reajuste tarifário (p. 5, 7 valores), consumo por classe (p. 5), carga fio e perda
+  não-técnica (p. 6, 10 valores) e composição acionária (p. 11, 4 valores). Antes do OCR esses
+  4 ficavam fora do índice. O OCR dos 9 recortes levou 17 s e não refaz o parse nem a chamada
+  ao modelo de visão.
 - **Busca híbrida:** "alavancagem dívida líquida EBITDA covenants" traz a Light p. 10 no topo,
   seguida das notas de covenants; "Lei 14.385" (termo exato) traz as páginas 114 e 28 da Light;
   "risco de liquidez e vencimento das dívidas" traz a nota de risco de liquidez da Light e da Millet.
@@ -307,8 +319,9 @@ O que foi verificado de ponta a ponta, em contêineres e com a OpenAI real:
 - Os três PDFs fornecidos são demonstrações **anuais de 2022**, não trimestrais; `period` sai como `2022`.
 - A página citada é a do arquivo PDF (1-based), não a numeração impressa, que diverge na Light.
 - O parse em CPU leva minutos por documento na primeira vez (ver medições acima).
-- Valor de gráfico que não aparece na camada de texto (gráfico em imagem rasterizada) não é
-  indexado como número; fica só em `unverified_values`.
+- Valor de gráfico só é indexado se confirmado pelo texto da página ou pelo OCR do recorte. Se
+  o gráfico é uma imagem e o OCR não lê o número (texto muito pequeno, por exemplo), ele fica só
+  em `unverified_values`. A conferência também não valida a qual rótulo o número pertence.
 - A hierarquia de seções depende da numeração das notas. Subtítulo sem numeração em página onde
   o título da nota não aparece fica sem o ancestral — a escolha foi perder o ancestral a exibir
   um ancestral errado.

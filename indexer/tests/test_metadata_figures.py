@@ -1,5 +1,6 @@
 import pytest
 
+from app.pipeline.figure_ocr import read_figures
 from app.pipeline.figures import (
     FigurePoint,
     FigureSeries,
@@ -16,6 +17,7 @@ from app.pipeline.metadata import (
     merge_metadata,
     regex_metadata,
 )
+from app.schemas import ParsedDocument, ParsedItem
 
 # --- unidade ---------------------------------------------------------------
 
@@ -127,6 +129,65 @@ def test_illegible_figure_keeps_only_the_title():
     result = verify_transcription(transcription(legivel=False), PAGE_TEXT)
     assert "Evolução das Perdas Totais" in result.text and "26,51%" not in result.text
     assert result.verified_ratio is None
+
+
+def test_value_read_by_ocr_confirms_a_chart_that_is_an_image():
+    """Gráfico colado como imagem: o número não está no texto da página, mas o OCR do recorte
+    leu o mesmo valor que o modelo de visão."""
+    result = verify_transcription(transcription(), PAGE_TEXT, ocr_text="Set/22\n25.98%\n9.101")
+    assert "Set/22: 25,98%" in result.text
+    assert result.unverified_values == []
+    assert result.verified_ratio == 1.0
+    assert result.verified_by_ocr == 1  # os outros dois já estavam no texto da página
+    assert "3 de 3 valores conferidos: 2 no texto da página e 1 por OCR do recorte" in result.text
+
+
+def test_ocr_does_not_confirm_what_it_did_not_read():
+    series = [FigureSeries(nome="PECLD/ROB", pontos=[
+        FigurePoint(rotulo="Dez/21", valor="3,0%"),  # OCR leu "3" e "0" soltos: não é prova
+        FigurePoint(rotulo="Dez/22", valor="6%"),  # um dígito só nunca é confirmado por OCR
+        FigurePoint(rotulo="Dez/23", valor="14,68%"),  # OCR leu outro número
+    ])]
+    result = verify_transcription(transcription(series=series), "sem números", ocr_text="%0°\n6\n3\n14,86%")
+    assert result.verified_ratio == 0.0 and result.verified_by_ocr == 0
+    assert len(result.unverified_values) == 3
+    for value in ("3,0%", "6%", "14,68%"):
+        assert value not in result.text
+
+
+def test_notes_with_numbers_follow_the_same_rule():
+    """Nota é texto livre do modelo de visão; número em nota também precisa conferir."""
+    notas = ["Comercial 2022: Cativo 4.008", "Industrial 2022: Cativo 9.999", "Valores em GWh"]
+    result = verify_transcription(transcription(notas=notas), PAGE_TEXT, ocr_text="Cativo\n4.008\n2022")
+    assert "Nota: Comercial 2022: Cativo 4.008" in result.text
+    assert "Nota: Valores em GWh" in result.text  # sem número, nada a conferir
+    assert "9.999" not in result.text
+    assert "Nota: Industrial 2022: Cativo 9.999" in result.unverified_values
+
+
+def test_figure_ocr_reads_only_candidates_and_only_once(tmp_path):
+    class FakeOcr:
+        def __init__(self):
+            self.calls = []
+
+        def read(self, path):
+            self.calls.append(path.name)
+            if path.name == "quebrado.png":
+                raise OSError("imagem corrompida")
+            return "14,68%"
+
+    doc = ParsedDocument(doc_id="d", file_name="f.pdf", page_count=1, parser="t", pipeline_version="x", items=[
+        ParsedItem(type="figure", page=1, image_path="figures/grafico.png", area_ratio=0.15),
+        ParsedItem(type="figure", page=1, image_path="figures/logo.png", area_ratio=0.01),
+        ParsedItem(type="figure", page=1, image_path="figures/quebrado.png", area_ratio=0.10),
+        ParsedItem(type="figure", page=1, image_path="figures/lido.png", area_ratio=0.10, ocr_text="já lido"),
+        ParsedItem(type="text", page=1, text="parágrafo"),
+    ])
+    ocr = FakeOcr()
+    assert read_figures(doc, tmp_path, ocr, min_area_ratio=0.04) == 2
+    assert ocr.calls == ["grafico.png", "quebrado.png"]
+    assert [item.ocr_text for item in doc.items] == ["14,68%", None, "", "já lido", None]
+    assert read_figures(doc, tmp_path, ocr, min_area_ratio=0.04) == 0  # nada a refazer
 
 
 def test_hallucinated_numbers_never_reach_the_index():
