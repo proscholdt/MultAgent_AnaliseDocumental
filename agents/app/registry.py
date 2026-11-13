@@ -50,7 +50,8 @@ class AgentFile:
 
 
 def parse_agent(text: str, file_name: str) -> AgentFile:
-    match = _HEADER.match(text.lstrip("﻿"))
+    # Arquivo salvo no Windows pode começar com o BOM (U+FEFF), e aí o "---" do cabeçalho não casa.
+    match = _HEADER.match(text.lstrip("\ufeff"))
     if not match:
         raise AgentFileError("falta o cabeçalho entre linhas '---' no começo do arquivo")
     try:
