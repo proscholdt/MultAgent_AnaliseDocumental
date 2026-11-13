@@ -16,6 +16,11 @@ ou ligar o número ao rótulo errado. Nada do que ele devolve entra no índice s
    conferível por posição e por isso não é indexada.
 
 O que não confere é omitido do texto do chunk e registrado em `unverified_values`.
+
+A conferência garante que o que entra está certo, não que está completo: num gráfico cheio o
+modelo às vezes transcreve só parte dos valores. Quando o parser entrega a camada de texto do
+PDF dentro da região da figura (os rótulos de um gráfico vetorial, exatos), os valores que o
+modelo pulou entram a partir dela, numa linha própria e sem rótulo.
 """
 import asyncio
 import json
@@ -30,12 +35,14 @@ from pydantic import BaseModel, ValidationError
 
 from app.config import Settings
 from app.pipeline.llm import LLMClient
-from app.schemas import OcrWord, ParsedDocument
+from app.schemas import OcrWord, ParsedDocument, ParsedItem
 
 log = logging.getLogger(__name__)
 
 _NUMBER = re.compile(r"\d[\d.,]*")
 _AMBIGUOUS = re.compile(r"\d{1,3}[.,]\d{3}")  # um separador e três dígitos: milhar ou decimal?
+_TWO_DIGITS = re.compile(r"\d\D*\d")  # um dígito solto não prova que a figura tem números
+_VALUE_TOKEN = re.compile(r"[+\-−(]?\d[\d.,]*[%x)]?")  # palavra que é só um valor: "9.902", "26,51%", "3,32x"
 _OCR_MIN_DIGITS = 2  # um dígito solto no OCR não prova nada
 _PAGE_SUBSTRING_MIN = 5  # palavra curta só confere com a página como palavra inteira
 _ROW_OVERLAP = 0.5  # sobreposição vertical mínima para dois textos estarem na mesma linha
@@ -371,10 +378,14 @@ def _confirm_labels(entries: list[_Entry], layout: _Layout) -> tuple[list[str], 
 
 
 def verify_transcription(transcription: FigureTranscription, native_text: str,
-                         ocr_words: list[OcrWord] | None = None) -> FigureResult | None:
+                         ocr_words: list[OcrWord] | None = None,
+                         figure_text: str | None = None) -> FigureResult | None:
     """Monta o texto do chunk só com o que foi conferido. None = figura sem conteúdo útil.
 
-    `native_text` é a camada de texto da página; `ocr_words`, o que o OCR leu no recorte."""
+    `native_text` é a camada de texto da página; `ocr_words`, o que o OCR leu no recorte;
+    `figure_text`, a camada de texto do PDF dentro da região da figura, quando o parser a
+    extrai. Essa última serve para completar: o modelo de visão não transcreve sempre todos os
+    valores de um gráfico cheio, e os que ele pula estão escritos ali, exatos."""
     if transcription.tipo == "decorativo":
         return None
     ocr_words = ocr_words or []
@@ -418,6 +429,24 @@ def verify_transcription(transcription: FigureTranscription, native_text: str,
     if unlinked:
         lines.append("Outros textos da figura, sem ligação conferida com os valores: " + "; ".join(unlinked))
 
+    # Valores que o modelo deixou de transcrever e que estão na camada de texto da figura. Só
+    # contam as linhas feitas só de valores: em "12 meses", o 12 é parte de um rótulo. Também
+    # não entram os números que o modelo usou como rótulo (o ano de uma coluna, por exemplo).
+    skipped: list[str] = []
+    if transcription.legivel and figure_text:
+        known = {key for entry in entries for text in (entry.value, *entry.labels) for key in number_forms(text)}
+        for line in figure_text.splitlines():
+            tokens = line.split()
+            if not tokens or not all(_VALUE_TOKEN.fullmatch(token) for token in tokens):
+                continue
+            for token in tokens:
+                key = number_key(token)
+                if key not in known and sum(c.isdigit() for c in key) >= _OCR_MIN_DIGITS:
+                    known.add(key)
+                    skipped.append(token)
+    if skipped:
+        lines.append("Valores escritos na figura que o modelo não transcreveu: " + "; ".join(skipped))
+
     # Nota é texto livre: não dá para conferir a que cada número dela se refere. Só entra nota
     # sem números e cujas palavras existam na figura ou na página.
     notes: list[str] = []
@@ -429,7 +458,7 @@ def verify_transcription(transcription: FigureTranscription, native_text: str,
         else:
             unverified.append(f"Nota: {note}")
 
-    if not title and not entries and not notes:
+    if not title and not entries and not notes and not skipped:
         return None
 
     verified = len(entries)
@@ -437,6 +466,11 @@ def verify_transcription(transcription: FigureTranscription, native_text: str,
     links_total = sum(len(entry.labels) for entry in entries)
     links_kept = sum(len(entry.kept) for entry in entries)
     body = [f"[Figura: {transcription.tipo}] {title}".strip(), *lines, *notes]
+    completed = ""
+    if len(skipped) == 1:
+        completed = " Outro valor veio direto da camada de texto da figura, sem rótulo."
+    elif skipped:
+        completed = f" Outros {len(skipped)} valores vieram direto da camada de texto da figura, sem rótulo."
     if not transcription.legivel:
         body.append("(Valores ilegíveis na imagem; apenas o título foi indexado.)")
     elif total:
@@ -444,8 +478,10 @@ def verify_transcription(transcription: FigureTranscription, native_text: str,
             f"(Transcrição por modelo de visão. Valores: {verified} de {total} conferidos, "
             f"{verified - by_ocr} no texto da página e {by_ocr} por OCR do recorte. "
             f"Rótulos: {links_kept} de {links_total} ligações conferidas pela posição na figura. "
-            "O que não conferiu foi omitido.)"
+            f"O que não conferiu foi omitido.{completed})"
         )
+    elif skipped:
+        body.append(f"(O modelo de visão não transcreveu valores.{completed})")
     return FigureResult(
         text="\n".join(body),
         verified_ratio=round(verified / total, 3) if total else None,
@@ -465,6 +501,20 @@ def _cached(raw: dict | None) -> FigureTranscription | None:
         return None
 
 
+def is_chart_candidate(item: ParsedItem, settings: Settings) -> bool:
+    """Figura que vale transcrever. As menores que `figure_min_area_ratio` são logotipos e
+    ícones, a não ser que uma segunda fonte tenha lido números dentro dela: aí é um gráfico
+    pequeno. O parser da Azure delimita só a área do gráfico, sem título nem margem, e três
+    gráficos da Light ficam entre 3% e 4% da página."""
+    if item.type != "figure" or not item.image_path:
+        return False
+    area = item.area_ratio or 0
+    if area >= settings.figure_min_area_ratio:
+        return True
+    return area >= settings.figure_small_min_area_ratio and any(
+        _TWO_DIGITS.search(word.text) for word in item.ocr_words or [])
+
+
 async def transcribe_figures(
     parsed: ParsedDocument,
     doc_dir: Path,
@@ -478,11 +528,7 @@ async def transcribe_figures(
     if cache_path.exists():
         cache = json.loads(cache_path.read_text(encoding="utf-8"))
 
-    candidates = [
-        item for item in parsed.items
-        if item.type == "figure" and item.image_path
-        and (item.area_ratio or 0) >= settings.figure_min_area_ratio  # ignora logotipos
-    ]
+    candidates = [item for item in parsed.items if is_chart_candidate(item, settings)]
 
     if llm is not None:
         semaphore = asyncio.Semaphore(4)
@@ -510,7 +556,8 @@ async def transcribe_figures(
         transcription = _cached(cache.get(item.image_path))
         if transcription is None:
             continue
-        result = verify_transcription(transcription, parsed.native_text(item.page), item.ocr_words)
+        result = verify_transcription(transcription, parsed.native_text(item.page), item.ocr_words,
+                                      item.text_layer)
         if result is not None:
             results[item.image_path] = result
     return results

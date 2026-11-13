@@ -71,6 +71,9 @@ class ParsedItem(BaseModel):
     # Textos lidos por OCR no recorte da figura, com a posição de cada um.
     # None = ainda não lido; [] = lido, nada encontrado.
     ocr_words: list[OcrWord] | None = None
+    # Camada de texto do PDF dentro da região da figura: os rótulos de um gráfico vetorial,
+    # exatos. None = o parser não a extraiu.
+    text_layer: str | None = None
 
 
 class ParsedPage(BaseModel):
@@ -87,6 +90,9 @@ class ParsedDocument(BaseModel):
     items: list[ParsedItem] = Field(default_factory=list)
     pages: list[ParsedPage] = Field(default_factory=list)
     ocr_pages: list[int] = Field(default_factory=list)  # páginas sem texto nativo que passaram por OCR
+    # Páginas enviadas a um serviço pago para produzir este parse. Zero no parser local e
+    # quando a resposta do serviço já estava guardada.
+    billed_pages: int = 0
 
     def native_text(self, page: int) -> str:
         for p in self.pages:

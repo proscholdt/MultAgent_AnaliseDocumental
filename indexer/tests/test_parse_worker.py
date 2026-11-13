@@ -22,6 +22,7 @@ class FakeParser:
     def __init__(self, name: str, page_price_usd: float = 0.0, error: Exception | None = None) -> None:
         self.name, self.page_price_usd, self.error = name, page_price_usd, error
         self.parse_calls = 0
+        self.billed_pages = 1 if page_price_usd else 0  # páginas enviadas ao serviço pago
 
     def warmup(self) -> None:
         pass
@@ -33,6 +34,7 @@ class FakeParser:
         assert out_dir == storage.parse_dir(USER, DOC, self.name) and out_dir.is_dir()
         return ParsedDocument(
             doc_id=doc_id, file_name=file_name, page_count=1, parser=self.name, pipeline_version=PIPELINE_VERSION,
+            billed_pages=self.billed_pages,
             items=[ParsedItem(type="heading", text="1. Contexto operacional", page=1),
                    ParsedItem(type="text", text=f"Documento lido pelo parser {self.name}, em uma página.", page=1)],
             pages=[ParsedPage(page=1, native_text="1. Contexto operacional")])
@@ -85,6 +87,25 @@ async def test_each_parser_keeps_its_own_cache(job_id, settings):
     _, job = await run_parse(job_id, azure, settings)
     assert (docling.parse_calls, azure.parse_calls) == (1, 1)
     assert job.timings["parse_cached"] is True and job.usage["parse_cost_usd"] == 0
+
+
+async def test_new_parse_bills_only_what_was_sent_and_drops_old_figure_transcriptions(job_id, settings):
+    azure = FakeParser("azure", page_price_usd=0.01)
+    parse_dir = storage.parse_dir(USER, DOC, "azure")
+    (parse_dir / "figures").mkdir(parents=True)
+    (parse_dir / "figures" / "p0001_001.png").write_bytes(b"recorte antigo")
+    transcriptions = storage.figures_cache_path(USER, DOC, "azure")
+    transcriptions.write_text('{"figures/p0001_001.png": {}}', encoding="utf-8")
+    response = parse_dir / "response.json.gz"
+    response.write_bytes(b"resposta guardada do servico")
+
+    # A conversão foi refeita a partir da resposta guardada: nenhuma página foi enviada.
+    azure.billed_pages = 0
+    _, job = await run_parse(job_id, azure, settings)
+    assert job.timings["parse_cached"] is False and job.usage["parse_cost_usd"] == 0
+    # Os recortes vão ser refeitos e podem mudar de nome: o que foi transcrito dos antigos sai.
+    assert not transcriptions.exists() and not (parse_dir / "figures").exists()
+    assert response.exists()  # a resposta do serviço fica
 
 
 async def test_parser_configuration_error_is_not_retried(job_id, settings):

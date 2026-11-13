@@ -6,6 +6,7 @@ que chama o Azure AI Document Intelligence. Escala separado do index-worker:
 """
 import asyncio
 import logging
+import shutil
 import time
 from pathlib import Path
 
@@ -62,6 +63,10 @@ async def handle_parse(message: ParseRequested, *, parser: DocumentParser, publi
     cached = parsed is not None
     try:
         if parsed is None:
+            # Parse novo: os recortes são refeitos e podem mudar de nome, então as transcrições
+            # guardadas dos recortes antigos deixam de valer.
+            shutil.rmtree(out_dir / "figures", ignore_errors=True)
+            storage.figures_cache_path(message.user_id, message.doc_id, parser.name).unlink(missing_ok=True)
             loop = asyncio.get_running_loop()
 
             def on_progress(done: int, total: int) -> None:
@@ -84,7 +89,9 @@ async def handle_parse(message: ParseRequested, *, parser: DocumentParser, publi
     if unconfirmed:
         log.warning("%s: %d número(s) de tabela não existem na camada de texto do PDF.",
                     message.doc_id, unconfirmed)
-    billed_pages = 0 if cached else parsed.page_count  # parse em cache não é cobrado de novo
+    # Só é cobrado o que foi de fato enviado ao serviço neste job: parse em cache não é, e
+    # conversão refeita a partir da resposta guardada também não.
+    billed_pages = 0 if cached else parsed.billed_pages
 
     async with session_scope() as session:
         document = await repo.get_document(session, message.user_id, message.doc_id)

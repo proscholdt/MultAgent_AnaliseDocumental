@@ -22,6 +22,10 @@ from app.config import Settings
 from app.schemas import ParsedDocument, ParsedPage
 
 log = logging.getLogger(__name__)
+# Sem o fontTools instalado, o pypdf avisa a cada fonte CFF que a codificação pode sair
+# incompleta: são dezenas de linhas por documento no log do worker. O texto extraído é
+# conferido pela auditoria (os números das tabelas batem com ele), então o aviso fica de fora.
+logging.getLogger("pypdf._cmap").setLevel(logging.ERROR)
 
 ProgressCallback = Callable[[int, int], None]  # (páginas concluídas, total)
 

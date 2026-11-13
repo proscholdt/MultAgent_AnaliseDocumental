@@ -317,9 +317,54 @@ def test_table_of_contents_and_stray_letters_are_not_indexed(settings):
     assert "RECEITA LÍQUIDA" not in chunks[0].text
 
 
+def test_table_of_contents_as_a_table_is_dropped_with_what_is_around_it(settings):
+    """O parser da Azure devolve o índice como tabela: título da seção e número da página."""
+    entries = [("", "BALANÇOS PATRIMONIAIS", 1), ("", "DEMONSTRAÇÕES DE RESULTADOS", 3),
+               ("", "DEMONSTRAÇÕES DOS FLUXOS DE CAIXA", 6), ("1.", "CONTEXTO OPERACIONAL", 8),
+               ("2.", "BASE DE PREPARAÇÃO", 15), ("3.", "PRINCIPAIS POLÍTICAS CONTÁBEIS", 17)]
+    rows = [f"| {number} | {title} | {page} |" for number, title, page in entries]
+    toc = "\n".join([rows[0], "|---|---|---|", *rows[1:]])
+    # Tabela comum de duas colunas com números pequenos: não é índice, os números não crescem.
+    aging = ("| Faixa | Clientes |\n|---|---|\n| Até 30 dias | 12 |\n| De 31 a 60 dias | 9 |\n"
+             "| De 61 a 90 dias | 7 |\n| De 91 a 180 dias | 5 |\n| Acima de 180 dias | 3 |\n| Total | 36 |")
+    doc = make_doc([
+        ParsedItem(type="heading", text="Empresa Exemplo S.A.", page=2),
+        ParsedItem(type="text", text="Demonstrações financeiras em 31 de dezembro de 2022", page=2),
+        ParsedItem(type="text", text="Índice", page=2),
+        ParsedItem(type="heading", text="Demonstrações financeiras auditadas", page=2),
+        ParsedItem(type="table", text=toc, page=2),
+        ParsedItem(type="heading", text="1. Contexto operacional", page=3),
+        ParsedItem(type="table", text=aging, page=3),
+        ParsedItem(type="text", text="A Companhia atua na distribuição de energia elétrica.", page=3),
+    ])
+    chunks = chunk_document(doc, {}, settings)
+    # Somem o índice e o texto curto que sobra na página dele; a numeração dos chunks continua seguida.
+    assert [(c.chunk_type, c.page_start) for c in chunks] == [("table", 3), ("text", 3)]
+    assert [c.chunk_index for c in chunks] == [0, 1]
+    assert "Acima de 180 dias | 3" in chunks[0].text
+
+
+def test_statement_footer_is_dropped_even_when_it_repeats_on_few_pages(settings):
+    """A Millet tem quatro demonstrações de uma página: o rodapé fixo aparece quatro vezes,
+    menos do que o critério de repetição exige."""
+    footer = "As notas explicativas são parte integrante das demonstrações financeiras individuais e consolidadas."
+    doc = make_doc([
+        ParsedItem(type="heading", text="Balanços patrimoniais", page=1),
+        ParsedItem(type="table", text="| Caixa | 355 |\n|---|---|\n| Total | 871 |", page=1),
+        ParsedItem(type="text", text=footer, page=1),
+        ParsedItem(type="heading", text="1. Contexto operacional", page=2),
+        ParsedItem(type="text", text="Conforme as notas explicativas, que são parte integrante das demonstrações "
+                                     "financeiras, a Companhia atua no varejo.", page=2),
+    ])
+    chunks = chunk_document(doc, {}, settings)
+    assert [c.chunk_type for c in chunks] == ["table", "text"]
+    assert "parte integrante" not in chunks[0].text
+    assert "parte integrante" in chunks[1].text  # a mesma expressão dentro de um parágrafo fica
+
+
 def test_footer_repeated_on_a_few_pages_is_dropped(settings):
     """Rodapé que aparece em sete páginas de um documento de 124: no pé bastam cinco páginas."""
-    footer = "As notas explicativas são parte integrante das demonstrações financeiras."
+    footer = "Documento assinado digitalmente pela Diretoria da Companhia."
     unit = "(Em milhares de reais)"  # no topo de sete páginas, é título de tabela: fica
     items = []
     for page in range(18, 25):
@@ -332,7 +377,7 @@ def test_footer_repeated_on_a_few_pages_is_dropped(settings):
     chunks = chunk_document(doc, {}, settings)
     assert len(chunks) == 7 and all(c.chunk_type == "table" for c in chunks)
     assert all(c.text.startswith(unit) for c in chunks)
-    assert not any("parte integrante" in c.text for c in chunks)
+    assert not any("assinado digitalmente" in c.text for c in chunks)
 
 
 def test_footnote_right_after_a_table_stays_with_the_table(settings):

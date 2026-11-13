@@ -48,6 +48,33 @@ def test_number_key_keeps_the_separator_position():
     assert number_key("N/D") == ""
 
 
+def test_values_the_model_skipped_come_from_the_text_layer_of_the_figure():
+    """Gráfico de perdas da Light, numa das execuções: o modelo transcreveu 30 dos 43 valores, e
+    o 26,51% de dez/22 ficou de fora. A camada de texto do PDF dentro da figura tem todos."""
+    layer = ("8.992 9.101 \r\n9.303 \r\n26,81% 26,51%\r\n21,53% 21,53% 21,53%\r\n2021 2022\r\n"
+             "12 meses 3,0%\r\ndez/20 dez/22\r\nPerdas Totais REN\r\n5")
+    page = "Perdas Totais REN dez/20 dez/22 8.992 9.101 9.303 26,81% 26,51% 21,53% 2021 2022 12 meses 3,0%"
+    result = verify_transcription(transcription([
+        value("8.992", "dez/20"), value("26,81%", "dez/20"), value("9.303", "2021"),
+    ]), page, [], layer)
+    # Entram os valores das linhas feitas só de valores, uma vez cada, na forma em que estão
+    # escritos. Ficam de fora: o que o modelo já transcreveu, o número que ele usou como rótulo
+    # (2021), o "12" de "12 meses" (e o 3,0% que divide a linha com ele) e o dígito solto.
+    assert "Valores escritos na figura que o modelo não transcreveu: 9.101; 26,51%; 21,53%; 2022" in lines(result)
+    assert "Outros 4 valores vieram direto da camada de texto da figura, sem rótulo.)" in result.text
+    assert result.verified_ratio == 1.0  # a conta continua sendo só do que o modelo transcreveu
+
+    one = verify_transcription(transcription([value("8.992", "dez/20")]), page, [], "8.992\r\n9.101\r\ndez/20")
+    assert "Outro valor veio direto da camada de texto da figura, sem rótulo.)" in one.text
+
+    # Sem a camada de texto da figura (gráfico em imagem, ou parser que não a extrai), nada muda.
+    plain = verify_transcription(transcription([value("8.992", "dez/20")]), page, [])
+    assert "não transcreveu" not in plain.text
+    # Figura que o modelo deu como ilegível não é completada: fica só o título.
+    unreadable = verify_transcription(transcription([], legivel=False, titulo="Perdas Totais"), page, [], layer)
+    assert "não transcreveu" not in unreadable.text
+
+
 def test_only_values_present_in_page_text_are_indexed():
     result = verify_transcription(transcription([
         value("26,51%", "Dez/22"),

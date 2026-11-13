@@ -110,7 +110,7 @@ docker compose -f docker-compose.yml -f docker-compose.azure.yml up --build
 ```bash
 docker compose up -d kafka postgres qdrant
 uv sync                                    # inclui Docling, torch e RapidOCR (grupo "parse")
-uv run pytest                              # 130 testes, sem rede nem contêiner
+uv run pytest                              # 142 testes, sem rede nem contêiner
 uv run python -m app.warmup                # baixa os modelos uma vez
 uv run uvicorn app.main:app --port 8000
 uv run python -m app.workers.parse_worker
@@ -208,12 +208,15 @@ mesmo arquivo, escolhidos pela variável `PARSER`. O resto do pipeline não sabe
 | | `PARSER=docling` (padrão) | `PARSER=azure` |
 |---|---|---|
 | Quem lê o PDF | Docling, na máquina | Azure AI Document Intelligence, modelo `prebuilt-layout` |
-| Tempo nos 3 PDFs | 26 min em CPU | não medido (ver "o que não foi testado") |
-| Custo | zero | por página; o job traz a estimativa em `usage.parse_cost_usd` |
+| Tempo nos 3 PDFs | 26 min em CPU | 86 s |
+| Custo | zero | por página: US$ 2,18 nos 3 PDFs, a US$ 10 por mil páginas (preço de referência) |
 | Imagem do parse-worker | 4,3 GB, até 4 GB de memória | a leve (825 MB) basta |
 | O PDF sai da máquina | não | sim, vai para o recurso da Azure |
-| Texto de dentro dos gráficos | OCR local (RapidOCR) do recorte | palavras que o serviço leu na página; OCR local só como reserva |
+| Texto de dentro dos gráficos | OCR local (RapidOCR) do recorte | palavras que o serviço leu na página, inclusive por OCR nos gráficos em imagem |
 | O que exige | nada | `AZURE_DI_ENDPOINT`, `AZURE_DI_KEY` e recurso no nível S0 |
+
+Os dois foram medidos com os mesmos três PDFs; a comparação completa está em "Os dois parsers,
+lado a lado".
 
 O que é igual nos dois:
 
@@ -267,50 +270,77 @@ Além disso:
 #### Azure Document Intelligence
 
 O serviço devolve parágrafos com papel (título, cabeçalho de página...), tabelas com as células
-e figuras com a região que ocupam na página. A conversão para o `parsed.json`:
+e figuras com a região que ocupam na página. Nos três PDFs ele tirou o texto da camada de texto
+do PDF (todos os números de tabela existem nela) e leu por OCR o que só existe em imagem,
+inclusive os gráficos colados como imagem. A conversão para o `parsed.json`:
 
 - **Ordem de leitura.** Parágrafos, tabelas e figuras são intercalados pela posição de cada um
-  no texto corrido que o serviço devolve. Cabeçalho, rodapé e número de página são descartados
-  pelo papel. O que está dentro de uma tabela ou de uma figura não vira texto corrido.
+  no texto corrido que o serviço devolve. O que está dentro de uma tabela ou de uma figura não
+  vira texto corrido.
+- **Cabeçalho e rodapé de página.** O rótulo do serviço falha nos dois sentidos, e o que separa
+  os casos é a repetição: cabeçalho corrido aparece em mais de uma página.
+  - Na Light, dois cabeçalhos vieram rotulados 170 vezes e sem rótulo 5 vezes. O parágrafo sem
+    rótulo que tem o texto de um cabeçalho rotulado em outras páginas, e está na mesma faixa da
+    página, também é descartado.
+  - Um título que só existe no alto de uma página veio rotulado como cabeçalho: "Demonstrações
+    dos fluxos de caixa" na Millet, "Anexo I" na Light. Ele é mantido quando é o nome de uma
+    demonstração, ou quando tem cara de título e a página não abre com outro. Timbre com
+    endereço e telefone continua fora.
+- **Bloco de título das demonstrações.** O serviço devolve num parágrafo só a empresa, o título,
+  o período e a unidade. O parser separa as linhas: o título abre a seção ("BALANÇOS
+  PATRIMONIAIS") e o resto vai como texto para o alto da tabela ("EM 31 DE DEZEMBRO DE 2022 E DE
+  2021 (Em milhares de reais)"). Linha de período rotulada como título ("Exercício findo em 31
+  de dezembro de 2021") também vai como texto. Sem isso, a tabela das mutações do patrimônio
+  líquido da Millet ficava na seção da demonstração anterior.
 - **Tabelas.** As células viram Markdown no mesmo formato do Docling, com os níveis do cabeçalho
   juntados ("Consolidado - 2022"). Célula de dados que cobre várias colunas fica só na primeira,
-  para um número não aparecer repetido.
-- **Gráficos.** O serviço informa só a região da figura. O recorte é renderizado aqui, com o
-  `pypdfium2`, na mesma escala do Docling, e é ele que vai para o modelo de visão. O texto de
-  dentro da figura vem das palavras que o serviço leu naquela região, reagrupadas em trechos:
-  "Perdas Totais" é um trecho; "dez/20" e "mar/21", num eixo, são dois. Se o serviço não
-  devolver nenhum número dentro da figura e o OCR local estiver instalado (imagem do alvo
-  `parse`), ele lê o recorte.
+  para um número não aparecer repetido. Dois consertos:
+  - *"(não auditado)".* Na Brasal a marca vale só para as colunas de 2021. O serviço a devolve
+    como linha de dados, numa célula que cobre várias colunas ou sob a coluna errada (40
+    tabelas). Ela volta para o cabeçalho da coluna sobre a qual está escrita, pela posição das
+    palavras na página: "Controladora - 2021 - (não auditado)".
+  - *Rótulo quebrado em duas linhas.* "Lucro operacional antes das receitas e despesas" com os
+    valores e, na linha seguinte, só "financeiras": a continuação volta para o rótulo.
+- **Caixas de seleção.** O serviço marca caixas de seleção onde há um pontilhado ou um traço:
+  123 nos três documentos, coladas em rótulos e valores ("Estoques ☐"). Elas são descartadas.
+  Onde a caixa existe de verdade (o balanço social da Light), o PDF já a escreve como "( X )".
+- **Gráficos.** O serviço informa só a região da figura, e ela é mais justa que a do Docling: só
+  a área do gráfico, sem título nem margem. O recorte é renderizado aqui, com o `pypdfium2`, e
+  é ele que vai para o modelo de visão.
+  - Três gráficos da Light ficam entre 3% e 4% da página, abaixo do limite que separa gráfico de
+    logotipo. Figura pequena (a partir de 2%) é tratada como gráfico quando o serviço leu
+    números dentro dela.
+  - O texto de dentro da figura vem das palavras que o serviço leu naquela região, reagrupadas
+    em trechos: "Perdas Totais" é um trecho; "dez/20" e "mar/21", num eixo, são dois. Palavra
+    escrita na vertical não se junta à horizontal ao lado, e dois números vizinhos são sempre
+    dois valores (os de uma barra empilhada ficam encostados).
+  - A camada de texto do PDF dentro da região também é guardada. Ela completa os valores que o
+    modelo de visão pula (etapa 2).
+  - Se o serviço não devolver nenhum número dentro de uma figura grande e o OCR local estiver
+    instalado (imagem do alvo `parse`), ele lê o recorte. Nos três PDFs não foi preciso.
 - **Parágrafo em duas páginas, nota de rodapé de tabela e legenda de figura** têm o mesmo
   tratamento do Docling.
 - **PDF com restrição de permissões** (caso da Brasal): é regravado sem a criptografia antes do
   envio, porque o serviço pede que a proteção seja removida.
+- **Resposta guardada.** A resposta crua do serviço fica ao lado do `parsed.json`, em
+  `response.json.gz`. Se a conversão for refeita, por mudança de regra ou de versão do pipeline,
+  o serviço não é chamado nem cobrado de novo.
 - **Nível gratuito.** O F0 analisa só as duas primeiras páginas de cada documento. Se o serviço
   devolver menos páginas do que o PDF tem, o job falha com essa explicação, em vez de indexar o
   documento pela metade.
 - **Erros.** Credencial ou endpoint recusado vai direto para `failed`, sem novas tentativas.
   Limite de requisições e erro do servidor seguem o retry normal.
-- **Custo.** O job registra `usage.parse_cost_usd`: páginas analisadas vezes o preço por página
-  (`AZURE_DI_PRICE_PER_1K_PAGES`, US$ 10 por mil páginas por padrão; confira a tabela da sua
-  região). Parse vindo do cache não é cobrado de novo.
+- **Custo.** O job registra `usage.parse_cost_usd`: páginas enviadas ao serviço vezes o preço por
+  página (`AZURE_DI_PRICE_PER_1K_PAGES`, US$ 10 por mil páginas por padrão; confira a tabela da
+  sua região). Parse em cache e conversão refeita a partir da resposta guardada não são cobrados.
 
-**O que foi e o que não foi testado no parser da Azure.** Não havia credencial da Azure durante
-o desenvolvimento, então o serviço real não foi chamado. O que foi feito:
-
-- 19 testes automatizados com uma resposta montada no formato documentado da API (versão
-  2024-11-30) e um cliente falso: ordem de leitura, tabelas, figuras, erros, nível gratuito e
-  cache por parser;
-- as partes que rodam na máquina, sobre os três PDFs reais: o envio sem criptografia da Brasal
-  (51 páginas, mesmo texto) e o recorte de figuras;
-- uma simulação com os três gráficos vetoriais da Light, em que as palavras e as posições vieram
-  da camada de texto do PDF, como o serviço as devolveria. A conferência de posição deu o mesmo
-  resultado do caminho Docling em dois gráficos e, no terceiro (PECLD/ROB), localizou os quatro
-  valores; o OCR local localiza dois.
-
-Fica por conferir com uma chave real: tempo e custo; a qualidade das tabelas; se o serviço lê
-por OCR o texto dos quatro gráficos da Light que são imagem (a documentação não diz); e se a
-auditoria e a busca dão os mesmos números. `scripts/audit_index.py` e `scripts/eval_search.py`
-servem para isso: é só rodá-los depois de indexar com cada parser.
+**Como o parser da Azure foi validado.** Em 13/11/2026, contra o serviço real (recurso S0 em
+East US, API 2024-11-30), com os três PDFs, em contêineres. A primeira execução mostrou os
+desvios descritos acima; todos foram corrigidos, e os números de "Os dois parsers, lado a lado"
+são os de depois. Como a resposta do serviço fica guardada, as correções foram conferidas sem
+chamá-lo de novo. A variante com a imagem leve (`docker-compose.azure.yml`) também foi
+executada. Além disso, 28 testes automatizados cobrem a conversão e a troca de parser com
+respostas no formato da API e um cliente falso; rodam sem rede.
 
 ### 2. Gráficos (modelo de visão + conferência)
 
@@ -337,7 +367,19 @@ Detalhes da regra:
 - Um título no alto da figura, ou um texto que cobre todos os valores, não é aceito como rótulo:
   a posição dele não distingue nada.
 - Logotipos e fotos são descartados antes: por área (menos de 4% da página) ou quando o modelo
-  classifica a figura como decorativa.
+  classifica a figura como decorativa. A exceção é a figura pequena, a partir de 2% da página,
+  em que uma segunda fonte leu números: é um gráfico pequeno. Acontece com o parser da Azure,
+  que delimita só a área do gráfico.
+
+**Conferir não é completar.** A conferência garante que o que entra está certo, não que está
+tudo lá: num gráfico cheio o modelo às vezes transcreve só parte dos valores. Numa das execuções
+ele devolveu 30 dos 43 valores do gráfico de perdas da Light, e o "26,51%" de dez/22 ficou de
+fora. Quando o parser entrega a camada de texto do PDF dentro da região da figura (hoje, só o da
+Azure), os valores que o modelo pulou entram a partir dela, numa linha própria e sem rótulo:
+"Valores escritos na figura que o modelo não transcreveu: 9.902; ...; 26,51%". Essa camada é
+uma fonte exata: são os rótulos de um gráfico vetorial como o PDF os escreve. Só contam as
+linhas feitas só de valores (em "12 meses", o 12 é parte de um rótulo), e gráfico colado como
+imagem não tem essa camada.
 
 **Legenda de cores não é indexada como ligação.** Saber que a barra laranja é "Uso Rede" depende
 da cor, e nenhuma das duas fontes confere cor. Os nomes da legenda entram no chunk como texto,
@@ -398,11 +440,16 @@ O corte segue a estrutura do documento, não um tamanho fixo:
   auditado pelos auditores independentes"). Tabela muito grande é dividida por linhas, repetindo
   o cabeçalho em cada parte. Uma tabela nunca é cortada no meio de uma linha.
 - **Gráfico:** um chunk por gráfico, só com o que foi conferido na etapa 2.
-- **Cabeçalhos e rodapés corridos** (nome da empresa, "Notas explicativas...", "As notas
-  explicativas são parte integrante...", o logotipo do auditor lido como título) são removidos.
-  Senão virariam "seção" de tudo e gerariam dezenas de chunks idênticos.
+- **Cabeçalhos e rodapés corridos** (nome da empresa, "Notas explicativas...", o logotipo do
+  auditor lido como título) são removidos pela repetição: a mesma linha curta, na borda da
+  página, em muitas páginas. Senão virariam "seção" de tudo e gerariam dezenas de chunks
+  idênticos. O rodapé fixo das demonstrações ("As notas explicativas são parte integrante das
+  demonstrações financeiras") sai sempre, mesmo quando aparece em poucas páginas.
 - **Índice.** O índice do documento não é indexado: ele repete o nome de todas as seções e
-  aparecia como resultado de qualquer busca por elas.
+  aparecia como resultado de qualquer busca por elas. É reconhecido em texto corrido (linhas
+  com pontilhado e número de página) e em forma de tabela, que é como o parser da Azure o
+  devolve: quase todas as linhas são um título e um número de página, e as páginas não diminuem
+  de uma linha para a outra. O texto curto que sobra na página do índice também sai.
 
 A seção de cada chunk (`section_path`) vem destas regras:
 
@@ -631,10 +678,54 @@ A busca acha o chunk certo, mas nem sempre em primeiro: para "receita operaciona
 nota explicativa da receita vem antes da DRE na Brasal e na Millet. O agente deve combinar a
 busca com filtro por `section_path` e `chunk_type`, não depender só da ordem.
 
+### Os dois parsers, lado a lado
+
+Medido em 13/11/2026, na mesma máquina, com os mesmos três PDFs e as mesmas chamadas à OpenAI.
+Docling: `PARSER=docling`. Azure: `PARSER=azure`, recurso S0 em East US.
+
+| | Docling | Azure |
+|---|---|---|
+| Parse dos 3 PDFs | 26 min | 86 s (Brasal 20 s, Light 46 s, Millet 20 s) |
+| Custo do parse | zero | US$ 2,18 (218 páginas a US$ 10 por mil, preço de referência) |
+| Chunks (texto / tabela / gráfico) | 641 (407 / 227 / 7) | 638 (396 / 234 / 8) |
+| Números das tabelas que existem no texto da página | 6.831 de 6.831 | 6.760 de 6.760 |
+| Números do PDF (4 dígitos ou mais) presentes nos chunks | 6.934 de 7.018 | 6.934 de 7.018 |
+| Páginas com texto e sem chunk | os índices da Millet e da Light | os índices da Brasal, da Millet e da Light |
+| Busca: chunk certo entre os 8 primeiros | 38 de 38 | 38 de 38 |
+| Busca: chunk certo em 1º lugar | 23 | 22 |
+| Busca: MRR | 0,74 | 0,74 |
+| Checagens de ponta a ponta | 14 de 14 | 14 de 14 |
+
+Os dois índices são equivalentes para o que o agente precisa. Na busca, duas indexações seguidas
+com a Azure deram 23 e 22 perguntas em 1º lugar (MRR 0,75 e 0,74); a tabela traz a última. As
+diferenças:
+
+- **Tempo e custo.** A Azure lê os três documentos em um minuto e meio, contra 26 minutos, e
+  cobra por página. O preço usado na conta é o padrão do indexador, não o da tabela da Azure.
+- **Conteúdo.** As duas contagens de 6.934 coincidem no total, mas não são os mesmos números. A
+  Azure traz a receita líquida da tabela do balanço social da Light (p. 15), que o Docling deixa
+  de fora, e o registro do contador no parecer da Brasal e da Millet. O Docling traz o telefone
+  do timbre do auditor da Light, que a Azure descarta como cabeçalho.
+- **Tabelas.** A Azure reconhece mais tabelas na Brasal (71 contra 63). Na p. 33, por exemplo,
+  o Docling junta controladora e consolidado numa tabela e a Azure devolve duas.
+- **Seções.** Nas demonstrações da Light, a seção da Azure é só o nome da demonstração
+  ("DEMONSTRAÇÕES DE RESULTADOS"), e o período e a unidade vão no alto da tabela. Com o Docling
+  as três linhas ficam juntas no nome da seção.
+- **Gráficos.** A Azure separa "Carga fio" e "Perda não-técnica", que o Docling recorta como uma
+  figura só: são oito chunks de gráfico, contra sete. No índice da Azure, 119 de 126 valores
+  transcritos foram conferidos e 148 de 231 ligações rótulo → valor (no do Docling, 105 de 105 e
+  120 de 211). Os valores barrados são quase todos do gráfico de carga fio, uma imagem pequena
+  em que o OCR do serviço leu pela metade os números escritos na vertical dentro das barras
+  ("105" onde está "5.105"). No gráfico de perdas o modelo leu "27,76%" onde está "27,27%": o
+  errado foi barrado e o certo entrou pela camada de texto da figura. O modelo de visão varia
+  entre execuções, e isso pesa mais nesses números do que o parser.
+- **O que só a Azure lê.** Texto que só existe em imagem: os gráficos colados (que no caminho
+  Docling dependem do OCR local) e, como efeito colateral, assinaturas manuscritas.
+
 ### Gráficos da Light
 
-Nove recortes passaram no filtro de área. Dois foram classificados como decorativos e sete
-foram transcritos.
+Os números desta seção são do caminho Docling. Nove recortes passaram no filtro de área. Dois
+foram classificados como decorativos e sete foram transcritos.
 
 | Gráfico | Página | Valores conferidos | Fonte do número | Ligações rótulo → valor conferidas |
 |---|---|---|---|---|
@@ -712,15 +803,26 @@ Sobre os gráficos:
 
 Sobre o parser da Azure:
 
-- **Não foi executado contra o serviço real** (ver a etapa 1). Tempo, custo e qualidade são os
-  da documentação, não medições.
-- **Gráficos em imagem.** A documentação não diz se o serviço lê por OCR o texto de uma imagem
-  colada num PDF digital. Se não ler, e o parse-worker estiver na imagem leve, os valores desses
-  gráficos não têm segunda fonte e são omitidos; na imagem do alvo `parse`, o OCR local cobre.
-- **Regras calibradas no Docling.** A correção de cabeçalho de tabela é específica do Docling.
-  As regras de seção e a conferência de posição dos gráficos valem para os dois parsers, mas
-  foram ajustadas com a saída do Docling; com a Azure os chunks podem sair diferentes.
-- **Medições e auditoria** deste README são todas com o Docling.
+- **Validado em três documentos.** As regras de título, cabeçalho e tabela foram ajustadas com a
+  resposta do serviço para estes três PDFs. Outro documento pode trazer desvios que elas não
+  cobrem; `scripts/audit_index.py` é o que mostra.
+- **Preço de referência.** O custo registrado no job usa US$ 10 por mil páginas, que é o padrão
+  do indexador. O valor real é o da tabela de preços da Azure para a região do recurso.
+- **O PDF sai da máquina.** Com `PARSER=azure` o documento inteiro é enviado ao recurso da Azure.
+- **Assinatura lida como palavra.** O serviço lê por OCR o que está em imagem, e uma assinatura
+  manuscrita vira uma palavra sem sentido no meio do parágrafo ("Momentan", no parecer da
+  Brasal).
+- **Gráfico em imagem.** Com a Azure, a segunda fonte dos gráficos colados como imagem é o OCR
+  do próprio serviço. O OCR local só entra se o serviço não devolver número nenhum dentro da
+  figura, e só existe na imagem do alvo `parse`.
+- **Complemento dos gráficos só com a Azure.** Os valores que o modelo de visão pula são
+  completados pela camada de texto da figura, que só o parser da Azure extrai. Com o Docling,
+  um valor que o modelo não transcreveu fica de fora.
+- **Correção de cabeçalho de tabela é uma por parser.** O problema é o mesmo ("(não auditado)"
+  na coluna errada), mas os dois erram de formas diferentes, e cada um tem a sua regra.
+- **Medições das outras seções** deste README (tempo por documento, unidade, gráficos da Light,
+  auditoria) são do caminho Docling. A comparação entre os dois está em "Os dois parsers, lado
+  a lado".
 
 Sobre a aplicação:
 
@@ -751,7 +853,7 @@ indexer/
 │     ├─ chunker.py                   # seções, texto, tabelas
 │     ├─ embedder.py, vector_store.py # vetores e Qdrant
 │     └─ indexing.py                  # junta as etapas da indexação
-└─ tests/                             # 130 testes, sem rede nem contêiner
+└─ tests/                             # 142 testes, sem rede nem contêiner
 ```
 
 ## Caminho para produção no Azure

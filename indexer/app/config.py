@@ -70,6 +70,9 @@ class Settings(BaseSettings):
     # documento, então voltar ao anterior não refaz o parse.
     parser: Literal["docling", "azure"] = "docling"
     figure_min_area_ratio: float = 0.04  # figuras menores que 4% da página são logotipos
+    # A exceção: figura pequena (a partir de 2%) em que uma segunda fonte leu números. É um
+    # gráfico pequeno. Acontece com o parser da Azure, que delimita só a área do gráfico.
+    figure_small_min_area_ratio: float = 0.02
 
     # --- Parser Azure ---
     azure_di_endpoint: str = ""  # https://<recurso>.cognitiveservices.azure.com/

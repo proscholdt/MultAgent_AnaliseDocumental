@@ -20,6 +20,7 @@ from app.pipeline.figures import (
     FigureResult,
     FigureTranscription,
     FigureValue,
+    is_chart_candidate,
     verify_transcription,
 )
 from app.pipeline.parsing import ParserError, build_parser, unconfirmed_table_numbers
@@ -36,10 +37,11 @@ def polygon(x0: float, y0: float, x1: float, y1: float) -> list[float]:
 class Layout:
     """Monta uma resposta do modelo de layout: o texto corrido e os elementos que apontam para ele."""
 
-    def __init__(self) -> None:
+    def __init__(self, pages: int = 2) -> None:
         self.content = ""
         self.paragraphs, self.tables, self.figures = [], [], []
-        self.words: dict[int, list[dict]] = {1: [], 2: []}
+        self.words: dict[int, list[dict]] = {n: [] for n in range(1, pages + 1)}
+        self.lines: dict[int, list[dict]] = {n: [] for n in range(1, pages + 1)}
 
     def element(self, text: str, page: int, box: tuple, **extra) -> dict:
         offset = len(self.content)
@@ -50,6 +52,15 @@ class Layout:
     def paragraph(self, text: str, page: int, box: tuple, role: str | None = None) -> dict:
         item = self.element(text, page, box, **({"role": role} if role else {}))
         self.paragraphs.append(item)
+        return item
+
+    def block(self, lines: list[str], page: int, box: tuple, role: str | None = None) -> dict:
+        """Parágrafo de várias linhas: o serviço devolve o texto junto e as linhas à parte."""
+        item = self.paragraph(" ".join(lines), page, box, role)
+        offset = item["spans"][0]["offset"]
+        for line in lines:
+            self.lines[page].append({"content": line, "spans": [{"offset": offset, "length": len(line)}]})
+            offset += len(line) + 1
         return item
 
     def word(self, text: str, page: int, box: tuple) -> None:
@@ -64,7 +75,8 @@ class Layout:
                 cell = self.paragraph(text, page, (box[0] + column, box[1] + r * 0.2,
                                                    box[0] + column + span, box[1] + r * 0.2 + 0.15))
                 cells.append({"rowIndex": r, "columnIndex": column, "content": text, "kind": kind,
-                              "columnSpan": span, "spans": cell["spans"]})
+                              "columnSpan": span, "spans": cell["spans"],
+                              "boundingRegions": cell["boundingRegions"]})
                 column += span
         table = {"rowCount": len(rows), "columnCount": max(sum(c[2] for c in row) for row in rows),
                  "cells": cells, "spans": [{"offset": start, "length": len(self.content) - start}],
@@ -80,7 +92,7 @@ class Layout:
 
     def result(self) -> dict:
         pages = [{"pageNumber": n, "width": PAGE[0], "height": PAGE[1], "unit": "inch",
-                  "words": self.words[n]} for n in (1, 2)]
+                  "words": self.words[n], "lines": self.lines[n]} for n in self.words]
         return {"apiVersion": "2024-11-30", "modelId": "prebuilt-layout", "content": self.content,
                 "pages": pages, "paragraphs": self.paragraphs, "tables": self.tables, "figures": self.figures}
 
@@ -139,7 +151,8 @@ def layout() -> Layout:
 
 
 def convert(layout: Layout, calls: list | None = None) -> list[ParsedItem]:
-    return convert_layout(layout.result(), crop=fake_crop([] if calls is None else calls), min_area_ratio=0.04)
+    return convert_layout(layout.result(), crop=fake_crop([] if calls is None else calls),
+                          min_area_ratio=0.04, small_min_area_ratio=0.02)
 
 
 # --- texto e ordem de leitura -------------------------------------------------
@@ -172,6 +185,89 @@ def test_paragraph_across_a_page_break_keeps_both_pages(layout):
     assert all(i.page_end is None for i in items if i is not crossing)
 
 
+# --- títulos, cabeçalhos e rodapés ----------------------------------------------
+
+
+def test_statement_title_block_is_split_and_a_title_tagged_as_page_header_is_kept(settings):
+    """O serviço devolve o bloco de título de uma demonstração como um parágrafo só e, na
+    Millet, rotulou "Demonstrações dos fluxos de caixa" como cabeçalho de página: a tabela
+    ficava na seção da demonstração anterior."""
+    doc = Layout()
+    doc.paragraph("Empresa Exemplo S.A.", 1, (1, 0.3, 4, 0.5), role="pageHeader")
+    doc.block(["Empresa Exemplo S.A.", "Demonstrações do resultado",
+               "Exercícios findos em 31 de dezembro de 2022 e 2021", "(em milhares de reais)"],
+              1, (1, 1.0, 6, 1.8), role="title")
+    doc.table(1, (1, 2.0, 3, 2.6), rows=[[("", "stubHead", 1), ("2022", "columnHeader", 1)],
+                                          [("Receita operacional líquida", "content", 1), ("462.127", "content", 1)]])
+    doc.block(["Empresa Exemplo S.A.", "Demonstrações dos fluxos de caixa"], 2, (1, 0.3, 6, 0.7), role="pageHeader")
+    doc.paragraph("Exercícios findos em 31 de dezembro de 2022 e 2021", 2, (1, 1.0, 6, 1.2))
+    doc.table(2, (1, 2.0, 3, 2.6), rows=[[("(em milhares de reais)", "columnHeader", 1), ("2022", "columnHeader", 1)],
+                                          [("Caixa gerado nas operações", "content", 1), ("14.743", "content", 1)]])
+    # Linha de período rotulada como título: é o subtítulo da tabela, não uma seção.
+    doc.paragraph("Exercício findo em 31 de dezembro de 2021 -- não auditado", 2, (1, 3.0, 6, 3.2), role="sectionHeading")
+    # Título quebrado pela largura da página: a segunda linha continua a primeira. Fica inteiro.
+    doc.block(["Demonstração do resultado da controlada em conjunto Amazônia Energia em 31 de dezembro",
+               "de 2022"], 2, (1, 4.0, 7, 4.4), role="sectionHeading")
+    # Parágrafo comum que começa pelo nome de uma demonstração: é frase, não bloco de título.
+    doc.block(["Balanço patrimonial e demonstração do resultado são apresentados de forma", "Condensada, a seguir."],
+              2, (1, 5.0, 7, 5.4))
+    items = convert(doc)
+    assert [(i.type, i.page, i.text) for i in items if i.type != "table"] == [
+        ("heading", 1, "Demonstrações do resultado"),  # a linha da empresa é cabeçalho corrido: sai
+        ("text", 1, "Exercícios findos em 31 de dezembro de 2022 e 2021 (em milhares de reais)"),
+        ("heading", 2, "Demonstrações dos fluxos de caixa"),
+        ("text", 2, "Exercícios findos em 31 de dezembro de 2022 e 2021"),
+        ("text", 2, "Exercício findo em 31 de dezembro de 2021 -- não auditado"),
+        ("heading", 2, "Demonstração do resultado da controlada em conjunto Amazônia Energia em 31 de dezembro de 2022"),
+        ("text", 2, "Balanço patrimonial e demonstração do resultado são apresentados de forma Condensada, a seguir."),
+    ]
+    parsed = ParsedDocument(doc_id="d", file_name="f.pdf", page_count=2, parser="azure", pipeline_version="x",
+                            items=items, pages=[ParsedPage(page=1), ParsedPage(page=2)])
+    first, second = [c for c in chunk_document(parsed, {}, settings) if c.chunk_type == "table"]
+    assert first.section_path == ["Demonstrações do resultado"] and second.section_path == ["Demonstrações dos fluxos de caixa"]
+    assert first.text.startswith("Exercícios findos em 31 de dezembro de 2022 e 2021 (em milhares de reais)")
+    assert first.unit == "R$ mil"
+
+
+def test_page_header_that_does_not_repeat_is_a_title_unless_the_page_already_has_one():
+    doc = Layout()
+    # Página 1: timbre do auditor e um nome solto, rotulados como cabeçalho. A página abre com
+    # um título de verdade, então nada disso vira título.
+    doc.block(["Auditores Associados", "Rua das Flores, 18 - 15º andar", "20090-010 - Rio de Janeiro - RJ"],
+              1, (5, 0.3, 8, 0.9), role="pageHeader")
+    doc.paragraph("Membro de uma rede global", 1, (5, 1.0, 8, 1.1), role="pageHeader")
+    doc.paragraph("Relatório do auditor independente", 1, (1, 1.4, 6, 1.6), role="title")
+    doc.paragraph("Examinamos as demonstrações financeiras da Companhia.", 1, (1, 1.8, 7, 2.2))
+    # Página 2: o título do anexo veio como cabeçalho de página, e a página não tem outro.
+    doc.paragraph("Anexo I", 2, (3, 0.5, 5, 0.7), role="pageHeader")
+    doc.block(['Relatório anual do comitê de auditoria da Empresa Exemplo ("Companhia" ou', '"Empresa")'],
+              2, (1, 0.8, 7, 1.2), role="pageHeader")
+    doc.paragraph("Ao longo do exercício, o comitê realizou reuniões ordinárias.", 2, (1, 1.6, 7, 2.0))
+    # Timbre numa página que começa por texto: tem CEP, não tem cara de título.
+    doc.paragraph("Av. Central, 100 - 20040-020", 2, (5, 0.2, 8, 0.4), role="pageHeader")
+    assert [(i.type, i.text) for i in convert(doc)] == [
+        ("heading", "Relatório do auditor independente"),
+        ("text", "Examinamos as demonstrações financeiras da Companhia."),
+        ("heading", "Anexo I"),
+        ("heading", 'Relatório anual do comitê de auditoria da Empresa Exemplo ("Companhia" ou "Empresa")'),
+        ("text", "Ao longo do exercício, o comitê realizou reuniões ordinárias."),
+    ]
+
+
+def test_running_header_left_untagged_on_one_page_is_still_dropped():
+    """Light: o mesmo cabeçalho veio rotulado em 79 páginas e sem rótulo em 4."""
+    header = "Empresa Exemplo S.A. CNPJ 00.000.000/0001-00"
+    doc = Layout(pages=3)
+    for page in (1, 2):
+        doc.paragraph(header, page, (1, 0.3, 5, 0.5), role="pageHeader")
+        doc.paragraph(f"Texto da página {page}.", page, (1, 1.0, 7, 1.3))
+    doc.paragraph(header, 3, (1, 0.3, 5, 0.5))  # sem rótulo, no mesmo lugar: é o cabeçalho
+    doc.paragraph(header, 3, (1, 5.0, 5, 5.2))  # mesmo texto no meio da página: é conteúdo
+    doc.paragraph("Texto da página 3.", 3, (1, 6.0, 7, 6.3))
+    assert [i.text for i in convert(doc)] == [
+        "Texto da página 1.", "Texto da página 2.", header, "Texto da página 3."]
+
+
 # --- tabelas ------------------------------------------------------------------
 
 
@@ -182,9 +278,61 @@ def test_table_becomes_markdown_with_header_levels_joined(layout):
         "| Receita operacional líquida | 1.325.059 | 1.061.410 |",
         # Célula de dados que cobre as três colunas fica só na primeira; a barra é escapada.
         "| Outras receitas \\| despesas: |  |  |",
-        "| Possui auditoria? ☒ sim | 485.156 | 388.450 |",
+        # A marca de caixa de seleção que o serviço inventa (":selected:") não entra.
+        "| Possui auditoria? sim | 485.156 | 388.450 |",
     ]
     assert table_markdown({"rowCount": 0, "columnCount": 0, "cells": []}) == ""
+
+
+def test_header_note_row_goes_to_the_column_it_is_written_over():
+    """Brasal: "(não auditado)" vale só para 2021, e o serviço devolve as duas marcas numa
+    célula de dados que cobre todas as colunas, na linha do primeiro rótulo."""
+    doc = Layout()
+    table = doc.table(1, (1, 2.0, 6, 3.4), rows=[
+        [("", "stubHead", 1), ("Controladora", "columnHeader", 2), ("Consolidado", "columnHeader", 2)],
+        [("", "stubHead", 1), ("2022", "columnHeader", 1), ("2021", "columnHeader", 1),
+         ("2022", "columnHeader", 1), ("2021", "columnHeader", 1)],
+        [("Ativo", "content", 1), ("(não auditado) (não auditado)", "content", 4)],
+        [("Caixa", "content", 1), ("355", "content", 1), ("871", "content", 1),
+         ("10.656", "content", 1), ("8.195", "content", 1)],
+        [("Lucro operacional antes das receitas e despesas", "content", 1), ("173.736", "content", 1),
+         ("275.244", "content", 1), ("192.840", "content", 1), ("238.224", "content", 1)],
+        [("financeiras", "content", 1), ("", "content", 1), ("", "content", 1), ("", "content", 1), ("", "content", 1)],
+        [("(-) Provisão", "content", 1), ("(1.551)", "content", 1), ("", "content", 1), ("", "content", 1), ("", "content", 1)],
+    ])
+    # As colunas têm 1 polegada: 2021 da controladora vai de 3 a 4, e a do consolidado de 5 a 6.
+    for text, box in (("(não", (3.1, 2.42, 3.4, 2.55)), ("auditado)", (3.45, 2.42, 3.9, 2.55)),
+                      ("(não", (5.1, 2.42, 5.4, 2.55)), ("auditado)", (5.45, 2.42, 5.9, 2.55))):
+        doc.word(text, 1, box)
+    words = [(word["content"], word["polygon"]) for word in doc.words[1]]
+    assert table_markdown(table, words).splitlines() == [
+        ("|  | Controladora - 2022 | Controladora - 2021 - (não auditado) | Consolidado - 2022 "
+         "| Consolidado - 2021 - (não auditado) |"),
+        "|---|---|---|---|---|",
+        "| Ativo |  |  |  |  |",  # a linha fica, sem a marca
+        "| Caixa | 355 | 871 | 10.656 | 8.195 |",
+        # Rótulo quebrado em duas linhas: a continuação volta para o rótulo.
+        "| Lucro operacional antes das receitas e despesas financeiras | 173.736 | 275.244 | 192.840 | 238.224 |",
+        "| (-) Provisão | (1.551) |  |  |  |",
+    ]
+    # Sem as posições das palavras não dá para saber a coluna: a linha fica como veio.
+    assert table_markdown(table).splitlines()[2] == "| Ativo | (não auditado) (não auditado) |  |  |  |"
+
+    # Valor negativo entre parênteses na primeira linha de dados não é anotação de cabeçalho.
+    negative = Layout().table(1, (1, 2.0, 3, 3.0), rows=[
+        [("Saldos", "columnHeader", 1), ("2022", "columnHeader", 1)],
+        [("", "content", 1), ("(1.551)", "content", 1)],
+    ])
+    assert table_markdown(negative).splitlines()[2] == "|  | (1.551) |"
+
+    # Marca sozinha numa célula de uma coluna só: é dessa coluna, e a linha vazia some.
+    single = Layout().table(1, (1, 2.0, 4, 3.0), rows=[
+        [("Saldos", "columnHeader", 1), ("31/12/2022", "columnHeader", 1), ("31/12/2021", "columnHeader", 1)],
+        [("", "content", 1), ("", "content", 1), ("(não auditado)", "content", 1)],
+        [("Terrenos", "content", 1), ("13.278", "content", 1), ("13.292", "content", 1)],
+    ])
+    assert table_markdown(single).splitlines() == [
+        "| Saldos | 31/12/2022 | 31/12/2021 - (não auditado) |", "|---|---|---|", "| Terrenos | 13.278 | 13.292 |"]
 
 
 def test_table_without_header_cells_uses_the_first_row():
@@ -224,11 +372,62 @@ def test_figure_text_comes_from_the_service_words_in_crop_pixels(layout):
 
 
 def test_words_far_apart_on_the_same_line_are_separate_segments():
-    words = [("dez/20", (1.0, 5.0, 1.5, 5.15)), ("mar/21", (2.2, 5.0, 2.7, 5.15)),
-             ("Perdas", (1.0, 5.5, 1.5, 5.65)), ("Totais/Carga", (1.55, 5.5, 2.4, 5.65)), ("Fio", (2.45, 5.5, 2.7, 5.65))]
-    segments = figure_segments(words, (0.5, 4.0, 6.0, 6.0), (PX, PX), (72, 576))
+    words = [(text, polygon(*box)) for text, box in (
+        ("dez/20", (1.0, 5.0, 1.5, 5.15)), ("mar/21", (2.2, 5.0, 2.7, 5.15)),
+        ("Perdas", (1.0, 5.5, 1.5, 5.65)), ("Totais/Carga", (1.55, 5.5, 2.4, 5.65)), ("Fio", (2.45, 5.5, 2.7, 5.65)))]
+    segments = figure_segments(words, (0.5, 4.0, 6.0, 6.0))
     assert [s.text for s in segments] == ["dez/20", "mar/21", "Perdas Totais/Carga Fio"]
-    assert figure_segments(words, (6.5, 4.0, 8.0, 6.0), (PX, PX), (0, 0)) is None
+    # As caixas saem na unidade da página; a conversão para pixels do recorte vem depois.
+    assert (segments[2].x0, segments[2].y0, segments[2].x1, segments[2].y1) == (1.0, 5.5, 2.7, 5.65)
+    assert figure_segments(words, (6.5, 4.0, 8.0, 6.0)) is None
+
+
+def vertical(x0: float, y0: float, x1: float, y1: float) -> list[float]:
+    """Polígono de uma palavra escrita de baixo para cima, como o serviço devolve: começa no
+    canto de baixo e a primeira aresta sobe."""
+    return [x0, y1, x0, y0, x1, y0, x1, y1]
+
+
+def test_vertical_word_is_not_joined_to_the_horizontal_label_beside_it():
+    """Gráfico de barras da Light: o valor escrito na vertical dentro da barra ("29.082") e o
+    percentual ao lado ("85%") estão na mesma altura e quase encostados."""
+    words = [("29.082", vertical(1.35, 5.87, 1.44, 6.13)), ("85%", polygon(1.48, 5.93, 1.65, 6.01)),
+             ("28.977", vertical(1.94, 5.89, 2.03, 6.14)), ("85%", polygon(2.06, 5.97, 2.23, 6.05)),
+             # Rótulo vertical de duas palavras: lido de baixo para cima, na mesma coluna.
+             ("Receita", vertical(0.5, 5.6, 0.6, 6.1)), ("líquida", vertical(0.5, 5.0, 0.6, 5.55)),
+             # Barra empilhada: dois valores na vertical, um logo acima do outro. São dois números.
+             ("3.573", vertical(3.0, 6.0, 3.09, 6.2)), ("3.190", vertical(3.0, 5.75, 3.09, 5.95)),
+             # Na horizontal vale o mesmo, mas "12 meses" continua sendo um rótulo só.
+             ("94,2%", polygon(1.0, 6.5, 1.3, 6.6)), ("94,0%", polygon(1.33, 6.5, 1.63, 6.6)),
+             ("12", polygon(2.5, 6.5, 2.62, 6.6)), ("meses", polygon(2.65, 6.5, 3.0, 6.6))]
+    segments = figure_segments(words, (0.3, 4.8, 4.0, 6.8))
+    assert sorted(s.text for s in segments) == [
+        "12 meses", "28.977", "29.082", "3.190", "3.573", "85%", "85%", "94,0%", "94,2%", "Receita líquida"]
+
+
+def test_small_figure_is_a_chart_only_when_the_service_read_numbers_in_it(settings):
+    """A Azure delimita só a área do gráfico: três gráficos da Light ficam abaixo dos 4% da
+    página que separam gráfico de logotipo."""
+    doc = Layout()
+    doc.paragraph("Arrecadação", 1, (1, 1.0, 5, 1.2), role="sectionHeading")
+    for text, box in (("6,0%", (1.2, 2.2, 1.6, 2.35)), ("Dez/22", (1.2, 3.2, 1.7, 3.35))):
+        doc.word(text, 1, box)
+    doc.figure(1, (1.0, 2.0, 3.2, 3.5))  # 3,5% da página, com um número lido dentro
+    doc.word("Light", 1, (5.1, 2.2, 5.9, 2.5))
+    doc.figure(1, (5.0, 2.0, 7.2, 3.5))  # mesmo tamanho, só com um nome: ícone ou logotipo
+    doc.word("96,0%", 1, (1.1, 5.05, 1.5, 5.2))
+    doc.figure(1, (1.0, 5.0, 2.0, 5.5))  # com número, mas menor que 2%: pequena demais
+    calls: list = []
+    chart, icon, tiny = [i for i in convert(doc, calls) if i.type == "figure"]
+    assert [box for _, box, _ in calls] == [(1.0, 2.0, 3.2, 3.5)]
+    assert chart.image_path and [w.text for w in chart.ocr_words] == ["6,0%", "Dez/22"]
+    assert icon.image_path is None and tiny.image_path is None
+    # O index-worker usa a mesma regra para decidir o que vai ao modelo de visão.
+    assert is_chart_candidate(chart, settings)
+    chart.ocr_words = [OcrWord(text="Dez", x0=0, y0=0, x1=1, y1=1)]
+    assert not is_chart_candidate(chart, settings)  # pequena e sem número lido
+    chart.area_ratio = 0.10
+    assert is_chart_candidate(chart, settings)  # grande: é candidata de qualquer jeito
 
 
 def test_chart_verification_and_chunking_work_on_the_converted_document(layout, settings):
@@ -317,6 +516,61 @@ def test_parse_sends_the_pdf_and_builds_the_parsed_document(layout, settings, mo
         assert image.size == (720, 504)
     assert [w.text for w in vector.ocr_words] == ["26,51%", "21,53%", "dez/22", "Patamar Regulatório"]
     assert sorted(p.name for p in (tmp_path / "out" / "figures").iterdir()) == ["p0002_001.png", "p0002_002.png"]
+    assert parsed.billed_pages == 2  # as duas páginas foram enviadas ao serviço
+    # A camada de texto do PDF na região de cada figura recortada também é lida aqui. Este PDF
+    # está em branco, então ela vem vazia; o logotipo, que não é recortado, fica sem ela.
+    assert [i.text_layer for i in parsed.items if i.type == "figure"] == [None, "", ""]
+
+
+def test_text_layer_of_the_figure_region_is_read_from_the_pdf(tmp_path):
+    """Só o texto do PDF que está dentro da região entra. É ele que completa os valores que o
+    modelo de visão pula num gráfico vetorial."""
+    from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
+
+    writer = PdfWriter()
+    page = writer.add_blank_page(width=612, height=792)  # 8,5 x 11 polegadas, em pontos
+    font = DictionaryObject({NameObject("/Type"): NameObject("/Font"), NameObject("/Subtype"): NameObject("/Type1"),
+                             NameObject("/BaseFont"): NameObject("/Helvetica")})
+    page[NameObject("/Resources")] = DictionaryObject(
+        {NameObject("/Font"): DictionaryObject({NameObject("/F1"): writer._add_object(font)})})
+    content = DecodedStreamObject()
+    # "26,51%" a 1,3 polegada do alto da página; "9.902" bem mais abaixo, a 6,8.
+    content.set_data(b"BT /F1 12 Tf 100 700 Td (26,51%) Tj ET BT /F1 12 Tf 100 300 Td (9.902) Tj ET")
+    page[NameObject("/Contents")] = writer._add_object(content)
+    pdf = tmp_path / "grafico.pdf"
+    with pdf.open("wb") as handle:
+        writer.write(handle)
+
+    cropper = azure_parser._FigureCropper(pdf, tmp_path / "out", 2.0)
+    try:
+        assert cropper.text_layer(1, (1.0, 1.0, 4.0, 1.6), PAGE).strip() == "26,51%"
+        assert cropper.text_layer(1, (1.0, 6.5, 4.0, 7.0), PAGE).strip() == "9.902"
+        assert cropper.text_layer(1, (5.0, 1.0, 8.0, 1.6), PAGE).strip() == ""  # região sem texto
+    finally:
+        cropper.close()
+
+
+def test_service_response_is_kept_so_converting_again_costs_nothing(layout, settings, monkeypatch, tmp_path):
+    settings = azure_settings(settings, monkeypatch)
+    pdf = tmp_path / "upload.pdf"
+    pdf.write_bytes(two_page_pdf())
+    client = FakeClient(layout.result())
+    first = AzureParser(settings, client).parse(pdf, "abc", "exemplo.pdf", tmp_path / "out")
+    assert (tmp_path / "out" / azure_parser.RESPONSE_FILE).exists()
+
+    # Mesmo documento, mesma pasta (o parsed.json foi invalidado, por exemplo): a conversão é
+    # refeita a partir da resposta guardada, sem chamar nem pagar o serviço.
+    again = AzureParser(settings, client).parse(pdf, "abc", "exemplo.pdf", tmp_path / "out")
+    assert len(client.calls) == 1 and again.billed_pages == 0
+    assert again.items == first.items and again.parser == first.parser
+
+    # Resposta de outro modelo, ou arquivo corrompido, não serve: o serviço é chamado de novo.
+    monkeypatch.setattr(settings, "azure_di_model", "prebuilt-read")
+    other = FakeClient({**layout.result(), "modelId": "prebuilt-read"})
+    assert AzureParser(settings, other).parse(pdf, "abc", "exemplo.pdf", tmp_path / "out").billed_pages == 2
+    (tmp_path / "out" / azure_parser.RESPONSE_FILE).write_bytes(b"pela metade")
+    assert AzureParser(settings, other).parse(pdf, "abc", "exemplo.pdf", tmp_path / "out").billed_pages == 2
+    assert len(other.calls) == 2
 
 
 def test_free_tier_that_reads_only_two_pages_is_an_error_not_a_short_index(layout, settings, monkeypatch, tmp_path):
@@ -327,6 +581,7 @@ def test_free_tier_that_reads_only_two_pages_is_an_error_not_a_short_index(layou
     truncated["pages"] = truncated["pages"][:1]
     with pytest.raises(ParserError, match="1 de 2 páginas.*F0"):
         AzureParser(settings, FakeClient(truncated)).parse(pdf, "abc", "x.pdf", tmp_path / "out")
+    assert not (tmp_path / "out" / azure_parser.RESPONSE_FILE).exists()  # resposta incompleta não é guardada
 
 
 def test_service_errors_are_permanent_only_when_retrying_cannot_help(settings, monkeypatch, tmp_path):

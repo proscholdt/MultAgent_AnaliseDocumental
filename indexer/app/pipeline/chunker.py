@@ -39,17 +39,29 @@ _CONTINUATION = re.compile(r"\s*(?:[-–—]{1,2}\s*continua[cç][aã]o|\(contin
 _NUMBERED = re.compile(r"^(\d{1,2}(?:\.\d{1,2}){0,3})(\.?)(\s*)(\S)")
 _TITLE_OPENERS = "\"“'(["
 # As demonstrações primárias têm nome fixo. Quando o layout rotula o título como texto comum,
-# é por esse nome que ele é reconhecido.
-_STATEMENT_TITLE = re.compile(
+# é por esse nome que ele é reconhecido. O parser da Azure usa a mesma lista para separar o
+# título do bloco em que o serviço o devolve (empresa, título, período e unidade juntos).
+STATEMENT_TITLE = re.compile(
     r"^(?:balanços?\s+patrimonia(?:l|is)"
     r"|demonstraç(?:ão|ões)\s+d[aeo]s?\s+(?:resultados?(?:\s+abrangentes?)?|fluxos?\s+de\s+caixa"
     r"|mutaç(?:ão|ões)\s+d[eo]\s+patrimônio\s+líquido|valor(?:es)?\s+adicionados?))\b",
     re.IGNORECASE,
 )
 _STATEMENT_TITLE_MAX_CHARS = 200
+# Rodapé fixo das demonstrações primárias. O critério de repetição não o pega quando ele
+# aparece em menos de cinco páginas (a Millet tem quatro demonstrações de uma página).
+_STATEMENT_FOOTER = re.compile(
+    r"^as\s+notas\s+explicativas\s+(?:da\s+administração\s+)?são\s+parte\s+integrante\s+d[ae]s(?:tas)?\s+"
+    r"demonstrações\s+(?:financeiras|contábeis)(?:\s+(?:individuais|consolidadas|e))*\s*\.?$",
+    re.IGNORECASE,
+)
 _MERGED_TITLE_MAX_CHARS = 240
 _TOC_LEADER = re.compile(r"\.{5,}")
 _TOC_MIN_LINES = 5
+_TOC_ROW_SHARE = 0.8  # fração das linhas de uma tabela que têm de ser "título | página"
+_TOC_LEFTOVER_MAX_TOKENS = 80  # texto curto que sobra na página do índice ("Índice", o nome da empresa)
+_TOC_SECTION_NUMBER = re.compile(r"\d{1,2}\.?")
+_NUMERIC_CELL = re.compile(r"[\d.,()%\s-]+")
 _FOOTNOTE = re.compile(r"^(?:\(\w{1,3}\)|\*{1,3}|\d{1,2}\))\s*\S")
 _FOOTNOTE_MAX_TOKENS = 80
 _LETTERED = re.compile(r"^(?:[a-z]\)|\([a-z]\)|\([ivx]+\))\s+\S", re.IGNORECASE)
@@ -136,11 +148,32 @@ def _looks_like_note_title(text: str) -> str | None:
     return note_number(line)
 
 
+def _toc_row_page(line: str) -> int | None:
+    """Página apontada por uma linha de índice em forma de tabela ("| 1. | Contexto operacional
+    | 8 |"), ou None se a linha não for isso: tem de ser um título e, no fim, um número de
+    página. Uma linha com outro número (um valor) é de tabela comum."""
+    cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+    filled = [cell for cell in cells if cell]
+    if len(filled) < 2 or not re.fullmatch(r"\d{1,4}", filled[-1]):
+        return None
+    titles = [cell for cell in filled[:-1] if not _TOC_SECTION_NUMBER.fullmatch(cell)]
+    if not titles or any(_NUMERIC_CELL.fullmatch(cell) for cell in titles):
+        return None
+    return int(filled[-1])
+
+
 def is_table_of_contents(text: str) -> bool:
-    """Índice: a maioria das linhas termina em pontilhado e número de página."""
+    """Índice. Em texto corrido, a maioria das linhas termina em pontilhado e número de página.
+    Em forma de tabela (é como o parser da Azure o devolve), quase todas as linhas são um
+    título seguido do número da página, e as páginas não diminuem de uma linha para a outra."""
     lines = [line for line in text.splitlines() if line.strip()]
     leaders = sum(1 for line in lines if _TOC_LEADER.search(line))
-    return leaders >= _TOC_MIN_LINES and leaders >= len(lines) / 2
+    if leaders >= _TOC_MIN_LINES and leaders >= len(lines) / 2:
+        return True
+    rows = [line for line in lines if line.lstrip().startswith("|") and not _TABLE_SEPARATOR.match(line)]
+    pages = [page for line in rows if (page := _toc_row_page(line)) is not None]
+    return (len(pages) >= _TOC_MIN_LINES and len(pages) >= _TOC_ROW_SHARE * len(rows)
+            and pages == sorted(pages))
 
 
 def _running_key(text: str) -> str:
@@ -273,6 +306,19 @@ class _Builder:
         self.items: list[ParsedItem] = []  # itens na ordem de leitura, para olhar adiante
         self.position = 0  # índice do item em processamento
         self.buffer: list[tuple[str, int, int, int]] = []  # (parágrafo, página, tokens, página final)
+        self.toc_pages: set[int] = set()  # páginas em que um índice foi descartado
+
+    def without_toc_leftovers(self) -> list[Chunk]:
+        """Os chunks, sem o texto curto que sobra na página do índice. Quando o índice vem como
+        tabela, o que está em volta dele ("Índice", o nome da empresa, uma linha que ficou fora
+        da grade) vem como texto separado e viraria um chunk sem conteúdo."""
+        kept = [chunk for chunk in self.chunks
+                if not (chunk.chunk_type == "text" and chunk.page_start == chunk.page_end
+                        and chunk.page_start in self.toc_pages
+                        and chunk.token_count <= _TOC_LEFTOVER_MAX_TOKENS)]
+        for index, chunk in enumerate(kept):
+            chunk.chunk_index = index
+        return kept
 
     # -- emissão ------------------------------------------------------------
 
@@ -285,6 +331,7 @@ class _Builder:
             return
         # O índice repete o nome de todas as seções e casaria com qualquer busca por elas.
         if chunk_type != "figure" and is_table_of_contents(text):
+            self.toc_pages.update(range(page_start, page_end + 1))
             return
         if chunk_type == "figure":
             # A unidade de um gráfico é a que está escrita nele (GWh, %, R$ milhões). A unidade
@@ -449,6 +496,8 @@ class _Builder:
         text = text.strip()
         if len(text) < 2:  # letra solta de um logotipo ou de um sumário
             return
+        if _STATEMENT_FOOTER.match(text):  # rodapé fixo das demonstrações: não é conteúdo
+            return
         if self.is_note_heading(text):
             self.add_heading(text, page)
             return
@@ -466,7 +515,7 @@ class _Builder:
                 table.page_end = max(table.page_end, end)
                 return
         if (len(text) <= _STATEMENT_TITLE_MAX_CHARS and "\n" not in text and text[-1] not in ".;:,"
-                and _STATEMENT_TITLE.match(text)):
+                and STATEMENT_TITLE.match(text)):
             # "Balanços patrimoniais Em 31 de dezembro de 2022 e 2021" rotulado como texto comum:
             # abre a seção da demonstração e continua no texto, como título da tabela.
             self.add_heading(text, page)
@@ -535,4 +584,4 @@ def chunk_document(parsed: ParsedDocument, figures: dict[str, FigureResult], set
         elif item.type == "figure":
             builder.add_figure(item.image_path, item.text, item.page)
     builder.flush()
-    return builder.chunks
+    return builder.without_toc_leftovers()

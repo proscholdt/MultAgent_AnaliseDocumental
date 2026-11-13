@@ -44,6 +44,10 @@ def settings(tmp_path, monkeypatch):
     monkeypatch.setenv("JWT_SECRET", "segredo-de-teste-com-mais-de-32-bytes!")
     monkeypatch.setenv("RETRY_BACKOFF_SECONDS", "0")
     monkeypatch.setenv("OPENAI_API_KEY", "")
+    # Os testes não dependem do .env de quem os roda: parser padrão e nenhuma credencial real.
+    monkeypatch.setenv("PARSER", "docling")
+    monkeypatch.setenv("AZURE_DI_ENDPOINT", "")
+    monkeypatch.setenv("AZURE_DI_KEY", "")
     get_settings.cache_clear()
     yield get_settings()
     get_settings.cache_clear()
