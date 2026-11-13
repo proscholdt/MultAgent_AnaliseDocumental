@@ -62,14 +62,16 @@ class Decide:
     delegacoes: list[dict] = field(default_factory=list)
     terminado: bool = False
     mensagem: str = "Feito."
+    intencao: str = "pergunta"
 
 
 def delegation(agente: str, tarefa: str, doc_id: str | None = None) -> dict:
     return {"agente": agente, "tarefa": tarefa, "doc_id": doc_id}
 
 
-def decide(*delegacoes: dict, terminado: bool = False, mensagem: str = "Feito.") -> Decide:
-    return Decide(list(delegacoes), terminado, mensagem)
+def decide(*delegacoes: dict, terminado: bool = False, mensagem: str = "Feito.",
+           intencao: str = "pergunta") -> Decide:
+    return Decide(list(delegacoes), terminado, mensagem, intencao)
 
 
 class ScriptedModel:
@@ -97,7 +99,8 @@ class ScriptedModel:
         for item in output:
             if isinstance(item, Decide):
                 parts.append(ToolCallPart(info.output_tools[0].name, {
-                    "delegacoes": item.delegacoes, "terminado": item.terminado, "mensagem": item.mensagem}))
+                    "delegacoes": item.delegacoes, "terminado": item.terminado, "mensagem": item.mensagem,
+                    "intencao": item.intencao}))
             elif isinstance(item, ToolCallPart):  # cada chamada precisa de um id próprio, mesmo repetida
                 parts.append(ToolCallPart(item.tool_name, item.args))
             else:

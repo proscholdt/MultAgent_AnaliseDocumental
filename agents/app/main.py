@@ -66,8 +66,9 @@ def view(run: Run, steps: list[dict[str, Any]] | None = None) -> dict[str, Any]:
 def turn_view(run: Run) -> dict[str, Any]:
     answers = (run.resultado or {}).get("respostas") or []
     return {"execucao_id": run.id, "pedido": run.pedido, "tipo": run.tipo, "estado": run.estado,
-            "mensagem": run.mensagem, "respostas": [{"resposta": a["resposta"], "fontes": a.get("fontes", [])}
-                                                     for a in answers],
+            "mensagem": run.mensagem, "erro": run.erro,
+            "respostas": [{"resposta": a["resposta"], "fontes": a.get("fontes", [])} for a in answers],
+            "relatorio": (run.resultado or {}).get("relatorio"),
             "criada_em": run.criada_em, "terminada_em": run.terminada_em}
 
 
@@ -171,12 +172,13 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
                 "turnos": [turn_view(run) for run in deps.runs.of_conversation(conversation.id)]}
 
     @app.post("/api/conversas/{conversa_id}/mensagens", tags=["Conversas"],
-              summary="Um turno da conversa: uma pergunta, respondida com fontes, lembrando os turnos anteriores")
+              summary="Um turno da conversa: pergunta, relatório ou outro pedido, lembrando os turnos anteriores")
     async def send_message(conversa_id: str, body: Mensagem, user: Caller) -> dict[str, Any]:
-        # Um turno de conversa é uma pergunta: a conferência final só o aceita com uma resposta
-        # gravada pelo pesquisador, com fontes. Na primeira versão (pedido livre) o orquestrador
-        # respondia sozinho, na mensagem de estado, sem fonte.
-        return await start(user, "pergunta", body.texto, wait=body.aguardar, conversa_id=conversa_id)
+        # O orquestrador diz o que a mensagem é (pergunta, relatório ou outro), e o tipo da execução
+        # passa a ser esse: a conferência final cobra o que cada tipo exige (a pergunta, uma resposta
+        # gravada com fonte; o relatório, o relatório montado). Na primeira versão, sem essa
+        # cobrança, o orquestrador respondia perguntas sozinho, na mensagem de estado, sem fonte.
+        return await start(user, "auto", body.texto, wait=body.aguardar, conversa_id=conversa_id)
 
     # --- execuções ----------------------------------------------------------------------------
 

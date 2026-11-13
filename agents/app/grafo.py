@@ -26,7 +26,7 @@ import unicodedata
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Annotated, Any, TypedDict
+from typing import Annotated, Any, Literal, TypedDict
 
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
@@ -60,6 +60,15 @@ class Decisao(BaseModel):
     terminado: bool = Field(description="true quando o pedido está atendido (ou não há mais o que fazer).")
     mensagem: str = Field(description="Para o usuário, em duas ou três frases: o que foi feito e o que ficou pendente. "
                           "Sem valores dos documentos.")
+    intencao: Literal["pergunta", "relatorio", "outro"] = Field(
+        description="O que o pedido atual do usuário é: 'pergunta' (quer saber algo dos documentos), 'relatorio' "
+                    "(quer o relatório consolidado) ou 'outro' (qualquer outra tarefa).")
+
+
+# A intenção que o orquestrador dá a uma mensagem de conversa vira o tipo da execução, e o tipo
+# diz o que a conferência final cobra: pergunta exige resposta gravada com fonte; relatório exige
+# o relatório montado; pedido livre só exige que o orquestrador tenha terminado.
+INTENT_TYPE = {"pergunta": "pergunta", "relatorio": "relatorio", "outro": "livre"}
 
 
 @dataclass
@@ -132,6 +141,8 @@ def first_input(run: Run, turns: list[dict] | None = None) -> str:
                 "fontes, análise qualitativa, as cinco perguntas, os resumos e a montagem do relatório.")
     elif run.tipo == "pergunta":
         text = f"Responda à pergunta do usuário, com as fontes. Pergunta: «{run.pedido}»"
+    elif run.tipo == "auto":
+        text = f"Mensagem do usuário (diga em `intencao` o que ela pede): «{run.pedido}»"
     else:
         text = run.pedido
     history = conversation_so_far(turns or [])
@@ -241,6 +252,10 @@ class Execution:
         if outcome.estado in _STOPPED:
             return {**update, "parada": outcome.erro}
         decision: Decisao = outcome.saida
+        if self.run.tipo == "auto":  # mensagem de conversa: a primeira decisão diz o que ela é
+            self.run.tipo = INTENT_TYPE[decision.intencao]
+            self.trace.add("intencao", intencao=decision.intencao, tipo_execucao=self.run.tipo)
+            self.deps.runs.save(self.run)
         # Delegação a quem não existe vira relato de erro, que o orquestrador recebe na onda seguinte.
         unknown = [{"agente": item.agente, "estado": "erro", "doc_id": item.doc_id,
                     "erro": f"não há especialista '{item.agente}'"} for item in decision.delegacoes
@@ -263,6 +278,8 @@ class Execution:
         return "conferencia"
 
     async def delegar(self, item: dict) -> dict:
+        # Quem está trabalhando agora: o especialista só entra de novo no trace quando termina.
+        self.trace.add("delegando", agente=item["agente"], doc_id=item.get("doc_id"), tarefa=item["tarefa"])
         report = await delegate(self.client, item["agente"], item["tarefa"], item.get("doc_id"), self.budget,
                                 self.run.conversa_id or None)
         detail = report.get("execucao") or {}

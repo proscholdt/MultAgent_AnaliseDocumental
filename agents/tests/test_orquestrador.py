@@ -108,6 +108,12 @@ async def test_report_run_goes_through_the_graph_and_returns_the_report_from_the
         ("extrator", "A receita está na DRE.")]
     assert [(s["agente"], s["doc_id"], s["estado"]) for s in steps if s["tipo"] == "especialista"] == [
         ("extrator", DOC, "concluido"), ("redator", None, "concluido")]
+    # Quem começou a trabalhar entra no trace na hora (é o que a tela mostra ao vivo), antes do relato.
+    live = [(s["tipo"], s["agente"]) for s in steps if s["tipo"] in ("delegando", "especialista")]
+    assert live == [("delegando", "extrator"), ("especialista", "extrator"),
+                    ("delegando", "redator"), ("especialista", "redator")]
+    # A rota de relatório já diz o tipo: a intenção da decisão não muda nada.
+    assert run["tipo"] == "relatorio" and not [s for s in steps if s["tipo"] == "intencao"]
     waves = [s for s in steps if s["tipo"] == "orquestrador"]
     assert [(s["onda"], s["decisao"]["terminado"]) for s in waves] == [(1, False), (2, False), (3, True)]
     assert [s for s in steps if s["tipo"] == "conferencia"] == [
@@ -180,7 +186,7 @@ async def test_follow_up_question_knows_the_previous_turn(http, world, model, ag
     conversation = (await http.post("/api/conversas", headers=auth())).json()["conversa_id"]
     first = (await http.post(f"/api/conversas/{conversation}/mensagens",
                              json={"texto": "Qual empresa teve a maior margem EBITDA?"}, headers=auth())).json()
-    assert first["estado"] == "completa" and first["conversa_id"] == conversation
+    assert first["estado"] == "completa" and first["conversa_id"] == conversation, first["erro"]
     assert first["resultado"]["respostas"][0]["resposta"].startswith("A maior margem é a da Brasal")
     assert "A conversa até aqui" not in model.first_input("orquestrador", turn=0)  # primeiro turno: nada antes
 
@@ -194,8 +200,11 @@ async def test_follow_up_question_knows_the_previous_turn(http, world, model, ag
     prompt = model.first_input("orquestrador", turn=2)
     assert "## A conversa até aqui" in prompt and "Pedido: Qual empresa teve a maior margem EBITDA?" in prompt
     assert "Resposta: A maior margem é a da Brasal, 16,74% (calculado)." in prompt
-    assert prompt.endswith("## Pedido atual\nResponda à pergunta do usuário, com as fontes. Pergunta: «E a menor?»")
-    assert second["tipo"] == "pergunta"  # turno de conversa é pergunta: só fecha com resposta gravada
+    assert prompt.endswith("## Pedido atual\nMensagem do usuário (diga em `intencao` o que ela pede): «E a menor?»")
+    # O orquestrador disse que é pergunta, e o turno virou pergunta: só fecha com resposta gravada.
+    assert second["tipo"] == "pergunta"
+    assert [(s["intencao"], s["tipo_execucao"]) for s in second["passos"] if s["tipo"] == "intencao"] == [
+        ("pergunta", "pergunta")]
     assert asked == ["Maior margem EBITDA?", "Menor margem EBITDA?"]
     # O especialista também lembra: na mesma conversa, recebeu a chamada anterior.
     researcher = next(s for s in second["passos"] if s["tipo"] == "especialista")
@@ -212,6 +221,43 @@ async def test_follow_up_question_knows_the_previous_turn(http, world, model, ag
     model.scripts["orquestrador"] = [[decide(terminado=True)]]
     alone = (await http.post("/api/perguntas", json={"pergunta": "E a menor?", "aguardar": True}, headers=auth())).json()
     assert alone["conversa_id"] != conversation and "A conversa até aqui" not in model.first_input("orquestrador", 3)
+
+
+async def test_a_chat_message_asking_for_the_report_becomes_a_report_run(http, world, model):
+    """No chat, o usuário só escreve. O orquestrador diz que é relatório, e a conferência passa a
+    cobrar o relatório montado; o turno traz o relatório para a tela."""
+    working_team(world, model)
+    model.scripts["orquestrador"] = [
+        [decide(delegation("redator", "Monte o relatório."), intencao="relatorio")],
+        [decide(terminado=True, mensagem="Relatório pronto.", intencao="relatorio")],
+    ]
+    conversation = (await http.post("/api/conversas", headers=auth())).json()["conversa_id"]
+    run = (await http.post(f"/api/conversas/{conversation}/mensagens", json={"texto": "gera o relatório pra mim"},
+                           headers=auth())).json()
+    assert (run["estado"], run["tipo"]) == ("completa", "relatorio"), run["erro"]
+    assert world.called("sistema")[-2:] == ["pendencias", "ler_relatorio"]
+    turn = (await http.get(f"/api/conversas/{conversation}", headers=auth())).json()["turnos"][0]
+    assert (turn["tipo"], turn["relatorio"]) == ("relatorio", "# Relatório consolidado\n\nBrasal...")
+
+
+async def test_a_chat_question_still_needs_a_saved_answer(http, world, model):
+    """Classificada como pergunta, a mensagem só fecha com uma resposta gravada com fonte: a
+    mensagem do orquestrador não serve de resposta."""
+    model.scripts["orquestrador"] = [[decide(terminado=True, mensagem="A maior é a Brasal.", intencao="pergunta")]]
+    conversation = (await http.post("/api/conversas", headers=auth())).json()["conversa_id"]
+    run = (await http.post(f"/api/conversas/{conversation}/mensagens", json={"texto": "Qual a maior margem?"},
+                           headers=auth())).json()
+    assert (run["estado"], run["tipo"]) == ("incompleta", "pergunta")
+    assert run["pendencias"][0]["agente"] == "pesquisador"
+
+
+async def test_anything_else_in_the_chat_is_a_free_request(http, world, model):
+    model.scripts["orquestrador"] = [[call("listar_documentos")],
+                                     [decide(terminado=True, mensagem="Você tem 1 documento.", intencao="outro")]]
+    conversation = (await http.post("/api/conversas", headers=auth())).json()["conversa_id"]
+    run = (await http.post(f"/api/conversas/{conversation}/mensagens", json={"texto": "quais documentos eu tenho?"},
+                           headers=auth())).json()
+    assert (run["estado"], run["tipo"], run["mensagem"]) == ("completa", "livre", "Você tem 1 documento.")
 
 
 async def test_conversation_belongs_to_its_user(http, model):
