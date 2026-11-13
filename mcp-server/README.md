@@ -55,7 +55,7 @@ Fora do Docker:
 ```bash
 uv sync
 uv run uvicorn app.main:app_factory --factory --port 8100
-uv run pytest        # 85 testes, sem rede
+uv run pytest        # 88 testes, sem rede
 ```
 
 ## Governança: quem pode o quê
@@ -157,10 +157,13 @@ qual.
 | O rótulo casa sem diferença de acento ou de caixa | O PDF escreve "Caixa liquido"; o modelo copiou "Caixa líquido", não casou e desistiu do campo |
 | O ano do cabeçalho da coluna tem de ser o do período pedido | A coluna de 2021 gravada como 2022 |
 | **Texto: o trecho existe literalmente no chunk e contém o número, inteiro** | Paráfrase; "1.234" achado dentro de "21.234" |
+| Texto só vale em chunk de texto: linha de tabela não pode ser citada como "trecho" | Na 6ª execução o lucro e o capex da Light entraram assim: o número estava no trecho, mas a coluna (ano, escopo) era escolha do modelo, e o ano anterior não veio |
 | A unidade é lida do trecho ou do chunk, nunca informada pelo agente | Milhares gravados como milhões |
 | O número tem de ser do tipo do campo: dinheiro, percentual ou múltiplo | A frase "EBITDA foi de R$1.180 milhões" gravada como **margem** EBITDA (a única invenção da 2ª execução) |
 | A linha ou a frase tem de mencionar o indicador (EBITDA, dívida líquida) | "Alavancagem" de 76% (dívida sobre capital) e de 0,08 (dívida sobre patrimônio) gravadas como dívida líquida / EBITDA |
 | Trecho que fala de uma parte do grupo (distribuidora, controlada) exige uma nota dizendo o que o valor é | O EBITDA da distribuidora da Light gravado como o da companhia |
+| Receita, lucro e caixa operacional vêm da demonstração do próprio campo (resultado, fluxo de caixa), não de outra tabela em que a linha se repete | O lucro tirado da demonstração do resultado abrangente com cabeçalho duplicado, ou das mutações do patrimônio, sem colunas por ano |
+| O campo capex é o total de investimentos que a empresa declara, não uma linha de aquisição | "Aquisições de bens do ativo imobilizado" (307.759) gravada como o capex da Light (1.470.292 com o intangível) |
 | Receita, lucro e caixa operacional vêm da tabela da demonstração, não de frase | O prejuízo da Light tirado de "-R$5.673 milhões" do texto, sem o sinal |
 | Uma célula não pode ser gravada em dois campos | A linha única "Imobilizado e intangível" da Brasal gravada duas vezes: capex dobrado |
 | Linha sem rótulo não identifica valor; a linha de receita, lucro ou caixa operacional tem de ter o nome do valor | O caixa operacional da Millet veio de uma linha de rótulo vazio (53.267, contra 24.799) |
@@ -249,6 +252,12 @@ Ele registra com `registrar_alerta`, que confere a citação.
   árabe num resumo.
 - **Comparações.** "Qual a maior margem" e "quem está acima de 3x" são respondidas por
   `comparar_indicadores`, com os valores guardados. O modelo não compara números.
+- **A resposta é ao enunciado oficial.** As cinco perguntas do relatório têm o texto guardado no
+  servidor. `salvar_resposta` recusa a p1 a p5 se a pergunta informada não é o enunciado, e a
+  recusa traz o enunciado. Na 5ª execução o orquestrador delegou "responda a p3" sem o texto, e
+  o pesquisador respondeu qual empresa teve o maior lucro.
+- **Resumo executivo curto.** No resumo, o valor calculado sai com "(calculado; arquivo, p. N)";
+  a fórmula fica na tabela comparativa e nas respostas.
 
 ## Pendências e a ordem do trabalho
 
@@ -344,7 +353,7 @@ mcp-server/
 │  ├─ report.py             marcadores e montagem do relatório
 │  ├─ store.py  models.py   SQLite
 │  └─ tools/                rag, extraction, analysis, answers, reporting
-└─ tests/                   85 testes: governança, portões, fórmulas, pendências, relatório
+└─ tests/                   88 testes: governança, portões, fórmulas, pendências, relatório
 ```
 
 ## Caminho para produção no Azure

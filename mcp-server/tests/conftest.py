@@ -192,7 +192,8 @@ def add_performance_details(indexer: "FakeIndexer") -> None:
     doc["chunks"] += [
         chunk(EXTRA, "text", 9, ["Desempenho"],
               "A margem EBITDA foi de 10,0% no ano. O EBITDA da distribuidora foi de R$ 1.817 milhões. O EBITDA de "
-              "2022 somou R$ 485.156 mil. A Companhia apurou um resultado líquido de -R$5.673 milhões no ano.",
+              "2022 somou R$ 485.156 mil. A Companhia apurou um resultado líquido de -R$5.673 milhões no ano. O "
+              "valor total de investimentos no ano foi de R$ 50 milhões.",
               unit=None, unit_source=None),
         chunk(CAPITAL, "table", 42, ["22. Gestão de risco", "22.2. Gestão de capital"],
               "|  | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 |\n|---|---|---|\n"
@@ -201,6 +202,18 @@ def add_performance_details(indexer: "FakeIndexer") -> None:
               "| Relação dívida liquida sobre capital ajustado (a)/(b) | 0,08 | 0,11 |"),
     ]
     doc["meta"]["chunk_count"] = len(doc["chunks"])
+
+
+def add_loans_note(indexer: "FakeIndexer") -> int:
+    """Acrescenta ao documento da Ana uma nota de empréstimos em que um dos financiamentos se chama
+    "BNDES - Capex", como na Light. Devolve o índice do chunk."""
+    doc = indexer.documents[(ANA, DOC_ANA)]
+    index = len(doc["chunks"])
+    doc["chunks"].append(chunk(index, "table", 36, ["20. Empréstimos e financiamentos"],
+                               "| Financiador | Saldo a amortizar em 31.12.2022 | Custo |\n|---|---|---|\n"
+                               "| BNDES - Capex | 120.000 | 8,5% |\n| CCB - Capital de giro | 45.000 | 9,1% |"))
+    doc["meta"]["chunk_count"] = len(doc["chunks"])
+    return index
 
 
 def add_second_document(indexer: "FakeIndexer") -> None:

@@ -56,9 +56,12 @@ _FIELDS = [
     Field("fluxo_caixa_operacional", "Fluxo de caixa operacional", "valor", True,
           ("atividades operacionais",), "fluxo", statement=True,
           mention=("caixa+operacionais", "caixa+operacoes")),
+    # O capex informado é um total de investimentos que a empresa declara. As linhas de aquisição do
+    # fluxo de caixa são valores de apoio (campos capex_*), e o servidor soma.
     Field("capex", "Capex", "valor", True,
           ("capex", "aquisição de imobilizado", "aquisições de imobilizado", "aquisição de ativo imobilizado",
-           "aquisições de bens do ativo imobilizado", "adições ao imobilizado"), "fluxo"),
+           "aquisições de bens do ativo imobilizado", "adições ao imobilizado"), "fluxo",
+          mention=("capex", "total de investimento", "investimentos totais", "investimentos realizados")),
     Field("resultado_antes_financeiro", "Resultado antes do resultado financeiro", "valor", False,
           section="resultado", mention=("antes+financeir", "lucro operacional", "resultado operacional")),
     Field("depreciacao_amortizacao", "Depreciação e amortização", "valor", False, mention=("deprecia",)),

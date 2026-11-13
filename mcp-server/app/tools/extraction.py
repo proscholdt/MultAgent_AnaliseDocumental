@@ -25,7 +25,15 @@ from app.errors import ToolRejected
 from app.fields import FIELDS, MAIN_FIELDS, Campo, CampoPrincipal
 from app.formulas import AlertDraft, Extraction, Value
 from app.models import StoredValue
-from app.numbers import contains_number, number_tokens, parse_number, unit_in_text, unit_of_number
+from app.numbers import (
+    contains_number,
+    in_reais,
+    number_tokens,
+    parse_number,
+    to_decimal,
+    unit_in_text,
+    unit_of_number,
+)
 from app.tables import parse_table, read_cell, scope_of, sibling_column
 from app.text import check_script, plain, squash
 
@@ -123,6 +131,13 @@ def _from_table(args: SalvarIndicador, chunk: dict[str, Any]) -> dict[str, Any]:
 
 
 def _from_text(args: SalvarIndicador, chunk: dict[str, Any]) -> dict[str, Any]:
+    if chunk["chunk_type"] == "table":
+        # Citar a linha de uma tabela como "trecho" escaparia da leitura de célula: o número estaria
+        # no trecho, mas a coluna (o ano, o escopo) seria escolha do modelo. Na 6ª execução real o
+        # lucro e o capex da Light entraram assim.
+        raise ToolRejected(f"O chunk {args.chunk_index} é uma tabela: use origem='tabela', com rotulo_linha e "
+                           "rotulo_coluna, e o servidor lê a célula. Se o cabeçalho da coluna (ou o rótulo da linha) "
+                           "se repete, informe ocorrencia_coluna (ou ocorrencia_linha).")
     if not args.trecho or not args.valor:
         raise ToolRejected("Com origem='texto', informe trecho (a frase copiada do chunk) e valor.")
     snippet = _squash(args.trecho)
@@ -187,7 +202,7 @@ async def salvar_indicador(call: Call, args: SalvarIndicador) -> dict[str, Any]:
     if kind == "multiplo" and number.kind != "multiplo" and args.origem == "texto" and "vez" not in plain(found["trecho"]):
         raise ToolRejected(f"{info.label} é um múltiplo (ex.: 3,32x), e o número citado ({number.text}) não é: se a "
                            "empresa não escreve o múltiplo, use salvar_nao_encontrado.")
-    _check_source(args, info, found, chunk)
+    _check_source(args, info, found, chunk, document)
     if args.nota:
         check_script(args.nota, "A nota")
     replaced = (_CAPEX_SPLIT if args.campo == _CAPEX_SINGLE else (_CAPEX_SINGLE,) if args.campo in _CAPEX_SPLIT else ())
@@ -234,11 +249,21 @@ def mentions(info: Any, text: str) -> bool:
     return any(all(part in text for part in term.split("+")) for term in info.mention)
 
 
-def _check_source(args: SalvarIndicador, info: Any, found: dict[str, Any], chunk: dict[str, Any]) -> None:
+def _check_source(args: SalvarIndicador, info: Any, found: dict[str, Any], chunk: dict[str, Any],
+                  document: IndexedDocument) -> None:
     """A fonte apontada tem de ser do indicador pedido, e da companhia inteira."""
     table = args.origem == "tabela"
     source = plain(found["linha"] if table else found["trecho"])
     section = plain(" > ".join(chunk.get("section_path") or []))
+    if info.statement and table and info.section and plain(info.section) not in section:
+        # A mesma linha aparece em outras tabelas (mutações do patrimônio, valor adicionado), sem as
+        # colunas por ano: o valor entra, mas sem o ano anterior. Vale a demonstração do próprio campo.
+        pages = sorted({other["page_start"] for other in _statement_tables(document, info.section)})
+        if pages:
+            raise ToolRejected(
+                f"{info.label} vem da demonstração de {info.section} (p. {', '.join(map(str, pages[:6]))}), e a "
+                f"tabela apontada é de '{' > '.join(chunk.get('section_path') or [])}'. Aponte a linha na "
+                "demonstração: é nela que estão as colunas do ano e do ano anterior.")
     # Num quadro de composição, a linha do total não repete o assunto: vale o título da seção.
     in_its_note = table and bool(_SUBTOTAL.match(source)) and mentions(info, section)
     if info.mention and not info.main and not mentions(info, source) and not in_its_note:
@@ -253,6 +278,12 @@ def _check_source(args: SalvarIndicador, info: Any, found: dict[str, Any], chunk
             f"não é a deste valor. O rótulo tem de mencionar "
             f"{' ou '.join(repr(term.replace('+', ' e ')) for term in info.mention)}: aponte a linha do total da "
             "demonstração, com o nome do próprio valor.")
+    if args.campo == "capex" and table and not _CAPEX_ROW.match(source):
+        raise ToolRejected(
+            f"Capex: a linha apontada ('{found['linha']}') não é um total de investimentos da empresa. O capex "
+            "informado vem de uma linha ou frase de investimentos; as linhas de aquisição do fluxo de caixa vão nos "
+            "campos de apoio (capex_imobilizado, capex_intangivel ou capex_imobilizado_e_intangivel), e o campo "
+            "capex fica como não encontrado.")
     if info.mention and info.main and not mentions(info, source):
         raise ToolRejected(
             f"{info.label}: a {'linha' if table else 'frase'} apontada não menciona "
@@ -344,6 +375,13 @@ def support_rows(document: IndexedDocument, campo: str) -> dict[int, str]:
     return found
 
 
+# Os indicadores que a empresa informa com o próprio nome. Só para eles vale a regra de que uma
+# linha ou frase com valor não pode ser descartada. O capex ficou de fora depois da 7ª execução
+# real: "BNDES - Capex" é o nome de um financiamento da Light, a regra o tomou por capex informado,
+# e o campo ficou sem saída (não podia ser dado como ausente nem gravado).
+_NAMED = ("ebitda", "margem_ebitda", "divida_liquida", "alavancagem")
+# O capex informado em tabela é uma linha de investimentos, não uma linha qualquer com a palavra.
+_CAPEX_ROW = re.compile(r"(capex|investimentos?\b|total de investimento)")
 _SENTENCE = re.compile(r"(?<=[.;])\s+")
 _HAS = {"valor": re.compile(r"R\$\s?\d"), "percentual": re.compile(r"\d\s?%"), "multiplo": re.compile(r"\d\s?x\b")}
 # Rótulos de razão: "Dívida líquida/EBITDA" não é linha de EBITDA nem de dívida líquida.
@@ -356,7 +394,7 @@ def informed_evidence(document: IndexedDocument, campo: str) -> list[tuple[int, 
     como "não encontrado": na 4ª execução real a dívida líquida da Millet, que está numa tabela,
     e a alavancagem da Light, que está numa frase, foram dadas como ausentes."""
     info = FIELDS[campo]
-    if not info.mention or info.statement:
+    if campo not in _NAMED:
         return []
     terms = tuple(plain(term) for term in info.terms)
     rows, sentences = [], []
@@ -366,7 +404,8 @@ def informed_evidence(document: IndexedDocument, campo: str) -> list[tuple[int, 
             table = parse_table(chunk["text"])
             for row in (table.rows if table else []):
                 label = plain(row[0])
-                if not any(term in label for term in terms) or (info.kind == "valor" and _RATIO.search(label)):
+                if not any(term in label for term in terms) or not mentions(info, label) \
+                        or (info.kind == "valor" and _RATIO.search(label)):
                     continue
                 kinds = {number.kind for cell in row[1:] if (number := parse_number(cell))}
                 if info.kind in kinds or (info.kind == "percentual" and kinds and "%" in row[0]):
@@ -377,6 +416,40 @@ def informed_evidence(document: IndexedDocument, campo: str) -> list[tuple[int, 
                 if any(term in folded for term in terms) and mentions(info, folded) and _HAS[info.kind].search(sentence):
                     sentences.append((page, f"frase '{sentence[:170]}' (chunk {chunk['chunk_index']})"))
     return rows + sentences  # as tabelas primeiro: é delas que o valor deve vir, quando há
+
+
+_RECONCILES = Decimal("0.02")  # diferença relativa aceita entre o EBITDA do texto e o da demonstração
+
+
+def reconciling_ebitda(document: IndexedDocument, extraction: Extraction) -> str | None:
+    """Um relatório de grupo traz o EBITDA de cada controlada e o consolidado, em frases parecidas.
+    O consolidado é o que bate, em módulo, com a demonstração (resultado antes do financeiro mais
+    depreciação). Se o EBITDA gravado veio de texto e não bate, e outra frase de EBITDA do documento
+    bate, devolve essa frase: é ela que deve ser gravada. Na 8ª execução real o EBITDA da Light
+    voltou a ser o da distribuidora (R$1.817 milhões), com uma nota; o consolidado (R$1.180 milhões)
+    estava na página seguinte."""
+    informed = extraction.found("ebitda", extraction.reference)
+    computed = extraction.calculated("ebitda", extraction.reference)
+    if informed is None or informed.origem != "texto" or informed.valor is None or not computed:
+        return None
+    amount = in_reais(informed.valor, informed.unidade)
+    target = in_reais(Decimal(str(computed["valor_numerico"])), computed["unidade"])
+    if amount is None or not target or abs(abs(amount) - abs(target)) / abs(target) <= _RECONCILES:
+        return None
+    info, terms = FIELDS["ebitda"], tuple(plain(term) for term in FIELDS["ebitda"].terms)
+    for chunk in document.chunks:
+        if chunk["chunk_type"] != "text":
+            continue
+        for sentence in _SENTENCE.split(squash(chunk["text"])):
+            folded = plain(sentence)
+            if not (any(term in folded for term in terms) and mentions(info, folded)):
+                continue
+            for token in number_tokens(sentence):
+                value, unit = to_decimal(token), unit_of_number(sentence, token)
+                candidate = in_reais(value, unit) if value is not None and unit else None
+                if candidate and abs(abs(candidate) - abs(target)) / abs(target) <= _RECONCILES:
+                    return f"p. {chunk['page_start']} (chunk {chunk['chunk_index']}): '{sentence[:220]}'"
+    return None
 
 
 def occurrences(document: IndexedDocument, terms: tuple[str, ...]) -> dict[int, str]:
@@ -493,6 +566,13 @@ async def fechar_extracao(call: Call, args: FecharExtracao) -> dict[str, Any]:
             f"Faltam {len(missing)} dos 8 indicadores. Cada um precisa de um valor (salvar_indicador) ou de "
             "um registro de não encontrado (salvar_nao_encontrado).",
             problemas=[f"{campo}: {FIELDS[campo].label}" for campo in missing])
+    better = reconciling_ebitda(document, extraction)
+    if better:
+        raise ToolRejected(
+            "O EBITDA gravado não bate com a demonstração (resultado antes do resultado financeiro mais depreciação "
+            "e amortização), e o documento tem outra frase de EBITDA cujo valor bate, em módulo. A gravada é "
+            "provavelmente de uma parte do grupo ou de outro critério. Grave a frase abaixo no campo 'ebitda' e "
+            "feche de novo.", problemas=[better])
     # Indicador não informado e sem os valores de apoio: o relatório sairia sem o número, e a
     # falta passaria por "a empresa não informa". O agente grava o apoio, ou diz por que não há.
     uncomputable = [campo for campo in _SUPPORT

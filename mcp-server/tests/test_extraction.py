@@ -8,6 +8,7 @@ from tests.conftest import (
     DOC_ANA,
     DOC_BRUNO,
     EXTRA,
+    add_loans_note,
     add_performance_details,
     headers,
     payload,
@@ -157,11 +158,14 @@ async def test_term_absent_from_the_document_is_accepted_at_once(governance):
                                      "paginas_descartadas": []}
 
 
-async def test_not_found_replaces_a_previous_value_and_exists_only_for_the_eight_indicators(governance):
-    await save(governance, cell("capex", "Aquisição de imobilizado", "Consolidado - 2022", chunk=DFC))
+async def test_not_found_replaces_a_previous_value_and_exists_only_for_the_eight_indicators(governance, indexer):
+    add_performance_details(indexer)
+    informed = await save(governance, text("capex", "O valor total de investimentos no ano foi de R$ 50 milhões", "50",
+                                           chunk=EXTRA))
+    assert informed["salvo"]["unidade"] == "R$ milhões"
     await call(governance, "salvar_nao_encontrado", {
         "doc_id": DOC_ANA, "campo": "capex", "paginas_descartadas": [11],
-        "motivo": "A linha da p. 11 é só a aquisição de imobilizado, não um total de capex."})
+        "motivo": "A frase fala em investimentos em geral, não em capex; a p. 11 traz só as linhas de aquisição."})
     missing = await rejected(governance, "fechar_extracao", {"doc_id": DOC_ANA})
     assert not any(problem.startswith("capex") for problem in missing["problemas"])  # tem status
     # Valor de apoio não tem "não encontrado": simplesmente não é gravado.
@@ -556,6 +560,86 @@ async def test_a_percentage_field_does_not_take_an_amount_and_statement_fields_c
     variation = await save(governance, text("receita_liquida", "Em 2022, a receita líquida cresceu 30% em relação a 2021",
                                             "30%", chunk=PERFORMANCE, medida="variacao_informada"))
     assert variation["salvo"]["unidade"] == "%"
+
+
+async def test_a_table_row_cannot_be_quoted_as_text_and_capex_is_not_one_acquisition_line(governance):
+    """Na 6ª execução real o lucro e o capex da Light entraram com origem='texto' sobre a linha de
+    uma TABELA: o número estava no "trecho", mas a coluna era escolha do modelo, e o ano anterior
+    não veio. O capex gravado era só a linha de imobilizado (307.759 de 1.470.292)."""
+    row = "| Aquisição de imobilizado | - | - | (6.263) | (3.803) |"
+    as_text = await rejected(governance, "salvar_indicador", text("capex_imobilizado", row, "6.263", chunk=DFC))
+    assert "é uma tabela: use origem='tabela'" in as_text["erro"] and "ocorrencia_coluna" in as_text["erro"]
+    # O campo capex é o total que a empresa declara: uma linha de aquisição é valor de apoio.
+    one_line = await rejected(governance, "salvar_indicador", cell(
+        "capex", "Aquisição de imobilizado", "Consolidado - 2022", chunk=DFC))
+    assert "não é um total de investimentos" in one_line["erro"] and "capex_imobilizado" in one_line["erro"]
+    # E a linha de aquisição, que contém um termo de busca do capex, não impede o "não encontrado".
+    accepted = await call(governance, "salvar_nao_encontrado", {
+        "doc_id": DOC_ANA, "campo": "capex", "paginas_descartadas": [11],
+        "motivo": "As linhas de aquisição foram gravadas como apoio; não há um total de capex."})
+    assert not accepted.is_error, payload(accepted)
+
+
+async def test_among_ebitda_sentences_the_one_that_matches_the_statements_wins(governance, indexer):
+    """Na 8ª execução real o EBITDA da Light voltou a ser o da distribuidora (com uma nota). O
+    consolidado, na página seguinte, é o que bate com a demonstração: 192.840 + 29.014 no exemplo."""
+    add_performance_details(indexer)
+    doc = indexer.documents[next(k for k in indexer.documents if k[1] == DOC_ANA)]
+    consolidated = len(doc["chunks"])
+    doc["chunks"].append({**doc["chunks"][EXTRA], "chunk_index": consolidated, "page_start": 10, "page_end": 10,
+                          "text": "EBITDA CVM. Em 2022, o EBITDA CVM foi de R$221,9 milhões, acima do de 2021."})
+    doc["meta"]["chunk_count"] = len(doc["chunks"])
+    await fill(governance, not_found=("capex",))
+    await save(governance, text("margem_ebitda", "A margem EBITDA foi de 10,0% no ano", "10,0%", chunk=EXTRA))
+    await save(governance, text("ebitda", "O EBITDA da distribuidora foi de R$ 1.817 milhões", "1.817", chunk=EXTRA,
+                                nota="EBITDA de uma controlada (distribuidora), não o consolidado."))
+
+    refused = await rejected(governance, "fechar_extracao", {"doc_id": DOC_ANA})
+    assert "outra frase de EBITDA cujo valor bate" in refused["erro"]
+    assert refused["problemas"] == [
+        f"p. 10 (chunk {consolidated}): 'Em 2022, o EBITDA CVM foi de R$221,9 milhões, acima do de 2021.'"]
+
+    await save(governance, text("ebitda", "Em 2022, o EBITDA CVM foi de R$221,9 milhões", "221,9", chunk=consolidated))
+    closed = payload(await call(governance, "fechar_extracao", {"doc_id": DOC_ANA}))
+    assert closed["indicadores"]["ebitda"].startswith("informado: 221,9 R$ milhões (p. 10)")
+    # O que bate não gera alerta de divergência.
+    assert not any("O EBITDA informado" in alert for alert in closed["alertas"])
+    # Um EBITDA de texto que não bate e para o qual o documento não tem alternativa (um EBITDA
+    # ajustado, por exemplo) entra com o alerta, sem recusa: é o caso do teste das validações.
+
+
+async def test_a_loan_called_capex_is_not_the_capex(governance, indexer):
+    """Na 7ª execução real a extração da Light não fechou: a nota de empréstimos tem a linha "BNDES -
+    Capex", a regra do "traz com valor" a tomou por capex informado, e o campo ficou sem saída."""
+    loans = add_loans_note(indexer)
+    as_capex = await rejected(governance, "salvar_indicador", cell(
+        "capex", "BNDES - Capex", "Saldo a amortizar em 31.12.2022", chunk=loans))
+    assert "não é um total de investimentos" in as_capex["erro"] and "capex_imobilizado" in as_capex["erro"]
+    # O termo aparece na p. 36, e a página tem de ser descartada, como qualquer menção; mas a linha
+    # do financiamento não impede dizer que a empresa não informa o capex.
+    needs_page = await rejected(governance, "salvar_nao_encontrado", {
+        "doc_id": DOC_ANA, "campo": "capex", "paginas_descartadas": [11],
+        "motivo": "A empresa não informa um total de capex; as linhas de aquisição são valores de apoio."})
+    assert "páginas que você não descartou: 36" in needs_page["erro"]
+    accepted = await call(governance, "salvar_nao_encontrado", {
+        "doc_id": DOC_ANA, "campo": "capex", "paginas_descartadas": [11, 36],
+        "motivo": "A p. 36 traz 'Capex' só como nome de um financiamento do BNDES; não há total de capex."})
+    assert not accepted.is_error, payload(accepted)
+
+
+async def test_statement_value_comes_from_its_own_statement(governance, indexer):
+    """O lucro aparece também na demonstração das mutações do patrimônio, sem colunas por ano: de
+    lá o valor entra sem o ano anterior."""
+    doc = indexer.documents[(next(k for k in indexer.documents if k[1] == DOC_ANA))]
+    doc["chunks"].append({**doc["chunks"][DRE], "chunk_index": len(doc["chunks"]), "page_start": 10, "page_end": 10,
+                          "section_path": ["Demonstração das mutações do patrimônio líquido"]})
+    doc["meta"]["chunk_count"] = len(doc["chunks"])
+    other = await rejected(governance, "salvar_indicador", cell(
+        "lucro_liquido", "Lucro líquido do exercício", "Consolidado - 2022", chunk=len(doc["chunks"]) - 1))
+    assert "vem da demonstração de resultado (p. 8)" in other["erro"]
+    assert "Demonstração das mutações do patrimônio líquido" in other["erro"]
+    right = await save(governance, cell("lucro_liquido", "Lucro líquido do exercício", "Consolidado - 2022"))
+    assert right["ano_anterior_gravado_pelo_servidor"]["valor"] == "275.560"
 
 
 async def test_words_in_another_alphabet_are_refused(governance):

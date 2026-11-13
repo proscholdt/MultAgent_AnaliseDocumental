@@ -47,7 +47,7 @@ async def salvar_resumo(call: Call, args: SalvarResumo) -> dict[str, Any]:
     if loose:
         raise ToolRejected(f"O resumo traz números escritos direto no texto: {', '.join(loose)}. Use os "
                            "marcadores dos indicadores.")
-    rendered = markers_for(states).render(text, default_doc=args.doc_id)
+    rendered = markers_for(states).render(text, default_doc=args.doc_id, brief=True)
     if len(rendered.text) > _SUMMARY_CHARS * 2:
         raise ToolRejected("O resumo ficou longo demais para um resumo executivo: encurte as linhas.")
     await call.deps.store.save_summary(Summary(

@@ -10,6 +10,7 @@ A resposta é texto do modelo, com duas amarras:
 Comparações entre empresas (maior margem, acima de 3x) não são feitas pelo modelo: há uma tool
 que ordena e filtra pelos valores guardados.
 """
+import difflib
 import hashlib
 import re
 from decimal import Decimal
@@ -24,7 +25,7 @@ from app.models import Answer
 from app.numbers import in_reais
 from app.pending import DocState, gather, question_blockers
 from app.report import MARKER, Markers, render_amount
-from app.text import check_script, squash, unbacked_numbers
+from app.text import check_script, plain, squash, unbacked_numbers
 
 CITATION = re.compile(r"\[\[\s*([0-9a-f]{8,32})\s*:\s*(\d+)\s*\]\]")
 
@@ -93,7 +94,8 @@ async def comparar_indicadores(call: Call, args: CompararIndicadores) -> dict[st
 class SalvarResposta(Args):
     pergunta_id: Literal["p1", "p2", "p3", "p4", "p5", "livre"] = Field(
         description="p1 a p5: as cinco perguntas do relatório. 'livre': outra pergunta do usuário.")
-    pergunta: str = Field(min_length=5, max_length=500, description="A pergunta respondida.")
+    pergunta: str = Field(min_length=1, max_length=500, description="A pergunta respondida. Para p1 a p5, o "
+                          "enunciado oficial (ler_respostas mostra os cinco).")
     resposta: str = Field(min_length=20, max_length=4000, description="A resposta. Valores vão como marcador "
                           "{{doc_id.campo}} (ou .calculado, .variacao, .comparavel); trechos citados vão como "
                           "[[doc_id:chunk_index]]; categoria da análise registrada como ausente vai como "
@@ -111,6 +113,15 @@ async def salvar_resposta(call: Call, args: SalvarResposta) -> dict[str, Any]:
     by_id = {state.document.doc_id: state for state in states}
     raw = args.resposta.strip()
     check_script(raw, "A resposta")
+    official = QUESTIONS.get(args.pergunta_id)
+    if official and difflib.SequenceMatcher(None, plain(squash(args.pergunta)), plain(official)).ratio() < 0.85:
+        # Na 5ª execução real o orquestrador delegou "responda a p3" sem o enunciado, e o pesquisador
+        # respondeu a outra pergunta (maior lucro, em vez de alavancagem acima de 3x).
+        raise ToolRejected(f"A pergunta {args.pergunta_id} do relatório é: «{official}». A resposta tem de ser a esse "
+                           "enunciado. Confira se a sua responde a ele, reescreva se for o caso, e repita o enunciado "
+                           "em 'pergunta'.")
+    if official is None and len(squash(args.pergunta)) < 5:
+        raise ToolRejected("Em 'pergunta', escreva a pergunta do usuário por inteiro.")
     if args.pergunta_id != "livre":
         # As cinco perguntas do relatório comparam as empresas: respondidas com a base pela
         # metade, saem dizendo que falta dado (ou, pior, comparando só quem já tem).
@@ -167,10 +178,15 @@ class LerRespostas(Args):
 
 
 @tool("ler_respostas", "perguntas", """
-    Lê as respostas guardadas do usuário, já com os valores e as fontes no lugar dos marcadores.""")
+    Lê as respostas guardadas do usuário, já com os valores e as fontes no lugar dos marcadores, e o
+    enunciado oficial das cinco perguntas do relatório (p1 a p5), dizendo quais já têm resposta.""")
 async def ler_respostas(call: Call, args: LerRespostas) -> dict[str, Any]:
     answers = await call.deps.store.answers(call.caller.user_id)
-    return {"respostas": [{"pergunta_id": answer.pergunta_id, "pergunta": answer.pergunta,
+    answered = {answer.pergunta_id for answer in answers}
+    return {"perguntas_do_relatorio": [{"pergunta_id": question_id, "pergunta": question,
+                                        "respondida": question_id in answered}
+                                       for question_id, question in QUESTIONS.items()],
+            "respostas": [{"pergunta_id": answer.pergunta_id, "pergunta": answer.pergunta,
                            "resposta": answer.renderizado,
                            "fontes": list(dict.fromkeys(f"{c['arquivo']}, p. {c['pagina']}"
                                                         for c in answer.citacoes)),

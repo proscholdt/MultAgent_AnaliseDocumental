@@ -60,8 +60,10 @@ def _pages(pages: list[int]) -> str:
     return "p. " + (", ".join(map(str, pages[:-1])) + " e " + str(pages[-1]) if len(pages) > 1 else str(pages[0]))
 
 
-def render_part(block: dict[str, Any], part: str, file_name: str, pages: list[int] | None = None) -> str | None:
-    """O texto de uma parte de um indicador, ou None se essa parte não existe."""
+def render_part(block: dict[str, Any], part: str, file_name: str, pages: list[int] | None = None,
+                brief: bool = False) -> str | None:
+    """O texto de uma parte de um indicador, ou None se essa parte não existe. `brief` é para o
+    resumo executivo, que tem 5 linhas: o calculado sai sem a fórmula (ela está na tabela)."""
     if part == "informado":
         informed = block["informado"]
         if not informed or informed["status"] != "encontrado":
@@ -82,6 +84,9 @@ def render_part(block: dict[str, Any], part: str, file_name: str, pages: list[in
     computed = block["calculado"]
     if not computed:
         return None
+    if brief:
+        return f"{render_amount(computed['valor'], computed['unidade'])} (calculado" + (
+            f"; {file_name}, {_pages(pages)})" if pages else ")")
     origin = f"; valores de origem em {file_name}, {_pages(pages)}" if pages else ""
     return f"{render_amount(computed['valor'], computed['unidade'])} (calculado: {computed['formula']}{origin})"
 
@@ -100,17 +105,17 @@ class Markers:
         self._extractions = extractions  # doc_id → JSON da extração
         self._absences = absences or {}  # doc_id → {categoria: registro de ausência da análise}
 
-    def render(self, text: str, default_doc: str | None = None) -> Rendered:
+    def render(self, text: str, default_doc: str | None = None, brief: bool = False) -> Rendered:
         result = Rendered(text="")
 
         def replace(match: re.Match[str]) -> str:
             result.markers += 1
-            return self._resolve(match.group(1), default_doc, result)
+            return self._resolve(match.group(1), default_doc, result, brief)
 
         result.text = MARKER.sub(replace, text)
         return result
 
-    def _resolve(self, path: str, default_doc: str | None, result: Rendered) -> str:
+    def _resolve(self, path: str, default_doc: str | None, result: Rendered, brief: bool = False) -> str:
         parts = path.split(".")
         doc_id = default_doc
         if parts[0] in self._extractions or (parts[0] not in FIELDS and parts[0] != "analise"):
@@ -130,7 +135,7 @@ class Markers:
             raise ToolRejected(f"Marcador {{{{{path}}}}}: parte desconhecida.", opcoes=list(_PARTS))
         block = payload["indicadores"][campo]
         pages = source_pages(payload["indicadores"], campo, part)
-        text = render_part(block, part, file_name, pages)
+        text = render_part(block, part, file_name, pages, brief)
         if text is None:
             available = [name for name in _PARTS if render_part(block, name, file_name) is not None]
             raise ToolRejected(f"Marcador {{{{{path}}}}}: {FIELDS[campo].label} não tem '{part}' neste documento.",

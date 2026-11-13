@@ -1,5 +1,6 @@
 """Respostas, resumo, pendências e o relatório final: os números vêm de marcadores que o
 código preenche, e o relatório só é montado quando nada falta."""
+from app.fields import QUESTIONS
 from tests.conftest import BRUNO, DOC_ANA, DOC_ANA_2, DOC_BRUNO, add_second_document, headers, payload
 from tests.test_analysis import GROWTH, LIQUIDITY, MESSAGE, OUTLOOK, PERFORMANCE, RISK, item
 from tests.test_extraction import cell, fill, save
@@ -47,8 +48,10 @@ async def summarize(governance) -> None:
         "doc_id": DOC_ANA, "texto": "Receita de {{receita_liquida}} e lucro de {{lucro_liquido}} no exercício."})).is_error
 
 
-def answer(question_id, text, question="Pergunta de teste?"):
-    return {"pergunta_id": question_id, "pergunta": question, "resposta": text}
+def answer(question_id, text, question=None):
+    """Para p1 a p5, o enunciado oficial (o servidor exige); para 'livre', uma pergunta qualquer."""
+    return {"pergunta_id": question_id, "pergunta": question or QUESTIONS.get(question_id, "Pergunta de teste?"),
+            "resposta": text}
 
 
 # --- comparar empresas é do código ------------------------------------------------------------
@@ -186,7 +189,8 @@ async def test_summary_has_at_most_five_lines_and_no_typed_numbers(governance):
     assert saved["salvo"] == {"empresa": "Empresa Exemplo S.A.", "linhas": 3}
     assert saved["resumo"].splitlines()[0] == (
         "Receita líquida de R$ 1.325.059 mil (Exemplo.pdf, p. 8), variação de +24,84% sobre 2021.")
-    assert "EBITDA não informado no documento, com R$ 221.854 mil (calculado:" in saved["resumo"]
+    # No resumo o calculado sai curto, com as páginas; a fórmula fica na tabela do relatório.
+    assert "EBITDA não informado no documento, com R$ 221.854 mil (calculado; Exemplo.pdf, p. 8 e 11)." in saved["resumo"]
 
 
 # --- pendências e relatório -------------------------------------------------------------------
@@ -301,4 +305,26 @@ async def test_another_user_has_their_own_pending_list_and_no_report(governance)
     pending = payload(await call(governance, "orquestrador", "pendencias", **other))["pendencias"]
     assert {p.get("doc_id") for p in pending if p.get("doc_id")} == {DOC_BRUNO}
     assert payload(await call(governance, "orquestrador", "ler_relatorio", **other)) == {"relatorio": None}
-    assert payload(await call(governance, "pesquisador", "ler_respostas", **other)) == {"respostas": []}
+    listed = payload(await call(governance, "pesquisador", "ler_respostas", **other))
+    assert listed["respostas"] == [] and not any(q["respondida"] for q in listed["perguntas_do_relatorio"])
+
+
+async def test_report_question_must_be_answered_as_it_is_written(governance):
+    """Na 5ª execução real o orquestrador delegou "responda a p3" sem o enunciado, e o pesquisador
+    respondeu qual empresa teve o maior lucro. Entrou como resposta da p3."""
+    await extract(governance)
+    await analyse(governance)
+    text = f"A empresa teve lucro de {{{{{DOC_ANA}.lucro_liquido}}}}, o maior entre as analisadas."
+    for wrong in ("p3", "Pergunta p3", "Qual empresa teve o maior lucro líquido no período?"):
+        refused = await call(governance, "pesquisador", "salvar_resposta", answer("p3", text, wrong))
+        assert refused.is_error, wrong
+        assert "«Alguma das empresas está com alavancagem acima de 3x? Qual?»" in payload(refused)["erro"]
+    # O enunciado oficial passa, com pequenas diferenças de escrita.
+    right = await call(governance, "pesquisador", "salvar_resposta", answer(
+        "p3", f"Sim: a empresa, com {{{{{DOC_ANA}.alavancagem}}}}.", "alguma das empresas está com alavancagem acima de 3x? qual"))
+    assert not right.is_error, payload(right)
+    # O pesquisador lê o enunciado oficial daqui, sem depender de quem delegou.
+    listed = payload(await call(governance, "pesquisador", "ler_respostas"))["perguntas_do_relatorio"]
+    assert [(q["pergunta_id"], q["respondida"]) for q in listed] == [
+        ("p1", False), ("p2", False), ("p3", True), ("p4", False), ("p5", False)]
+    assert listed[0]["pergunta"] == "Qual empresa teve a maior margem EBITDA no período?"
