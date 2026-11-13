@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.auth import Caller
-from app.errors import ToolRejected
+from app.errors import IndexerNotFound, ToolRejected
 from app.indexer_client import IndexerClient
 
 _MAX_CACHED = 64
@@ -48,7 +48,15 @@ class Documents:
     async def get(self, caller: Caller, doc_id: str) -> IndexedDocument:
         """O documento, se existe para este usuário e já foi indexado. Os metadados são
         consultados a cada vez (é isso que revela uma reindexação); os chunks, só se mudaram."""
-        meta = await self._indexer.document(caller.user_token, doc_id)  # 404: IndexerNotFound
+        try:
+            meta = await self._indexer.document(caller.user_token, doc_id)
+        except IndexerNotFound:
+            # O modelo às vezes passa o nome da empresa ou um id truncado: o erro mostra os válidos.
+            listed = await self._indexer.documents(caller.user_token)
+            raise ToolRejected(
+                f"Não existe o documento '{doc_id}' para este usuário. Use um doc_id de listar_documentos.",
+                opcoes=[f"{d['doc_id']} ({d.get('company') or d['file_name']})" for d in listed
+                        if d.get("status") == "indexed"]) from None
         if meta.get("status") != "indexed":
             raise ToolRejected(f"O documento {doc_id} ainda não está indexado (status: {meta.get('status')}).")
         key, current = (caller.user_id, doc_id), fingerprint(meta)

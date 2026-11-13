@@ -8,9 +8,9 @@ from app.catalog import Args, Call, tool
 from app.errors import ToolRejected
 from app.formulas import AlertDraft
 from app.models import Summary
-from app.pending import REVIEW_DONE, gather, pending
+from app.pending import REVIEW_DONE, gather, pending, summary_blockers
 from app.report import MARKER, build_report
-from app.text import squash, unbacked_numbers
+from app.text import check_script, squash, unbacked_numbers
 from app.tools.answers import markers_for
 
 _SUMMARY_LINES = 5  # o teste pede resumo executivo de até 5 linhas por empresa
@@ -32,9 +32,13 @@ async def salvar_resumo(call: Call, args: SalvarResumo) -> dict[str, Any]:
     states = await gather(call)
     state = next((s for s in states if s.document.doc_id == args.doc_id), None)
     if state is None:
-        raise ToolRejected("Documento não encontrado para este usuário.")
-    if state.extraction is None:
-        raise ToolRejected("Este documento ainda não tem extração publicada: o resumo usa os valores dela.")
+        raise ToolRejected(f"Não existe o documento '{args.doc_id}' para este usuário.",
+                           opcoes=[f"{s.document.doc_id} ({s.name})" for s in states])
+    blockers = summary_blockers(state)
+    if blockers:
+        raise ToolRejected("O resumo usa a extração, a análise qualitativa e os alertas da empresa. Ainda falta o "
+                           "que está na lista. Termine sem gravar e diga isso.", problemas=blockers)
+    check_script(args.texto, "O resumo")
     lines = [squash(line) for line in args.texto.splitlines() if line.strip()]
     if len(lines) > _SUMMARY_LINES:
         raise ToolRejected(f"O resumo tem {len(lines)} linhas; o limite é {_SUMMARY_LINES}.")
@@ -69,6 +73,7 @@ async def concluir_revisao(call: Call, args: ConcluirRevisao) -> dict[str, Any]:
     if published is None or published.fingerprint != document.fingerprint:
         raise ToolRejected("A revisão vem depois da extração: este documento não tem extração publicada.")
     note = squash(args.observacao)
+    check_script(note, "A observação")
     loose = unbacked_numbers(note, [])
     if loose:
         raise ToolRejected(f"A observação não leva valores ({', '.join(loose)}): eles ficam nos alertas, com citação.")
@@ -87,7 +92,10 @@ class Pendencias(Args):
 @tool("pendencias", "controle", """
     Diz o que ainda falta para o relatório completo do usuário: extração, revisão das fontes,
     análise qualitativa, respostas às cinco perguntas, resumos e a montagem do relatório. Cada item
-    indica o documento e o agente que costuma resolver. Lista vazia = está completo.""")
+    indica o documento, o agente que costuma resolver e se já pode ser feito: 'liberada' true, ou
+    false com o que ele 'aguarda' (as perguntas esperam a extração e a análise de todos os
+    documentos; o resumo espera a extração, a revisão e a análise da empresa). Lista vazia = está
+    completo.""")
 async def pendencias(call: Call, args: Pendencias) -> dict[str, Any]:
     items = await pending(call)
     return {"completo": not items, "pendencias": items}

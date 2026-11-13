@@ -14,6 +14,39 @@ async def extract(governance) -> None:
     assert not (await call(governance, "extrator", "fechar_extracao", {"doc_id": DOC_ANA})).is_error
 
 
+async def review(governance) -> None:
+    await call(governance, "validador", "registrar_alerta", {
+        "doc_id": DOC_ANA, "chunk_index": 3, "descricao": "O texto fala em aumento de 23% da dívida; confira com os saldos.",
+        "citacao": "totalizou R$9.032 milhões, aumento de 23% em comparação a 2021, de R$7.353 milhões"})
+    assert not (await call(governance, "validador", "concluir_revisao", {
+        "doc_id": DOC_ANA, "observacao": "Endividamento e desempenho revisados; uma inconsistência registrada."})).is_error
+
+
+async def analyse(governance) -> None:
+    for arguments in [
+        item("motivo_resultado", "A receita cresceu 30% no ano.", PERFORMANCE, GROWTH),
+        item("risco", "A empresa cita o risco de liquidez, acompanhado pela tesouraria.", RISK, LIQUIDITY),
+        item("guidance", "A empresa espera manter o crescimento das vendas e reduzir a dívida.", MESSAGE, OUTLOOK),
+        item("tom", "A administração fala em recuperação e em metas para o ano seguinte.", MESSAGE, OUTLOOK, "positivo"),
+    ]:
+        assert not (await call(governance, "analista", "salvar_item_analise", arguments)).is_error
+    assert not (await call(governance, "analista", "registrar_ausencia_analise", {
+        "doc_id": DOC_ANA, "categoria": "evento_relevante", "paginas_descartadas": [],
+        "motivo": "O documento não relata aquisições, reestruturações nem contingências."})).is_error
+
+
+async def answer_all(governance) -> None:
+    for question_id in ("p1", "p2", "p3", "p4", "p5"):
+        saved = await call(governance, "pesquisador", "salvar_resposta", answer(
+            question_id, f"Resposta de teste sobre a empresa, com a receita de {{{{{DOC_ANA}.receita_liquida}}}}."))
+        assert not saved.is_error, payload(saved)
+
+
+async def summarize(governance) -> None:
+    assert not (await call(governance, "redator", "salvar_resumo", {
+        "doc_id": DOC_ANA, "texto": "Receita de {{receita_liquida}} e lucro de {{lucro_liquido}} no exercício."})).is_error
+
+
 def answer(question_id, text, question="Pergunta de teste?"):
     return {"pergunta_id": question_id, "pergunta": question, "resposta": text}
 
@@ -71,6 +104,7 @@ async def test_companies_are_ranked_and_filtered_by_the_stored_values(governance
 
 async def test_answer_values_come_from_markers_and_quotes_are_checked(governance):
     await extract(governance)
+    await analyse(governance)
     saved = payload(await call(governance, "pesquisador", "salvar_resposta", answer(
         "p3", f"A alavancagem informada é de {{{{{DOC_ANA}.alavancagem}}}}, acima de 3x. A dívida líquida é de "
               f"{{{{{DOC_ANA}.divida_liquida}}}}, e a receita variou {{{{{DOC_ANA}.receita_liquida.variacao}}}} "
@@ -87,6 +121,7 @@ async def test_answer_values_come_from_markers_and_quotes_are_checked(governance
 
 async def test_loose_numbers_and_missing_sources_are_refused(governance):
     await extract(governance)
+    await analyse(governance)
     for text, reason in [
         ("A receita foi de R$ 1.325.059 mil e a margem ficou em 16,7%, segundo a empresa.", "1.325.059, 16,7"),
         ("A empresa não comenta o motivo da variação da receita em nenhum trecho.", "não cita nenhuma fonte"),
@@ -121,8 +156,19 @@ async def test_free_questions_get_their_own_id_and_a_new_answer_replaces_the_old
 async def test_summary_has_at_most_five_lines_and_no_typed_numbers(governance):
     early = await call(governance, "redator", "salvar_resumo", {
         "doc_id": DOC_ANA, "texto": "A receita cresceu e o lucro recuou no exercício, com dívida maior."})
-    assert early.is_error and "não tem extração publicada" in payload(early)["erro"]
+    # O resumo usa a extração, a análise e os alertas: sem eles, é recusado dizendo o que falta.
+    assert early.is_error and payload(early)["problemas"] == [
+        "extração dos indicadores de Empresa Exemplo S.A.",
+        "análise qualitativa de Empresa Exemplo S.A. (motivo_resultado, risco, guidance, evento_relevante, tom)"]
     await extract(governance)
+    half = await call(governance, "redator", "salvar_resumo", {
+        "doc_id": DOC_ANA, "texto": "A receita cresceu e o lucro recuou no exercício, com dívida maior."})
+    assert half.is_error and payload(half)["problemas"][0] == "revisão das fontes de Empresa Exemplo S.A."
+    await review(governance)
+    await analyse(governance)
+    foreign = await call(governance, "redator", "salvar_resumo", {
+        "doc_id": DOC_ANA, "texto": "O principal risco da empresa é o crédito concedido a العملاء no exercício."})
+    assert foreign.is_error and "outro alfabeto" in payload(foreign)["erro"]
     long = await call(governance, "redator", "salvar_resumo", {
         "doc_id": DOC_ANA, "texto": "\n".join(f"Linha de número {word} do resumo executivo." for word in "abcdef")})
     assert long.is_error and "6 linhas" in payload(long)["erro"]
@@ -146,44 +192,50 @@ async def test_summary_has_at_most_five_lines_and_no_typed_numbers(governance):
 async def complete(governance) -> None:
     """Tudo o que o relatório exige, na ordem em que os agentes fariam."""
     await extract(governance)
-    await call(governance, "validador", "registrar_alerta", {
-        "doc_id": DOC_ANA, "chunk_index": 3, "descricao": "O texto fala em aumento de 23% da dívida; confira com os saldos.",
-        "citacao": "totalizou R$9.032 milhões, aumento de 23% em comparação a 2021, de R$7.353 milhões"})
-    await call(governance, "validador", "concluir_revisao", {
-        "doc_id": DOC_ANA, "observacao": "Endividamento e desempenho revisados; uma inconsistência registrada."})
-    for arguments in [
-        item("motivo_resultado", "A receita cresceu 30% no ano.", PERFORMANCE, GROWTH),
-        item("risco", "A empresa cita o risco de liquidez, acompanhado pela tesouraria.", RISK, LIQUIDITY),
-        item("guidance", "A empresa espera manter o crescimento das vendas e reduzir a dívida.", MESSAGE, OUTLOOK),
-        item("tom", "A administração fala em recuperação e em metas para o ano seguinte.", MESSAGE, OUTLOOK, "positivo"),
-    ]:
-        assert not (await call(governance, "analista", "salvar_item_analise", arguments)).is_error
-    assert not (await call(governance, "analista", "registrar_ausencia_analise", {
-        "doc_id": DOC_ANA, "categoria": "evento_relevante", "paginas_descartadas": [],
-        "motivo": "O documento não relata aquisições, reestruturações nem contingências."})).is_error
-    for question_id in ("p1", "p2", "p3", "p4", "p5"):
-        saved = await call(governance, "pesquisador", "salvar_resposta", answer(
-            question_id, f"Resposta de teste sobre a empresa, com a receita de {{{{{DOC_ANA}.receita_liquida}}}}."))
-        assert not saved.is_error, payload(saved)
-    assert not (await call(governance, "redator", "salvar_resumo", {
-        "doc_id": DOC_ANA, "texto": "Receita de {{receita_liquida}} e lucro de {{lucro_liquido}} no exercício."})).is_error
+    await review(governance)
+    await analyse(governance)
+    await answer_all(governance)
+    await summarize(governance)
 
 
 async def test_pending_list_follows_the_work_and_report_is_refused_while_something_is_missing(governance):
     first = payload(await call(governance, "orquestrador", "pendencias"))
     assert first["completo"] is False
-    assert [(p["o_que_falta"].split(" (")[0], p["agente"]) for p in first["pendencias"][:2]] == [
-        ("extração dos indicadores", "extrator"), ("análise qualitativa", "analista")]
-    assert first["pendencias"][1]["categorias"] == ["motivo_resultado", "risco", "guidance", "evento_relevante", "tom"]
-    assert [p["pergunta_id"] for p in first["pendencias"] if p["agente"] == "pesquisador"] == ["p1", "p2", "p3", "p4", "p5"]
+    assert [(p["o_que_falta"].split(" (")[0], p["agente"], p["liberada"]) for p in first["pendencias"][:3]] == [
+        ("extração dos indicadores", "extrator", True),
+        ("revisão das fontes em busca de inconsistências", "validador", False),
+        ("análise qualitativa", "analista", True)]
+    assert first["pendencias"][1]["aguarda"] == "extração dos indicadores de Empresa Exemplo S.A."
+    assert first["pendencias"][2]["categorias"] == ["motivo_resultado", "risco", "guidance", "evento_relevante", "tom"]
+    questions = [p for p in first["pendencias"] if p["agente"] == "pesquisador"]
+    assert [p["pergunta_id"] for p in questions] == ["p1", "p2", "p3", "p4", "p5"]
+    # As perguntas comparam as empresas: esperam a extração e a análise de todos os documentos.
+    assert not any(p["liberada"] for p in questions)
+    assert questions[0]["aguarda"].startswith("extração dos indicadores de Empresa Exemplo S.A.; análise qualitativa")
+    assert first["pendencias"][-1]["agente"] == "redator" and first["pendencias"][-1]["liberada"] is False
 
     refused = await call(governance, "redator", "montar_relatorio")
     assert refused.is_error and len(payload(refused)["problemas"]) == len(first["pendencias"])
 
     await extract(governance)
     second = payload(await call(governance, "orquestrador", "pendencias"))["pendencias"]
-    assert [p["agente"] for p in second][:2] == ["validador", "analista"]  # a revisão vem depois da extração
+    assert [(p["agente"], p["liberada"]) for p in second][:2] == [("validador", True), ("analista", True)]
     assert second[-1]["agente"] == "redator" and "resumo" in second[-1]["o_que_falta"]
+    assert second[-1]["aguarda"].startswith("revisão das fontes de Empresa Exemplo S.A.")
+
+    # E a tool recusa o que chega fora de ordem, mesmo que o orquestrador mande fazer.
+    early = await call(governance, "pesquisador", "salvar_resposta", answer(
+        "p1", f"A maior margem é a da empresa, com {{{{{DOC_ANA}.margem_ebitda.calculado}}}}."))
+    assert early.is_error and "só podem ser respondidas com a extração e a análise" in payload(early)["erro"]
+    assert payload(early)["problemas"][0].startswith("análise qualitativa de Empresa Exemplo S.A.")
+    # Pergunta livre do usuário não espera: responde com o que há na base.
+    free = await call(governance, "pesquisador", "salvar_resposta", answer(
+        "livre", f"A receita foi de {{{{{DOC_ANA}.receita_liquida}}}}.", "Qual foi a receita?"))
+    assert not free.is_error, payload(free)
+
+    await analyse(governance)
+    third = payload(await call(governance, "orquestrador", "pendencias"))["pendencias"]
+    assert all(p["liberada"] for p in third if p["agente"] == "pesquisador")
 
 
 async def test_report_is_built_by_code_from_the_store(governance):
@@ -226,6 +278,15 @@ async def test_new_data_after_the_report_makes_it_pending_again(governance):
     await call(governance, "redator", "montar_relatorio")
     await save(governance, cell("receita_liquida", "Lucro bruto", "Consolidado - 2022"))
     await call(governance, "extrator", "fechar_extracao", {"doc_id": DOC_ANA})
+    # A extração mudou: o que foi escrito com os números antigos volta para a lista, antes do relatório.
+    pending = payload(await call(governance, "orquestrador", "pendencias"))["pendencias"]
+    assert [p["o_que_falta"].split(":")[0] for p in pending] == ["refazer a resposta"] * 5 + ["refazer o resumo executivo"]
+    assert all(p["liberada"] for p in pending)
+    stale = await call(governance, "redator", "montar_relatorio")
+    assert stale.is_error and len(payload(stale)["problemas"]) == 6
+
+    await answer_all(governance)
+    await summarize(governance)
     pending = payload(await call(governance, "orquestrador", "pendencias"))["pendencias"]
     assert [p["o_que_falta"].split(":")[0] for p in pending] == ["remontar o relatório"]
 

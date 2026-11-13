@@ -18,6 +18,7 @@ from app.numbers import format_br, in_reais
 MARGIN_TOLERANCE = Decimal("0.2")  # pontos percentuais
 VARIATION_TOLERANCE = Decimal("0.5")  # pontos percentuais
 LEVERAGE_TOLERANCE = Decimal("0.05")  # múltiplo
+EBITDA_TOLERANCE = Decimal("0.05")  # fração do maior dos dois valores
 
 
 @dataclass(frozen=True)
@@ -159,6 +160,9 @@ class Extraction:
                              "empréstimos e financiamentos (circulante + não circulante) − caixa e equivalentes",
                              ["emprestimos_circulante", "emprestimos_nao_circulante"], ["caixa_equivalentes"])
         if campo == "capex":
+            if self.found("capex_imobilizado_e_intangivel", periodo) is not None:
+                return self._sum(campo, periodo, "aquisição de imobilizado e intangível (linha única do fluxo de caixa)",
+                                 ["capex_imobilizado_e_intangivel"])
             return self._sum(campo, periodo, "aquisição de imobilizado + aquisição de intangível",
                              ["capex_imobilizado", "capex_intangivel"])
         if campo == "margem_ebitda":
@@ -239,6 +243,22 @@ class Extraction:
     # -- validações ----------------------------------------------------------------------------
 
     def _check_informed_against_calculated(self) -> None:
+        ebitda = self.found("ebitda", self.reference)
+        informed_amount = _money(ebitda)
+        from_statement = self.calculated("ebitda", self.reference) if informed_amount is not None else None
+        if from_statement:
+            computed_amount = in_reais(Decimal(str(from_statement["valor_numerico"])), from_statement["unidade"])
+            largest = max(abs(informed_amount), abs(computed_amount))
+            if largest and abs(informed_amount - computed_amount) / largest > EBITDA_TOLERANCE:
+                self.alerts.append(AlertDraft(
+                    "ebitda_divergente", "atencao", campo="ebitda",
+                    mensagem=f"O EBITDA informado ({ebitda.texto} {ebitda.unidade}) não bate com o resultado antes do "
+                             f"resultado financeiro mais depreciação e amortização ({from_statement['valor']} "
+                             f"{from_statement['unidade']}). Pode ser um EBITDA ajustado, o valor de uma controlada "
+                             "ou um sinal omitido no texto.",
+                    detalhes={"informado": f"{ebitda.texto} {ebitda.unidade}", "pagina": ebitda.pagina,
+                              "calculado": f"{from_statement['valor']} {from_statement['unidade']}",
+                              "trecho": ebitda.trecho}))
         margin = self.found("margem_ebitda", self.reference)
         if margin is not None and self.found("ebitda", self.reference) is not None:
             computed = self.calculated("margem_ebitda", self.reference)
@@ -310,9 +330,10 @@ class Extraction:
             informed = self.get(campo, self.reference)
             previous = self.found(campo, self.comparable)
             computed = None
-            # O calculado só aparece quando a empresa não informa, ou para as razões (margem e
-            # alavancagem), em que ele serve de conferência do informado.
-            if informed is None or informed.status != "encontrado" or campo in ("margem_ebitda", "alavancagem"):
+            # O calculado só aparece quando a empresa não informa, ou onde ele serve de conferência
+            # do informado: o EBITDA pela demonstração e as razões (margem e alavancagem).
+            if informed is None or informed.status != "encontrado" or campo in ("ebitda", "margem_ebitda",
+                                                                                 "alavancagem"):
                 computed = self.calculated(campo, self.reference)
                 if computed is not None:
                     previous_computed = self.calculated(campo, self.comparable)

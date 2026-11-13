@@ -108,8 +108,9 @@ async def test_multiple_and_informed_variation_keep_their_own_units(governance):
     assert (leverage["salvo"]["valor"], leverage["salvo"]["unidade"]) == ("3,32x", "x")
     # O trecho não escreve "2022": o valor entra, mas com o aviso de que o período não foi confirmado.
     assert "não escreve o período 2022" in leverage["avisos"][0]
-    variation = await save(governance, text("divida_liquida", "totalizou R$9.032 milhões, aumento de 23% em comparação a 2021",
-                                            "23%", medida="variacao_informada"))
+    variation = await save(governance, text(
+        "divida_liquida", "A dívida líquida da Companhia em 31 de dezembro de 2022 totalizou R$9.032 milhões, aumento "
+        "de 23% em comparação a 2021", "23%", medida="variacao_informada"))
     assert (variation["salvo"]["medida"], variation["salvo"]["unidade"]) == ("variacao_informada", "%")
 
 
@@ -243,7 +244,7 @@ async def test_closing_computes_with_fixed_formulas_and_keeps_informed_apart_fro
 async def test_validations_flag_what_does_not_add_up_and_fix_nothing(governance):
     await fill(governance)
     # A empresa escreve "margem EBITDA de 10,0%" e "receita cresceu 30%"; os números dizem outra coisa.
-    await save(governance, cell("ebitda", "Lucro bruto", "Consolidado - 2022"))  # um "EBITDA informado" de 485.156
+    await save(governance, text("ebitda", "O EBITDA de 2022 somou R$ 485.156 mil", "485.156", chunk=PERFORMANCE))
     await save(governance, text("margem_ebitda", "A margem EBITDA foi de 10,0% no ano", "10,0%", chunk=PERFORMANCE))
     await save(governance, text("receita_liquida", "Em 2022, a receita líquida cresceu 30% em relação a 2021", "30%",
                                 chunk=PERFORMANCE, medida="variacao_informada"))
@@ -264,6 +265,10 @@ async def test_validations_flag_what_does_not_add_up_and_fix_nothing(governance)
     # Dois trechos citados não escrevem o ano: o do múltiplo e o da margem.
     assert {a["campo"] for a in alerts if a["codigo"] == "periodo_nao_confirmado"} == {"alavancagem", "margem_ebitda"}
     assert codes["alavancagem_divergente"]["detalhes"]["informada"] == "3,32x"
+    # O EBITDA que a empresa escreve contra o que sai da demonstração (resultado operacional + depreciação).
+    assert codes["ebitda_divergente"]["detalhes"] == {
+        "informado": "485.156 R$ mil", "calculado": "221.854 R$ mil", "pagina": 9,
+        "trecho": "O EBITDA de 2022 somou R$ 485.156 mil"}
     # Nada foi corrigido: os valores informados continuam como a fonte os escreve.
     assert closed["indicadores"]["margem_ebitda"].startswith("informado: 10,0% %")
 
@@ -286,7 +291,113 @@ async def test_extraction_of_one_user_does_not_exist_for_another(governance):
     other = {"user_token": "tok-bruno", "user_id": BRUNO}
     assert payload(await call(governance, "ler_extracao", {}, **other))["documentos"][0]["extracao"] is None
     denied = await call(governance, "ler_extracao", {"doc_id": DOC_ANA}, **other)
-    assert denied.is_error and "não encontrado" in payload(denied)["erro"]
+    assert denied.is_error and f"Não existe o documento '{DOC_ANA}'" in payload(denied)["erro"]
+    # O erro mostra os documentos que existem para quem chamou, e só esses.
+    assert payload(denied)["opcoes"] == [f"{DOC_BRUNO} (Outra Empresa S.A.)"]
+
+
+# --- portões acrescentados depois da primeira execução real dos agentes --------------------------
+
+
+async def test_the_source_must_be_about_the_indicator_asked_for(governance):
+    """'Alavancagem' e 'margem' nomeiam contas diferentes em cada empresa. Na primeira execução real
+    entrou como alavancagem um '76%' (dívida sobre capital) e um '0,08' (dívida sobre patrimônio)."""
+    other_row = await rejected(governance, "salvar_indicador", cell("ebitda", "Lucro bruto", "Consolidado - 2022"))
+    assert "a linha apontada não menciona 'ebitda' nem 'lajida'" in other_row["erro"]
+    assert "salvar_nao_encontrado" in other_row["erro"]
+    other_ratio = await rejected(governance, "salvar_indicador", text(
+        "alavancagem", "Em 2022, a receita líquida cresceu 30% em relação a 2021", "30%", chunk=PERFORMANCE))
+    assert "é um múltiplo (ex.: 3,32x), e o número citado (30%) é um percentual" in other_ratio["erro"]
+    other_text = await rejected(governance, "salvar_indicador", text(
+        "divida_liquida", "aumento de 23% em comparação a 2021, de R$7.353 milhões", "7.353", periodo="2021"))
+    assert "a frase apontada não menciona 'divida liquida'" in other_text["erro"]
+
+
+async def test_value_of_a_part_of_the_group_needs_a_note_saying_so(governance):
+    """Na Light, o EBITDA da distribuidora (p. 8) entrou como o da companhia; o consolidado estava na p. 9."""
+    snippet = "O EBITDA da distribuidora foi de R$ 1.817 milhões"
+    part = await rejected(governance, "salvar_indicador", text("ebitda", snippet, "1.817", chunk=PERFORMANCE))
+    assert "fala em 'distribuidora'" in part["erro"] and "consolidado" in part["erro"]
+    noted = await save(governance, text("ebitda", snippet, "1.817", chunk=PERFORMANCE,
+                                        nota="EBITDA só da distribuidora; a empresa não informa o consolidado."))
+    assert noted["salvo"]["valor"] == "1.817" and noted["salvo"]["unidade"] == "R$ milhões"
+
+
+async def test_one_cell_cannot_be_saved_under_two_fields(governance):
+    """Na Brasal, a linha única 'Imobilizado e intangível' foi gravada como imobilizado e como
+    intangível, e o capex calculado saiu dobrado."""
+    row, column = "Aquisição de imobilizado", "Consolidado - 2022"
+    await save(governance, cell("capex_imobilizado", row, column, chunk=DFC))
+    twice = await rejected(governance, "salvar_indicador", cell("capex_intangivel", row, column, chunk=DFC))
+    assert "já está gravada como 'capex_imobilizado'" in twice["erro"]
+    assert "grave-a no campo 'capex_imobilizado_e_intangivel'" in twice["erro"]
+
+    # A linha única substitui os dois campos separados (e vice-versa): não há soma em dobro.
+    await save(governance, cell("capex_imobilizado_e_intangivel", row, column, chunk=DFC))
+    await fill_except_capex(governance)
+    extraction = payload(await call(governance, "ler_extracao", {"doc_id": DOC_ANA, "detalhe": "completo"}))[
+        "documentos"][0]["extracao"]
+    capex = extraction["indicadores"]["capex"]["calculado"]
+    assert capex["valor"] == "6.263" and "linha única" in capex["formula"]
+    assert "capex_imobilizado" not in extraction["valores_de_apoio"]
+
+    # O mesmo vale entre outros campos: a célula da receita não pode virar também o lucro.
+    await save(governance, cell("receita_liquida", "Receita operacional líquida", column))
+    again = await rejected(governance, "salvar_indicador", cell("lucro_liquido", "Receita operacional líquida", column))
+    assert "já está gravada como 'receita_liquida'" in again["erro"]
+
+
+async def fill_except_capex(governance) -> None:
+    for arguments in [
+        cell("receita_liquida", "Receita operacional líquida", "Consolidado - 2022"),
+        cell("lucro_liquido", "Lucro líquido do exercício", "Consolidado - 2022"),
+        cell("fluxo_caixa_operacional", "Caixa líquido gerado pelas atividades operacionais", "Consolidado - 2022", chunk=DFC),
+    ]:
+        await save(governance, arguments)
+    for campo, pages in (("ebitda", [9, 10]), ("margem_ebitda", [9]), ("capex", [11]), ("divida_liquida", [10]),
+                         ("alavancagem", [10])):
+        result = await call(governance, "salvar_nao_encontrado", {
+            "doc_id": DOC_ANA, "campo": campo, "paginas_descartadas": pages,
+            "motivo": "O documento não traz este indicador como um valor único."})
+        assert not result.is_error, payload(result)
+    assert not (await call(governance, "fechar_extracao", {"doc_id": DOC_ANA})).is_error
+
+
+async def test_previous_year_is_read_by_the_server_from_the_sibling_column(governance):
+    """Na primeira execução real o extrator esqueceu o ano anterior em dois dos três documentos, e
+    o relatório saiu sem variação. Agora quem lê a coluna irmã é o servidor."""
+    saved = await save(governance, cell("receita_liquida", "Receita operacional líquida", "Consolidado - 2022"))
+    assert saved["ano_anterior_gravado_pelo_servidor"] == {
+        "periodo": "2021", "valor": "1.061.410", "coluna": "Consolidado - 2021 - (não auditado)"}
+    balance = await save(governance, cell("caixa_equivalentes", "Caixa e equivalentes de caixa",
+                                          "Consolidado - 31/12/2022", chunk=BALANCE))
+    assert balance["ano_anterior_gravado_pelo_servidor"]["coluna"] == "Consolidado - 31/12/2021"
+    # A coluna irmã é a do mesmo escopo: a da controladora não serve para um valor do consolidado.
+    assert balance["ano_anterior_gravado_pelo_servidor"]["valor"] == "174.602"
+
+    await fill_except_capex(governance)
+    revenue = payload(await call(governance, "ler_extracao", {"doc_id": DOC_ANA, "detalhe": "completo"}))[
+        "documentos"][0]["extracao"]["indicadores"]["receita_liquida"]
+    assert revenue["comparavel"]["valor"] == "1.061.410" and revenue["variacao"]["calculada"]["valor"] == "24,84%"
+    assert revenue["comparavel"]["origem"]["coluna"] == "Consolidado - 2021 - (não auditado)"
+
+    # Valor de texto não tem coluna irmã: não há o que o servidor leia, e nada é inventado.
+    from_text = await save(governance, text(
+        "divida_liquida", "A dívida líquida da Companhia em 31 de dezembro de 2022 totalizou R$9.032 milhões", "9.032"))
+    assert from_text["ano_anterior_gravado_pelo_servidor"] is None
+
+
+async def test_words_in_another_alphabet_are_refused(governance):
+    """O modelo pequeno soltou 'crédito a العملاء' num resumo e 'Não մն' numa mensagem."""
+    refused = await rejected(governance, "salvar_nao_encontrado", {
+        "doc_id": DOC_ANA, "campo": "capex", "paginas_descartadas": [11],
+        "motivo": "A empresa não informa o capex aos العملاء em nenhuma página."})
+    assert "palavras em outro alfabeto (العملاء)" in refused["erro"]
+    # Ordinais e símbolos comuns em português passam.
+    accepted = await call(governance, "salvar_nao_encontrado", {
+        "doc_id": DOC_ANA, "campo": "capex", "paginas_descartadas": [11],
+        "motivo": "Na 1ª leitura e na nº 2 não há um total de capex; só as linhas de aquisição."})
+    assert not accepted.is_error, payload(accepted)
 
 
 @pytest.mark.parametrize("arguments, problem", [

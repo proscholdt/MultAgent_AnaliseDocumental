@@ -22,9 +22,9 @@ from app.errors import ToolRejected
 from app.fields import FIELDS, QUESTIONS, CampoPrincipal
 from app.models import Answer
 from app.numbers import in_reais
-from app.pending import DocState, gather
+from app.pending import DocState, gather, question_blockers
 from app.report import MARKER, Markers, render_amount
-from app.text import squash, unbacked_numbers
+from app.text import check_script, squash, unbacked_numbers
 
 CITATION = re.compile(r"\[\[\s*([0-9a-f]{8,32})\s*:\s*(\d+)\s*\]\]")
 
@@ -110,6 +110,15 @@ async def salvar_resposta(call: Call, args: SalvarResposta) -> dict[str, Any]:
     states = await gather(call)
     by_id = {state.document.doc_id: state for state in states}
     raw = args.resposta.strip()
+    check_script(raw, "A resposta")
+    if args.pergunta_id != "livre":
+        # As cinco perguntas do relatório comparam as empresas: respondidas com a base pela
+        # metade, saem dizendo que falta dado (ou, pior, comparando só quem já tem).
+        blockers = question_blockers(states)
+        if blockers:
+            raise ToolRejected("As perguntas do relatório só podem ser respondidas com a extração e a análise de "
+                               "todos os documentos. Ainda falta o que está na lista. Termine sem gravar e diga isso.",
+                               problemas=blockers)
 
     # 1. Cada citação tem de apontar para um chunk que existe para este usuário.
     citations: list[dict[str, Any]] = []
@@ -163,5 +172,6 @@ async def ler_respostas(call: Call, args: LerRespostas) -> dict[str, Any]:
     answers = await call.deps.store.answers(call.caller.user_id)
     return {"respostas": [{"pergunta_id": answer.pergunta_id, "pergunta": answer.pergunta,
                            "resposta": answer.renderizado,
-                           "fontes": [f"{c['arquivo']}, p. {c['pagina']}" for c in answer.citacoes]}
+                           "fontes": [f"{c['arquivo']}, p. {c['pagina']}" for c in answer.citacoes],
+                           "gravada_em": answer.at.isoformat()}
                           for answer in answers]}

@@ -13,7 +13,7 @@ from app.errors import ToolRejected
 from app.fields import CATEGORIES, Categoria
 from app.formulas import AlertDraft
 from app.models import AnalysisItem
-from app.text import check_quote, source_kind, squash, unbacked_numbers
+from app.text import check_quote, check_script, denies_existence, source_kind, squash, unbacked_numbers
 from app.tools.extraction import occurrences
 
 _QUOTE_MIN = 40
@@ -59,6 +59,11 @@ async def salvar_item_analise(call: Call, args: SalvarItemAnalise) -> dict[str, 
     chunk = _chunk(document, args.chunk_index)
     quote = check_quote(args.citacao, chunk, min_chars=_QUOTE_MIN)
     statement = squash(args.afirmacao)
+    check_script(statement, "A afirmação")
+    if args.categoria != "tom" and denies_existence(statement):
+        raise ToolRejected("Isto é uma ausência, não um achado: um item afirma algo que o documento diz. Se o "
+                           "documento não traz esta categoria, use registrar_ausencia_analise, que confere e guarda "
+                           "a evidência da busca.")
     _numbers_backed(statement, quote, "A afirmação")
     sections = chunk.get("section_path") or []
     row = AnalysisItem(
@@ -88,6 +93,7 @@ class RegistrarAusenciaAnalise(Args):
 async def registrar_ausencia_analise(call: Call, args: RegistrarAusenciaAnalise) -> dict[str, Any]:
     document = await call.deps.documents.get(call.caller, args.doc_id)
     label, terms = CATEGORIES[args.categoria]
+    check_script(args.motivo, "O motivo")
     found = occurrences(document, terms) if terms else {}
     pending = sorted(set(found) - set(args.paginas_descartadas))
     if pending:
@@ -149,6 +155,7 @@ async def registrar_alerta(call: Call, args: RegistrarAlerta) -> dict[str, Any]:
     chunk = _chunk(document, args.chunk_index)
     quote = check_quote(args.citacao, chunk, min_chars=_QUOTE_MIN)
     description = squash(args.descricao)
+    check_script(description, "A descrição")
     _numbers_backed(description, quote, "A descrição")
     draft = AlertDraft("inconsistencia_na_fonte", "atencao", mensagem=description, detalhes={
         "pagina": chunk["page_start"], "chunk_index": args.chunk_index,

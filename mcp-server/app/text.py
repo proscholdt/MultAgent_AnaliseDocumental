@@ -5,6 +5,7 @@ que dá para conferir, e é conferido: a citação existe literalmente no chunk 
 número do texto está escrito numa citação ou veio de um marcador preenchido pelo código.
 """
 import re
+import unicodedata
 
 from app.errors import ToolRejected
 from app.numbers import contains_number, number_tokens, to_decimal
@@ -14,8 +15,36 @@ _NUMBERED_NOTE = re.compile(r"\d{1,2}(?:\.\d{1,2})*\.?\s")
 _SUFFIXED = re.compile(r"(\d[\d.,]*\d|\d)\s*(%|x\b|p\.p\.)")
 
 
+# Uma afirmação que começa negando a existência ("O documento não traz guidance") não é um
+# achado: é uma ausência, e ausência tem tool própria, que guarda a evidência da busca.
+_DENIAL = re.compile(
+    r"^(?:(?:o|a|as|os)\s+(?:documento|relatório|texto|nota|empresa|companhia|administração|demonstrações"
+    r"(?:\s+financeiras)?)\s+)?(?:também\s+)?não\s+(?:traz|trouxe|apresenta|informa|divulga|menciona|contém|"
+    r"detalha|há|(?:foi|foram)\s+(?:identificad|encontrad|localizad))", re.IGNORECASE)
+_OTHER_LETTERS = "ªºµ"  # letras que não são do alfabeto latino e são normais em português
+
+
 def squash(text: str) -> str:
     return " ".join(text.split())
+
+
+def plain(text: str) -> str:
+    """Texto para comparar termos: minúsculas e sem acento."""
+    return "".join(ch for ch in unicodedata.normalize("NFD", text.casefold()) if not unicodedata.combining(ch))
+
+
+def check_script(text: str, what: str) -> None:
+    """Recusa texto com letras de outro alfabeto. Modelos pequenos às vezes soltam uma palavra em
+    árabe ou armênio no meio de uma frase em português (visto na primeira execução real)."""
+    foreign = [word for word in text.split()
+               if any(ch.isalpha() and ch not in _OTHER_LETTERS and "LATIN" not in unicodedata.name(ch, "")
+                      for ch in word)]
+    if foreign:
+        raise ToolRejected(f"{what} tem palavras em outro alfabeto ({', '.join(foreign[:3])}). Reescreva em português.")
+
+
+def denies_existence(statement: str) -> bool:
+    return bool(_DENIAL.match(statement.strip()))
 
 
 def check_quote(quote: str, chunk: dict, *, min_chars: int) -> str:

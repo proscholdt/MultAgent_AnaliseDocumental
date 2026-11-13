@@ -49,7 +49,7 @@ async def test_another_users_document_does_not_exist_for_this_call(governance, d
     for name, arguments in (("ler_chunk", {"doc_id": DOC_BRUNO, "chunk_index": 0}),
                             ("ler_pagina", {"doc_id": DOC_BRUNO, "pagina": 1})):
         result = await call(governance, name, arguments)
-        assert result.is_error and "não encontrado" in payload(result)["erro"]
+        assert result.is_error and "Não existe o documento" in payload(result)["erro"]
     assert payload(await call(governance, "buscar_trechos", {"consulta": "documento do Bruno"}))["trechos"] == []
     assert {row.outcome for row in await deps.audit.rows()} == {"rejeitada", "ok"}
 

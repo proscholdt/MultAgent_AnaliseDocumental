@@ -29,6 +29,8 @@ class Cell:
     column_label: str
     row_text: str  # a linha inteira, em Markdown: é o trecho citado
     header_text: str
+    row_index: int = -1
+    column_index: int = -1
 
 
 def _cells(line: str) -> list[str]:
@@ -98,4 +100,19 @@ def read_cell(text: str, row_label: str, column_label: str, *, row_occurrence: i
         raise ToolRejected("A coluna pedida é a dos rótulos das linhas, não uma coluna de valores.")
     cells = table.rows[row]
     return Cell(text=cells[column], row_label=cells[0], column_label=table.header[column],
-                row_text="| " + " | ".join(cells) + " |", header_text="| " + " | ".join(table.header) + " |")
+                row_text="| " + " | ".join(cells) + " |", header_text="| " + " | ".join(table.header) + " |",
+                row_index=row, column_index=column)
+
+
+def sibling_column(header: list[str], column: int, year: str, other_year: str) -> int | None:
+    """A coluna irmã de outro ano: mesmo cabeçalho, com o ano trocado ("Consolidado - 2022" ->
+    "Consolidado - 2021", "Consolidado - 31/12/2022" -> "Consolidado - 31/12/2021"). O cabeçalho
+    do outro ano pode trazer uma marca a mais no fim ("- (não auditado)"). None se não houver
+    exatamente uma candidata."""
+    label = normalize(header[column])
+    if year not in label:
+        return None
+    wanted = label.replace(year, other_year)
+    matches = [index for index, other in enumerate(header)
+               if index not in (0, column) and (normalize(other) == wanted or normalize(other).startswith(wanted + " "))]
+    return matches[0] if len(matches) == 1 else None

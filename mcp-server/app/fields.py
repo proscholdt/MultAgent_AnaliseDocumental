@@ -8,6 +8,7 @@ Campo = Literal[
     "fluxo_caixa_operacional", "capex",
     "resultado_antes_financeiro", "depreciacao_amortizacao", "emprestimos_circulante",
     "emprestimos_nao_circulante", "caixa_equivalentes", "capex_imobilizado", "capex_intangivel",
+    "capex_imobilizado_e_intangivel",
 ]
 CampoPrincipal = Literal[
     "receita_liquida", "ebitda", "margem_ebitda", "lucro_liquido", "divida_liquida", "alavancagem",
@@ -27,19 +28,25 @@ class Field:
     # Palavra que a seção de origem deve ter quando o valor vem de tabela (resultado, fluxo,
     # balanço). Valor de outra seção entra, mas gera alerta.
     section: str | None = None
+    # O que a linha da tabela (ou o trecho) de origem tem de mencionar. "Alavancagem" e "índice de
+    # endividamento" nomeiam contas diferentes em cada empresa; o campo deste sistema é dívida
+    # líquida / EBITDA, então a fonte tem de falar em EBITDA. Comparação sem acento.
+    mention: tuple[str, ...] = ()
 
 
 _FIELDS = [
     Field("receita_liquida", "Receita líquida", "valor", True,
           ("receita líquida", "receita operacional líquida"), "resultado"),
-    Field("ebitda", "EBITDA", "valor", True, ("ebitda", "lajida")),
+    Field("ebitda", "EBITDA", "valor", True, ("ebitda", "lajida"), mention=("ebitda", "lajida")),
     Field("margem_ebitda", "Margem EBITDA", "percentual", True,
-          ("margem ebitda", "margem lajida", "margem do ebitda")),
+          ("margem ebitda", "margem lajida", "margem do ebitda"), mention=("ebitda", "lajida")),
     Field("lucro_liquido", "Lucro líquido", "valor", True,
           ("lucro líquido", "prejuízo líquido", "resultado líquido", "prejuízo do exercício"), "resultado"),
-    Field("divida_liquida", "Dívida líquida", "valor", True, ("dívida líquida", "endividamento líquido")),
+    Field("divida_liquida", "Dívida líquida", "valor", True, ("dívida líquida", "endividamento líquido"),
+          mention=("divida liquida", "endividamento liquido")),
     Field("alavancagem", "Alavancagem (dívida líquida / EBITDA)", "multiplo", True,
-          ("alavancagem", "dívida líquida/ebitda", "dívida líquida / ebitda", "dívida líquida sobre ebitda")),
+          ("alavancagem", "dívida líquida/ebitda", "dívida líquida / ebitda", "dívida líquida sobre ebitda"),
+          mention=("ebitda", "lajida")),
     Field("fluxo_caixa_operacional", "Fluxo de caixa operacional", "valor", True,
           ("atividades operacionais",), "fluxo"),
     Field("capex", "Capex", "valor", True,
@@ -54,6 +61,10 @@ _FIELDS = [
     Field("caixa_equivalentes", "Caixa e equivalentes de caixa", "valor", False, section="balanço"),
     Field("capex_imobilizado", "Aquisição de imobilizado", "valor", False, section="fluxo"),
     Field("capex_intangivel", "Aquisição de intangível", "valor", False, section="fluxo"),
+    # Algumas empresas têm uma linha só no fluxo de caixa ("Imobilizado e intangível"). Ela entra
+    # aqui, e não nos dois campos acima: gravada duas vezes, o capex sairia dobrado.
+    Field("capex_imobilizado_e_intangivel", "Aquisição de imobilizado e intangível (linha única)", "valor", False,
+          section="fluxo"),
 ]
 FIELDS: dict[str, Field] = {field.name: field for field in _FIELDS}
 MAIN_FIELDS: tuple[str, ...] = tuple(field.name for field in _FIELDS if field.main)

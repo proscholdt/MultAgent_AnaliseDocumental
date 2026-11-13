@@ -90,7 +90,8 @@ def default_documents() -> dict[tuple[str, str], dict[str, Any]]:
         chunk(6, "table", 6, ["Balanços patrimoniais"], BALANCO, unit_source="chunk",
               extraction_method="table_model"),
         chunk(7, "text", 9, ["Desempenho"],
-              "Em 2022, a receita líquida cresceu 30% em relação a 2021. A margem EBITDA foi de 10,0% no ano.",
+              "Em 2022, a receita líquida cresceu 30% em relação a 2021. A margem EBITDA foi de 10,0% no ano. "
+              "O EBITDA da distribuidora foi de R$ 1.817 milhões. O EBITDA de 2022 somou R$ 485.156 mil.",
               unit=None, unit_source=None),
         chunk(8, "text", 35, ["26. Gestão de riscos", "Risco de liquidez"],
               "O Grupo está exposto ao risco de liquidez, monitorado pela tesouraria com base nas projeções de "

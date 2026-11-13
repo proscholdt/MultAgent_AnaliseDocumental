@@ -166,7 +166,7 @@ def build_report(documents: list[dict[str, Any]], answers: list[dict[str, Any]],
                    "conferido) ou calculado por fórmula fixa a partir desses valores. O que a empresa não informa "
                    "aparece como \"não informado\", e o que foi calculado vem marcado como calculado.")
     out = ["# Relatório de análise das demonstrações financeiras", "",
-           f"Gerado em {generated_at:%d/%m/%Y %H:%M} UTC. Empresas: {', '.join(names)}.", "", how_to_read, ""]
+           f"Gerado em {generated_at:%d/%m/%Y %H:%M} UTC. Empresas: {'; '.join(names)}.".replace("..", "."), "", how_to_read, ""]
 
     out += ["## 1. Resumo executivo", ""]
     for name, doc in zip(names, documents, strict=True):
@@ -182,8 +182,9 @@ def build_report(documents: list[dict[str, Any]], answers: list[dict[str, Any]],
                for doc in documents}
     compared = "; ".join(f"{ref} contra {comp}" for ref, comp in sorted(periods))
     legend = (f"Valores do período de referência; \"var.\" é a variação contra o período comparável ({compared}), "
-              "calculada pelo código. A página é a do PDF. ¹ O sinal mudou de um período para o outro: o "
-              "percentual não tem leitura direta.")
+              "calculada pelo código. A página é a do PDF.")
+    if any(" ¹" in line for line in out):
+        legend += " ¹ O sinal mudou de um período para o outro: o percentual não tem leitura direta."
     out += ["", legend, ""]
     formulas = {computed["formula"] for doc in documents for block in doc["extracao"]["indicadores"].values()
                 if (computed := block["calculado"])}
