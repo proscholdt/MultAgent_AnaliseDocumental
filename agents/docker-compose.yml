@@ -1,0 +1,51 @@
+name: agents
+
+# Agentes: orquestrador (API, porta 8200) e especialistas (A2A, porta 8201).
+# Depende do indexador (sistema 1) e do servidor MCP (sistema 2) já no ar.
+#   docker compose up --build
+#
+# Os três sistemas se falam pela rede Docker do indexador, pelo nome do serviço, sem passar
+# pela máquina hospedeira. Se a rede tiver outro nome, defina INDEXER_NETWORK no .env.
+
+x-agente: &agente
+  build: .
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    MCP_URL: ${MCP_URL_DOCKER:-http://mcp-server:8100/mcp}
+    INDEXER_URL: ${INDEXER_URL_DOCKER:-http://api:8000}
+    ESPECIALISTAS_URL: http://especialistas:8201
+    AGENTES_DIR: /app/agentes
+    DATA_DIR: /data
+  networks:
+    - default
+    - indexer
+
+services:
+  especialistas:
+    <<: *agente
+    command: ["uvicorn", "app.especialistas:app_factory", "--factory", "--host", "0.0.0.0", "--port", "8201"]
+    ports:
+      - "8201:8201" # só para ver os Agent Cards; quem chama é o orquestrador, pela rede interna
+    volumes:
+      - ./agentes:/app/agentes:ro # criar ou editar um agente vale na hora
+
+  orquestrador:
+    <<: *agente
+    command: ["uvicorn", "app.main:app_factory", "--factory", "--host", "0.0.0.0", "--port", "8200"]
+    ports:
+      - "8200:8200"
+    depends_on:
+      - especialistas
+    volumes:
+      - ./agentes:/app/agentes:ro
+      - agents-data:/data # execuções e traces
+
+networks:
+  indexer:
+    name: ${INDEXER_NETWORK:-indexer_default}
+    external: true
+
+volumes:
+  agents-data:
