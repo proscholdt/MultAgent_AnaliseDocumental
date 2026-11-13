@@ -1,4 +1,5 @@
-"""PDF → ParsedDocument com Docling. Só o parse-worker importa este módulo.
+"""Parser local: PDF → ParsedDocument com Docling (PARSER=docling). Só o parse-worker importa
+este módulo, e só quando esse é o parser escolhido (ver parsing.py).
 
 O Docling entrega os elementos na ordem de leitura, com rótulo (título, parágrafo,
 tabela, figura) e página. Aqui eles são convertidos para o esquema próprio do projeto,
@@ -7,8 +8,6 @@ para que as etapas seguintes não dependam do Docling.
 import gc
 import logging
 import os
-import sys
-from collections.abc import Callable
 from importlib.metadata import version
 from itertools import pairwise
 from pathlib import Path
@@ -31,17 +30,19 @@ from docling_core.types.doc import (
     TableItem,
     TextItem,
 )
-from pypdf import PdfReader
 
 from app.config import PIPELINE_VERSION, Settings
-from app.schemas import ParsedDocument, ParsedItem, ParsedPage
+from app.pipeline.figure_ocr import FigureOcr, read_figures
+from app.pipeline.parsing import (
+    MIN_NATIVE_CHARS,
+    ProgressCallback,
+    check_system_fonts,
+    native_pages,
+)
+from app.schemas import ParsedDocument, ParsedItem
 
 log = logging.getLogger(__name__)
 
-ProgressCallback = Callable[[int, int], None]  # (páginas concluídas, total)
-
-# Página com menos caracteres que isto é tratada como escaneada e passa por OCR.
-_MIN_NATIVE_CHARS = 20
 _HEADING_LABELS = {DocItemLabel.TITLE, DocItemLabel.SECTION_HEADER}
 _SKIP_LABELS = {DocItemLabel.PAGE_HEADER, DocItemLabel.PAGE_FOOTER, DocItemLabel.CAPTION}
 # Correção de cabeçalho de tabela (ver fix_header_spans e merge_split_cells), em pontos do PDF.
@@ -49,37 +50,17 @@ _SPAN_MAX_WIDTH = 1.5  # texto mais estreito que isto, em colunas, não cobre du
 _WORD_GAP_MAX = 8.0  # espaço entre duas palavras de um mesmo texto
 
 
-_LINUX_FONT_DIRS = ("/usr/share/fonts", "/usr/local/share/fonts", "~/.fonts", "~/.local/share/fonts")
-
-
-def check_system_fonts() -> None:
-    """Falha cedo se o Linux não tiver nenhuma fonte instalada.
-
-    O modelo de layout trabalha sobre a página renderizada. PDF que referencia Arial ou Times
-    sem embutir a fonte é renderizado com "caixinhas" quando não há substituto no sistema, e o
-    layout degrada em silêncio: páginas inteiras viram "figura" e as tabelas somem. O texto
-    extraído continua certo, então o erro não apareceria em lugar nenhum. Windows e macOS já
-    trazem essas fontes.
-    """
-    if not sys.platform.startswith("linux"):
-        return
-    for directory in _LINUX_FONT_DIRS:
-        root = Path(directory).expanduser()
-        if root.is_dir() and any(root.rglob("*.[to]tf")):
-            return
-    raise RuntimeError(
-        "Nenhuma fonte de sistema encontrada. Instale fontes (ex.: apt-get install fonts-liberation) "
-        "antes de subir o parse-worker; sem elas o layout das páginas é detectado errado."
-    )
-
-
-class PdfParser:
+class DoclingParser:
     """Mantém os conversores carregados: os modelos sobem uma vez por processo, não por PDF."""
 
+    name = "docling"
+    page_price_usd = 0.0  # roda na máquina: não há custo por página
+
     def __init__(self, settings: Settings) -> None:
-        check_system_fonts()
+        check_system_fonts()  # o modelo de layout trabalha sobre a página renderizada
         self._settings = settings
         self._converters: dict[bool, DocumentConverter] = {}
+        self._ocr = FigureOcr()
 
     def _converter(self, ocr: bool) -> DocumentConverter:
         if ocr not in self._converters:
@@ -103,13 +84,19 @@ class PdfParser:
         return self._converters[ocr]
 
     def warmup(self) -> None:
-        """Carrega os modelos antes do primeiro job."""
+        """Carrega os modelos do Docling e do OCR dos recortes antes do primeiro job."""
         self._converter(ocr=False).initialize_pipeline(InputFormat.PDF)
+        self._ocr.warmup()
+
+    def read_figures(self, parsed: ParsedDocument, out_dir: Path) -> int:
+        """OCR (RapidOCR) dos recortes de gráfico: o Docling não devolve o texto de dentro das
+        figuras. Também completa um parsed.json em cache feito antes de o OCR existir."""
+        return read_figures(parsed, out_dir, self._ocr, self._settings.figure_min_area_ratio)
 
     def parse(self, pdf_path: Path, doc_id: str, file_name: str, out_dir: Path,
               on_progress: ProgressCallback | None = None) -> ParsedDocument:
-        pages = _native_pages(pdf_path)
-        ocr_pages = [p.page for p in pages if len(p.native_text.strip()) < _MIN_NATIVE_CHARS]
+        pages = native_pages(pdf_path)
+        ocr_pages = [p.page for p in pages if len(p.native_text.strip()) < MIN_NATIVE_CHARS]
         converter = self._converter(ocr=bool(ocr_pages))
         total = len(pages)
         batch = max(1, self._settings.parse_page_batch)
@@ -143,21 +130,6 @@ class PdfParser:
             pages=pages,
             ocr_pages=ocr_pages,
         )
-
-
-def _native_pages(pdf_path: Path) -> list[ParsedPage]:
-    """Camada de texto de cada página, via pypdf. Inclui os rótulos de gráficos vetoriais,
-    que o Docling omite por estarem dentro de uma região de figura."""
-    reader = PdfReader(str(pdf_path))
-    pages: list[ParsedPage] = []
-    for number, page in enumerate(reader.pages, start=1):
-        try:
-            text = page.extract_text() or ""
-        except Exception as exc:  # noqa: BLE001 - página com fluxo de conteúdo inválido
-            log.warning("Falha ao extrair texto nativo da página %d: %s", number, exc)
-            text = ""
-        pages.append(ParsedPage(page=number, native_text=text))
-    return pages
 
 
 def _item_text(node: TextItem) -> str:

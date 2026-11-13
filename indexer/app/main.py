@@ -27,8 +27,9 @@ e **vetor esparso (BM25)**, prontos para busca híbrida com RRF.
 5. `GET /api/documents/{doc_id}/chunks` e `POST /api/search` — confira o que foi indexado.
 
 O processamento é assíncrono: a API publica o job no Kafka e dois tipos de worker o executam
-(parse com Docling; depois chunking, embeddings e gravação no Qdrant). Cada usuário só enxerga
-os próprios documentos.
+(parse; depois chunking, embeddings e gravação no Qdrant). O parse é feito pelo parser
+configurado em `PARSER`: Docling, na máquina, ou Azure Document Intelligence. `GET /health`
+mostra qual está ativo. Cada usuário só enxerga os próprios documentos.
 """
 
 TAGS = [
@@ -79,7 +80,8 @@ def create_app(with_lifespan: bool = True) -> FastAPI:
     app.include_router(jobs.router)
     app.include_router(search.router)
 
-    @app.get("/health", response_model=HealthOut, tags=["Saúde"], summary="API, Postgres, Kafka e Qdrant")
+    @app.get("/health", response_model=HealthOut, tags=["Saúde"],
+             summary="API, Postgres, Kafka, Qdrant e o parser configurado")
     async def health() -> HealthOut:
         components: dict[str, str] = {"api": "ok"}
         try:
@@ -93,8 +95,12 @@ def create_app(with_lifespan: bool = True) -> FastAPI:
         components["kafka"] = "ok" if kafka_ok else "erro"
         store = getattr(app.state, "store", None)
         components["qdrant"] = "ok" if store and await store.ping() else "erro"
+        settings = get_settings()
+        if settings.parser_problem:
+            components["parser"] = f"erro: {settings.parser_problem}"
         healthy = all(value == "ok" for value in components.values())
-        return HealthOut(status="ok" if healthy else "degraded", components=components)
+        return HealthOut(status="ok" if healthy else "degraded", components=components,
+                         parser=settings.parser)
 
     return app
 

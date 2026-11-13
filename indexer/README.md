@@ -7,6 +7,9 @@ esses trechos no Qdrant com dois vetores: um semântico e um de palavras-chave.
 O sistema 2, o agente que extrai indicadores, responde perguntas com citação e gera o relatório,
 vai consultar esse índice. Ele ainda não foi construído.
 
+O PDF pode ser lido por dois parsers, trocáveis por uma variável: o Docling, que roda na
+máquina, ou o Azure AI Document Intelligence.
+
 Não há frontend. Tudo é testável pelo Swagger em `http://localhost:8000/docs`.
 
 ## O caminho de um PDF
@@ -17,7 +20,8 @@ flowchart TD
     API -->|PDF| VOL[(volume: storage/user_id/doc_id)]
     API -->|documents, jobs| PG[(PostgreSQL)]
     API -->|indexer.parse<br/>chave = user_id| K{{Kafka}}
-    K --> PW[parse-worker<br/>Docling + OCR]
+    K --> PW[parse-worker<br/>Docling ou Azure]
+    PW -. PARSER=azure .-> ADI[Azure Document Intelligence]
     PW -->|parsed.json + recortes de figuras| VOL
     PW -->|indexer.index| K
     K --> IW[index-worker]
@@ -33,8 +37,9 @@ flowchart TD
 
 1. **Upload.** A API confere o login e o arquivo, grava o PDF em disco, cria um job e põe uma
    mensagem na fila. Responde na hora com `202`; não processa nada.
-2. **Parse.** O parse-worker lê o PDF com o Docling e produz uma lista de elementos (títulos,
-   parágrafos, tabelas, recortes de gráficos), cada um com a sua página. É a etapa lenta.
+2. **Parse.** O parse-worker lê o PDF com o parser escolhido (Docling, na máquina, ou Azure
+   Document Intelligence) e produz uma lista de elementos (títulos, parágrafos, tabelas,
+   recortes de gráficos), cada um com a sua página. Com o Docling, é a etapa lenta.
 3. **Indexação.** O index-worker transcreve e confere os gráficos, identifica empresa e período,
    monta os chunks, calcula os dois vetores e grava no Qdrant.
 4. **Consulta.** O índice fica pronto para busca híbrida (semântica + palavras-chave, combinadas
@@ -52,7 +57,7 @@ docker compose up --build   # kafka, postgres, qdrant, api, parse-worker, index-
 
 A primeira construção demora cerca de 25 minutos na máquina de desenvolvimento. A imagem do
 parse-worker tem 4,3 GB, com PyTorch só-CPU e os modelos do Docling e do OCR já baixados, para
-que nada seja baixado em execução. A imagem da API e do index-worker tem 786 MB. As construções
+que nada seja baixado em execução. A imagem da API e do index-worker tem 825 MB. As construções
 seguintes reaproveitam as camadas e levam segundos.
 
 Depois, no Swagger (`/docs`):
@@ -71,12 +76,41 @@ uv run python scripts/smoke.py    # registra, loga, envia os 3 PDFs, acompanha e
 
 O dashboard do Qdrant fica em `http://localhost:6333/dashboard`.
 
+### Escolher o parser
+
+Quem lê o PDF é decidido pela variável `PARSER` no `.env`:
+
+```bash
+PARSER=docling            # padrão: roda na máquina, sem custo por página
+
+PARSER=azure              # Azure AI Document Intelligence
+AZURE_DI_ENDPOINT=https://<recurso>.cognitiveservices.azure.com/
+AZURE_DI_KEY=<chave>      # recurso no nível S0; o gratuito lê só 2 páginas por documento
+```
+
+Para trocar:
+
+1. mude `PARSER` no `.env`;
+2. rode `docker compose up -d`, que recria os serviços com a variável nova;
+3. confira o campo `parser` em `GET /health`;
+4. reenvie o PDF (ou rode `scripts/smoke.py`). O documento é reindexado com o parser novo.
+
+Cada parser guarda o próprio cache por documento, então voltar ao anterior leva segundos e não
+paga nada de novo. Com `PARSER=azure` e sem as credenciais, `/health` mostra o que falta e o
+upload responde `503`, em vez de aceitar um job que ficaria parado.
+
+Para usar só a Azure, sem construir a imagem do Docling (4,3 GB):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.azure.yml up --build
+```
+
 ### Desenvolvimento fora do Docker
 
 ```bash
 docker compose up -d kafka postgres qdrant
 uv sync                                    # inclui Docling, torch e RapidOCR (grupo "parse")
-uv run pytest                              # 111 testes, sem rede nem contêiner
+uv run pytest                              # 130 testes, sem rede nem contêiner
 uv run python -m app.warmup                # baixa os modelos uma vez
 uv run uvicorn app.main:app --port 8000
 uv run python -m app.workers.parse_worker
@@ -106,14 +140,14 @@ Todas as rotas `/api/*` exigem `Authorization: Bearer <token>`.
 | GET | `/api/jobs/{job_id}` | Etapa, progresso por página, tentativas, tempos, tokens, custo, erro |
 | POST | `/api/jobs/{job_id}/retry` | Reenfileira um job que falhou, na etapa em que falhou |
 | POST | `/api/search` | Busca híbrida com RRF nos documentos do usuário (para conferência) |
-| GET | `/health` | API, Postgres, Kafka e Qdrant |
+| GET | `/health` | API, Postgres, Kafka e Qdrant, e qual parser está configurado |
 
 ## Arquitetura
 
 | Peça | Papel |
 |---|---|
 | **api** | Autentica, valida o PDF, grava o arquivo e o job, publica no Kafka e responde `202`. |
-| **parse-worker** | Docling: PDF → elementos com página. Depois, OCR dos recortes de gráfico. Pesado em CPU. |
+| **parse-worker** | PDF → elementos com página, pelo parser escolhido. Com o Docling é pesado em CPU; com a Azure, quase só rede. |
 | **index-worker** | Gráficos, metadados, chunks, vetores e gravação no Qdrant. Quase só rede; não depende de Docling nem de torch. |
 | **Kafka** | Duas filas de trabalho, uma de eventos e uma de mensagens mortas. |
 | **PostgreSQL** | Usuários, documentos e jobs (estado, progresso, tempos, tokens, custo). |
@@ -164,14 +198,41 @@ Recurso de outro usuário responde `404`, não `403`, para não confirmar que o 
 
 ## Do PDF ao chunk, etapa por etapa
 
-### 1. Parse (Docling)
+### 1. Parse: dois parsers, o mesmo resultado
+
+O parse transforma o PDF numa lista de elementos (títulos, parágrafos, tabelas em Markdown,
+recortes de gráfico), cada um com a sua página, que é o que permite citar a origem. O resultado
+é gravado em `parsed.json`, num esquema próprio do projeto. Há dois parsers que produzem esse
+mesmo arquivo, escolhidos pela variável `PARSER`. O resto do pipeline não sabe qual rodou.
+
+| | `PARSER=docling` (padrão) | `PARSER=azure` |
+|---|---|---|
+| Quem lê o PDF | Docling, na máquina | Azure AI Document Intelligence, modelo `prebuilt-layout` |
+| Tempo nos 3 PDFs | 26 min em CPU | não medido (ver "o que não foi testado") |
+| Custo | zero | por página; o job traz a estimativa em `usage.parse_cost_usd` |
+| Imagem do parse-worker | 4,3 GB, até 4 GB de memória | a leve (825 MB) basta |
+| O PDF sai da máquina | não | sim, vai para o recurso da Azure |
+| Texto de dentro dos gráficos | OCR local (RapidOCR) do recorte | palavras que o serviço leu na página; OCR local só como reserva |
+| O que exige | nada | `AZURE_DI_ENDPOINT`, `AZURE_DI_KEY` e recurso no nível S0 |
+
+O que é igual nos dois:
+
+- A camada de texto de cada página também é guardada (via `pypdf`). É a referência exata das
+  conferências de metadados e de gráficos, e da auditoria.
+- Tudo o que vem depois do parse: gráficos, metadados, chunks e vetores.
+- **Um cache por parser.** Cada parser grava em `storage/{user}/{doc}/parse/{parser}/` o seu
+  `parsed.json`, os recortes e as transcrições dos gráficos. Retry, correção de metadados e
+  reindexação não repetem o parse, e trocar de parser não apaga o que o outro fez.
+- O chunk guarda quem leu o PDF (campo `parser`), e o job também (`timings.parser`).
+- **Números de tabela contra a camada de texto.** O Docling lê a camada de texto do PDF; um
+  serviço de nuvem pode ler a página por OCR. Por isso o parse-worker conta, com qualquer
+  parser, quantos números de tabela não existem no texto da página
+  (`timings.table_numbers_unconfirmed` no job). Com o Docling é zero.
+
+#### Docling
 
 Os três PDFs têm texto nativo, mas as tabelas da Brasal e da Millet não têm bordas. O Docling
-reconstrói a estrutura dessas tabelas (modelo TableFormer) e informa a página de cada elemento,
-que é o que permite citar a origem. O resultado é gravado em `parsed.json`, num esquema próprio
-do projeto. Por isso o index-worker não precisa de Docling.
-
-O que foi preciso tratar:
+reconstrói a estrutura dessas tabelas (modelo TableFormer). O que foi preciso tratar:
 
 - **Fontes de sistema no Linux.** O modelo de layout trabalha sobre a página renderizada, e
   estes PDFs referenciam Arial sem embutir a fonte em várias páginas. Numa imagem `python:slim`,
@@ -199,12 +260,57 @@ O que foi preciso tratar:
 
 Além disso:
 
-- A camada de texto de cada página também é guardada (via `pypdf`). Ela serve para conferir
-  metadados e gráficos.
 - Depois do Docling, o RapidOCR lê cada recorte de figura com 4% da página ou mais e guarda cada
   texto com a posição dele na imagem (`ocr_words`). Isso é usado na conferência dos gráficos.
 - O OCR de página inteira só é ligado quando o documento tem página sem texto nativo.
-- O parse fica em cache por arquivo: retry, correção de metadados e reindexação não o repetem.
+
+#### Azure Document Intelligence
+
+O serviço devolve parágrafos com papel (título, cabeçalho de página...), tabelas com as células
+e figuras com a região que ocupam na página. A conversão para o `parsed.json`:
+
+- **Ordem de leitura.** Parágrafos, tabelas e figuras são intercalados pela posição de cada um
+  no texto corrido que o serviço devolve. Cabeçalho, rodapé e número de página são descartados
+  pelo papel. O que está dentro de uma tabela ou de uma figura não vira texto corrido.
+- **Tabelas.** As células viram Markdown no mesmo formato do Docling, com os níveis do cabeçalho
+  juntados ("Consolidado - 2022"). Célula de dados que cobre várias colunas fica só na primeira,
+  para um número não aparecer repetido.
+- **Gráficos.** O serviço informa só a região da figura. O recorte é renderizado aqui, com o
+  `pypdfium2`, na mesma escala do Docling, e é ele que vai para o modelo de visão. O texto de
+  dentro da figura vem das palavras que o serviço leu naquela região, reagrupadas em trechos:
+  "Perdas Totais" é um trecho; "dez/20" e "mar/21", num eixo, são dois. Se o serviço não
+  devolver nenhum número dentro da figura e o OCR local estiver instalado (imagem do alvo
+  `parse`), ele lê o recorte.
+- **Parágrafo em duas páginas, nota de rodapé de tabela e legenda de figura** têm o mesmo
+  tratamento do Docling.
+- **PDF com restrição de permissões** (caso da Brasal): é regravado sem a criptografia antes do
+  envio, porque o serviço pede que a proteção seja removida.
+- **Nível gratuito.** O F0 analisa só as duas primeiras páginas de cada documento. Se o serviço
+  devolver menos páginas do que o PDF tem, o job falha com essa explicação, em vez de indexar o
+  documento pela metade.
+- **Erros.** Credencial ou endpoint recusado vai direto para `failed`, sem novas tentativas.
+  Limite de requisições e erro do servidor seguem o retry normal.
+- **Custo.** O job registra `usage.parse_cost_usd`: páginas analisadas vezes o preço por página
+  (`AZURE_DI_PRICE_PER_1K_PAGES`, US$ 10 por mil páginas por padrão; confira a tabela da sua
+  região). Parse vindo do cache não é cobrado de novo.
+
+**O que foi e o que não foi testado no parser da Azure.** Não havia credencial da Azure durante
+o desenvolvimento, então o serviço real não foi chamado. O que foi feito:
+
+- 19 testes automatizados com uma resposta montada no formato documentado da API (versão
+  2024-11-30) e um cliente falso: ordem de leitura, tabelas, figuras, erros, nível gratuito e
+  cache por parser;
+- as partes que rodam na máquina, sobre os três PDFs reais: o envio sem criptografia da Brasal
+  (51 páginas, mesmo texto) e o recorte de figuras;
+- uma simulação com os três gráficos vetoriais da Light, em que as palavras e as posições vieram
+  da camada de texto do PDF, como o serviço as devolveria. A conferência de posição deu o mesmo
+  resultado do caminho Docling em dois gráficos e, no terceiro (PECLD/ROB), localizou os quatro
+  valores; o OCR local localiza dois.
+
+Fica por conferir com uma chave real: tempo e custo; a qualidade das tabelas; se o serviço lê
+por OCR o texto dos quatro gráficos da Light que são imagem (a documentação não diz); e se a
+auditoria e a busca dão os mesmos números. `scripts/audit_index.py` e `scripts/eval_search.py`
+servem para isso: é só rodá-los depois de indexar com cada parser.
 
 ### 2. Gráficos (modelo de visão + conferência)
 
@@ -372,6 +478,7 @@ Payload de cada ponto:
 | `unit`, `unit_source` | Unidade monetária do chunk (`R$ mil`, `R$ milhões`, ou vazio) e de onde ela veio: `chunk`, `page`, `mentions` ou `inherited` |
 | `chunk_index`, `chunk_type` | Posição no documento e tipo: `text`, `table` ou `figure` |
 | `extraction_method` | `native_text`, `table_model` ou `vision_llm` |
+| `parser` | Quem leu o PDF: `docling` ou `azure` |
 | `section_path`, `page_start`, `page_end` | Seção e páginas de origem (página do arquivo PDF, 1-based) |
 | `text` | Conteúdo literal, sem o cabeçalho de contexto. É o que o agente cita |
 | `context_header` | Prefixo usado nos embeddings |
@@ -400,6 +507,9 @@ client.query_points(
 ## Segurança
 
 - **Credenciais:** só em `.env`, fora do Git. O `.env.example` documenta as variáveis.
+- **Para onde o documento vai:** com qualquer parser, a OpenAI recebe o texto dos chunks (embeddings),
+  o texto das três primeiras páginas e os recortes de gráfico. Com `PARSER=azure`, o PDF inteiro
+  também é enviado ao recurso de Document Intelligence.
 - **Senhas:** Argon2. **Tokens:** JWT com expiração. O login responde igual para senha errada e
   usuário inexistente.
 - **Upload:** assinatura `%PDF-`, limite de tamanho e de páginas, leitura da estrutura com
@@ -600,6 +710,18 @@ Sobre os gráficos:
 - **Variação entre execuções.** A transcrição do modelo de visão não é idêntica a cada chamada.
   Ela fica em cache por documento, então o índice só muda se o cache for apagado.
 
+Sobre o parser da Azure:
+
+- **Não foi executado contra o serviço real** (ver a etapa 1). Tempo, custo e qualidade são os
+  da documentação, não medições.
+- **Gráficos em imagem.** A documentação não diz se o serviço lê por OCR o texto de uma imagem
+  colada num PDF digital. Se não ler, e o parse-worker estiver na imagem leve, os valores desses
+  gráficos não têm segunda fonte e são omitidos; na imagem do alvo `parse`, o OCR local cobre.
+- **Regras calibradas no Docling.** A correção de cabeçalho de tabela é específica do Docling.
+  As regras de seção e a conferência de posição dos gráficos valem para os dois parsers, mas
+  foram ajustadas com a saída do Docling; com a Azure os chunks podem sair diferentes.
+- **Medições e auditoria** deste README são todas com o Docling.
+
 Sobre a aplicação:
 
 - `create_all` cria as tabelas no startup; não há migrações.
@@ -609,6 +731,7 @@ Sobre a aplicação:
 ```text
 indexer/
 ├─ docker-compose.yml, Dockerfile     # alvos "light" (api, index-worker) e "parse" (Docling + OCR)
+├─ docker-compose.azure.yml           # só o parser da Azure, sem a imagem do Docling
 ├─ data/pdfs/                         # os três PDFs do teste
 ├─ scripts/                           # smoke.py (fluxo completo), audit_index.py, eval_search.py
 ├─ app/
@@ -619,14 +742,16 @@ indexer/
 │  ├─ api/                            # auth, documents, jobs, search
 │  ├─ workers/                        # parse_worker, index_worker
 │  └─ pipeline/
-│     ├─ parser.py                    # Docling em lotes → parsed.json
-│     ├─ figure_ocr.py                # OCR dos recortes, com posição
+│     ├─ parsing.py                   # contrato comum dos parsers e a escolha por PARSER
+│     ├─ docling_parser.py            # Docling em lotes → parsed.json
+│     ├─ azure_parser.py              # Azure Document Intelligence → parsed.json
+│     ├─ figure_ocr.py                # OCR local dos recortes, com posição
 │     ├─ figures.py                   # modelo de visão + conferência
 │     ├─ metadata.py                  # empresa, período, tipo e unidade
 │     ├─ chunker.py                   # seções, texto, tabelas
 │     ├─ embedder.py, vector_store.py # vetores e Qdrant
 │     └─ indexing.py                  # junta as etapas da indexação
-└─ tests/                             # 111 testes, sem rede nem contêiner
+└─ tests/                             # 130 testes, sem rede nem contêiner
 ```
 
 ## Caminho para produção no Azure
@@ -636,7 +761,7 @@ indexer/
 | Volume compartilhado | Azure Blob Storage |
 | Kafka em contêiner | Event Hubs (protocolo Kafka) ou Service Bus |
 | Workers no compose | Container Apps com escala por tamanho de fila (KEDA); parse em GPU |
-| Docling | Azure AI Document Intelligence (modelo de layout) para volume alto |
+| `PARSER=docling` | `PARSER=azure`, já disponível: Document Intelligence (layout), com o parse-worker na imagem leve |
 | Qdrant | Azure AI Search com busca híbrida e RRF nativos |
 | OpenAI | Azure OpenAI no AI Foundry, com Batch API para embeddings |
 | Logs em stdout | Application Insights / OpenTelemetry, com tempo e custo por etapa |

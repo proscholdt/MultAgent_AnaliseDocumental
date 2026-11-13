@@ -43,7 +43,8 @@ async def _load_llm_metadata(parsed: ParsedDocument, cache_path: Path, llm: LLMC
     return result
 
 
-def build_payload(chunk: Chunk, *, file_name: str, meta: DocMetadata, indexed_at: str) -> dict[str, Any]:
+def build_payload(chunk: Chunk, *, file_name: str, meta: DocMetadata, indexed_at: str,
+                  parser: str) -> dict[str, Any]:
     # Sem unidade encontrada o campo fica vazio. A unidade predominante do documento
     # (meta.default_unit) é só um resumo para a listagem, não um valor de reserva.
     unit = chunk.unit
@@ -57,6 +58,7 @@ def build_payload(chunk: Chunk, *, file_name: str, meta: DocMetadata, indexed_at
         "chunk_index": chunk.chunk_index,
         "chunk_type": chunk.chunk_type,
         "extraction_method": chunk.extraction_method,
+        "parser": parser,  # "docling" ou "azure": quem leu o PDF
         "verified_ratio": chunk.verified_ratio,
         "unverified_values": chunk.unverified_values,
         "verified_by_ocr": chunk.verified_by_ocr,
@@ -81,6 +83,7 @@ async def index_document(
     file_name: str,
     overrides: dict[str, Any],
     parsed: ParsedDocument,
+    parser: str,
     doc_dir: Path,
     figures_cache: Path,
     metadata_cache: Path,
@@ -109,7 +112,8 @@ async def index_document(
     started = await stage("chunking")
     chunks = await asyncio.to_thread(chunk_document, parsed, figures, settings)
     indexed_at = datetime.now(UTC).isoformat()
-    payloads = [build_payload(c, file_name=file_name, meta=meta, indexed_at=indexed_at) for c in chunks]
+    payloads = [build_payload(c, file_name=file_name, meta=meta, indexed_at=indexed_at, parser=parser)
+                for c in chunks]
     # O cabeçalho de contexto entra nos dois embeddings: um chunk de tabela sozinho não diz
     # de qual empresa, período ou nota ele é.
     texts = [f"{payload['context_header']}\n{payload['text']}" for payload in payloads]

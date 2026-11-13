@@ -62,14 +62,33 @@ class Settings(BaseSettings):
     max_upload_mb: int = 50
     max_pages: int = 500
 
-    # --- Parser (Docling) ---
+    # --- Parser: quem lê o PDF ---
+    # "docling": local, sem custo por página, minutos por documento em CPU.
+    # "azure": Azure AI Document Intelligence (modelo de layout): o parse roda no serviço
+    #          (tempo não medido aqui), é pago por página, e o PDF é enviado ao recurso da Azure.
+    # Para trocar, mude PARSER e reinicie os serviços. Cada parser guarda o próprio cache por
+    # documento, então voltar ao anterior não refaz o parse.
+    parser: Literal["docling", "azure"] = "docling"
+    figure_min_area_ratio: float = 0.04  # figuras menores que 4% da página são logotipos
+
+    # --- Parser Azure ---
+    azure_di_endpoint: str = ""  # https://<recurso>.cognitiveservices.azure.com/
+    azure_di_key: str = ""
+    azure_di_model: str = "prebuilt-layout"
+    azure_di_timeout_seconds: int = 900
+    # Preço de tabela do modelo de layout no nível S0, em US$ por mil páginas. Só para estimar
+    # o custo do parse no job; confira o valor da sua região.
+    azure_di_price_per_1k_pages: float = 10.0
+    # Escala da renderização dos recortes de figura (2 = 144 dpi), igual à do Docling.
+    figure_render_scale: float = 2.0
+
+    # --- Parser Docling ---
     table_mode: Literal["accurate", "fast"] = "accurate"
     # Páginas por chamada ao Docling. Ele guarda as páginas renderizadas até o fim da conversão;
     # num PDF de 124 páginas convertido de uma vez o worker passou de 5,7 GB. Em lotes, o pico
     # de memória depende do lote, não do tamanho do documento.
     parse_page_batch: int = 10
     parse_threads: int = 0  # 0 = todos os núcleos
-    figure_min_area_ratio: float = 0.04  # figuras menores que 4% da página são logotipos
 
     # --- Chunking ---
     chunk_target_tokens: int = 450
@@ -79,6 +98,18 @@ class Settings(BaseSettings):
     @property
     def llm_enabled(self) -> bool:
         return self.embedding_provider == "openai" and bool(self.openai_api_key)
+
+    @property
+    def azure_di_configured(self) -> bool:
+        return bool(self.azure_di_endpoint.strip() and self.azure_di_key.strip())
+
+    @property
+    def parser_problem(self) -> str | None:
+        """O que falta para o parser escolhido funcionar, ou None se está tudo configurado."""
+        if self.parser == "azure" and not self.azure_di_configured:
+            return ("PARSER=azure exige AZURE_DI_ENDPOINT e AZURE_DI_KEY no .env "
+                    "(endpoint e chave do recurso de Document Intelligence).")
+        return None
 
 
 @lru_cache

@@ -38,10 +38,14 @@ async def handle_index(message: IndexRequested, *, store: VectorStore, dense: De
         await repo.update_job(session, message.job_id, status="indexing", stage="index",
                               attempts=message.attempt, error=None, failed_stage=None)
 
-    parsed = load_parsed(storage.parsed_path(message.user_id, message.doc_id))
+    # O parse-worker diz qual parser produziu o parsed.json. Quando a API manda reindexar
+    # (PATCH, retry), vale o parser configurado aqui.
+    parser = message.parser or settings.parser
+    parsed = load_parsed(storage.parsed_path(message.user_id, message.doc_id, parser))
     if parsed is None:
-        # Sem parse em cache (ou de versão antiga do pipeline): devolve para a fila de parse.
-        log.info("parsed.json ausente para %s; reenfileirando o parse.", message.doc_id)
+        # Sem parse em cache para este parser (ou de versão antiga do pipeline): devolve para
+        # a fila de parse.
+        log.info("parsed.json (%s) ausente para %s; reenfileirando o parse.", parser, message.doc_id)
         await publisher.publish(
             settings.kafka_topic_parse, message.user_id,
             ParseRequested(job_id=message.job_id, user_id=message.user_id, doc_id=message.doc_id),
@@ -56,8 +60,8 @@ async def handle_index(message: IndexRequested, *, store: VectorStore, dense: De
     llm = LLMClient(settings) if settings.llm_enabled else None
     result = await index_document(
         user_id=message.user_id, doc_id=message.doc_id, file_name=file_name, overrides=overrides,
-        parsed=parsed, doc_dir=storage.doc_dir(message.user_id, message.doc_id),
-        figures_cache=storage.figures_cache_path(message.user_id, message.doc_id),
+        parsed=parsed, parser=parser, doc_dir=storage.parse_dir(message.user_id, message.doc_id, parser),
+        figures_cache=storage.figures_cache_path(message.user_id, message.doc_id, parser),
         metadata_cache=storage.metadata_cache_path(message.user_id, message.doc_id),
         store=store, dense=dense, sparse=sparse, llm=llm, settings=settings, on_stage=on_stage,
     )
@@ -83,8 +87,8 @@ async def handle_index(message: IndexRequested, *, store: VectorStore, dense: De
         DocumentEvent(type="document.indexed", job_id=message.job_id, user_id=message.user_id,
                       doc_id=message.doc_id, chunk_count=result.chunk_count, occurred_at=datetime.now(UTC)),
     )
-    log.info("Documento %s indexado: %d chunks, custo estimado US$ %.4f",
-             message.doc_id, result.chunk_count, result.usage["cost_usd"])
+    log.info("Documento %s indexado (%s): %d chunks, custo estimado US$ %.4f",
+             message.doc_id, parser, result.chunk_count, result.usage["cost_usd"])
 
 
 async def main() -> None:

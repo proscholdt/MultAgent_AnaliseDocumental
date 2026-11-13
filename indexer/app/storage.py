@@ -15,6 +15,7 @@ from pypdf.errors import FileNotDecryptedError, WrongPasswordError
 from app.config import get_settings
 
 _SAFE_ID = re.compile(r"^[0-9a-fA-F-]{1,64}$")
+_SAFE_PARSER = re.compile(r"^[a-z][a-z0-9_]{0,31}$")
 
 
 class InvalidPdf(ValueError):
@@ -35,19 +36,26 @@ def upload_path(user_id: str, doc_id: str) -> Path:
     return doc_dir(user_id, doc_id) / "upload.pdf"
 
 
-def parsed_path(user_id: str, doc_id: str) -> Path:
-    return doc_dir(user_id, doc_id) / "parsed.json"
+def parse_dir(user_id: str, doc_id: str, parser: str) -> Path:
+    """Pasta com o que um parser produziu para o documento: parsed.json, os recortes de figura
+    e as transcrições delas. Cada parser tem a sua, porque recortam as figuras de jeitos
+    diferentes; assim trocar de parser e voltar não refaz o parse."""
+    if not _SAFE_PARSER.match(parser):
+        raise ValueError("Parser inválido.")
+    return doc_dir(user_id, doc_id) / "parse" / parser
 
 
-def figures_dir(user_id: str, doc_id: str) -> Path:
-    return doc_dir(user_id, doc_id) / "figures"
+def parsed_path(user_id: str, doc_id: str, parser: str) -> Path:
+    return parse_dir(user_id, doc_id, parser) / "parsed.json"
 
 
-def figures_cache_path(user_id: str, doc_id: str) -> Path:
-    return doc_dir(user_id, doc_id) / "figures.json"
+def figures_cache_path(user_id: str, doc_id: str, parser: str) -> Path:
+    return parse_dir(user_id, doc_id, parser) / "figures.json"
 
 
 def metadata_cache_path(user_id: str, doc_id: str) -> Path:
+    """Resposta do LLM sobre empresa, período e tipo. Vale para os dois parsers: ela sai do
+    texto nativo das primeiras páginas, que não depende de quem fez o parse."""
     return doc_dir(user_id, doc_id) / "metadata.json"
 
 
@@ -87,8 +95,7 @@ def delete_document_files(user_id: str, doc_id: str) -> None:
 
 
 def clear_derived_files(user_id: str, doc_id: str) -> None:
-    """Apaga o que foi derivado do PDF (parse, figuras, metadados), mantendo o upload."""
-    for path in (parsed_path(user_id, doc_id), figures_cache_path(user_id, doc_id),
-                 metadata_cache_path(user_id, doc_id)):
-        path.unlink(missing_ok=True)
-    shutil.rmtree(figures_dir(user_id, doc_id), ignore_errors=True)
+    """Apaga o que foi derivado do PDF (parse de todos os parsers, figuras, metadados),
+    mantendo o upload."""
+    metadata_cache_path(user_id, doc_id).unlink(missing_ok=True)
+    shutil.rmtree(doc_dir(user_id, doc_id) / "parse", ignore_errors=True)

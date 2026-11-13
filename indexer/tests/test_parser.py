@@ -1,4 +1,4 @@
-"""Parser do parse-worker. Só roda onde o Docling está instalado (grupo "parse")."""
+"""Parser Docling. Só roda onde o Docling está instalado (grupo "parse")."""
 from types import SimpleNamespace
 
 import pytest
@@ -14,27 +14,28 @@ from docling_core.types.doc import (
     TextItem,
 )
 
-from app.pipeline import parser
+from app.pipeline import docling_parser as parser
+from app.pipeline import parsing
 from app.schemas import ParsedItem, ParsedPage
 
 
 def test_linux_without_system_fonts_fails_fast(monkeypatch, tmp_path):
     """Sem fontes, o layout degrada em silêncio (páginas viram "figura"); melhor não subir."""
-    monkeypatch.setattr(parser.sys, "platform", "linux")
-    monkeypatch.setattr(parser, "_LINUX_FONT_DIRS", (str(tmp_path / "nao-existe"), str(tmp_path)))
+    monkeypatch.setattr(parsing.sys, "platform", "linux")
+    monkeypatch.setattr(parsing, "_LINUX_FONT_DIRS", (str(tmp_path / "nao-existe"), str(tmp_path)))
     with pytest.raises(RuntimeError, match="fonte de sistema"):
-        parser.check_system_fonts()
+        parsing.check_system_fonts()
 
     font_dir = tmp_path / "truetype" / "liberation"
     font_dir.mkdir(parents=True)
     (font_dir / "LiberationSans-Regular.ttf").write_bytes(b"")
-    parser.check_system_fonts()  # com uma fonte instalada, passa
+    parsing.check_system_fonts()  # com uma fonte instalada, passa
 
 
 def test_font_check_is_skipped_outside_linux(monkeypatch, tmp_path):
-    monkeypatch.setattr(parser.sys, "platform", "win32")
-    monkeypatch.setattr(parser, "_LINUX_FONT_DIRS", (str(tmp_path),))
-    parser.check_system_fonts()
+    monkeypatch.setattr(parsing.sys, "platform", "win32")
+    monkeypatch.setattr(parsing, "_LINUX_FONT_DIRS", (str(tmp_path),))
+    parsing.check_system_fonts()
 
 
 def test_enumerated_list_item_keeps_its_marker():
@@ -166,13 +167,13 @@ def test_parse_converts_in_page_batches(monkeypatch, tmp_path, settings):
 
     native = [ParsedPage(page=n, native_text="texto nativo da página " * 3) for n in range(1, 26)]
     monkeypatch.setattr(parser, "check_system_fonts", lambda: None)
-    monkeypatch.setattr(parser, "_native_pages", lambda path: native)
+    monkeypatch.setattr(parser, "native_pages", lambda path: native)
     monkeypatch.setattr(parser, "_convert_items", fake_items)
-    monkeypatch.setattr(parser.PdfParser, "_converter", lambda self, ocr: FakeConverter())
+    monkeypatch.setattr(parser.DoclingParser, "_converter", lambda self, ocr: FakeConverter())
     settings.parse_page_batch = 10
 
     progress = []
-    parsed = parser.PdfParser(settings).parse(
+    parsed = parser.DoclingParser(settings).parse(
         tmp_path / "x.pdf", "doc", "x.pdf", tmp_path, on_progress=lambda done, total: progress.append((done, total))
     )
     assert ranges == [(1, 10), (11, 20), (21, 25)]

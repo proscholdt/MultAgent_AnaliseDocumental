@@ -39,7 +39,8 @@ async def retry_job(job_id: str, user: CurrentUser, session: SessionDep, publish
     if document is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Documento não encontrado.")
 
-    needs_parse = job.failed_stage == "parse" or not storage.parsed_path(user.id, job.doc_id).exists()
+    parsed_file = storage.parsed_path(user.id, job.doc_id, settings.parser)
+    needs_parse = job.failed_stage == "parse" or not parsed_file.exists()
     job.status, job.stage, job.error, job.failed_stage = "queued", None, None, None
     job.attempts, job.finished_at = 0, None
     document.status = "queued"

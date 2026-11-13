@@ -151,7 +151,9 @@ async def test_retry_only_for_failed_jobs_and_routes_by_stage(ctx, pdf_bytes):
     # Falha na indexação com o parse já em cache: volta direto para a fila de indexação.
     from app import db, repo
 
-    storage.parsed_path(user_id, body["doc_id"]).write_text("{}", encoding="utf-8")
+    parsed_file = storage.parsed_path(user_id, body["doc_id"], ctx.settings.parser)
+    parsed_file.parent.mkdir(parents=True)
+    parsed_file.write_text("{}", encoding="utf-8")
     async with db.session_scope() as session:
         await repo.mark_job_failed(session, body["job_id"], "index", "OpenAI fora do ar")
 
@@ -177,3 +179,23 @@ async def test_health_reports_components(ctx):
     assert response.status_code == 200
     components = response.json()["components"]
     assert components["api"] == "ok" and components["postgres"] == "ok" and components["qdrant"] == "ok"
+    assert response.json()["parser"] == "docling"  # o padrão
+
+
+async def test_azure_parser_without_credentials_is_reported_and_blocks_upload(ctx, pdf_bytes, monkeypatch):
+    """PARSER=azure sem endpoint e chave: o parse-worker não sobe, então a API recusa o upload
+    em vez de deixar um job parado na fila."""
+    _, headers = await register_and_login(ctx.client, "ana")
+    monkeypatch.setattr(ctx.settings, "parser", "azure")
+
+    health = (await ctx.client.get("/health")).json()
+    assert health["parser"] == "azure" and health["status"] == "degraded"
+    assert "AZURE_DI_ENDPOINT" in health["components"]["parser"]
+    refused = await upload(ctx, headers, pdf_bytes)
+    assert refused.status_code == 503 and "AZURE_DI_KEY" in refused.json()["detail"]
+    assert ctx.publisher.messages == []
+
+    monkeypatch.setattr(ctx.settings, "azure_di_endpoint", "https://exemplo.cognitiveservices.azure.com/")
+    monkeypatch.setattr(ctx.settings, "azure_di_key", "chave-de-teste")
+    assert (await ctx.client.get("/health")).json()["status"] == "ok"
+    assert (await upload(ctx, headers, pdf_bytes)).status_code == 202

@@ -16,12 +16,18 @@ class ParseRequested(BaseModel):
     attempt: int = 1
 
 
+ParserName = Literal["docling", "azure"]
+
+
 class IndexRequested(BaseModel):
     job_id: str
     user_id: str
     doc_id: str
     attempt: int = 1
     reason: Literal["parsed", "metadata_changed", "retry"] = "parsed"
+    # Parser que produziu o parsed.json a indexar. Quem preenche é o parse-worker; quando a API
+    # manda reindexar (PATCH, retry), fica vazio e vale o parser configurado no index-worker.
+    parser: ParserName | None = None
 
 
 class DocumentEvent(BaseModel):
@@ -173,6 +179,7 @@ class ChunkOut(BaseModel):
     chunk_index: int
     chunk_type: str
     extraction_method: str
+    parser: str | None = None  # "docling" ou "azure": quem leu o PDF
     page_start: int
     page_end: int
     section_path: list[str]
@@ -226,3 +233,4 @@ class SearchResponse(BaseModel):
 class HealthOut(BaseModel):
     status: Literal["ok", "degraded"]
     components: dict[str, str]
+    parser: str = Field(description="Parser configurado em PARSER: docling ou azure.")

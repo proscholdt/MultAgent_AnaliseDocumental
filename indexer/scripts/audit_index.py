@@ -10,6 +10,10 @@ tenha o PDF correspondente em data/pdfs, confere:
 - se há página com texto e sem chunk, chunk acima do limite, parágrafo repetido;
 - se a contagem do Postgres bate com a do Qdrant.
 
+Serve para comparar os dois parsers: indexe com PARSER=docling, rode; troque para PARSER=azure,
+reenvie os PDFs e rode de novo. O primeiro item é o que mostra se um parser que lê a página por
+OCR errou algum número.
+
 Sai com código 1 se algum número de tabela não existir na página ou se as contagens divergirem.
 """
 import argparse
@@ -82,7 +86,8 @@ def audit(name: str, chunks: list[dict], pages: dict[int, str]) -> dict:
     oversized = sum(c["token_count"] > (TEXT_MAX_TOKENS if c["chunk_type"] == "text" else TABLE_MAX_TOKENS)
                     for c in chunks if c["chunk_type"] != "figure")
     kinds = {kind: sum(c["chunk_type"] == kind for c in chunks) for kind in ("text", "table", "figure")}
-    print(f"\n{name}: {len(chunks)} chunks {kinds}, {len(pages)} páginas")
+    parsers = ", ".join(sorted({c.get("parser") or "?" for c in chunks}))
+    print(f"\n{name} (parser: {parsers}): {len(chunks)} chunks {kinds}, {len(pages)} páginas")
     print(f"  números de tabela presentes no texto da página: {table_numbers - table_missing} de {table_numbers}")
     print(f"  números do PDF (4+ dígitos) presentes nos chunks: {pdf_numbers - lost} de {pdf_numbers}"
           f" (dos {lost} ausentes, {lost_in_sections} são número de seção)")

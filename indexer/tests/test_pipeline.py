@@ -19,7 +19,7 @@ async def run_index(store, settings, parsed, user_id, tmp_path, overrides=None):
     doc_dir.mkdir(parents=True, exist_ok=True)
     return await index_document(
         user_id=user_id, doc_id=parsed.doc_id, file_name=parsed.file_name, overrides=overrides or {},
-        parsed=parsed, doc_dir=doc_dir, figures_cache=doc_dir / "figures.json",
+        parsed=parsed, parser="docling", doc_dir=doc_dir, figures_cache=doc_dir / "figures.json",
         metadata_cache=doc_dir / "metadata.json", store=store,
         dense=FakeDenseEmbedder(settings.embedding_dim), sparse=FakeSparseEmbedder(), llm=None,
         settings=settings,
@@ -45,6 +45,7 @@ async def test_index_writes_dense_and_sparse_with_full_payload(store, settings, 
     assert table["user_id"] == USER_A and table["doc_id"] == parsed_doc.doc_id
     assert table["company"] == "Empresa Exemplo S.A." and table["unit"] == "R$ mil"
     assert table["page_start"] == 1 and table["extraction_method"] == "table_model"
+    assert table["parser"] == "docling"
     assert table["context_header"] == \
         "[Empresa Exemplo S.A. | 2022 | R$ mil | Demonstrações dos resultados | p. 1]"
     # O texto citável fica literal, sem o cabeçalho de contexto.
@@ -114,7 +115,7 @@ async def worker_run(message, store, settings, publisher):
 
 
 async def test_index_worker_completes_job_and_emits_event(queued_job, store, settings, parsed_doc):
-    path = storage.parsed_path(USER_A, parsed_doc.doc_id)
+    path = storage.parsed_path(USER_A, parsed_doc.doc_id, "docling")
     path.parent.mkdir(parents=True)
     path.write_text(parsed_doc.model_dump_json(), encoding="utf-8")
     publisher = FakePublisher()

@@ -61,7 +61,12 @@ async def upload_document(
     """Valida o arquivo, grava no armazenamento do usuário e enfileira o processamento.
     Responde na hora; acompanhe por `GET /api/jobs/{job_id}`.
 
-    Reenviar o mesmo arquivo reindexa o mesmo `doc_id` (o parse vem do cache)."""
+    Reenviar o mesmo arquivo reindexa o mesmo `doc_id` (o parse vem do cache). O PDF é lido
+    pelo parser configurado em `PARSER` (veja `GET /health`): Docling, na máquina, ou Azure
+    Document Intelligence."""
+    if settings.parser_problem:
+        # Sem isto o job ficaria na fila para sempre: o parse-worker não sobe sem a configuração.
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail=settings.parser_problem)
     limit = settings.max_upload_mb * 1024 * 1024
     data = await file.read(limit + 1)
     if len(data) > limit:

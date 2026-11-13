@@ -24,20 +24,16 @@ def main() -> None:
     Bm25SparseEmbedder(settings).embed_query("receita líquida")
     print(f"BM25 ({settings.bm25_language}) ok ({time.perf_counter() - started:.1f}s)")
 
+    from app.pipeline.parsing import ParserError, build_parser
+
+    started = time.perf_counter()
     try:
-        from app.pipeline.parser import PdfParser
-    except ImportError:
-        print("Docling não instalado (grupo 'parse'); pulando os modelos de parse.")
+        parser = build_parser(settings)
+    except ParserError as exc:
+        print(f"parser não carregado: {exc}")
         return
-    started = time.perf_counter()
-    PdfParser(settings).warmup()
-    print(f"modelos do Docling ok ({time.perf_counter() - started:.1f}s)")
-
-    started = time.perf_counter()
-    from app.pipeline.figure_ocr import FigureOcr
-
-    FigureOcr().warmup()
-    print(f"modelos de OCR ok ({time.perf_counter() - started:.1f}s)")
+    parser.warmup()  # Docling: modelos de layout, tabelas e OCR. Azure: nada a baixar.
+    print(f"parser {parser.name} ok ({time.perf_counter() - started:.1f}s)")
 
 
 if __name__ == "__main__":

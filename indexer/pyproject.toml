@@ -21,6 +21,8 @@ dependencies = [
     # em demonstrações financeiras — o da Brasal é um deles.
     "pypdf[crypto]>=5.0",
     "httpx>=0.27",
+    "azure-ai-documentintelligence>=1.0",
+    "pypdfium2>=4.30",
 ]
 
 [dependency-groups]

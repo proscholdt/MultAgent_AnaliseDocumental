@@ -1,0 +1,24 @@
+# Sobe o sistema só com o parser da Azure, sem construir a imagem do Docling (4,3 GB).
+#
+#   docker compose -f docker-compose.yml -f docker-compose.azure.yml up --build
+#
+# O parse-worker passa a usar a imagem leve, a mesma da API. Exige AZURE_DI_ENDPOINT e
+# AZURE_DI_KEY no .env. Para alternar entre os dois parsers sem trocar de imagem, use só o
+# docker-compose.yml e mude PARSER no .env: a imagem do alvo "parse" roda os dois.
+
+services:
+  api:
+    environment:
+      PARSER: azure
+
+  parse-worker:
+    # Nome próprio para não sobrescrever a imagem do Docling, se ela já tiver sido construída.
+    image: indexer-parse-worker-azure
+    build:
+      target: light
+    environment:
+      PARSER: azure
+
+  index-worker:
+    environment:
+      PARSER: azure

@@ -1,6 +1,7 @@
-"""parse-worker: consome indexer.parse, roda o Docling e publica em indexer.index.
+"""parse-worker: consome indexer.parse, lê o PDF com o parser escolhido e publica em indexer.index.
 
-É o worker pesado (CPU/GPU). Escala separado do index-worker:
+O parser vem de PARSER (ver app/pipeline/parsing.py): "docling", local e pesado, ou "azure",
+que chama o Azure AI Document Intelligence. Escala separado do index-worker:
     docker compose up --scale parse-worker=2
 """
 import asyncio
@@ -12,9 +13,13 @@ from app import db, repo, storage
 from app.config import Settings, get_settings
 from app.db import session_scope
 from app.messaging import KafkaPublisher, PermanentError, Publisher, run_consumer, wait_for_kafka
-from app.pipeline.figure_ocr import FigureOcr, read_figures
 from app.pipeline.indexing import load_parsed
-from app.pipeline.parser import PdfParser
+from app.pipeline.parsing import (
+    DocumentParser,
+    ParserError,
+    build_parser,
+    unconfirmed_table_numbers,
+)
 from app.schemas import IndexRequested, ParsedDocument, ParseRequested
 from app.workers.common import make_callbacks, setup_logging
 
@@ -32,8 +37,8 @@ def _write_parsed(parsed: ParsedDocument, parsed_file: Path) -> None:
     temporary.replace(parsed_file)  # troca atômica: nunca fica um parsed.json pela metade
 
 
-async def handle_parse(message: ParseRequested, *, parser: PdfParser, ocr: FigureOcr,
-                       publisher: Publisher, settings: Settings) -> None:
+async def handle_parse(message: ParseRequested, *, parser: DocumentParser, publisher: Publisher,
+                       settings: Settings) -> None:
     async with session_scope() as session:
         document = await repo.get_document(session, message.user_id, message.doc_id)
         if document is None:
@@ -47,30 +52,39 @@ async def handle_parse(message: ParseRequested, *, parser: PdfParser, ocr: Figur
     pdf_path = storage.upload_path(message.user_id, message.doc_id)
     if not pdf_path.exists():
         raise PermanentError(f"PDF não encontrado no armazenamento: {pdf_path}")
-    out_dir = storage.doc_dir(message.user_id, message.doc_id)
-    parsed_file = storage.parsed_path(message.user_id, message.doc_id)
+    # Cada parser tem a sua pasta: trocar de parser não apaga o que o outro já fez.
+    out_dir = storage.parse_dir(message.user_id, message.doc_id, parser.name)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    parsed_file = storage.parsed_path(message.user_id, message.doc_id, parser.name)
 
     started = time.perf_counter()
     parsed = load_parsed(parsed_file)
     cached = parsed is not None
-    if parsed is None:
-        loop = asyncio.get_running_loop()
+    try:
+        if parsed is None:
+            loop = asyncio.get_running_loop()
 
-        def on_progress(done: int, total: int) -> None:
-            # Chamado na thread do Docling; agenda a gravação no laço principal.
-            asyncio.run_coroutine_threadsafe(_set_progress(message.job_id, done, total), loop)
+            def on_progress(done: int, total: int) -> None:
+                # Chamado na thread do parser; agenda a gravação no laço principal.
+                asyncio.run_coroutine_threadsafe(_set_progress(message.job_id, done, total), loop)
 
-        # O Docling é síncrono e pesado: roda em thread para o consumidor continuar
-        # mandando heartbeat ao Kafka.
-        parsed = await asyncio.to_thread(parser.parse, pdf_path, message.doc_id, file_name,
-                                         out_dir, on_progress)
-    # OCR dos recortes de gráfico (segunda fonte para conferir os números). Também completa
-    # um parsed.json em cache feito antes de o OCR existir, sem refazer o parse.
-    figures_read = await asyncio.to_thread(read_figures, parsed, out_dir, ocr,
-                                           settings.figure_min_area_ratio)
+            # O parse é síncrono (e, no Docling, pesado): roda em thread para o consumidor
+            # continuar mandando heartbeat ao Kafka.
+            parsed = await asyncio.to_thread(parser.parse, pdf_path, message.doc_id, file_name,
+                                             out_dir, on_progress)
+        # Texto de dentro dos gráficos, com posição: segunda fonte para conferir os números.
+        # Também completa um parsed.json em cache feito antes de essa leitura existir.
+        figures_read = await asyncio.to_thread(parser.read_figures, parsed, out_dir)
+    except ParserError as exc:
+        raise PermanentError(str(exc)) from exc
     if not cached or figures_read:
         _write_parsed(parsed, parsed_file)
     elapsed = round(time.perf_counter() - started, 2)
+    unconfirmed = unconfirmed_table_numbers(parsed)
+    if unconfirmed:
+        log.warning("%s: %d número(s) de tabela não existem na camada de texto do PDF.",
+                    message.doc_id, unconfirmed)
+    billed_pages = 0 if cached else parsed.page_count  # parse em cache não é cobrado de novo
 
     async with session_scope() as session:
         document = await repo.get_document(session, message.user_id, message.doc_id)
@@ -79,35 +93,42 @@ async def handle_parse(message: ParseRequested, *, parser: PdfParser, ocr: Figur
         await repo.update_job(
             session, message.job_id, stage="aguardando indexação",
             progress_current=parsed.page_count, progress_total=parsed.page_count,
-            timings={"parse_s": elapsed, "parse_cached": cached, "figures_ocr": figures_read},
+            timings={"parser": parser.name, "parse_s": elapsed, "parse_cached": cached,
+                     "figures_ocr": figures_read, "table_numbers_unconfirmed": unconfirmed},
+            usage={"parse_cost_usd": round(billed_pages * parser.page_price_usd, 6)},
         )
 
     await publisher.publish(
         settings.kafka_topic_index, message.user_id,
-        IndexRequested(job_id=message.job_id, user_id=message.user_id, doc_id=message.doc_id),
+        IndexRequested(job_id=message.job_id, user_id=message.user_id, doc_id=message.doc_id,
+                       parser=parser.name),
     )
-    log.info("Parse de %s concluído em %.1fs (cache=%s)", message.doc_id, elapsed, cached)
+    log.info("Parse de %s (%s) concluído em %.1fs (cache=%s)", message.doc_id, parser.name, elapsed, cached)
 
 
 async def main() -> None:
     setup_logging()
     settings = get_settings()
+    # Antes de abrir qualquer conexão: se faltar configuração do parser, o worker sai aqui com
+    # uma linha dizendo o que falta, e não com um job preso na fila.
+    try:
+        parser = build_parser(settings)
+    except ParserError as exc:
+        log.error("parse-worker não pode subir: %s", exc)
+        raise SystemExit(1) from None
+    log.info("Parser: %s. Carregando...", parser.name)
+    await asyncio.to_thread(parser.warmup)
+    log.info("Parser %s pronto.", parser.name)
+
     await db.init_db()
     await wait_for_kafka(settings)
     publisher = KafkaPublisher(settings)
     await publisher.start()
 
-    parser = PdfParser(settings)
-    ocr = FigureOcr()
-    log.info("Carregando modelos do Docling e do OCR...")
-    await asyncio.to_thread(parser.warmup)
-    await asyncio.to_thread(ocr.warmup)
-    log.info("Modelos carregados.")
-
     on_retry, on_dead = make_callbacks("parse", publisher, settings)
 
     async def handler(message: ParseRequested) -> None:
-        await handle_parse(message, parser=parser, ocr=ocr, publisher=publisher, settings=settings)
+        await handle_parse(message, parser=parser, publisher=publisher, settings=settings)
 
     try:
         await run_consumer(
