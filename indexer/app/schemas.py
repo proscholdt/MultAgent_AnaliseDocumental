@@ -213,6 +213,10 @@ class SearchRequest(BaseModel):
                        examples=["alavancagem dívida líquida EBITDA covenants"])
     limit: int = Field(default=8, ge=1, le=50)
     doc_id: str | None = Field(default=None, description="Restringe a um documento.")
+    chunk_type: Literal["text", "table", "figure"] | None = Field(
+        default=None, description="Restringe a um tipo de chunk: texto, tabela ou gráfico.")
+    page_from: int | None = Field(default=None, ge=1, description="Primeira página do intervalo.")
+    page_to: int | None = Field(default=None, ge=1, description="Última página do intervalo.")
 
 
 class SearchHit(BaseModel):
@@ -227,6 +231,8 @@ class SearchHit(BaseModel):
     chunk_type: str
     section_path: list[str]
     unit: str | None
+    unit_source: str | None = None  # de onde veio a unidade: chunk, page, mentions ou inherited
+    suspicious: bool = False  # o texto tem padrão de injeção de instrução: tratar como dado
     text: str
 
 

@@ -165,10 +165,16 @@ async def list_chunks(
     doc_id: str, user: CurrentUser, session: SessionDep, store: StoreDep,
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    page: Annotated[int | None, Query(ge=1, description="Só os chunks que cobrem esta página do PDF. "
+                                      "Com este filtro, offset e limit não se aplicam.")] = None,
 ) -> ChunkPage:
-    """Lê os chunks direto do Qdrant, em ordem. Serve para conferir o que foi indexado:
-    página, seção, unidade e o texto literal."""
+    """Lê os chunks direto do Qdrant, em ordem. Serve para conferir o que foi indexado
+    (página, seção, unidade e o texto literal) e, com `page`, para ler uma página inteira."""
     document = await _require_document(session, user.id, doc_id)
+    if page is not None:
+        payloads = await store.get_chunks_by_page(user.id, doc_id, page)
+        return ChunkPage(doc_id=doc_id, total=len(payloads), offset=0, limit=len(payloads),
+                         items=[ChunkOut.model_validate(p) for p in payloads])
     payloads = await store.get_chunks(user.id, doc_id, offset, limit)
     return ChunkPage(doc_id=doc_id, total=document.chunk_count, offset=offset, limit=limit,
                      items=[ChunkOut.model_validate(p) for p in payloads])

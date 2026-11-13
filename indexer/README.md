@@ -43,7 +43,8 @@ flowchart TD
 3. **Indexação.** O index-worker transcreve e confere os gráficos, identifica empresa e período,
    monta os chunks, calcula os dois vetores e grava no Qdrant.
 4. **Consulta.** O índice fica pronto para busca híbrida (semântica + palavras-chave, combinadas
-   por RRF). A rota `POST /api/search` já faz essa busca, para conferência.
+   por RRF). A rota `POST /api/search` faz essa busca; é por ela que o servidor MCP dá aos
+   agentes o acesso ao índice.
 
 ## Como rodar
 
@@ -110,7 +111,7 @@ docker compose -f docker-compose.yml -f docker-compose.azure.yml up --build
 ```bash
 docker compose up -d kafka postgres qdrant
 uv sync                                    # inclui Docling, torch e RapidOCR (grupo "parse")
-uv run pytest                              # 142 testes, sem rede nem contêiner
+uv run pytest                              # 143 testes, sem rede nem contêiner
 uv run python -m app.warmup                # baixa os modelos uma vez
 uv run uvicorn app.main:app --port 8000
 uv run python -m app.workers.parse_worker
@@ -136,10 +137,10 @@ Todas as rotas `/api/*` exigem `Authorization: Bearer <token>`.
 | GET | `/api/documents/{doc_id}/jobs` | Histórico de jobs do documento |
 | PATCH | `/api/documents/{doc_id}` | Corrige metadados e reindexa a partir do parse em cache |
 | DELETE | `/api/documents/{doc_id}` | Remove pontos do Qdrant, registros e arquivos |
-| GET | `/api/documents/{doc_id}/chunks` | Prévia paginada dos chunks indexados |
+| GET | `/api/documents/{doc_id}/chunks` | Chunks indexados, paginados; com `page`, todos os chunks que cobrem uma página do PDF |
 | GET | `/api/jobs/{job_id}` | Etapa, progresso por página, tentativas, tempos, tokens, custo, erro |
 | POST | `/api/jobs/{job_id}/retry` | Reenfileira um job que falhou, na etapa em que falhou |
-| POST | `/api/search` | Busca híbrida com RRF nos documentos do usuário (para conferência) |
+| POST | `/api/search` | Busca híbrida com RRF nos documentos do usuário, com filtros opcionais: documento, tipo de chunk e intervalo de páginas |
 | GET | `/health` | API, Postgres, Kafka e Qdrant, e qual parser está configurado |
 
 ## Arquitetura
@@ -863,7 +864,7 @@ indexer/
 │     ├─ chunker.py                   # seções, texto, tabelas
 │     ├─ embedder.py, vector_store.py # vetores e Qdrant
 │     └─ indexing.py                  # junta as etapas da indexação
-└─ tests/                             # 142 testes, sem rede nem contêiner
+└─ tests/                             # 143 testes, sem rede nem contêiner
 ```
 
 ## Caminho para produção no Azure

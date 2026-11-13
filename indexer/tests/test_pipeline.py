@@ -86,6 +86,31 @@ async def test_hybrid_search_finds_by_keyword_and_respects_tenant(store, setting
     assert await store.count(USER_A) == await store.count(USER_B)
 
 
+async def test_search_filters_and_reading_a_whole_page(store, settings, parsed_doc, tmp_path):
+    """O que o servidor MCP usa: busca restrita a um tipo de chunk ou a páginas, e a leitura
+    de todos os chunks de uma página."""
+    await run_index(store, settings, parsed_doc, USER_A, tmp_path)
+    await run_index(store, settings, parsed_doc, USER_B, tmp_path)
+    dense, sparse = FakeDenseEmbedder(settings.embedding_dim), FakeSparseEmbedder()
+    query = "receita operacional líquida"
+    vectors, _ = await dense.embed([query])
+    search = (USER_A, vectors[0], sparse.embed_query(query))
+
+    tables = await store.hybrid_search(*search, limit=10, chunk_type="table")
+    assert tables and {payload["chunk_type"] for _, payload in tables} == {"table"}
+    third_page = await store.hybrid_search(*search, limit=10, page_from=3, page_to=3)
+    assert third_page and all(p["page_start"] <= 3 <= p["page_end"] for _, p in third_page)
+    assert {payload["user_id"] for _, payload in third_page} == {USER_A}
+    assert await store.hybrid_search(*search, limit=10, page_from=90) == []
+
+    first_page = await store.get_chunks_by_page(USER_A, parsed_doc.doc_id, 1)
+    assert [c["chunk_index"] for c in first_page] == sorted(c["chunk_index"] for c in first_page)
+    assert all(c["page_start"] <= 1 <= c["page_end"] and c["user_id"] == USER_A for c in first_page)
+    assert any(c["chunk_type"] == "table" for c in first_page)
+    assert await store.get_chunks_by_page(USER_A, parsed_doc.doc_id, 90) == []
+    assert await store.get_chunks_by_page("33333333-3333-3333-3333-333333333333", parsed_doc.doc_id, 1) == []
+
+
 async def test_delete_only_touches_the_given_user(store, settings, parsed_doc, tmp_path):
     await run_index(store, settings, parsed_doc, USER_A, tmp_path)
     await run_index(store, settings, parsed_doc, USER_B, tmp_path)

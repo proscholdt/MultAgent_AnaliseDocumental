@@ -18,6 +18,7 @@ DENSE = "dense"
 SPARSE = "bm25"
 _NAMESPACE = uuid.UUID("6f1d2c7e-5b0a-4c3e-9d43-2a1f0e8b7c55")
 _UPSERT_BATCH = 64
+_SCROLL_BATCH = 128
 
 
 def point_id(user_id: str, doc_id: str, chunk_index: int) -> str:
@@ -29,10 +30,20 @@ def _match(key: str, value: Any) -> models.FieldCondition:
     return models.FieldCondition(key=key, match=models.MatchValue(value=value))
 
 
-def tenant_filter(user_id: str, doc_id: str | None = None) -> models.Filter:
+def tenant_filter(user_id: str, doc_id: str | None = None, *, chunk_type: str | None = None,
+                  page_from: int | None = None, page_to: int | None = None) -> models.Filter:
+    """Filtro de toda consulta: sempre o usuário e, se pedidos, o documento, o tipo de chunk e
+    um intervalo de páginas. Um chunk entra no intervalo se cobre alguma página dele: o chunk
+    das p. 27-28 aparece tanto para a página 27 quanto para a 28."""
     must = [_match("user_id", user_id)]
     if doc_id is not None:
         must.append(_match("doc_id", doc_id))
+    if chunk_type is not None:
+        must.append(_match("chunk_type", chunk_type))
+    if page_from is not None:
+        must.append(models.FieldCondition(key="page_end", range=models.Range(gte=page_from)))
+    if page_to is not None:
+        must.append(models.FieldCondition(key="page_start", range=models.Range(lte=page_to)))
     return models.Filter(must=must)
 
 
@@ -121,10 +132,26 @@ class VectorStore:
         payloads = [r.payload for r in records if r.payload and r.payload.get("user_id") == user_id]
         return sorted(payloads, key=lambda p: p["chunk_index"])
 
+    async def get_chunks_by_page(self, user_id: str, doc_id: str, page: int) -> list[dict[str, Any]]:
+        """Todos os chunks do documento que cobrem a página, em ordem. É o que permite ler uma
+        página inteira (a tabela e as notas dela) depois que a busca apontou onde olhar."""
+        scope = tenant_filter(user_id, doc_id, page_from=page, page_to=page)
+        payloads: list[dict[str, Any]] = []
+        offset = None
+        while True:
+            records, offset = await self._client.scroll(
+                self._collection, scroll_filter=scope, limit=_SCROLL_BATCH, offset=offset,
+                with_payload=True, with_vectors=False)
+            payloads += [record.payload for record in records if record.payload]
+            if offset is None:
+                return sorted(payloads, key=lambda p: p["chunk_index"])
+
     async def hybrid_search(self, user_id: str, dense: list[float], sparse: SparseVec, limit: int,
-                            doc_id: str | None = None) -> list[tuple[float, dict[str, Any]]]:
+                            doc_id: str | None = None, *, chunk_type: str | None = None,
+                            page_from: int | None = None, page_to: int | None = None,
+                            ) -> list[tuple[float, dict[str, Any]]]:
         """Busca densa e busca BM25 em paralelo, fundidas por Reciprocal Rank Fusion."""
-        scope = tenant_filter(user_id, doc_id)
+        scope = tenant_filter(user_id, doc_id, chunk_type=chunk_type, page_from=page_from, page_to=page_to)
         candidates = max(limit * 4, 20)
         response = await self._client.query_points(
             self._collection,
