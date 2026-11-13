@@ -1,0 +1,16 @@
+# Política de governança: o que cada agente vê e pode chamar neste servidor.
+#
+# - Um agente só enxerga, em tools/list, as tools listadas aqui. Chamar outra é recusado e
+#   fica registrado na auditoria.
+# - Agente que não aparece neste arquivo não tem acesso a nada.
+# - O arquivo é relido quando muda, sem reiniciar. Se ficar inválido (YAML quebrado, tool que
+#   não existe), continua valendo a versão anterior, e o erro aparece em GET /governanca.
+#
+# Para criar um agente: (1) o arquivo dele no sistema dos agentes; (2) uma entrada aqui.
+
+agentes:
+  # Lê os documentos pelo RAG. É o conjunto mínimo de qualquer especialista que consulta fonte.
+  leitor:
+    tools: [listar_documentos, buscar_trechos, ler_chunk, ler_pagina]
+    limites:
+      chamadas_por_execucao: 60

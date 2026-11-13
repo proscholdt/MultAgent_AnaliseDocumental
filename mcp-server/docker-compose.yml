@@ -1,0 +1,37 @@
+name: mcp-server
+
+# Servidor MCP com governança. Depende do indexador (sistema 1) já no ar.
+#   docker compose up --build
+#
+# O indexador roda em outro projeto do compose. Este serviço entra na rede Docker dele e o
+# chama pelo nome do serviço (http://api:8000), sem passar pela máquina hospedeira: assim uma
+# outra aplicação ocupando a porta 8000 do host não atrapalha.
+# Indexador em outro lugar: defina INDEXER_URL no .env (e INDEXER_NETWORK, se a rede dele
+# tiver outro nome).
+
+services:
+  mcp-server:
+    build: .
+    ports:
+      - "8100:8100"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      INDEXER_URL: ${INDEXER_URL:-http://api:8000}
+      DATABASE_URL: sqlite+aiosqlite:////data/mcp.db
+      POLICY_PATH: /app/policy.yaml
+    networks:
+      - default
+      - indexer
+    volumes:
+      - mcp-data:/data # base dos dados extraídos e da auditoria
+      - ./policy.yaml:/app/policy.yaml:ro # editar o arquivo vale na hora
+
+networks:
+  indexer:
+    name: ${INDEXER_NETWORK:-indexer_default}
+    external: true
+
+volumes:
+  mcp-data:
