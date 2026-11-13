@@ -1,0 +1,267 @@
+{
+  "empresa": "Millet Participações S.A.",
+  "documento": "Millet.pdf",
+  "periodo_referencia": "2022",
+  "periodo_comparavel": "2021",
+  "receita_liquida": {
+    "status": "encontrado",
+    "valor": 462127,
+    "valor_como_escrito": "462.127",
+    "unidade": "R$ mil",
+    "periodo": "2022",
+    "escopo": "consolidado",
+    "origem": {
+      "pagina": 7,
+      "trecho": "| Receita operacional líquida | 18 | - | - | 462.127 | 199.259 |",
+      "tipo": "tabela",
+      "linha": "Receita operacional líquida",
+      "coluna": "Consolidado - 2022"
+    },
+    "variacao": {
+      "contra": "2021",
+      "valor": 131.92,
+      "texto": "+131,92%",
+      "unidade": "%",
+      "tipo": "calculada pelos dois períodos",
+      "formula": "(462.127 − 199.259) / |199.259| × 100",
+      "valor_comparavel": {
+        "valor": 199259,
+        "valor_como_escrito": "199.259",
+        "unidade": "R$ mil",
+        "origem": {
+          "pagina": 7,
+          "trecho": "| Receita operacional líquida | 18 | - | - | 462.127 | 199.259 |",
+          "tipo": "tabela",
+          "linha": "Receita operacional líquida",
+          "coluna": "Consolidado - 2021"
+        }
+      }
+    }
+  },
+  "ebitda": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O documento não traz EBITDA/LAJIDA em texto ou tabela; há apenas os dados para cálculo no resultado e no fluxo de caixa, usados pelo servidor para conferir o indicador. Procurei por 'EBITDA', 'LAJIDA' e 'resultado antes do resultado financeiro'.",
+    "busca": {
+      "termos_procurados": [
+        "ebitda",
+        "lajida"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    },
+    "calculado_pelo_sistema": {
+      "valor": 43546,
+      "valor_como_escrito": "43.546",
+      "unidade": "R$ mil",
+      "formula": "resultado antes do resultado financeiro + depreciação e amortização",
+      "origem": {
+        "documento": "Millet.pdf",
+        "paginas": [
+          7,
+          10
+        ]
+      },
+      "observacao": "calculado por fórmula fixa a partir de valores do documento; não é informado pela empresa"
+    }
+  },
+  "margem_ebitda": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O documento não informa margem EBITDA em texto ou tabela. Há somente o resultado operacional e a depreciação/amortização para cálculo indireto pelo servidor; não há percentual escrito pela companhia. Procurei por 'margem EBITDA', 'EBITDA' e 'LAJIDA'.",
+    "busca": {
+      "termos_procurados": [
+        "margem ebitda",
+        "margem lajida",
+        "margem do ebitda"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    },
+    "calculado_pelo_sistema": {
+      "valor": 9.42,
+      "valor_como_escrito": "9,42%",
+      "unidade": "%",
+      "formula": "EBITDA / receita líquida × 100",
+      "origem": {
+        "documento": "Millet.pdf",
+        "paginas": [
+          7,
+          10
+        ]
+      },
+      "observacao": "calculado por fórmula fixa a partir de valores do documento; não é informado pela empresa"
+    }
+  },
+  "lucro_liquido": {
+    "status": "encontrado",
+    "valor": 18891,
+    "valor_como_escrito": "18.891",
+    "unidade": "R$ mil",
+    "periodo": "2022",
+    "escopo": "consolidado",
+    "origem": {
+      "pagina": 7,
+      "trecho": "| Lucro líquido do exercício |  | 14.743 | 5.371 | 18.891 | 6.470 |",
+      "tipo": "tabela",
+      "linha": "Lucro líquido do exercício",
+      "coluna": "Consolidado - 2022"
+    },
+    "variacao": {
+      "contra": "2021",
+      "valor": 191.98,
+      "texto": "+191,98%",
+      "unidade": "%",
+      "tipo": "calculada pelos dois períodos",
+      "formula": "(18.891 − 6.470) / |6.470| × 100",
+      "valor_comparavel": {
+        "valor": 6470,
+        "valor_como_escrito": "6.470",
+        "unidade": "R$ mil",
+        "origem": {
+          "pagina": 7,
+          "trecho": "| Lucro líquido do exercício |  | 14.743 | 5.371 | 18.891 | 6.470 |",
+          "tipo": "tabela",
+          "linha": "Lucro líquido do exercício",
+          "coluna": "Consolidado - 2021"
+        }
+      }
+    },
+    "nota": "Lucro líquido total consolidado antes da distribuição aos minoritários"
+  },
+  "divida_liquida": {
+    "status": "encontrado",
+    "valor": 13520,
+    "valor_como_escrito": "13.520",
+    "unidade": "R$ mil",
+    "periodo": "2022",
+    "escopo": "consolidado",
+    "origem": {
+      "pagina": 42,
+      "trecho": "| (=) Dívida líquida (a) | 13.520 | 16.877 |",
+      "tipo": "tabela",
+      "linha": "(=) Dívida líquida (a)",
+      "coluna": "Consolidado - 31/12/2022"
+    },
+    "variacao": {
+      "contra": "2021",
+      "valor": -19.89,
+      "texto": "-19,89%",
+      "unidade": "%",
+      "tipo": "calculada pelos dois períodos",
+      "formula": "(13.520 − 16.877) / |16.877| × 100",
+      "valor_comparavel": {
+        "valor": 16877,
+        "valor_como_escrito": "16.877",
+        "unidade": "R$ mil",
+        "origem": {
+          "pagina": 42,
+          "trecho": "| (=) Dívida líquida (a) | 13.520 | 16.877 |",
+          "tipo": "tabela",
+          "linha": "(=) Dívida líquida (a)",
+          "coluna": "Consolidado - 31/12/2021"
+        }
+      }
+    }
+  },
+  "alavancagem": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O documento não informa alavancagem dívida líquida/EBITDA. Na página 42, a companhia divulga 'Relação dívida liquida sobre capital ajustado (a)/(b)', que é outro índice, não o múltiplo dívida líquida / EBITDA. Procurei por 'alavancagem', 'EBITDA' e 'LAJIDA'.",
+    "busca": {
+      "termos_procurados": [
+        "alavancagem",
+        "dívida líquida/ebitda",
+        "dívida líquida / ebitda",
+        "dívida líquida sobre ebitda"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    },
+    "calculado_pelo_sistema": {
+      "valor": 0.31,
+      "valor_como_escrito": "0,31x",
+      "unidade": "x",
+      "formula": "dívida líquida / EBITDA",
+      "origem": {
+        "documento": "Millet.pdf",
+        "paginas": [
+          7,
+          10,
+          42
+        ]
+      },
+      "observacao": "calculado por fórmula fixa a partir de valores do documento; não é informado pela empresa"
+    }
+  },
+  "fluxo_caixa_operacional": {
+    "status": "encontrado",
+    "valor": 24799,
+    "valor_como_escrito": "24.799",
+    "unidade": "R$ mil",
+    "periodo": "2022",
+    "escopo": "consolidado",
+    "origem": {
+      "pagina": 10,
+      "trecho": "| Caixa liquido gerado pelas (consumido nas) atividades operacionais | (317) | (860) | 24.799 | (14.293) |",
+      "tipo": "tabela",
+      "linha": "Caixa liquido gerado pelas (consumido nas) atividades operacionais",
+      "coluna": "Consolidado - 2022"
+    },
+    "variacao": {
+      "contra": "2021",
+      "valor": 273.5,
+      "texto": "+273,50%",
+      "unidade": "%",
+      "tipo": "calculada pelos dois períodos",
+      "formula": "(24.799 − (14.293)) / |(14.293)| × 100",
+      "observacao": "o sinal mudou entre os dois períodos: o percentual não tem leitura direta",
+      "valor_comparavel": {
+        "valor": -14293,
+        "valor_como_escrito": "(14.293)",
+        "unidade": "R$ mil",
+        "origem": {
+          "pagina": 10,
+          "trecho": "| Caixa liquido gerado pelas (consumido nas) atividades operacionais | (317) | (860) | 24.799 | (14.293) |",
+          "tipo": "tabela",
+          "linha": "Caixa liquido gerado pelas (consumido nas) atividades operacionais",
+          "coluna": "Consolidado - 2021"
+        }
+      }
+    }
+  },
+  "capex": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O documento não informa capex como total; no fluxo de caixa há apenas as linhas de aquisição de imobilizado e de intangível, que foram tratadas como valores de apoio. Procurei por 'capex' e 'total de investimentos'.",
+    "busca": {
+      "termos_procurados": [
+        "capex",
+        "aquisição de imobilizado",
+        "aquisições de imobilizado",
+        "aquisição de ativo imobilizado",
+        "aquisições de bens do ativo imobilizado",
+        "adições ao imobilizado"
+      ],
+      "paginas_com_o_termo": [
+        10
+      ],
+      "paginas_descartadas": [
+        10
+      ]
+    },
+    "calculado_pelo_sistema": {
+      "valor": 17732,
+      "valor_como_escrito": "17.732",
+      "unidade": "R$ mil",
+      "formula": "aquisição de imobilizado + aquisição de intangível",
+      "origem": {
+        "documento": "Millet.pdf",
+        "paginas": [
+          10
+        ]
+      },
+      "observacao": "calculado por fórmula fixa a partir de valores do documento; não é informado pela empresa"
+    }
+  }
+}

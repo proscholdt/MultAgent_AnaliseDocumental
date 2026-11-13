@@ -1,0 +1,258 @@
+{
+  "empresa": "Brasal Brasília Holding S.A.",
+  "documento": "Brasal.pdf",
+  "periodo_referencia": "2022",
+  "periodo_comparavel": "2021",
+  "receita_liquida": {
+    "status": "encontrado",
+    "valor": 1325059,
+    "valor_como_escrito": "1.325.059",
+    "unidade": "R$ mil",
+    "periodo": "2022",
+    "escopo": "consolidado",
+    "origem": {
+      "pagina": 8,
+      "trecho": "| Receita operacional líquida | 21 | - | - | 1.325.059 | 1.061.410 |",
+      "tipo": "tabela",
+      "linha": "Receita operacional líquida",
+      "coluna": "Consolidado - 2022"
+    },
+    "variacao": {
+      "contra": "2021",
+      "valor": 24.84,
+      "texto": "+24,84%",
+      "unidade": "%",
+      "tipo": "calculada pelos dois períodos",
+      "formula": "(1.325.059 − 1.061.410) / |1.061.410| × 100",
+      "valor_comparavel": {
+        "valor": 1061410,
+        "valor_como_escrito": "1.061.410",
+        "unidade": "R$ mil",
+        "origem": {
+          "pagina": 8,
+          "trecho": "| Receita operacional líquida | 21 | - | - | 1.325.059 | 1.061.410 |",
+          "tipo": "tabela",
+          "linha": "Receita operacional líquida",
+          "coluna": "Consolidado - 2021 - (não auditado)"
+        }
+      }
+    }
+  },
+  "ebitda": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O documento não traz EBITDA/LAJIDA consolidado em texto ou tabela. Procurei nas páginas de desempenho, notas e demonstrações; há apenas resultado operacional e depreciação/amortização, suficientes para cálculo pelo servidor, mas sem linha ou frase com EBITDA informado pela companhia.",
+    "busca": {
+      "termos_procurados": [
+        "ebitda",
+        "lajida"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    },
+    "calculado_pelo_sistema": {
+      "valor": 221854,
+      "valor_como_escrito": "221.854",
+      "unidade": "R$ mil",
+      "formula": "resultado antes do resultado financeiro + depreciação e amortização",
+      "origem": {
+        "documento": "Brasal.pdf",
+        "paginas": [
+          8,
+          11
+        ]
+      },
+      "observacao": "calculado por fórmula fixa a partir de valores do documento; não é informado pela empresa"
+    }
+  },
+  "margem_ebitda": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O documento não informa margem EBITDA em texto ou tabela. Há dados para cálculo do servidor, mas não há percentual declarado pela companhia.",
+    "busca": {
+      "termos_procurados": [
+        "margem ebitda",
+        "margem lajida",
+        "margem do ebitda"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    },
+    "calculado_pelo_sistema": {
+      "valor": 16.74,
+      "valor_como_escrito": "16,74%",
+      "unidade": "%",
+      "formula": "EBITDA / receita líquida × 100",
+      "origem": {
+        "documento": "Brasal.pdf",
+        "paginas": [
+          8,
+          11
+        ]
+      },
+      "observacao": "calculado por fórmula fixa a partir de valores do documento; não é informado pela empresa"
+    }
+  },
+  "lucro_liquido": {
+    "status": "encontrado",
+    "valor": 174602,
+    "valor_como_escrito": "174.602",
+    "unidade": "R$ mil",
+    "periodo": "2022",
+    "escopo": "consolidado",
+    "origem": {
+      "pagina": 8,
+      "trecho": "| Lucro líquido do exercício |  | 174.602 | 275.560 | 174.602 | 275.560 |",
+      "tipo": "tabela",
+      "linha": "Lucro líquido do exercício",
+      "coluna": "Consolidado - 2022"
+    },
+    "variacao": {
+      "contra": "2021",
+      "valor": -36.64,
+      "texto": "-36,64%",
+      "unidade": "%",
+      "tipo": "calculada pelos dois períodos",
+      "formula": "(174.602 − 275.560) / |275.560| × 100",
+      "valor_comparavel": {
+        "valor": 275560,
+        "valor_como_escrito": "275.560",
+        "unidade": "R$ mil",
+        "origem": {
+          "pagina": 8,
+          "trecho": "| Lucro líquido do exercício |  | 174.602 | 275.560 | 174.602 | 275.560 |",
+          "tipo": "tabela",
+          "linha": "Lucro líquido do exercício",
+          "coluna": "Consolidado - 2021 - (não auditado)"
+        }
+      }
+    }
+  },
+  "divida_liquida": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O documento não informa dívida líquida consolidada em texto ou tabela. Há apenas empréstimos e financiamentos e caixa e equivalentes, que ficam como valores de apoio para cálculo do servidor.",
+    "busca": {
+      "termos_procurados": [
+        "dívida líquida",
+        "endividamento líquido"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    },
+    "calculado_pelo_sistema": {
+      "valor": -93036,
+      "valor_como_escrito": "-93.036",
+      "unidade": "R$ mil",
+      "formula": "empréstimos e financiamentos (circulante + não circulante) − caixa e equivalentes",
+      "origem": {
+        "documento": "Brasal.pdf",
+        "paginas": [
+          7,
+          48
+        ]
+      },
+      "observacao": "calculado por fórmula fixa a partir de valores do documento; não é informado pela empresa"
+    }
+  },
+  "alavancagem": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O documento não informa alavancagem (dívida líquida/EBITDA) em texto ou tabela. Não há múltiplo declarado pela companhia.",
+    "busca": {
+      "termos_procurados": [
+        "alavancagem",
+        "dívida líquida/ebitda",
+        "dívida líquida / ebitda",
+        "dívida líquida sobre ebitda"
+      ],
+      "paginas_com_o_termo": [
+        48
+      ],
+      "paginas_descartadas": [
+        48
+      ]
+    },
+    "calculado_pelo_sistema": {
+      "valor": -0.42,
+      "valor_como_escrito": "-0,42x",
+      "unidade": "x",
+      "formula": "dívida líquida / EBITDA",
+      "origem": {
+        "documento": "Brasal.pdf",
+        "paginas": [
+          7,
+          8,
+          11,
+          48
+        ]
+      },
+      "observacao": "calculado por fórmula fixa a partir de valores do documento; não é informado pela empresa"
+    }
+  },
+  "fluxo_caixa_operacional": {
+    "status": "encontrado",
+    "valor": 258248,
+    "valor_como_escrito": "258.248",
+    "unidade": "R$ mil",
+    "periodo": "2022",
+    "escopo": "consolidado",
+    "origem": {
+      "pagina": 11,
+      "trecho": "| Caixa líquido gerado pelas atividades operacionais | 887 | (4.545) | 258.248 | 121.462 |",
+      "tipo": "tabela",
+      "linha": "Caixa líquido gerado pelas atividades operacionais",
+      "coluna": "Consolidado - 2022"
+    },
+    "variacao": {
+      "contra": "2021",
+      "valor": 112.62,
+      "texto": "+112,62%",
+      "unidade": "%",
+      "tipo": "calculada pelos dois períodos",
+      "formula": "(258.248 − 121.462) / |121.462| × 100",
+      "valor_comparavel": {
+        "valor": 121462,
+        "valor_como_escrito": "121.462",
+        "unidade": "R$ mil",
+        "origem": {
+          "pagina": 11,
+          "trecho": "| Caixa líquido gerado pelas atividades operacionais | 887 | (4.545) | 258.248 | 121.462 |",
+          "tipo": "tabela",
+          "linha": "Caixa líquido gerado pelas atividades operacionais",
+          "coluna": "Consolidado - 2021 - (não auditado)"
+        }
+      }
+    }
+  },
+  "capex": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O documento não informa um total de capex. O fluxo de caixa traz as linhas de aquisição de imobilizado e intangível, que foram registradas como valores de apoio; não há linha consolidada chamada capex ou total de investimentos.",
+    "busca": {
+      "termos_procurados": [
+        "capex",
+        "aquisição de imobilizado",
+        "aquisições de imobilizado",
+        "aquisição de ativo imobilizado",
+        "aquisições de bens do ativo imobilizado",
+        "adições ao imobilizado"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    },
+    "calculado_pelo_sistema": {
+      "valor": 45761,
+      "valor_como_escrito": "45.761",
+      "unidade": "R$ mil",
+      "formula": "aquisição de imobilizado e intangível (linha única do fluxo de caixa)",
+      "origem": {
+        "documento": "Brasal.pdf",
+        "paginas": [
+          11
+        ]
+      },
+      "observacao": "calculado por fórmula fixa a partir de valores do documento; não é informado pela empresa"
+    }
+  }
+}

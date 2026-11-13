@@ -36,7 +36,8 @@ Em [`agents/entrega/`](agents/entrega/), gerada pela solução:
 | Arquivo | Item do teste |
 |---|---|
 | [`relatorio.md`](agents/entrega/relatorio.md) | 6. Relatório consolidado: resumo por empresa, tabela comparativa, análise qualitativa, as 5 perguntas e os alertas |
-| [`extracao/`](agents/entrega/extracao/) | 2. Extração estruturada em JSON: valor, unidade, período, página e trecho de cada indicador |
+| [`extracao_enxuta/`](agents/entrega/extracao_enxuta/) | 2. Extração estruturada em JSON, só com os campos do enunciado: valor, unidade, variação, página e trecho de cada um, ou "não encontrado" |
+| [`extracao/`](agents/entrega/extracao/) | O mesmo, completo: também os valores de apoio, os cálculos com os operandos e as validações |
 | [`analise/`](agents/entrega/analise/) | 3. Análise qualitativa, cada item com a citação e a página |
 | [`respostas.md`](agents/entrega/respostas.md) | 4. As 5 perguntas, com documento e página |
 | [`alertas/`](agents/entrega/alertas/) | 5. Inconsistências e informações não encontradas |

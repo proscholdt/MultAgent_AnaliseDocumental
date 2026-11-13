@@ -1,0 +1,277 @@
+{
+  "empresa": "LIGHT S.A.",
+  "documento": "Light.pdf",
+  "periodo_referencia": "2022",
+  "periodo_comparavel": "2021",
+  "receita_liquida": {
+    "status": "encontrado",
+    "valor": 13253286,
+    "valor_como_escrito": "13.253.286",
+    "unidade": "R$ mil",
+    "periodo": "2022",
+    "escopo": "consolidado",
+    "origem": {
+      "pagina": 20,
+      "trecho": "| RECEITA LÍQUIDA | 31 | - | - | 13.253.286 | 14.897.920 |",
+      "tipo": "tabela",
+      "linha": "RECEITA LÍQUIDA",
+      "coluna": "Consolidado - 2022"
+    },
+    "variacao": {
+      "contra": "2021",
+      "valor": -11.04,
+      "texto": "-11,04%",
+      "unidade": "%",
+      "tipo": "calculada pelos dois períodos",
+      "formula": "(13.253.286 − 14.897.920) / |14.897.920| × 100",
+      "valor_comparavel": {
+        "valor": 14897920,
+        "valor_como_escrito": "14.897.920",
+        "unidade": "R$ mil",
+        "origem": {
+          "pagina": 20,
+          "trecho": "| RECEITA LÍQUIDA | 31 | - | - | 13.253.286 | 14.897.920 |",
+          "tipo": "tabela",
+          "linha": "RECEITA LÍQUIDA",
+          "coluna": "Consolidado - 2021"
+        }
+      }
+    }
+  },
+  "ebitda": {
+    "status": "encontrado",
+    "valor": 1180,
+    "valor_como_escrito": "1.180",
+    "unidade": "R$ milhões",
+    "periodo": "2022",
+    "escopo": null,
+    "origem": {
+      "pagina": 9,
+      "trecho": "Em 2022, o EBITDA CVM foi de R$1.180 milhões, apresentando uma redução R$3.001 milhões se comparado a 2021.",
+      "tipo": "texto"
+    },
+    "variacao": null,
+    "nota": "EBITDA consolidado informado em texto; valor em R$ milhões.",
+    "calculado_pelo_sistema": {
+      "valor": -1179644,
+      "valor_como_escrito": "-1.179.644",
+      "unidade": "R$ mil",
+      "formula": "resultado antes do resultado financeiro + depreciação e amortização",
+      "origem": {
+        "documento": "Light.pdf",
+        "paginas": [
+          20,
+          23
+        ]
+      },
+      "observacao": "calculado por fórmula fixa a partir de valores do documento; não é informado pela empresa"
+    },
+    "alertas": [
+      "O EBITDA informado (1.180 R$ milhões) não bate com o resultado antes do resultado financeiro mais depreciação e amortização (-1.179.644 R$ mil). Pode ser um EBITDA ajustado, o valor de uma controlada ou um sinal omitido no texto."
+    ]
+  },
+  "margem_ebitda": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O documento não traz margem EBITDA consolidada em percentual; encontrei apenas o EBITDA em texto e não há linha/tabela com a margem do exercício.",
+    "busca": {
+      "termos_procurados": [
+        "margem ebitda",
+        "margem lajida",
+        "margem do ebitda"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    },
+    "calculado_pelo_sistema": {
+      "valor": 8.9,
+      "valor_como_escrito": "8,90%",
+      "unidade": "%",
+      "formula": "EBITDA / receita líquida × 100",
+      "origem": {
+        "documento": "Light.pdf",
+        "paginas": [
+          9,
+          20
+        ]
+      },
+      "observacao": "calculado por fórmula fixa a partir de valores do documento; não é informado pela empresa"
+    }
+  },
+  "lucro_liquido": {
+    "status": "encontrado",
+    "valor": -5672203,
+    "valor_como_escrito": "(5.672.203)",
+    "unidade": "R$ mil",
+    "periodo": "2022",
+    "escopo": "consolidado",
+    "origem": {
+      "pagina": 20,
+      "trecho": "| LUCRO (PREJUÍZO) LÍQUIDO DO EXERCÍCIO |  | (5.672.203) | 397.945 | (5.672.203) | 397.945 |",
+      "tipo": "tabela",
+      "linha": "LUCRO (PREJUÍZO) LÍQUIDO DO EXERCÍCIO",
+      "coluna": "Consolidado - 2022"
+    },
+    "variacao": {
+      "contra": "2021",
+      "valor": -1525.37,
+      "texto": "-1.525,37%",
+      "unidade": "%",
+      "tipo": "calculada pelos dois períodos",
+      "formula": "((5.672.203) − 397.945) / |397.945| × 100",
+      "observacao": "o sinal mudou entre os dois períodos: o percentual não tem leitura direta",
+      "valor_comparavel": {
+        "valor": 397945,
+        "valor_como_escrito": "397.945",
+        "unidade": "R$ mil",
+        "origem": {
+          "pagina": 20,
+          "trecho": "| LUCRO (PREJUÍZO) LÍQUIDO DO EXERCÍCIO |  | (5.672.203) | 397.945 | (5.672.203) | 397.945 |",
+          "tipo": "tabela",
+          "linha": "LUCRO (PREJUÍZO) LÍQUIDO DO EXERCÍCIO",
+          "coluna": "Consolidado - 2021"
+        }
+      }
+    }
+  },
+  "divida_liquida": {
+    "status": "encontrado",
+    "valor": 9032236,
+    "valor_como_escrito": "9.032.236",
+    "unidade": "R$ mil",
+    "periodo": "2022",
+    "escopo": null,
+    "origem": {
+      "pagina": 105,
+      "trecho": "| Dívida líquida (A) | 9.032.236 | 7.352.919 |",
+      "tipo": "tabela",
+      "linha": "Dívida líquida (A)",
+      "coluna": "31.12.2022"
+    },
+    "variacao": {
+      "contra": "2021",
+      "valor": 22.84,
+      "texto": "+22,84%",
+      "unidade": "%",
+      "tipo": "calculada pelos dois períodos",
+      "formula": "(9.032.236 − 7.352.919) / |7.352.919| × 100",
+      "valor_comparavel": {
+        "valor": 7352919,
+        "valor_como_escrito": "7.352.919",
+        "unidade": "R$ mil",
+        "origem": {
+          "pagina": 105,
+          "trecho": "| Dívida líquida (A) | 9.032.236 | 7.352.919 |",
+          "tipo": "tabela",
+          "linha": "Dívida líquida (A)",
+          "coluna": "31.12.2021"
+        }
+      }
+    }
+  },
+  "alavancagem": {
+    "status": "encontrado",
+    "valor": 3.32,
+    "valor_como_escrito": "3,32x",
+    "unidade": "x",
+    "periodo": "2022",
+    "escopo": null,
+    "origem": {
+      "pagina": 10,
+      "trecho": "O indicador de covenants Dívida Líquida/EBITDA ajustado para fins de covenants encerrou 2021 em 3,32x, menor do que no 2021 (3,48x).",
+      "tipo": "texto"
+    },
+    "variacao": null,
+    "nota": "A frase do relatório usa o múltiplo de covenants e menciona 2021; gravado como alavancagem por ser o valor informado no documento.",
+    "calculado_pelo_sistema": {
+      "valor": 7.65,
+      "valor_como_escrito": "7,65x",
+      "unidade": "x",
+      "formula": "dívida líquida / EBITDA",
+      "origem": {
+        "documento": "Light.pdf",
+        "paginas": [
+          9,
+          105
+        ]
+      },
+      "observacao": "calculado por fórmula fixa a partir de valores do documento; não é informado pela empresa"
+    },
+    "alertas": [
+      "A alavancagem informada (3,32x) não bate com dívida líquida dividida pelo EBITDA informados (7,65x). Pode ser um EBITDA ajustado.",
+      "Alavancagem (dívida líquida / EBITDA) (2022): a fonte citada não escreve o período 2022. Confira se o valor é mesmo desse período."
+    ]
+  },
+  "fluxo_caixa_operacional": {
+    "status": "encontrado",
+    "valor": 200763,
+    "valor_como_escrito": "200.763",
+    "unidade": "R$ mil",
+    "periodo": "2022",
+    "escopo": "consolidado",
+    "origem": {
+      "pagina": 23,
+      "trecho": "| Caixa líquido gerado (aplicado) pelas atividades operacionais |  | 697.508 | 171.062 | 200.763 | (42.045) |",
+      "tipo": "tabela",
+      "linha": "Caixa líquido gerado (aplicado) pelas atividades operacionais",
+      "coluna": "Consolidado - 2022"
+    },
+    "variacao": {
+      "contra": "2021",
+      "valor": 577.5,
+      "texto": "+577,50%",
+      "unidade": "%",
+      "tipo": "calculada pelos dois períodos",
+      "formula": "(200.763 − (42.045)) / |(42.045)| × 100",
+      "observacao": "o sinal mudou entre os dois períodos: o percentual não tem leitura direta",
+      "valor_comparavel": {
+        "valor": -42045,
+        "valor_como_escrito": "(42.045)",
+        "unidade": "R$ mil",
+        "origem": {
+          "pagina": 23,
+          "trecho": "| Caixa líquido gerado (aplicado) pelas atividades operacionais |  | 697.508 | 171.062 | 200.763 | (42.045) |",
+          "tipo": "tabela",
+          "linha": "Caixa líquido gerado (aplicado) pelas atividades operacionais",
+          "coluna": "Consolidado - 2021"
+        }
+      }
+    }
+  },
+  "capex": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "A página 66 traz apenas uma linha de composição de custos/fees de empréstimos chamada 'BNDES - Capex', que não é um total de investimentos capex do exercício. O fluxo de caixa traz as linhas de aquisição de imobilizado e intangível, já registradas como apoio; não há capex total informado.",
+    "busca": {
+      "termos_procurados": [
+        "capex",
+        "aquisição de imobilizado",
+        "aquisições de imobilizado",
+        "aquisição de ativo imobilizado",
+        "aquisições de bens do ativo imobilizado",
+        "adições ao imobilizado"
+      ],
+      "paginas_com_o_termo": [
+        23,
+        66
+      ],
+      "paginas_descartadas": [
+        23,
+        66
+      ]
+    },
+    "calculado_pelo_sistema": {
+      "valor": 1470292,
+      "valor_como_escrito": "1.470.292",
+      "unidade": "R$ mil",
+      "formula": "aquisição de imobilizado + aquisição de intangível",
+      "origem": {
+        "documento": "Light.pdf",
+        "paginas": [
+          23
+        ]
+      },
+      "observacao": "calculado por fórmula fixa a partir de valores do documento; não é informado pela empresa"
+    }
+  }
+}

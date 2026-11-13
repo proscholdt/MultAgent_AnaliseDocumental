@@ -20,6 +20,7 @@ from typing import Any, Literal
 from pydantic import Field
 
 from app.catalog import Args, Call, tool
+from app.compact import compact
 from app.documents import IndexedDocument
 from app.errors import ToolRejected
 from app.fields import FIELDS, MAIN_FIELDS, Campo, CampoPrincipal
@@ -649,9 +650,10 @@ async def fechar_extracao(call: Call, args: FecharExtracao) -> dict[str, Any]:
 
 class LerExtracao(Args):
     doc_id: str | None = Field(default=None, description="Um documento, ou null para todos os do usuário.")
-    detalhe: Literal["resumo", "completo"] = Field(
-        default="resumo", description="'resumo': uma linha por indicador. 'completo': o JSON inteiro, com a origem "
-        "(página e trecho) de cada valor.")
+    detalhe: Literal["resumo", "enxuto", "completo"] = Field(
+        default="resumo", description="'resumo': uma linha por indicador. 'enxuto': só os campos do relatório, cada "
+        "um com valor, unidade, variação e origem (página e trecho), ou 'não encontrado'. 'completo': o JSON "
+        "inteiro, com os valores de apoio e as validações.")
 
 
 @tool("ler_extracao", "extracao", """
@@ -674,6 +676,8 @@ async def ler_extracao(call: Call, args: LerExtracao) -> dict[str, Any]:
             entry.update(extracao=None, desatualizada="O documento foi reindexado depois da extração. Refaça.")
         elif args.detalhe == "completo":
             entry["extracao"] = published.payload
+        elif args.detalhe == "enxuto":
+            entry["extracao"] = compact(published.payload)
         else:
             payload = published.payload
             entry["extracao"] = {

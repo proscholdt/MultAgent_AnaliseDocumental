@@ -55,7 +55,7 @@ Fora do Docker:
 ```bash
 uv sync
 uv run uvicorn app.main:app_factory --factory --port 8100
-uv run pytest        # 92 testes, sem rede
+uv run pytest        # 93 testes, sem rede
 ```
 
 ## Governança: quem pode o quê
@@ -125,7 +125,7 @@ arquivo).
 | Extração | `salvar_indicador` | Grava um indicador, depois dos portões |
 | | `salvar_nao_encontrado` | Registra que o documento não informa, com a evidência da busca |
 | | `fechar_extracao` | Calcula, valida e publica o JSON do documento |
-| | `ler_extracao` | A extração publicada (resumo ou JSON completo) |
+| | `ler_extracao` | A extração publicada: resumo de uma linha por campo, JSON enxuto (só os campos do teste, com a origem) ou JSON completo |
 | Validação | `registrar_alerta` | Inconsistência no texto da fonte, com a citação conferida |
 | | `concluir_revisao`, `ler_alertas` | Marca a revisão como feita; lê os alertas |
 | Análise | `salvar_item_analise` | Um achado qualitativo, com a citação literal |
@@ -368,7 +368,7 @@ mcp-server/
 │  ├─ report.py             marcadores e montagem do relatório
 │  ├─ store.py  models.py   SQLite
 │  └─ tools/                rag, extraction, analysis, answers, reporting
-└─ tests/                   92 testes: governança, portões, fórmulas, pendências, relatório
+└─ tests/                   93 testes: governança, portões, fórmulas, pendências, relatório
 ```
 
 ## Caminho para produção no Azure

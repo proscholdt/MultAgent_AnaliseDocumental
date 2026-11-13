@@ -71,10 +71,13 @@ async def snapshot(settings: Settings, identity: Identity) -> dict[str, Any]:
     relatório e pendências."""
     async with mcp.connect(settings, mcp.SYSTEM, identity) as server:
         listed = (await mcp.call(server, "ler_extracao", {"doc_id": None, "detalhe": "completo"}))["documentos"]
+        compact = {doc["doc_id"]: doc["extracao"] for doc in
+                   (await mcp.call(server, "ler_extracao", {"doc_id": None, "detalhe": "enxuto"}))["documentos"]}
         documents = []
         for doc in listed:
             documents.append({
                 **doc,
+                "extracao_enxuta": compact.get(doc["doc_id"]),
                 "analise": (await mcp.call(server, "ler_analise", {"doc_id": doc["doc_id"]}))["analise"],
                 "alertas": (await mcp.call(server, "ler_alertas", {"doc_id": doc["doc_id"]}))["alertas"]})
         result = {

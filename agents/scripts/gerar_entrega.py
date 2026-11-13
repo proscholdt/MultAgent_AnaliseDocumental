@@ -9,7 +9,9 @@ custo por agente e por documento) vai junto.
 O que sai em entrega/:
 
     relatorio.md                  o relatório consolidado, como o servidor o montou
-    extracao/<documento>.json     os indicadores, cada um com valor, unidade, período, página e trecho
+    extracao_enxuta/<documento>.json  só os campos do item 2 do teste: valor, unidade, variação e
+                                  origem (página e trecho) de cada um, ou "não encontrado"
+    extracao/<documento>.json     o JSON completo: também os valores de apoio, os cálculos e as validações
     analise/<documento>.json      a análise qualitativa, cada item com a citação e a página
     alertas/<documento>.json      inconsistências e informações não encontradas
     respostas.md / respostas.json as 5 perguntas, com as fontes
@@ -91,6 +93,8 @@ async def main() -> int:
         name = Path(doc["arquivo"]).stem
         if doc["extracao"]:
             write(OUT / "extracao" / f"{name}.json", doc["extracao"])
+        if doc.get("extracao_enxuta"):
+            write(OUT / "extracao_enxuta" / f"{name}.json", doc["extracao_enxuta"])
         write(OUT / "analise" / f"{name}.json", {"arquivo": doc["arquivo"], "empresa": doc["empresa"],
                                                  "analise": doc["analise"]})
         write(OUT / "alertas" / f"{name}.json", {"arquivo": doc["arquivo"], "empresa": doc["empresa"],
