@@ -19,6 +19,7 @@ from app.db import Database
 from app.documents import Documents
 from app.indexer_client import IndexerClient
 from app.policy import PolicyStore
+from app.store import Store
 
 # Restrições que a validação daqui confere, mas que o modo estrito de saída do modelo não aceita
 # no esquema. Ficam só no Pydantic.
@@ -43,6 +44,7 @@ class Deps:
     audit: Audit
     database: Database
     documents: Documents
+    store: Store
 
 
 @dataclass(frozen=True)
@@ -110,6 +112,6 @@ def tool(name: str, group: str, description: str) -> Callable[[Handler], Handler
 
 def load_tools() -> dict[str, ToolSpec]:
     """Todas as tools, na ordem em que foram registradas. Importar os módulos é o que registra."""
-    from app.tools import rag  # noqa: F401
+    from app.tools import extraction, rag  # noqa: F401
 
     return dict(_TOOLS)

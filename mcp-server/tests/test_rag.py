@@ -35,7 +35,7 @@ async def test_chunk_and_page_come_whole(governance):
     table = payload(await call(governance, "ler_chunk", {"doc_id": DOC_ANA, "chunk_index": 1}))
     assert table["texto"].endswith("| 174.602 | 275.560 | 174.602 | 275.560 |") and "cortado" not in table
     missing = await call(governance, "ler_chunk", {"doc_id": DOC_ANA, "chunk_index": 99})
-    assert missing.is_error and "de 0 a 5" in payload(missing)["erro"]
+    assert missing.is_error and "de 0 a 7" in payload(missing)["erro"]
 
     # O chunk das p. 27-28 aparece nas duas páginas.
     for page in (27, 28):

@@ -12,6 +12,166 @@ def now() -> datetime:
     return datetime.now(UTC)
 
 
+class StoredValue(Base):
+    """Um valor que passou pelo portão: um campo, de um período, de um documento.
+
+    Salvar de novo o mesmo campo desativa o registro anterior, que fica como histórico."""
+
+    __tablename__ = "valores"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64))
+    doc_id: Mapped[str] = mapped_column(String(32))
+    fingerprint: Mapped[str] = mapped_column(String(80))  # impressão do índice em que o valor foi lido
+    run_id: Mapped[str] = mapped_column(String(64))
+    agent: Mapped[str] = mapped_column(String(40))
+    campo: Mapped[str] = mapped_column(String(40))
+    periodo: Mapped[str] = mapped_column(String(8))
+    medida: Mapped[str] = mapped_column(String(20))  # "valor" | "variacao_informada"
+    status: Mapped[str] = mapped_column(String(16))  # "encontrado" | "nao_encontrado"
+    origem: Mapped[str | None] = mapped_column(String(8), nullable=True)  # "tabela" | "texto"
+    chunk_index: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    pagina: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    pagina_final: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    secao: Mapped[str] = mapped_column(Text, default="")
+    linha: Mapped[str | None] = mapped_column(Text, nullable=True)
+    coluna: Mapped[str | None] = mapped_column(Text, nullable=True)
+    trecho: Mapped[str | None] = mapped_column(Text, nullable=True)  # o que está escrito na fonte
+    texto_valor: Mapped[str | None] = mapped_column(String(64), nullable=True)  # o número como escrito
+    valor: Mapped[str | None] = mapped_column(String(64), nullable=True)  # o número lido (Decimal em texto)
+    tipo: Mapped[str | None] = mapped_column(String(12), nullable=True)  # valor | percentual | multiplo
+    unidade: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    unidade_origem: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    escopo: Mapped[str | None] = mapped_column(String(16), nullable=True)  # consolidado | controladora
+    alternativa_consolidada: Mapped[bool] = mapped_column(default=False)  # a tabela tinha coluna consolidada?
+    periodo_confirmado: Mapped[bool] = mapped_column(default=True)  # o período está escrito na fonte citada?
+    motivo: Mapped[str | None] = mapped_column(Text, nullable=True)
+    evidencia: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    nota: Mapped[str | None] = mapped_column(Text, nullable=True)  # observação do agente, não conferida
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    ativo: Mapped[bool] = mapped_column(default=True)
+
+    __table_args__ = (Index("ix_valores_doc", "user_id", "doc_id", "ativo"),)
+
+
+class Extraction(Base):
+    """Extração publicada de um documento: o JSON que o teste pede, montado pelo código."""
+
+    __tablename__ = "extracoes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64))
+    doc_id: Mapped[str] = mapped_column(String(32))
+    fingerprint: Mapped[str] = mapped_column(String(80))
+    run_id: Mapped[str] = mapped_column(String(64))
+    payload: Mapped[dict] = mapped_column(JSON)
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+    __table_args__ = (Index("ix_extracoes_doc", "user_id", "doc_id"),)
+
+
+class Alert(Base):
+    """Alerta de validação ou de inconsistência na fonte. Só é acrescentado: reextrair até uma
+    checagem passar não apaga o que foi sinalizado antes."""
+
+    __tablename__ = "alertas"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64))
+    doc_id: Mapped[str] = mapped_column(String(32))
+    fingerprint: Mapped[str] = mapped_column(String(80))
+    run_id: Mapped[str] = mapped_column(String(64))
+    agent: Mapped[str] = mapped_column(String(40))
+    tipo: Mapped[str] = mapped_column(String(12))  # "validacao" (código) | "fonte" (agente, com citação)
+    codigo: Mapped[str] = mapped_column(String(40))
+    severidade: Mapped[str] = mapped_column(String(12))  # "atencao" | "informacao"
+    campo: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    mensagem: Mapped[str] = mapped_column(Text)
+    detalhes: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    digest: Mapped[str] = mapped_column(String(32))  # o mesmo alerta não é gravado duas vezes
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+    __table_args__ = (Index("ix_alertas_doc", "user_id", "doc_id"),)
+
+
+class AnalysisItem(Base):
+    """Um item da análise qualitativa, com a citação literal que o sustenta."""
+
+    __tablename__ = "analise"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64))
+    doc_id: Mapped[str] = mapped_column(String(32))
+    fingerprint: Mapped[str] = mapped_column(String(80))
+    run_id: Mapped[str] = mapped_column(String(64))
+    categoria: Mapped[str] = mapped_column(String(24))
+    status: Mapped[str] = mapped_column(String(16))  # "encontrado" | "nao_encontrado"
+    afirmacao: Mapped[str | None] = mapped_column(Text, nullable=True)
+    citacao: Mapped[str | None] = mapped_column(Text, nullable=True)
+    chunk_index: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    pagina: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    secao: Mapped[str] = mapped_column(Text, default="")
+    fonte: Mapped[str | None] = mapped_column(String(32), nullable=True)  # tipo da fonte, pela seção
+    tom: Mapped[str | None] = mapped_column(String(12), nullable=True)
+    motivo: Mapped[str | None] = mapped_column(Text, nullable=True)
+    evidencia: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    ativo: Mapped[bool] = mapped_column(default=True)
+
+    __table_args__ = (Index("ix_analise_doc", "user_id", "doc_id", "ativo"),)
+
+
+class Answer(Base):
+    """Resposta a uma pergunta, com as citações conferidas."""
+
+    __tablename__ = "respostas"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64))
+    run_id: Mapped[str] = mapped_column(String(64))
+    pergunta_id: Mapped[str] = mapped_column(String(40))
+    pergunta: Mapped[str] = mapped_column(Text)
+    texto: Mapped[str] = mapped_column(Text)  # como o agente escreveu, com marcadores
+    renderizado: Mapped[str] = mapped_column(Text)  # com números e citações postos pelo código
+    citacoes: Mapped[list] = mapped_column(JSON)
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    ativo: Mapped[bool] = mapped_column(default=True)
+
+    __table_args__ = (Index("ix_respostas_user", "user_id", "ativo"),)
+
+
+class Summary(Base):
+    """Resumo executivo de uma empresa."""
+
+    __tablename__ = "resumos"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64))
+    doc_id: Mapped[str] = mapped_column(String(32))
+    fingerprint: Mapped[str] = mapped_column(String(80))
+    run_id: Mapped[str] = mapped_column(String(64))
+    texto: Mapped[str] = mapped_column(Text)
+    renderizado: Mapped[str] = mapped_column(Text)
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    ativo: Mapped[bool] = mapped_column(default=True)
+
+    __table_args__ = (Index("ix_resumos_doc", "user_id", "doc_id", "ativo"),)
+
+
+class Report(Base):
+    """Relatório consolidado montado pelo código."""
+
+    __tablename__ = "relatorios"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64))
+    run_id: Mapped[str] = mapped_column(String(64))
+    markdown: Mapped[str] = mapped_column(Text)
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+    __table_args__ = (Index("ix_relatorios_user", "user_id"),)
+
+
 class AuditRow(Base):
     """Uma linha por listagem ou chamada de tool. Só é acrescentada, nunca alterada."""
 

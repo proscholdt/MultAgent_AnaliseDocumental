@@ -21,6 +21,7 @@ from app.errors import AuthError
 from app.indexer_client import IndexerClient
 from app.policy import PolicyStore
 from app.server import Governance, build_server
+from app.store import Store
 
 MCP_PATH = "/mcp"
 
@@ -85,7 +86,7 @@ def create_app(settings: Settings | None = None, *,
     indexer = IndexerClient(settings, transport=indexer_transport)
     deps = Deps(settings=settings, indexer=indexer, users=UserResolver(indexer, settings.user_cache_seconds),
                 policies=PolicyStore(settings.policy_path, set(tools)), audit=Audit(database),
-                database=database, documents=Documents(indexer))
+                database=database, documents=Documents(indexer), store=Store(database))
     mcp_server = build_server(Governance(deps, tools))
     # Sem sessão e com resposta em JSON: cada mensagem é uma requisição completa, com os seus
     # cabeçalhos. A proteção de DNS rebinding do SDK (lista de Hosts aceitos) fica desligada

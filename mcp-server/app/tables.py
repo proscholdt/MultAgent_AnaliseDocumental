@@ -1,0 +1,101 @@
+"""Leitura de uma célula numa tabela em Markdown, como o indexador as grava.
+
+É o centro do "o agente aponta, o código lê": o agente diz o rótulo da linha e o cabeçalho da
+coluna; o servidor acha a célula e devolve o que está escrito nela. O modelo nunca digita o
+número. Rótulo que não existe ou que aparece mais de uma vez é erro, com as opções, e nunca
+"a primeira que casar".
+"""
+import re
+from dataclasses import dataclass
+
+from app.errors import ToolRejected
+
+_SEPARATOR = re.compile(r"^\s*\|?\s*:?-{2,}")
+_CELL_BREAK = re.compile(r"(?<!\\)\|")
+_SCOPES = {"consolidado": "consolidado", "controladora": "controladora"}
+_MAX_OPTIONS = 40
+
+
+@dataclass(frozen=True)
+class Table:
+    header: list[str]
+    rows: list[list[str]]
+
+
+@dataclass(frozen=True)
+class Cell:
+    text: str
+    row_label: str
+    column_label: str
+    row_text: str  # a linha inteira, em Markdown: é o trecho citado
+    header_text: str
+
+
+def _cells(line: str) -> list[str]:
+    inner = line.strip()
+    inner = inner.removeprefix("|")
+    inner = inner[:-1] if inner.endswith("|") and not inner.endswith("\\|") else inner
+    return [" ".join(cell.replace("\\|", "|").split()) for cell in _CELL_BREAK.split(inner)]
+
+
+def parse_table(text: str) -> Table | None:
+    """A tabela de um chunk. As linhas antes dela (título, período, unidade) e depois dela
+    (notas de rodapé) não fazem parte. None se o chunk não tem tabela."""
+    lines = text.splitlines()
+    for index, line in enumerate(lines[:-1]):
+        if line.lstrip().startswith("|") and _SEPARATOR.match(lines[index + 1]):
+            header = _cells(line)
+            rows = []
+            for row in lines[index + 2:]:
+                if not row.lstrip().startswith("|"):
+                    break
+                cells = _cells(row)
+                rows.append(cells + [""] * (len(header) - len(cells)))
+            return Table(header=header, rows=rows)
+    return None
+
+
+def normalize(label: str) -> str:
+    """Rótulo para comparação: sem diferença de caixa, de espaços ou de pontuação nas pontas."""
+    return " ".join(label.split()).strip(" .:;").casefold()
+
+
+def scope_of(column_label: str) -> str | None:
+    """Controladora ou consolidado, pelo cabeçalho da coluna."""
+    folded = column_label.casefold()
+    return next((scope for word, scope in _SCOPES.items() if word in folded), None)
+
+
+def _pick(kind: str, wanted: str, labels: list[str], occurrence: int | None) -> int:
+    """Índice do rótulo pedido. Sem casar, ou casando mais de uma vez sem dizer qual: erro."""
+    target = normalize(wanted)
+    matches = [index for index, label in enumerate(labels) if normalize(label) == target]
+    if not matches:
+        options = [label for label in dict.fromkeys(labels) if label][:_MAX_OPTIONS]
+        raise ToolRejected(f"A tabela não tem {kind} com o rótulo '{wanted}'. Copie o rótulo como está "
+                           "escrito no chunk.", opcoes=options)
+    if len(matches) > 1 and occurrence is None:
+        raise ToolRejected(
+            f"O rótulo '{wanted}' aparece {len(matches)} vezes como {kind}. Informe qual delas "
+            f"(1 = a primeira) em ocorrencia_{'linha' if kind == 'linha' else 'coluna'}.")
+    if occurrence is not None:
+        if not 1 <= occurrence <= len(matches):
+            raise ToolRejected(f"O rótulo '{wanted}' aparece {len(matches)} vez(es) como {kind}; não existe a "
+                               f"ocorrência {occurrence}.")
+        return matches[occurrence - 1]
+    return matches[0]
+
+
+def read_cell(text: str, row_label: str, column_label: str, *, row_occurrence: int | None = None,
+              column_occurrence: int | None = None) -> Cell:
+    """A célula da linha e da coluna pedidas, lida do Markdown do chunk."""
+    table = parse_table(text)
+    if table is None:
+        raise ToolRejected("Este chunk não tem tabela. Para valor escrito em texto corrido, use origem='texto'.")
+    row = _pick("linha", row_label, [cells[0] for cells in table.rows], row_occurrence)
+    column = _pick("coluna", column_label, table.header, column_occurrence)
+    if column == 0:
+        raise ToolRejected("A coluna pedida é a dos rótulos das linhas, não uma coluna de valores.")
+    cells = table.rows[row]
+    return Cell(text=cells[column], row_label=cells[0], column_label=table.header[column],
+                row_text="| " + " | ".join(cells) + " |", header_text="| " + " | ".join(table.header) + " |")
