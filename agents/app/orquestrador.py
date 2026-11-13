@@ -10,6 +10,7 @@ Não há estado de conversa entre as rodadas: tudo o que foi feito está na base
 e a lista de pendências diz o que resta.
 """
 import json
+import unicodedata
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -38,6 +39,16 @@ class Deps:
 
 class RunFailed(Exception):
     pass
+
+
+def latin_only(text: str) -> str:
+    """A mensagem final do orquestrador sem as palavras em outro alfabeto. O modelo pequeno solta
+    uma de vez em quando ("Não մնou pendência"); no servidor MCP isso é recusado na gravação, mas a
+    mensagem de estado não passa por lá."""
+    def foreign(word: str) -> bool:
+        return any(ch.isalpha() and ch not in "ªºµ" and "LATIN" not in unicodedata.name(ch, "") for ch in word)
+
+    return " ".join(word for word in text.split(" ") if not foreign(word))
 
 
 def first_input(run: Run) -> str:
@@ -136,7 +147,7 @@ async def execute(run: Run, user_token: str, deps: Deps) -> Run:
                       segundos=outcome.segundos, modelo=outcome.modelo, uso=outcome.uso)
             if outcome.estado in ("sem_permissao", "erro"):
                 raise RunFailed(outcome.erro or "o orquestrador falhou")
-            run.mensagem, reason = outcome.texto, outcome.erro
+            run.mensagem, reason = latin_only(outcome.texto), outcome.erro
             complete, run.pendencias, run.resultado = await check(run, identity, deps, outcome.estado == "concluido")
             trace.add("conferencia", rodada=rodada, completo=complete, pendencias=len(run.pendencias))
             if complete or outcome.estado in _STOPPED or not budget.tokens_left or not budget.seconds_left:

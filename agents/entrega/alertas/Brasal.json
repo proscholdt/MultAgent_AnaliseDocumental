@@ -1,0 +1,45 @@
+{
+  "arquivo": "Brasal.pdf",
+  "empresa": "Brasal Brasília Holding S.A.",
+  "alertas": [
+    {
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
+      "severidade": "atencao",
+      "campo": null,
+      "mensagem": "Há inconsistência de ano no texto: a data-base é 31 de dezembro de 2022, mas a frase define o cenário provável para os 12 meses de 2020.",
+      "detalhes": {
+        "pagina": 49,
+        "chunk_index": 126,
+        "secao": "26. Gestão de riscos",
+        "citacao": "Análise de sensibilidade A Companhia realiza suas análises de sensibilidade em três cenários, sendo um provável e dois que possam representar efeitos adversos com deterioração de 25% e 50% da variável do risco considerado pela Administração. A Companhia acompanha e analisa somente as variações nos preços de commodities, variação cambial e variação nas taxas de juros como fatores principais de risco. Com a finalidade de verificar a sensibilidade dos indexadores nas dívidas ao qual a Companhia está exposta na data base de 31 de dezembro de 2022, foram estimados 3 cenários distintos, considerando o volume de financiamento total. Com base nesses montantes em 31 de dezembro de 2022, definimos o Cenário Provável para os 12 meses de 2020 (Cenário I). A partir do Cenário I (Provável), simulamos acréscimo de 25% (Cenário II) e 50% (Cenário III) sobre as projeções dos índices de correção de cada contrato. Para cada cenário foi calculada a despesa financeira bruta não levando em consideração a incidência de tributos bem como o fluxo de vencimentos de cada contrato programado."
+      },
+      "registrado_por": "validador"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
+      "severidade": "atencao",
+      "campo": null,
+      "mensagem": "Há inconsistência entre a redação e a análise apresentada na sequência: o texto fala em simular variações de 25% e 50%, mas os cenários seguintes usam taxas menores que a taxa média de 12,4% ao ano, indicando redução e não aumento.",
+      "detalhes": {
+        "pagina": 50,
+        "chunk_index": 128,
+        "secao": "26. Gestão de riscos > Sensibilidade relativo a ativos financeiros e passivos financeiros",
+        "citacao": "Parte do passivo financeiro da Companhia está atrelado a contratos atrelado às taxas de juros em CDI, com taxas médias de 12,4% ao ano. O ativo financeiro da Companhia está atrelado à variação do CDI. Com a finalidade de verificar a sensibilidade das possíveis alterações no CDI, adotando-se a data-base de 31 de dezembro de 2022, definimos o Cenário Provável para os 12 meses de 2022 e a partir deste, simulamos variações de 25% (Cenário II) e 50% (Cenário III) sobre as projeções do indexador."
+      },
+      "registrado_por": "validador"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "revisao_das_fontes_concluida",
+      "severidade": "informacao",
+      "campo": null,
+      "mensagem": "Fontes revisadas pelo agente validador. Notas de gestão de riscos, contexto operacional, tributos a recuperar e partes relacionadas lidos; duas inconsistências registradas.",
+      "detalhes": {
+        "inconsistencias_registradas": 2
+      },
+      "registrado_por": "validador"
+    }
+  ]
+}

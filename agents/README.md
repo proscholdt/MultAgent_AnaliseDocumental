@@ -81,7 +81,7 @@ Fora do Docker (dois processos):
 uv sync
 uv run uvicorn app.especialistas:app_factory --factory --port 8201
 uv run uvicorn app.main:app_factory --factory --port 8200
-uv run pytest        # 49 testes, sem rede
+uv run pytest        # 51 testes, sem rede
 ```
 
 ## O que dá para pedir
@@ -247,7 +247,165 @@ resumo aparece em `GET /api/execucoes/{id}`:
 - A **auditoria do servidor MCP** é o registro completo: toda chamada de toda tool, com o
   resultado, por execução.
 
-<!-- RESULTADOS -->
+## Combate à alucinação: como um número chega ao relatório
+
+Nenhum número do relatório é escrito pelo modelo. O caminho de cada um:
+
+1. **O agente aponta, o código lê.** Valor de tabela: o agente diz o chunk, a linha e a coluna, e
+   o servidor MCP lê a célula. Valor de texto: o trecho tem de existir literalmente no chunk e
+   conter o número inteiro. A unidade, a página, o ano e o escopo saem do documento, não do agente.
+2. **A fonte tem de ser a do indicador.** A linha ou a frase tem de mencionar o indicador, ser do
+   tipo certo (dinheiro, percentual, múltiplo), vir da demonstração certa e ser da companhia
+   inteira. Uma célula não entra em dois campos.
+3. **"Não encontrado" tem prova.** O servidor procura os termos no documento inteiro. O que
+   aparece com valor tem de ser gravado; o que só é mencionado tem de ser descartado página por
+   página, com o motivo. A evidência vai para o relatório.
+4. **O que é calculado é do código**, com fórmula fixa, e fica separado do que a empresa informa.
+5. **Texto do modelo leva marcadores, não números.** No resumo e nas respostas, os valores entram
+   por marcador, que o código preenche com a unidade e a página. Citação tem de existir no trecho
+   citado. Número solto é recusado.
+6. **Validações automáticas** comparam o informado com o calculado e geram alerta. Nada é
+   corrigido em silêncio.
+7. **A ordem e a completude são do código**: o servidor diz o que está liberado e recusa o que
+   chega fora de ordem; a execução só termina como completa quando a lista de pendências está vazia.
+
+O detalhe de cada conferência, com o erro que ela barra, está no
+[README do servidor MCP](../mcp-server/README.md#portões-o-que-precisa-conferir-para-entrar-na-base).
+
+## Avaliação de qualidade
+
+### Como foi medido
+
+- **Gabarito** (`avaliacao/gabarito.json`): os 8 indicadores dos 3 documentos (24 campos), com
+  status esperado, valor, página e valor do ano anterior, lidos à mão na camada de texto dos PDFs,
+  sem passar pelo índice nem pelos agentes. Traz também os valores que as fórmulas devem dar, os
+  alertas automáticos que devem disparar, as duas inconsistências que existem no texto da Light e
+  os termos e fontes esperados nas cinco perguntas.
+- **Avaliação** (`scripts/avaliar.py`): lê a base pelo servidor MCP e compara. Mede status,
+  valor, página, ano anterior, valor calculado, **invenção** (o que a empresa não informa e o
+  sistema gravou como informado), alertas, inconsistências da fonte, perguntas e, direto no
+  indexador, se cada citação guardada existe no trecho citado.
+
+```bash
+uv run python scripts/avaliar.py --usuario <usuário> --senha <senha>
+```
+
+### Resultado (8ª execução, a que está em `entrega/`)
+
+| Medida | Resultado |
+|---|---|
+| Status certo (informado ou não encontrado) | 24 de 24 |
+| Valor informado certo | 12 de 13 |
+| Página certa | 12 de 13 |
+| Valor do ano anterior certo | 9 de 9 |
+| Valor calculado certo | 10 de 10 |
+| Invenção (não informado gravado como informado) | 0 de 11 |
+| Alertas automáticos esperados que dispararam | 2 de 2 |
+| Inconsistências do texto da fonte registradas | 2 de 2 |
+| Perguntas com o conteúdo e a fonte esperados | 4 de 5 |
+| Citações que existem literalmente no trecho citado | 33 de 33 |
+
+Os dois erros desta execução, que estão no relatório entregue:
+
+- **EBITDA da Light:** entrou o da distribuidora (R$ 1.817 milhões, p. 8), com uma nota dizendo
+  isso, em vez do consolidado (R$ 1.180 milhões, p. 9). O relatório mostra o alerta de que o valor
+  não bate com a demonstração, mas a margem e a alavancagem calculadas da Light saem dele.
+- **Pergunta 2:** para a Light, a resposta cita a explicação da geradora (cenário hidrológico), e
+  não a da queda da receita (estornos de faturamento, bandeiras tarifárias e CVA, p. 9).
+
+A tabela campo a campo está em [`entrega/avaliacao.md`](entrega/avaliacao.md).
+
+> **O que não foi reexecutado.** Depois da 8ª execução entraram um portão (entre as frases de
+> EBITDA, vale a que bate com a demonstração, o que barra o primeiro erro) e ajustes nos prompts do
+> analista e do pesquisador (para o segundo). Estão cobertos por testes, mas não por uma nova
+> execução real: o crédito da conta da OpenAI acabou na 9ª. A entrega é a da 8ª, sem retoque.
+
+### Como a qualidade foi construída: o histórico das execuções
+
+Cada execução real do relatório completo, nos três PDFs e com a base zerada, foi avaliada contra o
+gabarito. Cada erro virou uma conferência no servidor MCP, com teste, e não só um ajuste de
+prompt. Todas as linhas abaixo usam o gabarito final.
+
+| # | Tempo | Custo | Status | Valor | Calculado | Invenção | Perguntas | O que a avaliação mostrou → o que entrou |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 118 s | — | — | — | — | — | — | Ainda sem gabarito. Na leitura: perguntas respondidas antes das extrações; "alavancagem" de 76%; capex dobrado; sem ano anterior → ordem imposta pelo servidor; a fonte tem de mencionar o indicador; uma célula, um campo; ano anterior lido pelo servidor |
+| 2 | 132 s | US$ 0,36 | 23/24 | 12/13 | 5/10 | 1/11 | 4/5 | Margem inventada a partir da frase do EBITDA; lucro tirado do texto, sem o sinal; valores de apoio "gravados" sem terem sido → tipo do número; demonstração só de tabela; fechamento exige os valores de apoio; validador no modelo forte |
+| 3 | 169 s | US$ 0,63 | 23/24 | 12/13 | 6/10 | 0/11 | 5/5 | Componente da nota de caixa gravado como caixa; "o documento não traz o apoio" dito com as linhas na página → linha com o nome do valor; prova para a falta de apoio; rótulo sem diferença de acento |
+| 4 | 207 s | US$ 0,62 | 22/24 | 10/13 | 10/10 | 0/11 | 3/5 | Dívida líquida (num quadro) e alavancagem (numa frase) dadas como ausentes; linha sem rótulo → o que tem valor não pode ser descartado; valor calculado cita as páginas de origem |
+| 5 | 206 s | US$ 0,67 | 24/24 | 13/13 | 10/10 | 0/11 | 0/5 | Extração sem erro. O orquestrador delegou as perguntas sem o enunciado, e as respostas eram a outras perguntas → enunciado oficial exigido pelo servidor; pendências do agente como contexto; gabarito das perguntas mais exigente |
+| 6 | 147 s | US$ 0,63 | 24/24 | 13/14 | 9/9 | 0/10 | 5/5 | Linha de tabela citada como "texto": capex da Light só com o imobilizado → texto não vale em chunk de tabela; o capex informado é um total; valor de demonstração vem da própria demonstração |
+| 7 | 501 s | US$ 1,05 | — | — | — | — | — | **Incompleta.** Um portão novo tomou o financiamento "BNDES - Capex" por capex informado, e a extração da Light não fechou → regra restrita aos quatro indicadores para os quais foi pensada |
+| 8 | 163 s | US$ 0,73 | 24/24 | 12/13 | 10/10 | 0/11 | 4/5 | EBITDA da distribuidora, com nota; motivo da receita de uma controlada → vale o EBITDA que bate com a demonstração; prompts (não reexecutado) |
+
+O que o histórico mostra:
+
+- **A invenção caiu para zero na 3ª execução e ficou em zero.** É a medida que o teste mais cobra:
+  informação ausente como "não encontrado", sem estimativa.
+- **O erro mudou de lugar a cada rodada.** O modelo pequeno procura o caminho mais curto: quando
+  uma porta fecha, ele tenta a do lado (a nota como atalho, a linha de tabela citada como texto).
+  Por isso as regras estão no servidor, e não no prompt.
+- **Um portão pode errar** (execução 7). O sistema respondeu do jeito certo: não entregou
+  relatório, terminou como `incompleta` e a auditoria mostrou onde travou.
+- **A avaliação também precisou ser corrigida.** A conferência das perguntas por nome de empresa
+  e fonte contou como certas respostas a outras perguntas (execução 5).
+
+### Estabilidade entre execuções
+
+Comparando duas execuções completas, indicador a indicador (mesmo status, mesma origem e mesmo
+valor): 22 de 24 iguais entre a 5ª e a 6ª, 21 de 24 entre a 5ª e a 8ª. Brasal e Millet saíram
+iguais nas três. As diferenças estão todas na Light, o documento com relatório da administração:
+é onde há mais de um lugar plausível para o mesmo indicador (a dívida líquida está na p. 10, em
+milhões, e na p. 105, em milhares: as duas origens estão certas e contam como diferença).
+
+## Custo e desempenho
+
+Medido na 8ª execução: relatório completo dos três documentos, com a base zerada, num Core
+i5-10400 sem GPU. Os especialistas rodam em paralelo.
+
+| | |
+|---|---|
+| Tempo total, do pedido ao relatório montado | **163 s** |
+| Chamadas ao modelo | 147 |
+| Tokens | 1,94 milhão (84% de entrada em cache) |
+| Custo | **US$ 0,73** |
+| Chamadas de tool no servidor MCP | 253, das quais 32 recusadas por um portão e refeitas |
+| Delegações do orquestrador (A2A) | 19 |
+
+Por documento (extração, revisão, análise e resumo; os tempos somam o trabalho dos quatro
+especialistas, que em parte roda em paralelo):
+
+| Documento | Páginas | Tempo dos especialistas | Tokens | Custo |
+|---|---|---|---|---|
+| Brasal | 51 | 133 s | 694 mil | US$ 0,25 |
+| Millet | 43 | 174 s | 726 mil | US$ 0,24 |
+| Light | 124 | 131 s | 376 mil | US$ 0,19 |
+
+As cinco perguntas, a montagem do relatório e o orquestrador somam os US$ 0,05 restantes.
+
+Por agente:
+
+| Agente | Modelo | Chamadas | Tokens | Custo |
+|---|---|---|---|---|
+| extrator | gpt-5.4-mini | 47 | 897 mil | US$ 0,15 |
+| validador | gpt-5.4 | 24 | 504 mil | US$ 0,40 |
+| analista | gpt-5.4-mini | 28 | 347 mil | US$ 0,10 |
+| pesquisador | gpt-5.4-mini | 26 | 99 mil | US$ 0,03 |
+| redator | gpt-5.4-mini | 13 | 51 mil | US$ 0,02 |
+| orquestrador | gpt-5.4-mini | 9 | 44 mil | US$ 0,01 |
+
+- O **validador** é mais da metade do custo: é o único no modelo forte, e lê páginas inteiras.
+- O **extrator** é quem mais gasta tokens, quase todos em cache: cada tabela lida fica no
+  histórico e é reenviada a cada passo.
+- Preços usados (por milhão de tokens, da página de cada modelo em 13/11/2026): gpt-5.4-mini a
+  US$ 0,75 de entrada, 0,075 em cache e 4,50 de saída; gpt-5.4 a US$ 2,50, 0,25 e 15,00. Ficam em
+  `PRECOS`, no `.env`.
+- **Indexação**, que acontece antes e uma vez por documento (medida no
+  [indexador](../indexer/README.md#resultados-medidos)): 86 s para os três PDFs com o Azure
+  Document Intelligence (cerca de US$ 2,18 pelas 218 páginas, a preço de tabela) ou 26 min com o
+  Docling, sem custo por página; mais US$ 0,03 de embeddings e de leitura de gráficos.
+
+Somando: perto de **US$ 1 por lote de três documentos** (US$ 0,3 por documento) com o Docling, ou
+US$ 3 com a leitura pela Azure, e cerca de **3 minutos** de agentes.
 
 ## Decisões e trade-offs
 
@@ -258,7 +416,7 @@ resumo aparece em `GET /api/execucoes/{id}`:
 | **Orquestrador decide, código confere** | Pedido em texto livre e agentes novos sem mudar código. A ordem e a completude, que não podem falhar, ficaram no servidor e na conferência final | O orquestrador gasta tokens para fazer o que um roteiro fixo faria de graça no caso do relatório |
 | **A2A entre orquestrador e especialistas** | Fronteira de serviço e de identidade entre os agentes | Uma chamada de rede por delegação; dois serviços |
 | **MCP como porta única** | Um lugar só para política, auditoria e portões; os dados extraídos ficam disponíveis para outros agentes | Mais um serviço no caminho de toda chamada |
-| **Modelo pequeno para quase tudo, forte só no validador** | Com os portões, o modelo pequeno basta para apontar e redigir. Conferir contas no texto pede mais: o pequeno achou 1 de 2 inconsistências e registrou falsos positivos | O validador responde por perto de metade do custo da execução |
+| **Modelo pequeno para quase tudo, forte só no validador** | Com os portões, o modelo pequeno basta para apontar e redigir. Conferir contas no texto pede mais: o pequeno achou 1 de 2 inconsistências e registrou falsos positivos | O validador responde por mais da metade do custo da execução |
 | **SDK de agentes da OpenAI** | Laço de tools, MCP e limites de turno prontos; pouca coisa para manter | Acopla ao formato de tools da OpenAI. O modelo é configurável; trocar de provedor pede adaptar `app/runner.py` |
 | **Sem framework de RAG** | A busca é do indexador; aqui só há chamadas de tool | — |
 
@@ -291,6 +449,10 @@ resumo aparece em `GET /api/execucoes/{id}`:
   trecho citado); se a afirmação é a melhor leitura do trecho, só um analista diz.
 - **O validador pode errar para os dois lados**: deixar passar uma frase incoerente ou apontar
   uma que está certa. Todo alerta dele sai com a citação, para o analista julgar.
+- **Um portão novo pode travar um campo.** Aconteceu na 7ª execução (ver o histórico). O
+  sistema não entrega relatório nesse caso: termina como `incompleta` e diz o que faltou.
+- **O orquestrador gasta chamadas à toa.** Ele ainda delega itens que a lista marca como não
+  liberados; o servidor recusa a gravação, e o trabalho daquela chamada se perde.
 - **Execuções em memória.** O serviço roda uma execução por tarefa assíncrona, sem fila. Se cair
   no meio, a execução fica como `interrompida`; o que já foi gravado continua na base, e pedir de
   novo retoma do que falta.
@@ -347,6 +509,6 @@ agents/
 ├─ avaliacao/gabarito.json  valores conferidos à mão nos PDFs
 ├─ scripts/                 avaliar.py, gerar_entrega.py
 ├─ entrega/                 relatório, JSON por documento, respostas e avaliação
-└─ tests/                   49 testes sem rede: modelo com roteiro, servidor MCP em memória
+└─ tests/                   51 testes sem rede: modelo com roteiro, servidor MCP em memória
                             e A2A de verdade, por ASGI
 ```

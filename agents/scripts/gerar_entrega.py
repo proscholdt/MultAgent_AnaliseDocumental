@@ -26,6 +26,7 @@ import httpx
 from base import ROOT, arguments, login, settings, snapshot
 
 from app.evaluation import evaluate, render
+from app.orquestrador import latin_only
 
 OUT = ROOT / "entrega"
 
@@ -58,13 +59,29 @@ async def main() -> int:
     parser = arguments("Gera a pasta de entrega a partir da base.")
     parser.add_argument("--rodar", action="store_true", help="pede o relatório completo ao orquestrador antes")
     parser.add_argument("--api", default="http://localhost:8200", help="endereço da API do orquestrador")
+    parser.add_argument("--retrato", help="gera a entrega de um retrato guardado por avaliar.py "
+                        "(avaliacao/resultados/retrato-*.json), sem ler a base nem pedir login")
+    parser.add_argument("--execucao", help="com --retrato: o arquivo da execução que gerou aquele retrato "
+                        "(data/execucoes/<id>.json), para o resumo de tempo, tokens e custo")
     args = parser.parse_args()
 
-    config = settings()
-    identity = await login(config, args.usuario, args.senha, f"entrega-{datetime.now(UTC):%Y%m%d-%H%M%S}")
-    if args.rodar:
-        write(OUT / "execucao.json", await run_report(args.api, identity.user_token))
-    current = await snapshot(config, identity)
+    if args.retrato:
+        current = json.loads(Path(args.retrato).read_text(encoding="utf-8"))
+        if args.execucao:
+            run = json.loads(Path(args.execucao).read_text(encoding="utf-8"))
+            trace = Path(args.execucao).with_suffix(".jsonl")
+            steps = [json.loads(line) for line in trace.read_text(encoding="utf-8").splitlines()] if trace.exists() else []
+            run.pop("resultado", None)
+            run.pop("user_id", None)
+            run["mensagem"] = latin_only(run.get("mensagem", ""))  # como o serviço passou a gravar
+            write(OUT / "execucao.json", {"execucao_id": run.pop("id"), **run, "passos": [
+                {key: value for key, value in step.items() if key != "argumentos"} for step in steps]})
+    else:
+        config = settings()
+        identity = await login(config, args.usuario, args.senha, f"entrega-{datetime.now(UTC):%Y%m%d-%H%M%S}")
+        if args.rodar:
+            write(OUT / "execucao.json", await run_report(args.api, identity.user_token))
+        current = await snapshot(config, identity)
     if current["pendencias"]:
         print("Atenção: a base tem pendências; a entrega sai incompleta.")
         for item in current["pendencias"]:

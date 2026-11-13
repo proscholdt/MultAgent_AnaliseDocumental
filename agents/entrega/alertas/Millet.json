@@ -1,0 +1,95 @@
+{
+  "arquivo": "Millet.pdf",
+  "empresa": "Millet Participações S.A.",
+  "alertas": [
+    {
+      "tipo": "validacao",
+      "codigo": "secao_inesperada",
+      "severidade": "informacao",
+      "campo": "emprestimos_circulante",
+      "mensagem": "Empréstimos e financiamentos (circulante) (2022): o valor veio da seção '11. Empréstimos e financiamentos', e não de uma demonstração de balanço.",
+      "detalhes": {
+        "pagina": 32
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "validacao",
+      "codigo": "secao_inesperada",
+      "severidade": "informacao",
+      "campo": "emprestimos_nao_circulante",
+      "mensagem": "Empréstimos e financiamentos (não circulante) (2022): o valor veio da seção '11. Empréstimos e financiamentos', e não de uma demonstração de balanço.",
+      "detalhes": {
+        "pagina": 32
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
+      "severidade": "atencao",
+      "campo": null,
+      "mensagem": "O saldo final não fecha com a movimentação apresentada: com 25.075, 14.378, 3.706, (17.140) e (1.843), o resultado é 24.176, mas a tabela mostra saldo final negativo.",
+      "detalhes": {
+        "pagina": 32,
+        "chunk_index": 87,
+        "secao": "11. Empréstimos e financiamentos",
+        "citacao": "Os empréstimos e financiamentos estão garantidos por recebíveis, a qual foi exigida pelos Agentes Financeiros intermediadores da operação. A tabela a seguir demonstra amortizações e captações durante o período: | | Consolidado - 2022 | Consolidado - 2021 | |---|---|---| | Saldo Inicial | 25.075 | 13.818 | | Captações no período | 14.378 | 35.170 | | Provisão de encargos no período | 3.706 | 735 | | Amortização do principal no período | (17.140) | (24.109) | | Pagamento de juros no período | (1.843) | (539) | | Saldo final | (24.176) | 25.075 |"
+      },
+      "registrado_por": "validador"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
+      "severidade": "atencao",
+      "campo": null,
+      "mensagem": "A data de aprovação está inconsistente com o exercício das demonstrações: o documento é de 31 de dezembro de 2022 e 2021, mas a frase informa aprovação em 14 de março de 2022.",
+      "detalhes": {
+        "pagina": 12,
+        "chunk_index": 16,
+        "secao": "2. Sumario de políticas contábeis > 2.2. Base de preparação e apresentação das demonstrações financeiras",
+        "citacao": "A preparação das demonstrações financeiras requer o uso de certas estimativas contábeis críticas e também o exercício de julgamento por parte da administração da Companhia no processo de aplicação das suas políticas contábeis. Aquelas áreas que requerem maior nível de julgamento e possuem maior complexidade, bem como as áreas nas quais premissas e estimativas são significativas para as demonstrações financeiras, estão mencionadas na Nota 2.22. Adicionalmente, a Companhia considerou as orientações emanadas da Orientação Técnica OCPC 07, emitida pelo CPC em novembro de 2014, na preparação das suas demonstrações financeiras. Dessa forma, as informações relevantes próprias das demonstrações financeiras estão sendo evidenciadas e correspondem às utilizadas pela administração na sua gestão. A apresentação das demonstrações financeiras foi aprovada e pela administração em 14 de março de 2022."
+      },
+      "registrado_por": "validador"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
+      "severidade": "atencao",
+      "campo": null,
+      "mensagem": "O total dos ativos financeiros não fecha com as linhas da própria tabela: 10.656, 98.663 e 1.033 somam mais do que 10.352.",
+      "detalhes": {
+        "pagina": 42,
+        "chunk_index": 117,
+        "secao": "22. Gestão de risco > 22.3. Instrumento financeiro por categoria",
+        "citacao": "Diversas políticas e divulgações contábeis da Companhia exigem a determinação do valor justo, tanto para os ativos e passivos financeiros como para os não financeiros. Os valores justos têm sido apurados para propósitos de mensuração e/ou divulgação. | | Controladora - 31/12/2021 | Controladora - 31/12/2021 | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 | |---|---|---|---|---| | Ativos financeiros mensurados a custo amortizado | | | | | | Caixa e Equivalente de Caixa | 355 | 871 | 10.656 | 8.194 | | Contas a Receber de Clientes | - | - | 98.663 | 69.645 | | Outros Créditos | 3 | - | 1.033 | 916 | | Total | 358 | 871 | 10.352 | 78.755 | | Passivos financeiros mensurados a custo amortizado | | | | | | Contas a Pagar a Fornecedores | 5 | - | 41.873 | 32.854 | | Arrendamentos Operacionais a pagar | - | - | 636 | 972 | | Empréstimos e Financiamentos | - | - | 24.176 | 25.075 | | Antecipações de clientes e faturamento antecipado | - | - | 372 | 377 | | Outros Passivos | - | - | 814 | 2.120 | | Total | 5 | - | 67.871 | 61.398 |"
+      },
+      "registrado_por": "validador"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
+      "severidade": "atencao",
+      "campo": null,
+      "mensagem": "Há ano trocado no cabeçalho da tabela: as duas colunas da controladora estão identificadas como 31/12/2021, embora a tabela também traga saldos de 31/12/2022 e 31/12/2021.",
+      "detalhes": {
+        "pagina": 42,
+        "chunk_index": 117,
+        "secao": "22. Gestão de risco > 22.3. Instrumento financeiro por categoria",
+        "citacao": "Diversas políticas e divulgações contábeis da Companhia exigem a determinação do valor justo, tanto para os ativos e passivos financeiros como para os não financeiros. Os valores justos têm sido apurados para propósitos de mensuração e/ou divulgação. | | Controladora - 31/12/2021 | Controladora - 31/12/2021 | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 | |---|---|---|---|---| | Ativos financeiros mensurados a custo amortizado | | | | | | Caixa e Equivalente de Caixa | 355 | 871 | 10.656 | 8.194 | | Contas a Receber de Clientes | - | - | 98.663 | 69.645 | | Outros Créditos | 3 | - | 1.033 | 916 | | Total | 358 | 871 | 10.352 | 78.755 | | Passivos financeiros mensurados a custo amortizado | | | | | | Contas a Pagar a Fornecedores | 5 | - | 41.873 | 32.854 | | Arrendamentos Operacionais a pagar | - | - | 636 | 972 | | Empréstimos e Financiamentos | - | - | 24.176 | 25.075 | | Antecipações de clientes e faturamento antecipado | - | - | 372 | 377 | | Outros Passivos | - | - | 814 | 2.120 | | Total | 5 | - | 67.871 | 61.398 |"
+      },
+      "registrado_por": "validador"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "revisao_das_fontes_concluida",
+      "severidade": "informacao",
+      "campo": null,
+      "mensagem": "Fontes revisadas pelo agente validador. Notas de políticas contábeis, empréstimos e financiamentos, tributos, resultado financeiro, partes relacionadas e gestão de capital lidos; quatro inconsistências registradas.",
+      "detalhes": {
+        "inconsistencias_registradas": 4
+      },
+      "registrado_por": "validador"
+    }
+  ]
+}

@@ -55,7 +55,7 @@ Fora do Docker:
 ```bash
 uv sync
 uv run uvicorn app.main:app_factory --factory --port 8100
-uv run pytest        # 88 testes, sem rede
+uv run pytest        # 90 testes, sem rede
 ```
 
 ## Governança: quem pode o quê
@@ -199,6 +199,11 @@ há também precisa de prova:
   (resultado operacional, depreciação, empréstimos, caixa, aquisições), a chamada é recusada
   dizendo quais. Na 2ª execução o extrator escreveu "as linhas de apoio foram gravadas" sem ter
   gravado, e três indicadores saíram sem cálculo.
+- **Entre as frases de EBITDA, vale a que bate com a demonstração.** Relatório de grupo traz o
+  EBITDA de cada controlada e o consolidado, em frases parecidas. Se o EBITDA gravado veio de
+  texto e não bate com resultado operacional + depreciação, e outra frase do documento bate (em
+  módulo), o fechamento é recusado apontando a frase. Na 8ª execução o EBITDA da Light voltou a
+  ser o da distribuidora, com uma nota.
 - Dizer "o documento não traz as linhas de apoio" também precisa de prova: o servidor procura,
   nas tabelas da demonstração em que o valor mora, uma linha que sirva. Se acha, recusa e diz a
   página e o rótulo. Só quando não há linha nenhuma a explicação é aceita, e vira um alerta.
@@ -331,6 +336,12 @@ desatualizado e volta a ser pendência.
 - **Dívida líquida calculada** usa só caixa e equivalentes, sem aplicações financeiras, e só a
   linha de empréstimos e financiamentos, sem debêntures. É uma fórmula fixa e declarada, não a
   definição de cada empresa.
+- **Um portão novo pode criar um beco sem saída.** Aconteceu uma vez: a regra de que "o que o
+  documento traz com valor não pode ser descartado", aplicada ao capex, tomou o financiamento
+  "BNDES - Capex" por capex informado, e o campo não podia ser gravado nem dado como ausente. A
+  extração não fechou, e a execução terminou como incompleta. A auditoria mostra as recusas
+  repetidas; o remédio foi restringir a regra e escrever o teste. Portão novo pede uma execução
+  real nos três documentos antes de valer.
 - **SQLite e segredo compartilhado** servem para o teste, não para produção.
 - **A validação do texto da fonte é do modelo.** O servidor confere a citação, não a conta que o
   validador diz estar errada.
@@ -353,7 +364,7 @@ mcp-server/
 │  ├─ report.py             marcadores e montagem do relatório
 │  ├─ store.py  models.py   SQLite
 │  └─ tools/                rag, extraction, analysis, answers, reporting
-└─ tests/                   88 testes: governança, portões, fórmulas, pendências, relatório
+└─ tests/                   90 testes: governança, portões, fórmulas, pendências, relatório
 ```
 
 ## Caminho para produção no Azure

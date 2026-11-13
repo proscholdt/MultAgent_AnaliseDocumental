@@ -216,6 +216,14 @@ async def test_free_request_runs_in_the_background_and_belongs_to_its_user(http,
     assert [entry["execucao_id"] for entry in (await http.get("/api/execucoes", headers=auth())).json()] == [run_id]
 
 
+async def test_final_message_loses_words_in_another_alphabet(http, model):
+    """O modelo pequeno escreveu "Não մնou pendência" na mensagem de estado de várias execuções reais."""
+    model.scripts["orquestrador"] = [[say("Relatório concluído. Não մնou pendência no crédito a العملاء, na 1ª rodada.")]]
+    created = await http.post("/api/execucoes", json={"pedido": "Quais documentos eu tenho?"}, headers=auth())
+    run = await wait(http, created.json()["execucao_id"], auth())
+    assert run["mensagem"] == "Relatório concluído. Não pendência no crédito a na 1ª rodada."
+
+
 async def test_api_requires_a_valid_indexer_token_with_time_left(http, model):
     assert (await http.post("/api/relatorios")).status_code in (401, 403)
     invalid = await http.post("/api/relatorios", headers={"Authorization": "Bearer token-de-outro-lugar"})
