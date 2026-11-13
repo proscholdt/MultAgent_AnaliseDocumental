@@ -100,7 +100,7 @@ uv run pytest        # 67 testes, sem rede
 | `POST /api/perguntas` | Uma pergunta em linguagem natural; devolve a resposta com as fontes |
 | `POST /api/execucoes` | Pedido em texto livre: o orquestrador decide o que fazer |
 | `POST /api/conversas` | Abre uma conversa |
-| `POST /api/conversas/{id}/mensagens` | Um turno da conversa, em texto livre: pergunta, relatório ou outro pedido (o orquestrador classifica), lembrando os turnos anteriores |
+| `POST /api/conversas/{id}/mensagens` | Um turno da conversa, em texto livre: pergunta ou relatório (o orquestrador classifica), lembrando os turnos anteriores. O resto recebe "fora do escopo" e as opções |
 | `GET /api/conversas` | As conversas do usuário, com o primeiro pedido como título |
 | `GET /api/conversas/{id}` | Os turnos de uma conversa, com as respostas (e o relatório, no turno de relatório) |
 | `GET /api/execucoes/{id}` | Estado, resultado, passos (quem chamou o quê, e o raciocínio do modelo), tokens e custo |
@@ -249,12 +249,18 @@ MCP que diz o que está liberado e recusa o que chega antes da hora.
 | **O trace** (cada passo, com o raciocínio) | `data/execucoes/<id>.jsonl` | `GET /api/execucoes/{id}` |
 
 **O que a mensagem pede.** No chat o usuário só escreve. Na primeira decisão, o orquestrador
-diz o que a mensagem é (`intencao`: pergunta, relatório ou outro), e o tipo da execução passa a
-ser esse. O tipo diz o que a conferência final cobra: uma pergunta só fecha com uma resposta
-gravada pelo pesquisador, com fontes; um relatório, com o relatório montado; outro pedido, com o
-orquestrador dizendo que terminou. Na primeira versão o turno era um pedido livre sem cobrança, e
-o orquestrador respondia perguntas sozinho, na mensagem, sem fonte: por isso a cobrança é do
-código. A classificação fica no trace (passo `intencao`).
+diz o que a mensagem é (`intencao`: pergunta, relatório ou fora do escopo), e o tipo da execução
+passa a ser esse. O tipo diz o que a conferência final cobra: uma pergunta só fecha com uma
+resposta gravada pelo pesquisador, com fontes; um relatório, com o relatório montado.
+
+**Fora do escopo.** O sistema não é de conversa. Saudação, piada, previsão do tempo, conselho de
+investimento, qualquer coisa que não seja uma pergunta sobre os documentos ou o relatório: o
+código não executa nada (mesmo que o orquestrador tenha delegado) e responde com um texto fixo e
+as opções do que o sistema faz, cada uma com um exemplo. Assim nenhum texto livre do orquestrador
+chega ao usuário como resposta. Na primeira versão o turno era um pedido livre sem cobrança, e o
+orquestrador respondia perguntas sozinho, na mensagem, sem fonte. Na dúvida entre pergunta e fora
+do escopo, o prompt manda tratar como pergunta: se a resposta não estiver nos documentos, o
+pesquisador diz que não encontrou. A classificação fica no trace (passo `intencao`).
 
 **Pergunta de seguimento.** O orquestrador recebe os turnos anteriores ("A conversa até aqui") e
 delega ao pesquisador a pergunta já resolvida: "E a menor?" vira "qual empresa teve a MENOR
@@ -566,9 +572,9 @@ e o Docling, ou de US$ 2,8 a 3,2 com a leitura pela Azure, e de **2 a 6 minutos*
   cresce com a conversa. O teto é por chamada, não por conversa.
 - **O raciocínio registrado é um resumo.** É o que a OpenAI devolve, não a cadeia completa do
   modelo. Explica a escolha na maior parte das vezes; não é uma prova dela.
-- **A classificação da mensagem é do modelo.** Uma pergunta classificada como "outro" escapa
-  da exigência de resposta com fonte. O prompt diz que, na dúvida, é pergunta, e o trace mostra a
-  classificação de cada turno.
+- **A classificação da mensagem é do modelo.** Se ele classificar uma pergunta legítima como
+  fora do escopo, o usuário recebe as opções e precisa reformular. O erro é para o lado seguro:
+  nada sem fonte chega à tela. O trace mostra a classificação de cada turno.
 
 ## Caminho para produção no Azure
 

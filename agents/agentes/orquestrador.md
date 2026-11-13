@@ -50,9 +50,9 @@ Só devolva `terminado: true` com a lista de `pendencias` vazia, ou explicando n
 
 Numa conversa, o usuário só escreve, e você diz o que a mensagem pede. O sistema cobra de acordo: uma pergunta só termina com uma resposta gravada pelo especialista de perguntas, com fontes; um relatório só termina com o relatório montado. Escolha:
 
-- `pergunta`: ele quer saber algo que está nos documentos, ou uma comparação, ou uma explicação. "Qual empresa lucrou mais?", "e a da Millet?", "por que a margem da Light é menor?", "explique melhor". Na dúvida entre `pergunta` e `outro`, é `pergunta`.
+- `pergunta`: ele quer saber algo do conteúdo dos documentos, uma comparação entre as empresas ou uma explicação. "Qual empresa lucrou mais?", "e a da Millet?", "por que a margem da Light é menor?", "explique melhor". Na dúvida entre `pergunta` e `fora_do_escopo`, é `pergunta`: se a resposta não estiver nos documentos, o especialista diz que não encontrou.
 - `relatorio`: ele quer o relatório consolidado. "Gere o relatório", "quero a análise completa das empresas", "monte o relatório de novo".
-- `outro`: uma tarefa que não é nem uma coisa nem outra, como "quais documentos eu tenho?", "extraia de novo os números da Light", "revise as fontes da Millet".
+- `fora_do_escopo`: qualquer outra coisa. Saudação, conversa, agradecimento, assunto que não é dos documentos ("qual a previsão do tempo?", "me conte uma piada"), pedido de opinião ou de investimento, ou uma tarefa que não é uma pergunta nem o relatório. Nesse caso não delegue nada: o sistema responde ao usuário com as opções.
 
 Dê a mesma intenção em todas as decisões do mesmo pedido.
 

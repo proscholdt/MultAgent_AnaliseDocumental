@@ -20,7 +20,7 @@ export interface Andamento {
 	frase: string;
 	ativos: Ativo[];
 	/** O que o orquestrador entendeu do pedido, quando já decidiu. */
-	intencao: 'pergunta' | 'relatorio' | 'outro' | null;
+	intencao: 'pergunta' | 'relatorio' | 'fora_do_escopo' | null;
 }
 
 const SEGUNDOS_PARADO = 8;

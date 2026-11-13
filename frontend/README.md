@@ -3,8 +3,8 @@
 Sistema 4 de 4. A tela do usuário, em SvelteKit:
 
 - **enviar os PDFs** para o [indexador](../indexer/README.md), com o progresso da indexação;
-- **conversar com os [agentes](../agents/README.md)**: perguntas com fonte, o relatório
-  consolidado, ou qualquer outro pedido, em texto livre;
+- **conversar com os [agentes](../agents/README.md)**: perguntas com fonte e o relatório
+  consolidado, em texto livre. O que não for isso recebe "fora do escopo", com as opções;
 - enquanto o sistema responde, **o chat fica bloqueado**, e um aviso diz o que está acontecendo
   ("Buscando informações nos documentos…", "Lendo os números da LIGHT S.A.…").
 
@@ -67,9 +67,15 @@ menos de 16 minutos, a tela pede o login de novo, em vez de deixar a mensagem fa
 ### O chat
 
 Uma mensagem vai para `POST /api/conversas/{id}/mensagens` com `aguardar: false`. O orquestrador
-diz o que ela é (pergunta, relatório ou outro pedido) e cobra o que cada tipo exige (ver
-[Estado, memória e conversa](../agents/README.md#estado-memória-e-conversa)). A tela não precisa
-de botões de modo: o usuário só escreve.
+diz o que ela é (pergunta, relatório ou fora do escopo), e o código cobra o que cada tipo exige
+(ver [Estado, memória e conversa](../agents/README.md#estado-memória-e-conversa)). A tela não
+precisa de botões de modo: o usuário só escreve.
+
+O sistema não é de conversa: "oi", "me conta uma piada", "vale a pena comprar ações da Light?"
+recebem um texto fixo, escrito pelo código, e as opções do que o sistema faz. Clicar numa opção
+manda o exemplo dela.
+
+![Fora do escopo](docs/fora-do-escopo.png)
 
 - **Bloqueio.** Do envio até a execução terminar (`completa`, `incompleta` ou `falhou`), a caixa,
   o botão e as sugestões ficam desabilitados. O orquestrador também recusa um segundo pedido na
@@ -92,15 +98,16 @@ de botões de modo: o usuário só escreve.
 
   Quem está trabalhando sai dos passos `delegando` (quando o especialista começa) e
   `especialista` (quando termina). Depois que o orquestrador classifica a mensagem, o aviso diz
-  "Entendido como pergunta" (ou relatório, ou pedido). Se nada muda por 8 segundos e ninguém
+  "Entendido como pergunta" (ou relatório, ou fora do escopo). Se nada muda por 8 segundos e ninguém
   está trabalhando, o aviso alterna entre "Pensando…", "Buscando informações…" e "Carregando…",
   para não parecer travado. O tempo decorrido fica ao lado.
 - **Recarregar no meio.** A conversa aberta fica no endereço (`?c=conv-...`). Ao voltar, se o
   último turno ainda está rodando, o chat continua bloqueado e o acompanhamento recomeça.
 - **A resposta.** Pergunta: o texto em Markdown e as fontes (documento e página). Relatório: o
-  relatório em Markdown, com tabelas, recolhível, e um botão para copiar. Outro pedido: a mensagem
-  do orquestrador. Turno incompleto ou com falha aparece como tal, com o motivo. O Markdown que
-  vem dos agentes passa pelo DOMPurify antes de ir para a tela.
+  relatório em Markdown, com tabelas, recolhível, e um botão para copiar. Fora do escopo: o texto
+  fixo e as opções. A mensagem livre do orquestrador nunca aparece como resposta. Turno incompleto
+  ou com falha aparece como tal, com o motivo. O Markdown que vem dos agentes passa pelo
+  DOMPurify antes de ir para a tela.
 
 ### Os documentos
 
@@ -121,6 +128,8 @@ O caminho inteiro foi conferido no navegador (Edge, pelo Playwright), contra os 
 - login, cookie `httpOnly`;
 - pergunta, seguimento ("E o menor?") e o relatório pedido no chat, com a caixa bloqueada e os
   avisos mudando;
+- cinco mensagens fora do escopo (saudação, piada, previsão do tempo, conselho de investimento,
+  agradecimento), todas barradas sem chamar especialista, e uma pergunta de verdade passando;
 - recarregar no meio;
 - conta nova, envio de um PDF até "Indexado" e remoção;
 - celular e tema escuro, sem rolagem horizontal.

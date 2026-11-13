@@ -3,7 +3,7 @@
 
 	let { andamento, segundos }: { andamento: Andamento; segundos: number } = $props();
 
-	const ROTULO = { pergunta: 'pergunta', relatorio: 'relatório', outro: 'pedido' } as const;
+	const ROTULO = { pergunta: 'pergunta', relatorio: 'relatório', fora_do_escopo: 'fora do escopo' } as const;
 
 	function tempo(s: number): string {
 		return s < 60 ? `${s} s` : `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, '0')} s`;

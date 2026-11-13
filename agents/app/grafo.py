@@ -60,15 +60,26 @@ class Decisao(BaseModel):
     terminado: bool = Field(description="true quando o pedido está atendido (ou não há mais o que fazer).")
     mensagem: str = Field(description="Para o usuário, em duas ou três frases: o que foi feito e o que ficou pendente. "
                           "Sem valores dos documentos.")
-    intencao: Literal["pergunta", "relatorio", "outro"] = Field(
-        description="O que o pedido atual do usuário é: 'pergunta' (quer saber algo dos documentos), 'relatorio' "
-                    "(quer o relatório consolidado) ou 'outro' (qualquer outra tarefa).")
+    intencao: Literal["pergunta", "relatorio", "fora_do_escopo"] = Field(
+        description="O que o pedido atual do usuário é: 'pergunta' (quer saber algo do conteúdo dos documentos), "
+                    "'relatorio' (quer o relatório consolidado) ou 'fora_do_escopo' (qualquer outra coisa).")
 
 
 # A intenção que o orquestrador dá a uma mensagem de conversa vira o tipo da execução, e o tipo
 # diz o que a conferência final cobra: pergunta exige resposta gravada com fonte; relatório exige
-# o relatório montado; pedido livre só exige que o orquestrador tenha terminado.
-INTENT_TYPE = {"pergunta": "pergunta", "relatorio": "relatorio", "outro": "livre"}
+# o relatório montado. O resto está fora do escopo: o código não executa nada e responde com um
+# texto fixo e as opções. Nenhum texto livre do orquestrador chega ao usuário como resposta.
+INTENT_TYPE = {"pergunta": "pergunta", "relatorio": "relatorio", "fora_do_escopo": "fora_do_escopo"}
+
+OUT_OF_SCOPE = ("Isso está fora do escopo deste sistema. Ele responde perguntas sobre as demonstrações financeiras "
+                "enviadas, sempre com a página de origem, e gera o relatório consolidado. Escolha uma das opções ou "
+                "escreva a sua pergunta.")
+OPTIONS = [
+    {"titulo": "Perguntar sobre um indicador", "exemplo": "Qual empresa teve a maior margem EBITDA?"},
+    {"titulo": "Comparar as empresas", "exemplo": "Compare o lucro líquido das empresas"},
+    {"titulo": "Entender o resultado", "exemplo": "Quais riscos as empresas destacam?"},
+    {"titulo": "Gerar o relatório consolidado", "exemplo": "Gere o relatório consolidado completo"},
+]
 
 
 @dataclass
@@ -182,6 +193,8 @@ def _after(stamp: str | None, start: str) -> bool:
 async def check(run: Run, identity: Identity, deps: Deps, finished: bool) -> tuple[bool, list[dict[str, Any]], dict]:
     """A conferência final, feita pelo código com as tools de leitura do "sistema". Devolve se
     o pedido está completo, o que falta e o resultado para o usuário."""
+    if run.tipo == "fora_do_escopo":
+        return True, [], {"fora_do_escopo": True, "opcoes": OPTIONS}
     async with deps.engine.connect(mcp.SYSTEM, identity) as session:
         pending = (await session.call("pendencias"))["pendencias"]
         if run.tipo == "relatorio":
@@ -256,6 +269,9 @@ class Execution:
             self.run.tipo = INTENT_TYPE[decision.intencao]
             self.trace.add("intencao", intencao=decision.intencao, tipo_execucao=self.run.tipo)
             self.deps.runs.save(self.run)
+            if self.run.tipo == "fora_do_escopo":
+                # Nada é delegado, e a mensagem do orquestrador não vai ao usuário: o texto é fixo.
+                return {**update, "mensagem": OUT_OF_SCOPE, "decisao": {"delegacoes": [], "terminado": True}}
         # Delegação a quem não existe vira relato de erro, que o orquestrador recebe na onda seguinte.
         unknown = [{"agente": item.agente, "estado": "erro", "doc_id": item.doc_id,
                     "erro": f"não há especialista '{item.agente}'"} for item in decision.delegacoes

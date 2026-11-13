@@ -252,13 +252,25 @@ async def test_a_chat_question_still_needs_a_saved_answer(http, world, model):
     assert run["pendencias"][0]["agente"] == "pesquisador"
 
 
-async def test_anything_else_in_the_chat_is_a_free_request(http, world, model):
-    model.scripts["orquestrador"] = [[call("listar_documentos")],
-                                     [decide(terminado=True, mensagem="Você tem 1 documento.", intencao="outro")]]
+async def test_anything_else_in_the_chat_is_out_of_scope_and_runs_nothing(http, world, model, agents_dir):
+    """O sistema não é de conversa: o que não é pergunta nem relatório recebe um texto fixo e as
+    opções. Mesmo que o orquestrador tenha delegado algo ou escrito uma resposta, nada disso roda
+    nem chega ao usuário."""
+    asked = answering_researcher(world, agents_dir, "não deveria ser chamado")
+    model.scripts["orquestrador"] = [[decide(delegation("pesquisador", "Conte uma piada."), terminado=True,
+                                             mensagem="Claro! O lucro da Millet foi 18 milhões.",
+                                             intencao="fora_do_escopo")]]
     conversation = (await http.post("/api/conversas", headers=auth())).json()["conversa_id"]
-    run = (await http.post(f"/api/conversas/{conversation}/mensagens", json={"texto": "quais documentos eu tenho?"},
+    run = (await http.post(f"/api/conversas/{conversation}/mensagens", json={"texto": "oi, me conta uma piada"},
                            headers=auth())).json()
-    assert (run["estado"], run["tipo"], run["mensagem"]) == ("completa", "livre", "Você tem 1 documento.")
+    assert (run["estado"], run["tipo"]) == ("completa", "fora_do_escopo")
+    assert run["mensagem"].startswith("Isso está fora do escopo deste sistema.") and "18" not in run["mensagem"]
+    assert asked == [] and world.called("pesquisador") == []
+    assert not [s for s in run["passos"] if s["tipo"] in ("delegando", "especialista")]
+    assert [o["exemplo"] for o in run["resultado"]["opcoes"]][-1] == "Gere o relatório consolidado completo"
+    assert len(model.inputs["orquestrador"]) == 1  # uma decisão só: nenhuma onda depois dela
+    turn = (await http.get(f"/api/conversas/{conversation}", headers=auth())).json()["turnos"][0]
+    assert turn["tipo"] == "fora_do_escopo" and len(turn["opcoes"]) == 4
 
 
 async def test_conversation_belongs_to_its_user(http, model):

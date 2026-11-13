@@ -60,6 +60,7 @@
 			erro: execucao.erro,
 			respostas: (resultado.respostas ?? []).map((r) => ({ resposta: r.resposta, fontes: r.fontes ?? [] })),
 			relatorio: resultado.relatorio ?? null,
+			opcoes: resultado.opcoes ?? null,
 			criada_em: execucao.criada_em,
 			terminada_em: execucao.terminada_em
 		};
@@ -228,6 +229,8 @@
 				{turno}
 				andamento={emCurso?.execucaoId === turno.execucao_id ? andamentoAtual : null}
 				segundos={emCurso?.execucaoId === turno.execucao_id ? segundos : 0}
+				{bloqueado}
+				aoEscolher={enviar}
 			/>
 		{/each}
 	</div>

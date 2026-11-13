@@ -31,7 +31,7 @@ flowchart LR
 | 1. `indexer/` | Recebe os PDFs, lê com Docling ou Azure Document Intelligence, gera trechos com página, seção, tipo e unidade, e responde busca híbrida (semântica + palavras) | [indexer/README.md](indexer/README.md) |
 | 2. `mcp-server/` | Servidor MCP com governança: decide o que cada agente pode chamar, confere tudo o que eles gravam, calcula, valida e monta o relatório | [mcp-server/README.md](mcp-server/README.md) |
 | 3. `agents/` | Orquestrador e especialistas, feitos com PydanticAI; a orquestração é um grafo LangGraph. O orquestrador chama os especialistas por A2A; todos usam as ferramentas pelo servidor MCP. O usuário conversa: os agentes lembram os turnos anteriores, e o raciocínio do modelo fica registrado | [agents/README.md](agents/README.md) |
-| 4. `frontend/` | A tela: envio dos PDFs com o progresso da indexação, e o chat com os agentes (perguntas, relatório, qualquer pedido), bloqueado até a resposta e mostrando o que o sistema está fazendo. O token fica num cookie httpOnly, no servidor da tela | [frontend/README.md](frontend/README.md) |
+| 4. `frontend/` | A tela: envio dos PDFs com o progresso da indexação, e o chat com os agentes (perguntas e relatório; o resto é fora do escopo), bloqueado até a resposta e mostrando o que o sistema está fazendo. O token fica num cookie httpOnly, no servidor da tela | [frontend/README.md](frontend/README.md) |
 
 ## A entrega
 

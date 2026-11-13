@@ -38,16 +38,23 @@ export interface Resposta {
 	fontes: string[];
 }
 
+export interface Opcao {
+	titulo: string;
+	exemplo: string;
+}
+
 /** Um turno da conversa: o pedido e o que voltou. */
 export interface Turno {
 	execucao_id: string;
 	pedido: string;
-	tipo: 'pergunta' | 'relatorio' | 'livre' | 'auto';
+	tipo: 'pergunta' | 'relatorio' | 'fora_do_escopo' | 'livre' | 'auto';
 	estado: EstadoExecucao;
 	mensagem: string;
 	erro: string | null;
 	respostas: Resposta[];
 	relatorio: string | null;
+	/** Fora do escopo: o que o sistema faz, com um exemplo clicável de cada. */
+	opcoes: Opcao[] | null;
 	criada_em: string;
 	terminada_em: string | null;
 }
@@ -74,6 +81,6 @@ export interface Execucao {
 	criada_em: string;
 	iniciada_em: string | null;
 	terminada_em: string | null;
-	resultado: { respostas?: Resposta[]; relatorio?: string | null } | null;
+	resultado: { respostas?: Resposta[]; relatorio?: string | null; opcoes?: Opcao[] } | null;
 	passos?: Passo[];
 }

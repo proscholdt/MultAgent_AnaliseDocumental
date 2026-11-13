@@ -7,11 +7,25 @@
 	let {
 		turno,
 		andamento = null,
-		segundos = 0
-	}: { turno: Turno; andamento?: AndamentoT | null; segundos?: number } = $props();
+		segundos = 0,
+		bloqueado = false,
+		aoEscolher = () => {}
+	}: {
+		turno: Turno;
+		andamento?: AndamentoT | null;
+		segundos?: number;
+		bloqueado?: boolean;
+		aoEscolher?: (texto: string) => void;
+	} = $props();
 
 	const rodando = $derived(EM_ANDAMENTO.includes(turno.estado));
-	const TIPO: Record<Turno['tipo'], string> = { pergunta: 'Pergunta', relatorio: 'Relatório', livre: 'Pedido', auto: '' };
+	const TIPO: Record<Turno['tipo'], string> = {
+		pergunta: 'Pergunta',
+		relatorio: 'Relatório',
+		fora_do_escopo: 'Fora do escopo',
+		livre: 'Pedido',
+		auto: ''
+	};
 
 	let relatorioAberto = $state(true);
 	let copiado = $state(false);
@@ -89,7 +103,21 @@
 				</div>
 			{/if}
 
-			{#if !turno.respostas.length && !turno.relatorio && turno.mensagem}
+			<!-- A mensagem do orquestrador não é resposta: numa pergunta ou num relatório, só vale o que
+			     veio da base (a resposta com fonte, o relatório). Fora do escopo, o texto é fixo, do código. -->
+			{#if turno.tipo === 'fora_do_escopo'}
+				<p class="escopo">{turno.mensagem}</p>
+				{#if turno.opcoes?.length}
+					<div class="opcoes">
+						{#each turno.opcoes as opcao (opcao.exemplo)}
+							<button type="button" disabled={bloqueado} onclick={() => aoEscolher(opcao.exemplo)}>
+								<strong>{opcao.titulo}</strong>
+								<span>{opcao.exemplo}</span>
+							</button>
+						{/each}
+					</div>
+				{/if}
+			{:else if turno.tipo === 'livre' && !turno.respostas.length && turno.mensagem}
 				<Markdown texto={turno.mensagem} />
 			{/if}
 
@@ -206,6 +234,50 @@
 		padding: 12px 16px;
 		max-height: 70vh;
 		overflow: auto;
+	}
+
+	.escopo {
+		margin: 0;
+	}
+
+	.opcoes {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 8px;
+	}
+
+	@media (max-width: 600px) {
+		.opcoes {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.opcoes button {
+		display: grid;
+		gap: 2px;
+		text-align: left;
+		border: 1px solid var(--line);
+		background: var(--bg);
+		border-radius: 10px;
+		padding: 10px 12px;
+	}
+
+	.opcoes button:hover:not(:disabled) {
+		border-color: var(--accent);
+		background: var(--accent-soft);
+	}
+
+	.opcoes button:disabled {
+		opacity: 0.55;
+	}
+
+	.opcoes strong {
+		font-size: 14px;
+	}
+
+	.opcoes span {
+		font-size: 13px;
+		color: var(--muted);
 	}
 
 	.meta {
