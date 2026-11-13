@@ -25,6 +25,7 @@ ADMIN_KEY = "chave-de-administracao-de-teste"
 ANA, BRUNO = "11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222"
 USERS = {"tok-ana": {"user_id": ANA, "username": "ana"}, "tok-bruno": {"user_id": BRUNO, "username": "bruno"}}
 DOC_ANA, DOC_BRUNO = "aaaa000000000001", "bbbb000000000002"
+DOC_ANA_2 = "aaaa000000000003"  # segundo documento da Ana, só nos testes que comparam empresas
 
 DRE = """Exercícios findos em 31 de dezembro de 2022 e 2021 (Valores expressos em milhares de reais)
 
@@ -91,6 +92,13 @@ def default_documents() -> dict[tuple[str, str], dict[str, Any]]:
         chunk(7, "text", 9, ["Desempenho"],
               "Em 2022, a receita líquida cresceu 30% em relação a 2021. A margem EBITDA foi de 10,0% no ano.",
               unit=None, unit_source=None),
+        chunk(8, "text", 35, ["26. Gestão de riscos", "Risco de liquidez"],
+              "O Grupo está exposto ao risco de liquidez, monitorado pela tesouraria com base nas projeções de "
+              "fluxo de caixa para os próximos doze meses."),
+        chunk(9, "text", 3, ["Mensagem da Administração"],
+              "O ano foi marcado pela recuperação das vendas e pelo aumento dos custos de energia. Para 2023, a "
+              "Companhia espera manter o crescimento das vendas e reduzir o endividamento.", unit=None,
+              unit_source=None),
     ]
     bruno = [chunk(0, "text", 1, ["Relatório"], "Documento do Bruno, que a Ana não pode ver.")]
     return {(ANA, DOC_ANA): document(DOC_ANA, ANA, "Exemplo.pdf", "Empresa Exemplo S.A.", ana),
@@ -165,6 +173,19 @@ class FakeIndexer:
         return sorted(hits, key=lambda hit: -hit["score"])[:body.get("limit", 8)]
 
 
+SECOND_DRE = """| Demonstração do resultado | Consolidado - 2022 | Consolidado - 2021 |
+|---|---|---|
+| Receita líquida | 462.127 | 199.259 |
+| Resultado do exercício | 18.891 | 6.470 |"""
+
+
+def add_second_document(indexer: "FakeIndexer") -> None:
+    """Dá à Ana um segundo documento, de outra empresa, com uma DRE mínima."""
+    chunks = [chunk(0, "table", 7, ["Demonstrações do resultado"], SECOND_DRE, extraction_method="table_model"),
+              chunk(1, "text", 12, ["1. Contexto operacional"], "A Segunda S.A. atua no varejo de alimentos.")]
+    indexer.documents[(ANA, DOC_ANA_2)] = document(DOC_ANA_2, ANA, "Segunda.pdf", "Segunda S.A.", chunks)
+
+
 def agent_token(agent: str, user_id: str = ANA, run_id: str = "exec-1", *, secret: str = SECRET,
                 audience: str = "mcp-server", expires_in: int = 600, **extra: Any) -> str:
     claims = {"agent": agent, "run_id": run_id, "usr": user_id, "aud": audience,
@@ -187,6 +208,16 @@ agentes:
   extrator:
     tools: [listar_documentos, buscar_trechos, ler_chunk, ler_pagina, salvar_indicador, salvar_nao_encontrado,
             fechar_extracao, ler_extracao]
+  validador:
+    tools: [buscar_trechos, ler_chunk, ler_extracao, ler_alertas, registrar_alerta, concluir_revisao]
+  analista:
+    tools: [buscar_trechos, ler_chunk, salvar_item_analise, registrar_ausencia_analise, ler_analise]
+  pesquisador:
+    tools: [buscar_trechos, ler_chunk, ler_extracao, ler_analise, comparar_indicadores, salvar_resposta, ler_respostas]
+  redator:
+    tools: [ler_extracao, ler_analise, ler_alertas, ler_respostas, salvar_resumo, montar_relatorio, ler_relatorio]
+  orquestrador:
+    tools: [listar_documentos, pendencias, ler_extracao, ler_relatorio]
 """
 
 

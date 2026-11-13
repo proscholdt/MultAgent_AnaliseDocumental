@@ -100,6 +100,29 @@ def test_policy_needs_agents_and_known_tools():
     assert policy.calls_per_run("leitor") is None and policy.calls_per_run("ninguem") is None
 
 
+def test_shipped_policy_is_valid_and_keeps_one_owner_per_writing_tool():
+    """O policy.yaml que vai no repositório: válido contra o catálogo, e com as divisões que a
+    governança promete."""
+    from pathlib import Path
+
+    tools = load_tools()
+    policy = parse_policy((Path(__file__).parents[1] / "policy.yaml").read_text(encoding="utf-8"), set(tools))
+    owners = {"salvar_indicador": "extrator", "salvar_nao_encontrado": "extrator", "fechar_extracao": "extrator",
+              "registrar_alerta": "validador", "concluir_revisao": "validador",
+              "salvar_item_analise": "analista", "registrar_ausencia_analise": "analista",
+              "salvar_resposta": "pesquisador", "salvar_resumo": "redator", "montar_relatorio": "redator"}
+    for tool_name, owner in owners.items():
+        assert [agent for agent in policy.agents if policy.allows(agent, tool_name)] == [owner], tool_name
+    # Toda tool do catálogo que grava tem dono declarado aqui, e toda tool está liberada para alguém.
+    writers = {name for name in tools if name.split("_")[0] in ("salvar", "registrar", "fechar", "concluir", "montar")}
+    assert writers == set(owners)
+    assert set(tools) == {tool_name for entry in policy.agents.values() for tool_name in entry.tools}
+    # O orquestrador decide, mas não lê trecho de documento; o "sistema" só lê.
+    rag = {name for name, spec in tools.items() if spec.group == "rag"} - {"listar_documentos"}
+    assert not rag & policy.tools_of("orquestrador")
+    assert not writers & policy.tools_of("sistema") and not writers & policy.tools_of("orquestrador")
+
+
 # --- identidade -------------------------------------------------------------------------------
 
 

@@ -7,10 +7,51 @@
 #   não existe), continua valendo a versão anterior, e o erro aparece em GET /governanca.
 #
 # Para criar um agente: (1) o arquivo dele no sistema dos agentes; (2) uma entrada aqui.
+#
+# As divisões que importam:
+# - Cada tool que GRAVA tem um dono só: indicadores são do extrator, alertas de fonte do
+#   validador, análise do analista, respostas do pesquisador, resumo e relatório do redator.
+# - O orquestrador não lê trecho de documento (nenhuma tool de RAG): texto malicioso de um
+#   PDF não chega a quem decide o que fazer.
 
 agentes:
-  # Lê os documentos pelo RAG. É o conjunto mínimo de qualquer especialista que consulta fonte.
-  leitor:
-    tools: [listar_documentos, buscar_trechos, ler_chunk, ler_pagina]
+  orquestrador:
+    tools: [listar_documentos, pendencias, ler_extracao]
     limites:
       chamadas_por_execucao: 60
+
+  extrator:
+    tools: [listar_documentos, buscar_trechos, ler_chunk, ler_pagina,
+            salvar_indicador, salvar_nao_encontrado, fechar_extracao, ler_extracao]
+    limites:
+      chamadas_por_execucao: 250
+
+  validador:
+    tools: [buscar_trechos, ler_chunk, ler_pagina, ler_extracao, ler_alertas,
+            registrar_alerta, concluir_revisao]
+    limites:
+      chamadas_por_execucao: 120
+
+  analista:
+    tools: [listar_documentos, buscar_trechos, ler_chunk, ler_pagina,
+            salvar_item_analise, registrar_ausencia_analise, ler_analise]
+    limites:
+      chamadas_por_execucao: 150
+
+  pesquisador:
+    tools: [listar_documentos, buscar_trechos, ler_chunk, ler_pagina, ler_extracao, ler_analise,
+            ler_alertas, comparar_indicadores, salvar_resposta, ler_respostas]
+    limites:
+      chamadas_por_execucao: 150
+
+  redator:
+    tools: [listar_documentos, ler_extracao, ler_analise, ler_alertas, ler_respostas,
+            salvar_resumo, montar_relatorio, ler_relatorio, pendencias]
+    limites:
+      chamadas_por_execucao: 80
+
+  # Não é um agente com modelo: é o próprio sistema dos agentes, que no fim de cada execução
+  # confere as pendências e lê o resultado para devolver ao usuário. Só leitura.
+  sistema:
+    tools: [listar_documentos, pendencias, ler_extracao, ler_analise, ler_alertas, ler_respostas,
+            ler_relatorio]

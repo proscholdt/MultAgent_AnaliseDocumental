@@ -112,6 +112,6 @@ def tool(name: str, group: str, description: str) -> Callable[[Handler], Handler
 
 def load_tools() -> dict[str, ToolSpec]:
     """Todas as tools, na ordem em que foram registradas. Importar os módulos é o que registra."""
-    from app.tools import extraction, rag  # noqa: F401
+    from app.tools import analysis, answers, extraction, rag, reporting  # noqa: F401
 
     return dict(_TOOLS)

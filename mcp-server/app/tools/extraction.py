@@ -199,7 +199,7 @@ class SalvarNaoEncontrado(Args):
                                            "termo aparecer no documento, o erro lista as páginas.")
 
 
-def _occurrences(document: IndexedDocument, terms: tuple[str, ...]) -> dict[int, str]:
+def occurrences(document: IndexedDocument, terms: tuple[str, ...]) -> dict[int, str]:
     """Páginas em que algum termo do campo aparece, com um pedaço do texto em volta."""
     found: dict[int, str] = {}
     for chunk in document.chunks:
@@ -223,7 +223,7 @@ async def salvar_nao_encontrado(call: Call, args: SalvarNaoEncontrado) -> dict[s
     document = await call.deps.documents.get(call.caller, args.doc_id)
     reference, _ = periods(document)
     info = FIELDS[args.campo]
-    found = _occurrences(document, info.terms)
+    found = occurrences(document, info.terms)
     pending = sorted(set(found) - set(args.paginas_descartadas))
     if pending:
         raise ToolRejected(

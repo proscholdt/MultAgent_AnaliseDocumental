@@ -1,0 +1,176 @@
+"""Análise qualitativa (item 3 do teste) e alertas de inconsistência na fonte.
+
+A afirmação é do modelo; o que a sustenta é a citação, e a citação é conferida: tem de existir
+literalmente no chunk. Número que aparece na afirmação tem de estar na citação. No relatório a
+citação sai ao lado da afirmação, com a página, para o analista conferir com os próprios olhos.
+"""
+from typing import Any, Literal
+
+from pydantic import Field
+
+from app.catalog import Args, Call, tool
+from app.errors import ToolRejected
+from app.fields import CATEGORIES, Categoria
+from app.formulas import AlertDraft
+from app.models import AnalysisItem
+from app.text import check_quote, source_kind, squash, unbacked_numbers
+from app.tools.extraction import occurrences
+
+_QUOTE_MIN = 40
+
+
+def _chunk(document: Any, index: int) -> dict[str, Any]:
+    chunk = document.chunk(index)
+    if chunk is None:
+        raise ToolRejected(f"O documento tem chunks de 0 a {len(document.chunks) - 1}; não existe o {index}.")
+    return chunk
+
+
+def _numbers_backed(text: str, quote: str, what: str) -> None:
+    missing = unbacked_numbers(text, [quote])
+    if missing:
+        raise ToolRejected(f"{what} traz números que a citação não escreve: {', '.join(missing)}. Use só os "
+                           "números que estão na citação, como estão escritos.")
+
+
+class SalvarItemAnalise(Args):
+    doc_id: str = Field(description="Documento.")
+    categoria: Categoria = Field(description="motivo_resultado: o que explicou o resultado do período. risco: "
+                                 "risco ou ponto de atenção citado. guidance: perspectiva ou projeção. "
+                                 "evento_relevante: aquisição, reestruturação, contingência, mudança contábil. "
+                                 "tom: o tom geral da administração.")
+    afirmacao: str = Field(min_length=15, max_length=500, description="O achado, em uma ou duas frases suas.")
+    chunk_index: int = Field(ge=0, description="Chunk de onde vem a citação.")
+    citacao: str = Field(description="Frase do documento que sustenta a afirmação, copiada literalmente do chunk "
+                         "(pelo menos 40 caracteres).")
+    tom: Literal["positivo", "neutro", "negativo"] | None = Field(
+        default=None, description="Só na categoria 'tom': a classificação. A afirmação é a justificativa. Nas "
+        "outras categorias, null.")
+
+
+@tool("salvar_item_analise", "analise", """
+    Grava um item da análise qualitativa de um documento, com a citação literal que o sustenta. A
+    citação tem de existir no chunk, e os números da afirmação têm de estar na citação. Uma
+    categoria pode ter vários itens; na categoria 'tom' informe também a classificação.""")
+async def salvar_item_analise(call: Call, args: SalvarItemAnalise) -> dict[str, Any]:
+    if (args.categoria == "tom") != (args.tom is not None):
+        raise ToolRejected("O campo 'tom' é obrigatório na categoria 'tom' e fica null nas outras.")
+    document = await call.deps.documents.get(call.caller, args.doc_id)
+    chunk = _chunk(document, args.chunk_index)
+    quote = check_quote(args.citacao, chunk, min_chars=_QUOTE_MIN)
+    statement = squash(args.afirmacao)
+    _numbers_backed(statement, quote, "A afirmação")
+    sections = chunk.get("section_path") or []
+    row = AnalysisItem(
+        user_id=call.caller.user_id, doc_id=args.doc_id, fingerprint=document.fingerprint,
+        run_id=call.caller.run_id, categoria=args.categoria, status="encontrado", afirmacao=statement,
+        citacao=quote, chunk_index=args.chunk_index, pagina=chunk["page_start"], secao=" > ".join(sections),
+        fonte=source_kind(sections), tom=args.tom)
+    # O tom é um só por documento; as outras categorias acumulam itens.
+    await call.deps.store.save_analysis(row, replace_category=args.categoria == "tom")
+    return {"salvo": {"categoria": args.categoria, "pagina": row.pagina, "fonte": row.fonte, "tom": args.tom},
+            "aviso": "Trecho marcado como suspeito pelo indexador." if chunk.get("suspicious") else None}
+
+
+class RegistrarAusenciaAnalise(Args):
+    doc_id: str = Field(description="Documento.")
+    categoria: Categoria = Field(description="A categoria que o documento não traz.")
+    motivo: str = Field(min_length=20, max_length=600, description="Por que não há essa informação e onde foi "
+                        "procurada (ex.: o documento não tem relatório da administração).")
+    paginas_descartadas: list[int] = Field(default_factory=list, description="Páginas em que os termos da "
+                                           "categoria aparecem e que não servem. Pode começar vazia.")
+
+
+@tool("registrar_ausencia_analise", "analise", """
+    Registra que o documento não traz uma categoria da análise qualitativa (por exemplo, não há
+    guidance). O servidor procura os termos da categoria; se aparecerem em páginas que você não
+    descartou, a chamada é recusada com as páginas, para você ler antes de afirmar a ausência.""")
+async def registrar_ausencia_analise(call: Call, args: RegistrarAusenciaAnalise) -> dict[str, Any]:
+    document = await call.deps.documents.get(call.caller, args.doc_id)
+    label, terms = CATEGORIES[args.categoria]
+    found = occurrences(document, terms) if terms else {}
+    pending = sorted(set(found) - set(args.paginas_descartadas))
+    if pending:
+        raise ToolRejected(
+            f"Os termos de '{label}' aparecem em páginas que você não descartou: "
+            f"{', '.join(str(page) for page in pending)}. Leia-as: se há o que registrar, use salvar_item_analise.",
+            problemas=[f"p. {page}: …{found[page]}…" for page in pending[:10]])
+    evidence = {"termos_procurados": list(terms), "paginas_com_o_termo": sorted(found),
+                "paginas_descartadas": sorted(set(args.paginas_descartadas) & set(found))}
+    await call.deps.store.save_analysis(AnalysisItem(
+        user_id=call.caller.user_id, doc_id=args.doc_id, fingerprint=document.fingerprint,
+        run_id=call.caller.run_id, categoria=args.categoria, status="nao_encontrado",
+        motivo=squash(args.motivo), evidencia=evidence), replace_category=True)
+    return {"salvo": {"categoria": args.categoria, "status": "nao_encontrado"}, "evidencia": evidence}
+
+
+def analysis_view(items: list[AnalysisItem]) -> dict[str, list[dict[str, Any]]]:
+    """Os itens em vigor, por categoria, na ordem das categorias."""
+    grouped: dict[str, list[dict[str, Any]]] = {categoria: [] for categoria in CATEGORIES}
+    for item in items:
+        if item.status == "encontrado":
+            grouped[item.categoria].append({
+                "afirmacao": item.afirmacao, "citacao": item.citacao, "pagina": item.pagina,
+                "chunk_index": item.chunk_index, "secao": item.secao, "fonte": item.fonte, "tom": item.tom})
+        else:
+            grouped[item.categoria].append({"status": "nao_encontrado", "motivo": item.motivo,
+                                            "evidencia": item.evidencia})
+    return grouped
+
+
+class LerAnalise(Args):
+    doc_id: str = Field(description="Documento.")
+
+
+@tool("ler_analise", "analise", """
+    Lê a análise qualitativa guardada de um documento, por categoria, com a citação e a página de
+    cada item.""")
+async def ler_analise(call: Call, args: LerAnalise) -> dict[str, Any]:
+    document = await call.deps.documents.get(call.caller, args.doc_id)
+    items = await call.deps.store.analysis(call.caller.user_id, args.doc_id, document.fingerprint)
+    return {"doc_id": args.doc_id, "empresa": document.company, "analise": analysis_view(items)}
+
+
+class RegistrarAlerta(Args):
+    doc_id: str = Field(description="Documento.")
+    descricao: str = Field(min_length=20, max_length=500, description="O que está inconsistente na fonte, em "
+                           "uma ou duas frases.")
+    chunk_index: int = Field(ge=0, description="Chunk onde a inconsistência está.")
+    citacao: str = Field(description="O trecho inconsistente, copiado literalmente do chunk (pelo menos 40 "
+                         "caracteres).")
+
+
+@tool("registrar_alerta", "validacao", """
+    Registra uma inconsistência que está no próprio documento (uma frase cujos números não fecham,
+    um ano trocado), com a citação literal. Não corrija o documento: sinalize. Os números da
+    descrição têm de estar na citação.""")
+async def registrar_alerta(call: Call, args: RegistrarAlerta) -> dict[str, Any]:
+    document = await call.deps.documents.get(call.caller, args.doc_id)
+    chunk = _chunk(document, args.chunk_index)
+    quote = check_quote(args.citacao, chunk, min_chars=_QUOTE_MIN)
+    description = squash(args.descricao)
+    _numbers_backed(description, quote, "A descrição")
+    draft = AlertDraft("inconsistencia_na_fonte", "atencao", mensagem=description, detalhes={
+        "pagina": chunk["page_start"], "chunk_index": args.chunk_index,
+        "secao": " > ".join(chunk.get("section_path") or []), "citacao": quote})
+    added = await call.deps.store.add_alerts(call.caller, args.doc_id, document.fingerprint, "fonte", [draft])
+    return {"registrado": bool(added), "pagina": chunk["page_start"],
+            "aviso": None if added else "Este alerta já estava registrado."}
+
+
+def alert_view(alert: Any) -> dict[str, Any]:
+    return {"tipo": alert.tipo, "codigo": alert.codigo, "severidade": alert.severidade, "campo": alert.campo,
+            "mensagem": alert.mensagem, "detalhes": alert.detalhes, "registrado_por": alert.agent}
+
+
+class LerAlertas(Args):
+    doc_id: str = Field(description="Documento.")
+
+
+@tool("ler_alertas", "validacao", """
+    Lê os alertas de um documento: os das validações automáticas (margem, variação, unidades) e os
+    de inconsistência na fonte registrados com citação.""")
+async def ler_alertas(call: Call, args: LerAlertas) -> dict[str, Any]:
+    document = await call.deps.documents.get(call.caller, args.doc_id)
+    alerts = await call.deps.store.alerts(call.caller.user_id, args.doc_id, document.fingerprint)
+    return {"doc_id": args.doc_id, "empresa": document.company, "alertas": [alert_view(alert) for alert in alerts]}

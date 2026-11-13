@@ -65,7 +65,7 @@ async def test_wrong_year_empty_cell_and_unknown_labels_are_refused(governance):
     not_table = await rejected(governance, "salvar_indicador", cell("receita_liquida", "x", "y", chunk=TEXT))
     assert "não é uma tabela" in not_table["erro"]
     out_of_range = await rejected(governance, "salvar_indicador", cell("receita_liquida", "x", "y", chunk=99))
-    assert "de 0 a 7" in out_of_range["erro"]
+    assert "de 0 a 9" in out_of_range["erro"]
     other_year = await rejected(governance, "salvar_indicador", cell(
         "receita_liquida", "Receita operacional líquida", "Consolidado - 2022", periodo="2019"))
     assert "Este documento é de 2022" in other_year["erro"]

@@ -64,8 +64,20 @@ CATEGORIES: dict[str, tuple[str, tuple[str, ...]]] = {
     "motivo_resultado": ("Principais motivos do resultado", ()),
     "risco": ("Riscos e pontos de atenção", ("risco",)),
     "guidance": ("Guidance e perspectivas", ("guidance", "perspectiva", "projeç", "expectativa")),
-    "evento_relevante": ("Eventos relevantes", ("evento subsequente", "eventos subsequentes", "aquisição",
-                                                "reestrutura", "contingência")),
+    # Termos específicos: "aquisição" sozinha casaria com a linha de capex do fluxo de caixa, e
+    # "contingência", com a nota de provisões de qualquer demonstração.
+    "evento_relevante": ("Eventos relevantes", ("evento subsequente", "eventos subsequentes",
+                                                "combinação de negócios", "reestruturaç",
+                                                "recuperação judicial")),
     "tom": ("Tom geral da administração", ()),
 }
 Categoria = Literal["motivo_resultado", "risco", "guidance", "evento_relevante", "tom"]
+
+# As 5 perguntas que o teste manda rodar e entregar. As respostas a elas entram no relatório.
+QUESTIONS: dict[str, str] = {
+    "p1": "Qual empresa teve a maior margem EBITDA no período?",
+    "p2": "O que a administração de cada empresa apontou como principal motivo da variação da receita?",
+    "p3": "Alguma das empresas está com alavancagem acima de 3x? Qual?",
+    "p4": "Quais riscos são citados por mais de uma empresa?",
+    "p5": "Qual é o guidance de cada empresa para o próximo ano?",
+}
