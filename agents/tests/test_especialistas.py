@@ -3,7 +3,7 @@ volta é um relato montado pelo código."""
 import httpx
 import pytest
 
-from app.a2a import A2AError, SpecialistClient, specialist_tool
+from app.a2a import A2AError, SpecialistClient, delegate, for_the_model
 from app.runner import Budget
 from app.tokens import AuthError, Identity, a2a_headers, verify_a2a_token
 from tests.conftest import ANA, DOC, SECRET_A2A, call, say, write_agent
@@ -130,7 +130,7 @@ async def test_call_runs_the_specialist_and_returns_a_report_built_by_the_code(c
     # Só as pendências deste agente neste documento.
     assert report["pendencias"] == [{"o_que_falta": "extração dos indicadores", "agente": "extrator", "doc_id": DOC}]
     # O texto livre do especialista não volta (resposta: base).
-    assert "texto" not in report and "apagar tudo" not in str(report)
+    assert "texto" not in report and "apagar tudo" not in str(for_the_model(report))  # o que o orquestrador vê
     # Para o trace: modelo, tempo, tokens e passos. Os números voltam inteiros.
     detail = report["execucao"]
     assert detail["uso"] == {"chamadas": 4, "entrada": 400, "entrada_cache": 200, "saida": 40, "total": 440}
@@ -196,30 +196,49 @@ async def test_failures_come_back_as_a_state_not_as_an_exception_to_the_model(cl
     report = await client.call("redator", "Monte o relatório.", None, budget())
     assert report["estado"] == "sem_permissao" and "policy.yaml" in report["erro"]
 
-    # Especialista que não existe: erro do cliente, que a tool do orquestrador transforma em relato.
+    # Especialista que não existe: erro do cliente, que a delegação transforma em relato.
     with pytest.raises(Exception, match="404|agent card"):
         await client.call("ninguem", "Faça algo.", None, budget())
-    reports = []
-    tool = specialist_tool({"nome": "ninguem", "descricao": "Agente que não existe."}, client, budget(),
-                           lambda report, doc_id: reports.append(report))
-    shown = await tool.on_invoke_tool(None, '{"tarefa": "Faça algo.", "doc_id": null}')
-    assert '"estado": "erro"' in shown and reports[0]["agente"] == "ninguem"
+    report = await delegate(client, "ninguem", "Faça algo.", None, budget())
+    assert (report["agente"], report["estado"]) == ("ninguem", "erro") and report["erro"]
 
     # Pedido sem tarefa: a tarefa A2A falha com o motivo.
     with pytest.raises(A2AError, match="TASK_STATE_FAILED.*pedido sem tarefa"):
         await client.call("extrator", "   ", DOC, budget())
 
 
-async def test_orchestrator_tool_hides_the_trace_from_the_model_and_hands_it_to_the_code(client, model):
+async def test_the_orchestrator_sees_the_report_without_the_trace(client, model):
+    """O relato que vai ao modelo do orquestrador não leva os passos, os tokens nem as mensagens do
+    especialista: isso fica no trace e nos arquivos da execução."""
     model.scripts["extrator"] = [[call("fechar_extracao", doc_id=DOC)], [say("ok")]]
-    seen, spent = [], budget()
-    tool = specialist_tool({"nome": "extrator", "descricao": "Extrai os indicadores de um documento."}, client, spent,
-                           lambda report, doc_id: seen.append((report, doc_id)))
-    assert tool.name == "extrator" and tool.description == "Extrai os indicadores de um documento."
-    assert tool.params_json_schema["required"] == ["tarefa", "doc_id"]
-
-    shown = await tool.on_invoke_tool(None, f'{{"tarefa": "Extraia.", "doc_id": "{DOC}"}}')
-    assert '"gravacoes": {"fechar_extracao": 1}' in shown and "execucao" not in shown and "passos" not in shown
-    report, doc_id = seen[0]
-    assert doc_id == DOC and report["execucao"]["uso"]["total"] == 220
+    report = await delegate(client, "extrator", "Extraia.", DOC, budget())
+    assert report["execucao"]["uso"]["total"] == 220 and report["execucao"]["mensagens"]
+    shown = for_the_model(report)
+    assert shown["gravacoes"] == {"fechar_extracao": 1} and "execucao" not in shown
     assert Identity("exec-teste", ANA, "tok-ana") == client.identity
+
+
+async def test_specialist_remembers_its_previous_calls_in_the_same_conversation(client, model):
+    """Chamado de novo na mesma conversa, para o mesmo documento, o especialista recebe a própria
+    conversa anterior. Outra conversa, ou outro documento, começa limpo."""
+    model.scripts["extrator"] = [[call("buscar_trechos", consulta="DRE")], [say("Li a DRE e salvei a receita.")]]
+    first = await client.call("extrator", "Extraia a receita.", DOC, budget(), "conv-1")
+    assert first["execucao"]["memoria"] == {"chamadas_anteriores": 0, "chamadas_reenviadas": 0, "tokens_estimados": 0}
+
+    model.scripts["extrator"] = [[say("Continuo de onde parei.")]]
+    second = await client.call("extrator", "Agora o lucro.", DOC, budget(), "conv-1")
+    assert second["execucao"]["memoria"]["chamadas_anteriores"] == 1
+    prompts = [p.content for m in model.inputs["extrator"][-1] for p in m.parts if p.part_kind == "user-prompt"]
+    assert prompts[0].startswith("Extraia a receita.") and prompts[-1].startswith("Agora o lucro.")
+
+    for conversa, doc_id in (("conv-2", DOC), ("conv-1", "doc-light")):
+        model.scripts["extrator"] = [[say("Começo do zero.")]]
+        fresh = await client.call("extrator", "Extraia.", doc_id, budget(), conversa)
+        assert fresh["execucao"]["memoria"]["chamadas_anteriores"] == 0, (conversa, doc_id)
+        received = [p for m in model.inputs["extrator"][-1] for p in m.parts if p.part_kind == "user-prompt"]
+        assert len(received) == 1
+
+    # Sem conversa (chamada avulsa), nada é lembrado nem guardado.
+    model.scripts["extrator"] = [[say("Avulso.")]]
+    alone = await client.call("extrator", "Extraia.", DOC, budget())
+    assert alone["execucao"]["memoria"]["chamadas_anteriores"] == 0

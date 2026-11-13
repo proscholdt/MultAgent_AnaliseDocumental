@@ -1,32 +1,20 @@
 """O lado do orquestrador no A2A: descobrir os especialistas e chamar cada um.
 
-Cada especialista entra no orquestrador como UMA tool, cujo corpo é uma chamada A2A. O
-orquestrador decide quem chamar e com que tarefa; o protocolo é só o cabo.
+O orquestrador decide quem chamar e com que tarefa; o nó `delegar` do grafo faz a chamada, uma
+por delegação, em paralelo. O protocolo é só o cabo.
 """
-import json
 import uuid
-from collections.abc import Callable
 from typing import Any
 
 import httpx
 from a2a import helpers
 from a2a.client import A2ACardResolver, ClientConfig, create_client
 from a2a.types import Message, Role, SendMessageRequest, TaskState
-from agents import FunctionTool
 from google.protobuf.json_format import MessageToDict
 
 from app.config import Settings
 from app.runner import Budget
 from app.tokens import CATALOG, Identity, a2a_headers
-
-_PARAMS = {
-    "type": "object", "additionalProperties": False, "required": ["tarefa", "doc_id"],
-    "properties": {
-        "tarefa": {"type": "string", "description": "O que o especialista deve fazer, em uma ou duas frases."},
-        "doc_id": {"type": ["string", "null"], "description": "Documento em que ele deve trabalhar. null quando a "
-                   "tarefa não é sobre um documento só."},
-    },
-}
 
 
 class A2AError(Exception):
@@ -62,12 +50,15 @@ class SpecialistClient:
             raise A2AError(f"o serviço dos especialistas respondeu {response.status_code}: {response.text[:200]}")
         return response.json()
 
-    async def call(self, nome: str, tarefa: str, doc_id: str | None, budget: Budget) -> dict[str, Any]:
-        """Manda a tarefa e espera o relato. A chamada bloqueia até o especialista terminar."""
+    async def call(self, nome: str, tarefa: str, doc_id: str | None, budget: Budget,
+                   conversa_id: str | None = None) -> dict[str, Any]:
+        """Manda a tarefa e espera o relato. A chamada bloqueia até o especialista terminar. A
+        conversa vai junto: é a chave da memória do especialista."""
         async with self._http(nome) as http:
             card = await A2ACardResolver(http, f"{self.base}/agentes/{nome}").get_agent_card()
             client = await create_client(card, client_config=ClientConfig(streaming=False, httpx_client=http))
-            data = {"doc_id": doc_id, "orcamento": {"tokens": budget.tokens_left, "segundos": budget.seconds_left}}
+            data = {"doc_id": doc_id, "conversa_id": conversa_id,
+                    "orcamento": {"tokens": budget.tokens_left, "segundos": budget.seconds_left}}
             message = Message(message_id=uuid.uuid4().hex, role=Role.ROLE_USER,
                               parts=[helpers.new_text_part(tarefa), helpers.new_data_part(data)])
             task = None
@@ -87,22 +78,17 @@ class SpecialistClient:
         raise A2AError(f"o especialista '{nome}' terminou sem relato")
 
 
-def specialist_tool(entry: dict[str, Any], client: SpecialistClient, budget: Budget,
-                    on_report: Callable[[dict[str, Any], str | None], None]) -> FunctionTool:
-    """Uma tool do orquestrador = um especialista remoto. Nome e descrição vêm do catálogo
-    (isto é, do arquivo do agente)."""
-    nome = entry["nome"]
+async def delegate(client: SpecialistClient, nome: str, tarefa: str, doc_id: str | None, budget: Budget,
+                   conversa_id: str | None = None) -> dict[str, Any]:
+    """Uma delegação. Falha de transporte ou de tarefa vira um relato de erro: o orquestrador o
+    recebe e decide o que fazer, em vez de a execução cair."""
+    try:
+        return await client.call(nome, tarefa, doc_id, budget, conversa_id)
+    except Exception as error:  # noqa: BLE001
+        return {"agente": nome, "estado": "erro", "doc_id": doc_id, "erro": f"{type(error).__name__}: {error}"[:400]}
 
-    async def invoke(_context: Any, arguments: str) -> str:
-        args = json.loads(arguments or "{}")
-        doc_id = args.get("doc_id") or None
-        try:
-            report = await client.call(nome, str(args.get("tarefa") or ""), doc_id, budget)
-        except Exception as error:  # noqa: BLE001 - o orquestrador recebe a falha e decide o que fazer
-            report = {"agente": nome, "estado": "erro", "doc_id": doc_id, "erro": f"{type(error).__name__}: {error}"[:400]}
-        on_report(report, doc_id)
-        # O modelo vê o relato; os passos e os tokens do especialista ficam no trace.
-        return json.dumps({key: value for key, value in report.items() if key != "execucao"}, ensure_ascii=False)
 
-    return FunctionTool(name=nome, description=entry["descricao"], params_json_schema=_PARAMS,
-                        on_invoke_tool=invoke, strict_json_schema=True)
+def for_the_model(report: dict[str, Any]) -> dict[str, Any]:
+    """O relato que o orquestrador vê: sem os passos, os tokens e as mensagens do especialista,
+    que ficam no trace e nos arquivos da execução."""
+    return {key: value for key, value in report.items() if key != "execucao"}

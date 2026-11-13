@@ -1,25 +1,35 @@
 """Dublês para testar sem rede: um modelo com roteiro, um servidor MCP em memória e o
-indexador de mentira. O A2A roda de verdade, em memória (cliente e servidor do SDK, por ASGI)."""
+indexador de mentira. O A2A roda de verdade, em memória (cliente e servidor do SDK, por ASGI), e o
+grafo usa checkpoint em memória."""
 import json
 import re
 import time
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 import httpx
 import jwt
-import mcp.types as mcp_types
 import pytest
-from agents import ModelResponse, Usage
-from agents.mcp import MCPServer
-from agents.models.interface import Model
-from openai.types.responses import ResponseFunctionToolCall, ResponseOutputMessage, ResponseOutputText
-from openai.types.responses.response_usage import InputTokensDetails, OutputTokensDetails
+from langgraph.checkpoint.memory import InMemorySaver
+from pydantic_ai import FunctionToolset, Tool
+from pydantic_ai.exceptions import ToolFailed
+from pydantic_ai.messages import (
+    ModelMessage,
+    ModelResponse,
+    TextPart,
+    ThinkingPart,
+    ToolCallPart,
+    UserPromptPart,
+)
+from pydantic_ai.models.function import AgentInfo, FunctionModel
+from pydantic_ai.usage import RequestUsage
 
 from app.config import Settings
 from app.especialistas import create_app as create_specialists
 from app.main import create_app
+from app.mcp import McpError
 from app.runner import Engine
 from app.tokens import Identity
 
@@ -33,50 +43,72 @@ MODEL_NAME = "modelo-de-teste"
 # --- modelo com roteiro ---------------------------------------------------------------------
 
 
-def call(name: str, **arguments: Any) -> ResponseFunctionToolCall:
-    stamp = f"{name}-{time.monotonic_ns()}"
-    return ResponseFunctionToolCall(id=f"fc-{stamp}", call_id=f"call-{stamp}", name=name, type="function_call",
-                                    arguments=json.dumps(arguments, ensure_ascii=False))
+def call(name: str, **arguments: Any) -> ToolCallPart:
+    return ToolCallPart(name, arguments)
 
 
-def say(text: str) -> ResponseOutputMessage:
-    return ResponseOutputMessage(id=f"msg-{time.monotonic_ns()}", role="assistant", status="completed", type="message",
-                                 content=[ResponseOutputText(text=text, type="output_text", annotations=[])])
+def say(text: str) -> TextPart:
+    return TextPart(text)
 
 
-class ScriptedModel(Model):
+def think(text: str) -> ThinkingPart:
+    return ThinkingPart(content=text)
+
+
+@dataclass
+class Decide:
+    """A decisão estruturada do orquestrador (a saída dele no grafo)."""
+
+    delegacoes: list[dict] = field(default_factory=list)
+    terminado: bool = False
+    mensagem: str = "Feito."
+
+
+def delegation(agente: str, tarefa: str, doc_id: str | None = None) -> dict:
+    return {"agente": agente, "tarefa": tarefa, "doc_id": doc_id}
+
+
+def decide(*delegacoes: dict, terminado: bool = False, mensagem: str = "Feito.") -> Decide:
+    return Decide(list(delegacoes), terminado, mensagem)
+
+
+class ScriptedModel:
     """Um modelo que segue um roteiro por agente. O agente é reconhecido pelo prompt ("agente
     de teste <nome>"). Cada item do roteiro é a saída de uma chamada ao modelo: uma lista de
-    chamadas de tool e/ou uma mensagem final. Roteiro esgotado = repete o último item."""
+    partes (chamadas de tool, raciocínio, texto ou a decisão do orquestrador). Roteiro esgotado =
+    repete o último item."""
 
     def __init__(self) -> None:
         self.scripts: dict[str, list[list[Any]]] = {}
-        self.inputs: dict[str, list[Any]] = {}  # o que cada agente recebeu, chamada a chamada
+        self.inputs: dict[str, list[list[ModelMessage]]] = {}  # o que cada agente recebeu, chamada a chamada
+        self.prompts: dict[str, list[str]] = {}  # o pedido com que cada execução do agente começou
         self.tokens = (100, 10)  # entrada, saída de cada chamada
+        self.model = FunctionModel(self._respond, model_name=MODEL_NAME)
 
-    async def get_response(self, system_instructions, input, model_settings, tools, output_schema, handoffs, tracing,
-                           **_kwargs) -> ModelResponse:
-        agent = re.search(r"agente de teste (\w+)", system_instructions or "").group(1)
-        self.inputs.setdefault(agent, []).append(input)
+    def _respond(self, messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        agent = re.search(r"agente de teste (\w+)", info.instructions or "").group(1)
+        self.inputs.setdefault(agent, []).append(list(messages))
+        prompt = [part.content for part in messages[-1].parts if isinstance(part, UserPromptPart)]
+        if prompt:
+            self.prompts.setdefault(agent, []).append(prompt[-1])
         script = self.scripts[agent]
         output = script.pop(0) if len(script) > 1 else script[0]
-        # Cada chamada de tool precisa de um id próprio, mesmo quando o roteiro repete o item.
-        output = [call(item.name, **json.loads(item.arguments)) if isinstance(item, ResponseFunctionToolCall) else item
-                  for item in output]
+        parts = []
+        for item in output:
+            if isinstance(item, Decide):
+                parts.append(ToolCallPart(info.output_tools[0].name, {
+                    "delegacoes": item.delegacoes, "terminado": item.terminado, "mensagem": item.mensagem}))
+            elif isinstance(item, ToolCallPart):  # cada chamada precisa de um id próprio, mesmo repetida
+                parts.append(ToolCallPart(item.tool_name, item.args))
+            else:
+                parts.append(item)
         entrada, saida = self.tokens
-        usage = Usage(requests=1, input_tokens=entrada, output_tokens=saida, total_tokens=entrada + saida,
-                      input_tokens_details=InputTokensDetails.model_construct(cached_tokens=entrada // 2),
-                      output_tokens_details=OutputTokensDetails.model_construct(reasoning_tokens=0))
-        return ModelResponse(output=list(output), usage=usage, response_id=None)
-
-    def stream_response(self, *args, **kwargs):
-        raise NotImplementedError
+        return ModelResponse(parts=parts, usage=RequestUsage(input_tokens=entrada, output_tokens=saida,
+                                                             cache_read_tokens=entrada // 2))
 
     def first_input(self, agent: str, turn: int = 0) -> str:
-        """O texto do pedido que o agente recebeu na sua n-ésima execução."""
-        starts = [entry for entry in self.inputs[agent] if isinstance(entry, str) or len(entry) == 1]
-        entry = starts[turn]
-        return entry if isinstance(entry, str) else entry[0]["content"]
+        """O pedido com que a n-ésima execução do agente começou."""
+        return self.prompts[agent][turn]
 
 
 # --- servidor MCP em memória ----------------------------------------------------------------
@@ -114,50 +146,47 @@ class World:
     def called(self, agent: str) -> list[str]:
         return [tool for who, tool, _, _ in self.calls if who == agent]
 
+    def invoke(self, agent: str, identity: Identity, tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        """Como o servidor: recusa o que a política não dá; o resto vai ao handler (que pode recusar)."""
+        self.calls.append((agent, tool, arguments, identity))
+        if tool not in self.policy.get(agent, []):
+            raise Refused(f"A tool '{tool}' não está liberada para o agente '{agent}'.")
+        return self.handlers.get(tool, lambda _: {"ok": True})(arguments)
 
-class FakeMcp(MCPServer):
+
+class FakeMcp:
+    """A conexão MCP de um agente, em memória: o toolset que o agente PydanticAI usa e as chamadas
+    diretas do código. A recusa chega ao modelo como no servidor real (`ToolFailed`)."""
+
     def __init__(self, world: World, agent: str, identity: Identity) -> None:
-        super().__init__()
         self.world, self.agent, self.identity = world, agent, identity
+        self.toolset = FunctionToolset([
+            Tool.from_schema(self._tool(name), name=name, description=f"Tool {name}.",
+                             json_schema={"type": "object", "properties": {}, "additionalProperties": True})
+            for name in world.policy.get(agent, [])])
 
-    @property
-    def name(self) -> str:
-        return f"mcp:{self.agent}"
+    def _tool(self, name: str):
+        def run(**arguments: Any) -> dict[str, Any]:
+            try:
+                return self.world.invoke(self.agent, self.identity, name, arguments)
+            except Refused as error:
+                raise ToolFailed(json.dumps({"erro": str(error)}, ensure_ascii=False)) from error
+        return run
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> Self:
         return self
 
-    async def __aexit__(self, *_exc) -> None:
+    async def __aexit__(self, *_exc: object) -> None:
         return None
 
-    async def connect(self) -> None:
-        return None
+    async def tool_names(self) -> list[str]:
+        return list(self.world.policy.get(self.agent, []))
 
-    async def cleanup(self) -> None:
-        return None
-
-    async def list_tools(self, run_context=None, agent=None) -> list[mcp_types.Tool]:
-        return [mcp_types.Tool(name=name, description=f"Tool {name}.",
-                               input_schema={"type": "object", "properties": {}, "additionalProperties": True})
-                for name in self.world.policy.get(self.agent, [])]
-
-    async def call_tool(self, tool_name: str, arguments: dict[str, Any] | None, meta=None) -> mcp_types.CallToolResult:
-        arguments = arguments or {}
-        self.world.calls.append((self.agent, tool_name, arguments, self.identity))
+    async def call(self, tool: str, arguments: dict[str, Any] | None = None) -> dict[str, Any]:
         try:
-            if tool_name not in self.world.policy.get(self.agent, []):
-                raise Refused(f"A tool '{tool_name}' não está liberada para o agente '{self.agent}'.")
-            body, failed = self.world.handlers.get(tool_name, lambda _: {"ok": True})(arguments), False
+            return self.world.invoke(self.agent, self.identity, tool, arguments or {})
         except Refused as error:
-            body, failed = {"erro": str(error)}, True
-        return mcp_types.CallToolResult(
-            content=[mcp_types.TextContent(type="text", text=json.dumps(body, ensure_ascii=False))], is_error=failed)
-
-    async def list_prompts(self):
-        raise NotImplementedError
-
-    async def get_prompt(self, name, arguments=None):
-        raise NotImplementedError
+            raise McpError(f"{tool}: {error}") from error
 
 
 # --- arquivos de agente ---------------------------------------------------------------------
@@ -201,17 +230,17 @@ def world() -> World:
 @pytest.fixture
 def model() -> ScriptedModel:
     scripted = ScriptedModel()
-    scripted.scripts = {"orquestrador": [[say("Feito.")]], "extrator": [[say("Extração fechada.")]],
+    scripted.scripts = {"orquestrador": [[decide(terminado=True)]], "extrator": [[say("Extração fechada.")]],
                         "redator": [[say("Relatório montado.")]]}
     return scripted
 
 
 @pytest.fixture
 def engine(settings, world, model) -> Engine:
-    def resolve(alias: str) -> Model:
+    def resolve(alias: str) -> FunctionModel:
         if alias not in settings.modelos:
             raise KeyError(f"o apelido de modelo '{alias}' não está em MODELOS")
-        return model
+        return model.model
 
     return Engine(settings, lambda agent, identity: FakeMcp(world, agent, identity), resolve)
 
@@ -241,10 +270,15 @@ def fake_indexer(request: httpx.Request) -> httpx.Response:
 
 
 @pytest.fixture
-def api(settings, engine, specialists_app):
+def checkpointer() -> InMemorySaver:
+    return InMemorySaver()
+
+
+@pytest.fixture
+def api(settings, engine, specialists_app, checkpointer):
     """A API do orquestrador ligada aos especialistas em memória."""
     return create_app(settings, engine, specialists_transport=httpx.ASGITransport(app=specialists_app),
-                      indexer_transport=httpx.MockTransport(fake_indexer))
+                      indexer_transport=httpx.MockTransport(fake_indexer), checkpointer=checkpointer)
 
 
 @pytest.fixture

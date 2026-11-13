@@ -40,6 +40,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app import mcp
 from app.config import Settings, get_settings
+from app.memoria import Memory, compact, split_runs
 from app.registry import AgentFile, Registry
 from app.runner import AgentRun, Budget, Engine, default_engine, run_agent
 from app.tokens import CATALOG, AuthError, Identity, verify_a2a_token
@@ -69,8 +70,8 @@ def agent_card(spec: AgentFile, settings: Settings) -> AgentCard:
 
 
 def read_request(context: RequestContext) -> dict[str, Any]:
-    """O pedido do orquestrador: a tarefa em texto e, numa parte de dados, o documento e o que
-    resta do orçamento da execução."""
+    """O pedido do orquestrador: a tarefa em texto e, numa parte de dados, o documento, a conversa
+    do usuário (a chave da memória do especialista) e o que resta do orçamento da execução."""
     data: dict[str, Any] = {}
     for part in context.message.parts:
         if part.HasField("data"):
@@ -78,7 +79,7 @@ def read_request(context: RequestContext) -> dict[str, Any]:
             if isinstance(value, dict):
                 data.update(value)
     return {"tarefa": context.get_user_input().strip(), "doc_id": data.get("doc_id") or None,
-            "orcamento": data.get("orcamento") or {}}
+            "conversa_id": data.get("conversa_id") or None, "orcamento": data.get("orcamento") or {}}
 
 
 def task_input(tarefa: str, doc_id: str | None, pending: list[dict[str, Any]]) -> str:
@@ -140,8 +141,8 @@ class SpecialistExecutor(AgentExecutor):
 class Specialists:
     """Aplicação ASGI montada em /agentes: escolhe o especialista pelo primeiro trecho do caminho."""
 
-    def __init__(self, settings: Settings, registry: Registry, engine: Engine) -> None:
-        self.settings, self.registry, self.engine = settings, registry, engine
+    def __init__(self, settings: Settings, registry: Registry, engine: Engine, memory: Memory) -> None:
+        self.settings, self.registry, self.engine, self.memory = settings, registry, engine, memory
         self._apps: dict[str, tuple[str, ASGIApp]] = {}
 
     # --- o trabalho -------------------------------------------------------------------------
@@ -158,8 +159,20 @@ class Specialists:
         except Exception:  # noqa: BLE001 - sem o contexto o especialista trabalha só com a tarefa
             context = []
         entrada = task_input(request["tarefa"], request["doc_id"], context)
-        run = await run_agent(spec, entrada, identity=identity, engine=self.engine, budget=budget)
-        return await self.report(spec, run, request["doc_id"], identity)
+        # Memória na conversa do usuário: as chamadas anteriores deste especialista, para este
+        # documento, voltam como histórico (encurtado). Sem conversa, começa limpo.
+        conversa, previous, history = request["conversa_id"], [], []
+        if conversa:
+            previous = self.memory.load(identity.user_id, conversa, spec.nome, request["doc_id"])
+            history = compact(split_runs(previous), self.settings.memoria_max_tokens)
+        run = await run_agent(spec, entrada, identity=identity, engine=self.engine, budget=budget, history=history)
+        if conversa and run.mensagens:
+            self.memory.append(identity.user_id, conversa, spec.nome, request["doc_id"], previous, run.mensagens)
+        report = await self.report(spec, run, request["doc_id"], identity)
+        report["execucao"]["memoria"] = {"chamadas_anteriores": len(split_runs(previous)),
+                                         "chamadas_reenviadas": len(split_runs(history)),
+                                         "tokens_estimados": len(str(history)) // 4}
+        return report
 
     async def report(self, spec: AgentFile, run: AgentRun, doc_id: str | None, identity: Identity) -> dict[str, Any]:
         """O que volta ao orquestrador. É montado pelo código: o que o agente gravou (contado nas
@@ -178,13 +191,14 @@ class Specialists:
         if spec.resposta == "texto":
             report["texto"] = run.texto
         # Para o trace e o custo da execução; o orquestrador (o código) tira antes de mostrar ao modelo.
-        report["execucao"] = {"modelo": run.modelo, "segundos": run.segundos, "uso": run.uso, "passos": run.passos}
+        report["execucao"] = {"modelo": run.modelo, "segundos": run.segundos, "uso": run.uso, "passos": run.passos,
+                              "mensagens": run.mensagens}
         return report
 
     async def own_pending(self, identity: Identity, nome: str, doc_id: str | None) -> list[dict[str, Any]]:
         """O que a base registra como pendente para este agente (e este documento, se houver)."""
-        async with self.engine.connect(mcp.SYSTEM, identity) as server:
-            pending = (await mcp.call(server, "pendencias"))["pendencias"]
+        async with self.engine.connect(mcp.SYSTEM, identity) as session:
+            pending = (await session.call("pendencias"))["pendencias"]
         return [item for item in pending if item.get("agente") == nome
                 and (doc_id is None or item.get("doc_id") in (None, doc_id))]
 
@@ -194,8 +208,8 @@ class Specialists:
 
         async def tools_of(spec: AgentFile) -> list[str] | None:
             try:
-                async with self.engine.connect(spec.nome, identity) as server:
-                    return await mcp.tool_names(server)
+                async with self.engine.connect(spec.nome, identity) as session:
+                    return await session.tool_names()
             except Exception:  # noqa: BLE001 - servidor MCP fora do ar: o catálogo diz que não soube
                 return None
 
@@ -252,7 +266,8 @@ class Specialists:
 
 def create_app(settings: Settings | None = None, engine: Engine | None = None) -> FastAPI:
     settings = settings or get_settings()
-    service = Specialists(settings, Registry(settings.agentes_dir), engine or default_engine(settings))
+    service = Specialists(settings, Registry(settings.agentes_dir), engine or default_engine(settings),
+                          Memory(settings.data_dir / "memoria.db"))
     app = FastAPI(
         title="Especialistas (A2A)",
         description="Agentes especialistas servidos pelo protocolo A2A. Só o orquestrador os chama.")
@@ -277,9 +292,4 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
 
 
 def app_factory() -> FastAPI:
-    from agents import set_default_openai_key
-
-    settings = get_settings()
-    if settings.openai_api_key:
-        set_default_openai_key(settings.openai_api_key, use_for_tracing=settings.openai_tracing)
-    return create_app(settings)
+    return create_app(get_settings())

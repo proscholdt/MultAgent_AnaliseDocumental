@@ -29,7 +29,7 @@ import httpx
 from base import ROOT, arguments, login, settings, snapshot
 
 from app.evaluation import evaluate, render
-from app.orquestrador import latin_only
+from app.grafo import latin_only
 
 OUT = ROOT / "entrega"
 

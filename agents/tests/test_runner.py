@@ -1,13 +1,16 @@
-"""Rodar um agente: tools pelo MCP com a identidade dele, passos, tokens e os freios."""
+"""Rodar um agente PydanticAI: tools pelo MCP com a identidade dele, passos, raciocínio, tokens,
+memória e os freios."""
 import time
 
 import jwt
+from pydantic import BaseModel
+from pydantic_ai.messages import ToolReturnPart
 
 from app.costs import Ledger, cost_usd
 from app.registry import AgentFile, Registry
 from app.runner import Budget, run_agent
 from app.tokens import mcp_headers
-from tests.conftest import ANA, DOC, MODEL_NAME, SECRET_MCP, Refused, call, say, write_agent
+from tests.conftest import ANA, DOC, MODEL_NAME, SECRET_MCP, Refused, call, say, think, write_agent
 
 
 def budget(tokens: int = 1_000_000, seconds: float = 60) -> Budget:
@@ -59,8 +62,9 @@ async def test_a_refusal_from_the_server_goes_back_to_the_model_and_is_marked_in
     assert [step["ok"] for step in run.passos] == [False, True]
     assert run.writes == {"salvar_indicador": 1}  # a recusada não conta como gravação
     # O modelo recebeu o motivo da recusa como resultado da tool, para poder corrigir.
-    second_call_input = model.inputs["extrator"][1]
-    assert any("não existe na tabela" in str(item.get("output", "")) for item in second_call_input if isinstance(item, dict))
+    returns = [part for message in model.inputs["extrator"][1] for part in message.parts
+               if isinstance(part, ToolReturnPart)]
+    assert returns[-1].outcome == "failed" and "não existe na tabela" in str(returns[-1].content)
 
 
 async def test_brakes_turn_limit_token_budget_and_time(settings, engine, world, model, identity):
@@ -73,12 +77,50 @@ async def test_brakes_turn_limit_token_budget_and_time(settings, engine, world, 
 
     limited = budget(tokens=250)  # cada chamada ao modelo gasta 110
     broke = await run_agent(spec, "Extraia.", identity=identity, engine=engine, budget=limited)
-    assert broke.estado == "orcamento_esgotado" and "250 tokens" in broke.erro and broke.uso["chamadas"] == 3
+    assert broke.estado == "orcamento_esgotado" and "250" in broke.erro and broke.uso["chamadas"] == 3
     assert limited.tokens_left == 0
 
     expired = Budget(tokens=10**6, seconds=30, started=time.monotonic() - 31)
     late = await run_agent(spec, "Extraia.", identity=identity, engine=engine, budget=expired)
     assert late.estado == "tempo_esgotado" and not late.passos
+
+
+async def test_reasoning_goes_to_the_trace_and_the_messages_are_kept(settings, engine, model, identity):
+    """O resumo do raciocínio que o modelo devolve entra nos passos, antes da tool que ele motivou;
+    as mensagens completas saem em JSON, para guardar."""
+    model.scripts["extrator"] = [[think("A receita está na DRE, chunk 11."), call("buscar_trechos", consulta="DRE")],
+                                 [say("Pronto.")]]
+    run = await run_agent(spec_of(settings), "Extraia.", identity=identity, engine=engine, budget=budget())
+    assert run.passos[0] == {"raciocinio": "A receita está na DRE, chunk 11."}
+    assert run.passos[1]["tool"] == "buscar_trechos"
+    kinds = [part["part_kind"] for message in run.mensagens for part in message["parts"]]
+    assert kinds == ["user-prompt", "thinking", "tool-call", "tool-return", "text"]
+
+
+async def test_history_is_sent_back_and_the_new_messages_come_apart(settings, engine, model, identity):
+    model.scripts["extrator"] = [[call("buscar_trechos", consulta="DRE")], [say("Li a DRE.")]]
+    first = await run_agent(spec_of(settings), "Primeira tarefa.", identity=identity, engine=engine, budget=budget())
+    model.scripts["extrator"] = [[say("Já tinha lido a DRE.")]]
+    second = await run_agent(spec_of(settings), "Segunda tarefa.", identity=identity, engine=engine, budget=budget(),
+                             history=first.historico)
+    # O modelo recebeu a primeira chamada inteira antes do pedido novo.
+    received = model.inputs["extrator"][-1]
+    assert [p.content for m in received for p in m.parts if p.part_kind == "user-prompt"] == [
+        "Primeira tarefa.", "Segunda tarefa."]
+    # `mensagens` é só o desta chamada; `historico`, tudo.
+    assert len(second.mensagens) == 2 and len(second.historico) == len(first.historico) + 2
+
+
+async def test_structured_output_for_the_orchestrator(settings, engine, model, identity):
+    class Decisao(BaseModel):
+        terminado: bool
+
+    from tests.conftest import Decide
+
+    model.scripts["orquestrador"] = [[Decide(terminado=True)]]
+    run = await run_agent(spec_of(settings, "orquestrador"), "Decida.", identity=identity, engine=engine,
+                          budget=budget(), output_type=Decisao)
+    assert run.estado == "concluido" and run.saida == Decisao(terminado=True) and run.texto == ""
 
 
 async def test_agent_without_policy_entry_does_not_run(settings, engine, world, model, identity):

@@ -30,6 +30,7 @@ services:
       - "8201:8201" # só para ver os Agent Cards; quem chama é o orquestrador, pela rede interna
     volumes:
       - ./agentes:/app/agentes:ro # criar ou editar um agente vale na hora
+      - agents-data:/data # memória dos especialistas em cada conversa (memoria.db)
 
   orquestrador:
     <<: *agente
@@ -40,7 +41,7 @@ services:
       - especialistas
     volumes:
       - ./agentes:/app/agentes:ro
-      - agents-data:/data # execuções e traces
+      - agents-data:/data # execuções, traces, mensagens dos agentes e o checkpoint das conversas
 
 networks:
   indexer:

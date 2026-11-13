@@ -15,8 +15,10 @@ class Settings(BaseSettings):
     # US$ por milhão de tokens, por modelo: {"modelo": {"entrada": x, "entrada_cache": y, "saida": z}}.
     # Modelo sem preço aqui aparece com os tokens e sem custo.
     precos: dict[str, dict[str, float]] = {}
-    # Envio de traces ao painel da OpenAI. Desligado: os traces levariam texto dos documentos.
-    openai_tracing: bool = False
+    # Resumo do raciocínio que a OpenAI devolve junto com a resposta ("detailed", "auto" ou "" para
+    # não pedir). Ele entra no trace e nas mensagens guardadas de cada agente. Com "auto", em
+    # passos curtos, o resumo costuma vir vazio.
+    resumo_raciocinio: str = "detailed"
 
     # Servidor MCP: a única porta dos agentes para tools e RAG. O segredo é o mesmo do servidor.
     mcp_url: str = "http://localhost:8100/mcp"
@@ -44,6 +46,13 @@ class Settings(BaseSettings):
     execucao_max_tokens: int = 6_000_000
     # Quantas vezes o orquestrador é chamado de novo quando a conferência final acha pendência.
     rodadas_pendencias: int = 2
+    # Quantas decisões o orquestrador toma numa rodada (cada uma é uma onda de delegações).
+    max_ondas: int = 20
+
+    # Memória de um especialista na conversa do usuário: o teto, em tokens estimados, do histórico
+    # que ele recebe de volta. Acima disso, as chamadas mais antigas saem; o resultado das tools
+    # antigas já entra encurtado.
+    memoria_max_tokens: int = 40_000
 
     @property
     def problem(self) -> str | None:
