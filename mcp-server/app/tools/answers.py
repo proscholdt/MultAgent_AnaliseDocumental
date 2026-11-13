@@ -159,7 +159,7 @@ async def salvar_resposta(call: Call, args: SalvarResposta) -> dict[str, Any]:
         user_id=call.caller.user_id, run_id=call.caller.run_id, pergunta_id=question_id, pergunta=question,
         texto=raw, renderizado=text, citacoes=sources))
     return {"salva": {"pergunta_id": question_id, "pergunta": question}, "resposta": text,
-            "fontes": [f"{s['arquivo']}, p. {s['pagina']}" for s in sources]}
+            "fontes": list(dict.fromkeys(f"{s['arquivo']}, p. {s['pagina']}" for s in sources))}
 
 
 class LerRespostas(Args):
@@ -172,6 +172,7 @@ async def ler_respostas(call: Call, args: LerRespostas) -> dict[str, Any]:
     answers = await call.deps.store.answers(call.caller.user_id)
     return {"respostas": [{"pergunta_id": answer.pergunta_id, "pergunta": answer.pergunta,
                            "resposta": answer.renderizado,
-                           "fontes": [f"{c['arquivo']}, p. {c['pagina']}" for c in answer.citacoes],
+                           "fontes": list(dict.fromkeys(f"{c['arquivo']}, p. {c['pagina']}"
+                                                        for c in answer.citacoes)),
                            "gravada_em": answer.at.isoformat()}
                           for answer in answers]}

@@ -36,7 +36,31 @@ def render_amount(text: str, unit: str | None) -> str:
     return f"{text} {unit}" if unit else text
 
 
-def render_part(block: dict[str, Any], part: str, file_name: str) -> str | None:
+def source_pages(indicators: dict[str, Any], campo: str, part: str) -> list[int]:
+    """As páginas de onde um valor sai. O calculado e a variação não têm página própria: saem
+    dos valores de origem, e é a página deles que a resposta tem de citar."""
+    block = indicators[campo]
+    if part == "informado":
+        informed = block["informado"]
+        return [informed["origem"]["pagina"]] if informed and informed["status"] == "encontrado" else []
+    if part == "comparavel":
+        return [block["comparavel"]["origem"]["pagina"]] if block["comparavel"] else []
+    if part == "variacao":
+        return sorted(set(source_pages(indicators, campo, "informado") + source_pages(indicators, campo, "comparavel")))
+    pages: set[int] = set()
+    for operand in (block["calculado"] or {}).get("operandos", []):
+        if operand.get("pagina"):
+            pages.add(operand["pagina"])
+        elif operand.get("formula") and operand["campo"] != campo:  # operando que também é calculado
+            pages.update(source_pages(indicators, operand["campo"], "calculado"))
+    return sorted(pages)
+
+
+def _pages(pages: list[int]) -> str:
+    return "p. " + (", ".join(map(str, pages[:-1])) + " e " + str(pages[-1]) if len(pages) > 1 else str(pages[0]))
+
+
+def render_part(block: dict[str, Any], part: str, file_name: str, pages: list[int] | None = None) -> str | None:
     """O texto de uma parte de um indicador, ou None se essa parte não existe."""
     if part == "informado":
         informed = block["informado"]
@@ -58,7 +82,8 @@ def render_part(block: dict[str, Any], part: str, file_name: str) -> str | None:
     computed = block["calculado"]
     if not computed:
         return None
-    return f"{render_amount(computed['valor'], computed['unidade'])} (calculado: {computed['formula']})"
+    origin = f"; valores de origem em {file_name}, {_pages(pages)}" if pages else ""
+    return f"{render_amount(computed['valor'], computed['unidade'])} (calculado: {computed['formula']}{origin})"
 
 
 @dataclass
@@ -104,15 +129,14 @@ class Markers:
         if part not in _PARTS or len(parts) > 2:
             raise ToolRejected(f"Marcador {{{{{path}}}}}: parte desconhecida.", opcoes=list(_PARTS))
         block = payload["indicadores"][campo]
-        text = render_part(block, part, file_name)
+        pages = source_pages(payload["indicadores"], campo, part)
+        text = render_part(block, part, file_name, pages)
         if text is None:
             available = [name for name in _PARTS if render_part(block, name, file_name) is not None]
             raise ToolRejected(f"Marcador {{{{{path}}}}}: {FIELDS[campo].label} não tem '{part}' neste documento.",
                                opcoes=[f"{campo}.{name}" for name in available])
-        source = block["informado"] if part == "informado" else block["comparavel"] if part == "comparavel" else None
-        if source and source.get("status") == "encontrado":
-            result.sources.append({"doc_id": doc_id, "arquivo": file_name, "pagina": source["origem"]["pagina"],
-                                   "campo": campo})
+        for page in pages:
+            result.sources.append({"doc_id": doc_id, "arquivo": file_name, "pagina": page, "campo": campo})
         return text
 
     def _absence(self, path: str, doc_id: str, parts: list[str]) -> str:

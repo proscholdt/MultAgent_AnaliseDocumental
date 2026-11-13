@@ -80,11 +80,13 @@ def test_cell_is_read_by_row_and_column_labels_ignoring_title_lines_and_case():
 def test_unknown_label_is_refused_with_the_labels_that_exist():
     with pytest.raises(ToolRejected, match="não tem linha") as error:
         read_cell(DRE, "Receita líquida", "Consolidado - 2022")
-    assert "Receita operacional líquida" in error.value.opcoes and "Lucro bruto" in error.value.opcoes
+    # As opções são os rótulos mais parecidos com o pedido, não a tabela inteira.
+    assert error.value.opcoes[0] == "Receita operacional líquida" and "Lucro bruto" not in error.value.opcoes
     with pytest.raises(ToolRejected, match="não tem coluna") as error:
         read_cell(DRE, "Lucro bruto", "2022")
-    assert error.value.opcoes == ["Notas", "Controladora - 2022", "Controladora - 2021 - (não auditado)",
-                                  "Consolidado - 2022", "Consolidado - 2021 - (não auditado)"]
+    assert set(error.value.opcoes) == {"Controladora - 2022", "Consolidado - 2022"}  # as que falam em 2022
+    # O acento não separa dois rótulos: o PDF escreve "Caixa liquido", o modelo copia "Caixa líquido".
+    assert read_cell(DRE, "receita operacional liquida", "consolidado - 2022").text == "1.325.059"
     with pytest.raises(ToolRejected, match="rótulos das linhas"):
         read_cell(DRE.replace("|  | Notas", "| Conta | Notas"), "Lucro bruto", "Conta")
     with pytest.raises(ToolRejected, match="não tem tabela"):

@@ -42,7 +42,8 @@ DFC = """| (em milhares de reais) | Controladora - 2022 | Controladora - 2021 | 
 | Depreciações e amortizações | 507 | 465 | 29.014 | 22.837 |
 | Caixa líquido gerado pelas atividades operacionais | 887 | (4.545) | 258.248 | 121.462 |
 | Aquisição de imobilizado | - | - | (6.263) | (3.803) |
-| Aquisição de intangível | - | - | (11.469) | (12) |"""
+| Aquisição de intangível | - | - | (11.469) | (12) |
+| Outras aquisições de imobilizado e intangível | - | - | (45.761) | (53.388) |"""
 
 BALANCO = """Em 31 de dezembro de 2022 e 2021 (Valores expressos em milhares de reais)
 
@@ -90,8 +91,7 @@ def default_documents() -> dict[tuple[str, str], dict[str, Any]]:
         chunk(6, "table", 6, ["Balanços patrimoniais"], BALANCO, unit_source="chunk",
               extraction_method="table_model"),
         chunk(7, "text", 9, ["Desempenho"],
-              "Em 2022, a receita líquida cresceu 30% em relação a 2021. A margem EBITDA foi de 10,0% no ano. "
-              "O EBITDA da distribuidora foi de R$ 1.817 milhões. O EBITDA de 2022 somou R$ 485.156 mil.",
+              "Em 2022, a receita líquida cresceu 30% em relação a 2021. A margem EBITDA recuou no ano.",
               unit=None, unit_source=None),
         chunk(8, "text", 35, ["26. Gestão de riscos", "Risco de liquidez"],
               "O Grupo está exposto ao risco de liquidez, monitorado pela tesouraria com base nas projeções de "
@@ -178,6 +178,29 @@ SECOND_DRE = """| Demonstração do resultado | Consolidado - 2022 | Consolidado
 |---|---|---|
 | Receita líquida | 462.127 | 199.259 |
 | Resultado do exercício | 18.891 | 6.470 |"""
+
+
+EXTRA, CAPITAL = 10, 11  # chunks acrescentados por add_performance_details
+
+
+def add_performance_details(indexer: "FakeIndexer") -> None:
+    """Acrescenta ao documento da Ana um trecho em que a empresa informa a margem, o EBITDA (o da
+    companhia e o de uma controlada) e o resultado em texto, e um quadro de gestão de capital com a
+    dívida líquida. Sem isto, o documento de exemplo NÃO informa EBITDA nem margem. Chamar antes
+    de gravar qualquer coisa: o documento muda de impressão."""
+    doc = indexer.documents[(ANA, DOC_ANA)]
+    doc["chunks"] += [
+        chunk(EXTRA, "text", 9, ["Desempenho"],
+              "A margem EBITDA foi de 10,0% no ano. O EBITDA da distribuidora foi de R$ 1.817 milhões. O EBITDA de "
+              "2022 somou R$ 485.156 mil. A Companhia apurou um resultado líquido de -R$5.673 milhões no ano.",
+              unit=None, unit_source=None),
+        chunk(CAPITAL, "table", 42, ["22. Gestão de risco", "22.2. Gestão de capital"],
+              "|  | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 |\n|---|---|---|\n"
+              "| (-) Caixa e equivalente de caixa | (10.656) | (8.195) |\n"
+              "| (=) Dívida líquida (a) | 13.520 | 16.877 |\n"
+              "| Relação dívida liquida sobre capital ajustado (a)/(b) | 0,08 | 0,11 |"),
+    ]
+    doc["meta"]["chunk_count"] = len(doc["chunks"])
 
 
 def add_second_document(indexer: "FakeIndexer") -> None:

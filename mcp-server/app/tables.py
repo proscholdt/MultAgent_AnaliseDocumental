@@ -5,7 +5,9 @@ coluna; o servidor acha a célula e devolve o que está escrito nela. O modelo n
 número. Rótulo que não existe ou que aparece mais de uma vez é erro, com as opções, e nunca
 "a primeira que casar".
 """
+import difflib
 import re
+import unicodedata
 from dataclasses import dataclass
 
 from app.errors import ToolRejected
@@ -13,7 +15,7 @@ from app.errors import ToolRejected
 _SEPARATOR = re.compile(r"^\s*\|?\s*:?-{2,}")
 _CELL_BREAK = re.compile(r"(?<!\\)\|")
 _SCOPES = {"consolidado": "consolidado", "controladora": "controladora"}
-_MAX_OPTIONS = 40
+_MAX_OPTIONS = 12
 
 
 @dataclass(frozen=True)
@@ -58,8 +60,20 @@ def parse_table(text: str) -> Table | None:
 
 
 def normalize(label: str) -> str:
-    """Rótulo para comparação: sem diferença de caixa, de espaços ou de pontuação nas pontas."""
-    return " ".join(label.split()).strip(" .:;").casefold()
+    """Rótulo para comparação: sem diferença de caixa, de acento, de espaços ou de pontuação nas
+    pontas. O PDF escreve "Caixa liquido" e o modelo copia "Caixa líquido": é a mesma linha."""
+    folded = " ".join(label.split()).strip(" .:;").casefold()
+    return "".join(ch for ch in unicodedata.normalize("NFD", folded) if not unicodedata.combining(ch))
+
+
+def closest(wanted: str, labels: list[str]) -> list[str]:
+    """Os rótulos mais parecidos com o pedido, para o erro ajudar em vez de despejar a tabela."""
+    unique = [label for label in dict.fromkeys(labels) if label]
+    by_key = {normalize(label): label for label in unique}
+    near = difflib.get_close_matches(normalize(wanted), list(by_key), n=_MAX_OPTIONS, cutoff=0.35)
+    words = set(normalize(wanted).split())
+    sharing = [label for label in unique if words & set(normalize(label).split()) and normalize(label) not in near]
+    return ([by_key[key] for key in near] + sharing)[:_MAX_OPTIONS] or unique[:_MAX_OPTIONS]
 
 
 def scope_of(column_label: str) -> str | None:
@@ -71,11 +85,13 @@ def scope_of(column_label: str) -> str | None:
 def _pick(kind: str, wanted: str, labels: list[str], occurrence: int | None) -> int:
     """Índice do rótulo pedido. Sem casar, ou casando mais de uma vez sem dizer qual: erro."""
     target = normalize(wanted)
+    if not target:
+        raise ToolRejected(f"O rótulo da {kind} está vazio. Uma {kind} sem rótulo não identifica um valor: aponte a "
+                           f"{kind} que traz o nome do que você quer.")
     matches = [index for index, label in enumerate(labels) if normalize(label) == target]
     if not matches:
-        options = [label for label in dict.fromkeys(labels) if label][:_MAX_OPTIONS]
         raise ToolRejected(f"A tabela não tem {kind} com o rótulo '{wanted}'. Copie o rótulo como está "
-                           "escrito no chunk.", opcoes=options)
+                           "escrito no chunk; em 'opcoes' estão os mais parecidos.", opcoes=closest(wanted, labels))
     if len(matches) > 1 and occurrence is None:
         raise ToolRejected(
             f"O rótulo '{wanted}' aparece {len(matches)} vezes como {kind}. Informe qual delas "

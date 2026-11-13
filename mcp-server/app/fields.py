@@ -31,40 +31,50 @@ class Field:
     # O que a linha da tabela (ou o trecho) de origem tem de mencionar. "Alavancagem" e "índice de
     # endividamento" nomeiam contas diferentes em cada empresa; o campo deste sistema é dívida
     # líquida / EBITDA, então a fonte tem de falar em EBITDA. Comparação sem acento.
+    # Um termo com "+" exige todas as partes ("antes+financeir").
     mention: tuple[str, ...] = ()
+    # Valor de demonstração: vem da tabela da demonstração, não de uma frase. O texto do
+    # relatório da administração arredonda e, às vezes, perde o sinal.
+    statement: bool = False
 
 
 _FIELDS = [
     Field("receita_liquida", "Receita líquida", "valor", True,
-          ("receita líquida", "receita operacional líquida"), "resultado"),
+          ("receita líquida", "receita operacional líquida"), "resultado", statement=True, mention=("receita",)),
     Field("ebitda", "EBITDA", "valor", True, ("ebitda", "lajida"), mention=("ebitda", "lajida")),
     Field("margem_ebitda", "Margem EBITDA", "percentual", True,
           ("margem ebitda", "margem lajida", "margem do ebitda"), mention=("ebitda", "lajida")),
     Field("lucro_liquido", "Lucro líquido", "valor", True,
-          ("lucro líquido", "prejuízo líquido", "resultado líquido", "prejuízo do exercício"), "resultado"),
+          ("lucro líquido", "prejuízo líquido", "resultado líquido", "prejuízo do exercício"), "resultado",
+          statement=True, mention=("lucro", "prejuizo", "resultado liquido", "resultado do exercicio",
+                                   "resultado do periodo")),
     Field("divida_liquida", "Dívida líquida", "valor", True, ("dívida líquida", "endividamento líquido"),
           mention=("divida liquida", "endividamento liquido")),
     Field("alavancagem", "Alavancagem (dívida líquida / EBITDA)", "multiplo", True,
           ("alavancagem", "dívida líquida/ebitda", "dívida líquida / ebitda", "dívida líquida sobre ebitda"),
           mention=("ebitda", "lajida")),
     Field("fluxo_caixa_operacional", "Fluxo de caixa operacional", "valor", True,
-          ("atividades operacionais",), "fluxo"),
+          ("atividades operacionais",), "fluxo", statement=True,
+          mention=("caixa+operacionais", "caixa+operacoes")),
     Field("capex", "Capex", "valor", True,
           ("capex", "aquisição de imobilizado", "aquisições de imobilizado", "aquisição de ativo imobilizado",
            "aquisições de bens do ativo imobilizado", "adições ao imobilizado"), "fluxo"),
     Field("resultado_antes_financeiro", "Resultado antes do resultado financeiro", "valor", False,
-          section="resultado"),
-    Field("depreciacao_amortizacao", "Depreciação e amortização", "valor", False),
-    Field("emprestimos_circulante", "Empréstimos e financiamentos (circulante)", "valor", False, section="balanço"),
+          section="resultado", mention=("antes+financeir", "lucro operacional", "resultado operacional")),
+    Field("depreciacao_amortizacao", "Depreciação e amortização", "valor", False, mention=("deprecia",)),
+    Field("emprestimos_circulante", "Empréstimos e financiamentos (circulante)", "valor", False, section="balanço",
+          mention=("emprestimo", "financiamento")),
     Field("emprestimos_nao_circulante", "Empréstimos e financiamentos (não circulante)", "valor", False,
-          section="balanço"),
-    Field("caixa_equivalentes", "Caixa e equivalentes de caixa", "valor", False, section="balanço"),
-    Field("capex_imobilizado", "Aquisição de imobilizado", "valor", False, section="fluxo"),
-    Field("capex_intangivel", "Aquisição de intangível", "valor", False, section="fluxo"),
+          section="balanço", mention=("emprestimo", "financiamento")),
+    # Na nota de caixa, "Caixa e bancos" é um componente; o valor é o da linha do total.
+    Field("caixa_equivalentes", "Caixa e equivalentes de caixa", "valor", False, section="balanço",
+          mention=("caixa e equivalente",)),
+    Field("capex_imobilizado", "Aquisição de imobilizado", "valor", False, section="fluxo", mention=("imobilizado",)),
+    Field("capex_intangivel", "Aquisição de intangível", "valor", False, section="fluxo", mention=("intangivel",)),
     # Algumas empresas têm uma linha só no fluxo de caixa ("Imobilizado e intangível"). Ela entra
     # aqui, e não nos dois campos acima: gravada duas vezes, o capex sairia dobrado.
     Field("capex_imobilizado_e_intangivel", "Aquisição de imobilizado e intangível (linha única)", "valor", False,
-          section="fluxo"),
+          section="fluxo", mention=("imobilizado+intangivel",)),
 ]
 FIELDS: dict[str, Field] = {field.name: field for field in _FIELDS}
 MAIN_FIELDS: tuple[str, ...] = tuple(field.name for field in _FIELDS if field.main)

@@ -105,6 +105,7 @@ class Extraction:
         self._values = {(v.campo, v.periodo, v.medida): v for v in values}
         self.reference, self.comparable = reference, comparable
         self.alerts: list[AlertDraft] = []
+        self._no_comparable: list[str] = []
 
     def get(self, campo: str, periodo: str | None, medida: str = "valor") -> Value | None:
         return self._values.get((campo, periodo or "", medida))
@@ -206,9 +207,7 @@ class Extraction:
         if current is not None and previous is not None:
             computed = self._difference(current, previous)
         elif current is not None and self.comparable:
-            self.alerts.append(AlertDraft(
-                "sem_comparavel", "informacao", campo=campo,
-                mensagem=f"{FIELDS[campo].label}: sem o valor de {self.comparable}, a variação não foi calculada."))
+            self._no_comparable.append(FIELDS[campo].label)
         if computed is None and informed is None:
             return None
         if computed is not None and informed is not None and computed["unidade"] == "%":
@@ -280,8 +279,15 @@ class Extraction:
                     detalhes={"informada": leverage.texto, "calculada": computed["valor"], "pagina": leverage.pagina}))
 
     def _check_each_value(self) -> None:
+        if self._no_comparable:
+            self.alerts.append(AlertDraft(
+                "sem_comparavel", "informacao",
+                mensagem=f"Sem o valor de {self.comparable}, a variação não foi calculada para: "
+                         f"{', '.join(dict.fromkeys(self._no_comparable))}.",
+                detalhes={"campos": list(dict.fromkeys(self._no_comparable))}))
         for value in self._values.values():
-            if value.status != "encontrado":
+            # O valor do ano anterior vem da mesma célula vizinha: repetir os avisos dele é ruído.
+            if value.status != "encontrado" or value.periodo != self.reference:
                 continue
             info = FIELDS[value.campo]
             label = f"{info.label} ({value.periodo})"
@@ -326,6 +332,7 @@ class Extraction:
     def indicators(self) -> dict[str, Any]:
         """Os 8 indicadores, cada um com o informado, o comparável, a variação e o calculado."""
         result: dict[str, Any] = {}
+        self._no_comparable.clear()
         for campo in MAIN_FIELDS:
             informed = self.get(campo, self.reference)
             previous = self.found(campo, self.comparable)

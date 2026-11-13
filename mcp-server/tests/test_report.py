@@ -65,7 +65,9 @@ async def extract_second(governance) -> None:
             "doc_id": DOC_ANA_2, "campo": campo, "paginas_descartadas": [],
             "motivo": "O documento traz só a demonstração do resultado e o contexto operacional."})
         assert not result.is_error, payload(result)
-    assert not (await call(governance, "extrator", "fechar_extracao", {"doc_id": DOC_ANA_2})).is_error
+    closed = await call(governance, "extrator", "fechar_extracao", {
+        "doc_id": DOC_ANA_2, "apoio_ausente": "O documento traz só a demonstração do resultado."})
+    assert not closed.is_error, payload(closed)
 
 
 async def test_companies_are_ranked_and_filtered_by_the_stored_values(governance, indexer):
@@ -115,8 +117,9 @@ async def test_answer_values_come_from_markers_and_quotes_are_checked(governance
         "A alavancagem informada é de 3,32x (Exemplo.pdf, p. 10), acima de 3x. A dívida líquida é de "
         "R$ 9.032 milhões (Exemplo.pdf, p. 10), e a receita variou +24,84% (Exemplo.pdf, p. 10). O EBITDA não é "
         "informado: não informado no documento; pela DRE daria R$ 221.854 mil (calculado: resultado antes do "
-        "resultado financeiro + depreciação e amortização).")
-    assert saved["fontes"] == ["Exemplo.pdf, p. 10", "Exemplo.pdf, p. 10", "Exemplo.pdf, p. 10"]
+        "resultado financeiro + depreciação e amortização; valores de origem em Exemplo.pdf, p. 8 e 11).")
+    # As fontes não se repetem, e o valor calculado cita as páginas dos valores de que ele sai.
+    assert saved["fontes"] == ["Exemplo.pdf, p. 10", "Exemplo.pdf, p. 8", "Exemplo.pdf, p. 11"]
 
 
 async def test_loose_numbers_and_missing_sources_are_refused(governance):
@@ -276,7 +279,7 @@ async def test_report_is_built_by_code_from_the_store(governance):
 async def test_new_data_after_the_report_makes_it_pending_again(governance):
     await complete(governance)
     await call(governance, "redator", "montar_relatorio")
-    await save(governance, cell("receita_liquida", "Lucro bruto", "Consolidado - 2022"))
+    await save(governance, cell("lucro_liquido", "Lucro líquido do exercício", "Controladora - 2022"))
     await call(governance, "extrator", "fechar_extracao", {"doc_id": DOC_ANA})
     # A extração mudou: o que foi escrito com os números antigos volta para a lista, antes do relatório.
     pending = payload(await call(governance, "orquestrador", "pendencias"))["pendencias"]
