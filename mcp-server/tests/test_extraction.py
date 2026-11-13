@@ -776,3 +776,16 @@ async def test_compact_view_has_only_what_the_documents_state(governance):
     text_of_view = str(view)
     for absent in ("calculado", "formula", "alertas", "nota", "valores_de_apoio", "221.854", "24,84"):
         assert absent not in text_of_view, absent
+
+
+async def test_current_and_long_term_loans_come_from_where_they_are_separated(governance, indexer):
+    """Na Brasal, o total dos empréstimos de uma nota (3.417 = 1.849 + 1.568) entrou como circulante
+    e o não circulante do balanço foi somado de novo: a dívida líquida calculada saiu errada."""
+    add_performance_details(indexer)
+    total = await rejected(governance, "salvar_indicador", cell(
+        "emprestimos_circulante", "Total dos empréstimos com terceiros", "Consolidado - 31/12/2022", chunk=CAPITAL))
+    assert "não separa circulante de não circulante" in total["erro"] and "balanço patrimonial" in total["erro"]
+    # No balanço, passa.
+    right = await save(governance, cell("emprestimos_circulante", "Empréstimos e financiamentos",
+                                        "Consolidado - 31/12/2022", chunk=BALANCE, ocorrencia_linha=1))
+    assert right["salvo"]["valor"] == "1.849"

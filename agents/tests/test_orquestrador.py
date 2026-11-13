@@ -194,7 +194,8 @@ async def test_follow_up_question_knows_the_previous_turn(http, world, model, ag
     prompt = model.first_input("orquestrador", turn=2)
     assert "## A conversa até aqui" in prompt and "Pedido: Qual empresa teve a maior margem EBITDA?" in prompt
     assert "Resposta: A maior margem é a da Brasal, 16,74% (calculado)." in prompt
-    assert prompt.endswith("## Pedido atual\nE a menor?")
+    assert prompt.endswith("## Pedido atual\nResponda à pergunta do usuário, com as fontes. Pergunta: «E a menor?»")
+    assert second["tipo"] == "pergunta"  # turno de conversa é pergunta: só fecha com resposta gravada
     assert asked == ["Maior margem EBITDA?", "Menor margem EBITDA?"]
     # O especialista também lembra: na mesma conversa, recebeu a chamada anterior.
     researcher = next(s for s in second["passos"] if s["tipo"] == "especialista")

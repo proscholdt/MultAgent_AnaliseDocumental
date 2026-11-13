@@ -51,3 +51,35 @@ def test_memory_is_kept_per_user_conversation_agent_and_document(tmp_path):
         assert memory.load(*key) == [], key
     reopened = Memory(tmp_path / "memoria.db")  # sobrevive ao reinício do serviço
     assert len(split_runs(reopened.load("ana", "conv-1", "extrator", "doc-a"))) == 2
+
+
+def test_item_ids_leave_with_the_reasoning():
+    """Na API de Responses, chamada de tool com id e sem o raciocínio que a precedeu é recusada
+    (erro 400). Aconteceu na execução real: a segunda chamada do extrator, a que levava a memória."""
+    from pydantic_ai.messages import (
+        ModelRequest,
+        ModelResponse,
+        TextPart,
+        ThinkingPart,
+        ToolCallPart,
+        ToolReturnPart,
+        UserPromptPart,
+    )
+
+    from app.runner import dump, load
+
+    messages = [
+        ModelRequest(parts=[UserPromptPart(content="Feche a extração.")]),
+        ModelResponse(parts=[ThinkingPart(content="ler o balanço", id="rs_1", signature="cifrado"),
+                             ToolCallPart(tool_name="ler_chunk", args={"chunk_index": 11}, tool_call_id="call_1",
+                                          id="fc_1")], provider_name="openai"),
+        ModelRequest(parts=[ToolReturnPart(tool_name="ler_chunk", content="ok", tool_call_id="call_1")]),
+        ModelResponse(parts=[TextPart(content="Fechada.", id="msg_1")], provider_name="openai"),
+    ]
+    history = load(compact(split_runs(dump(messages)), 40_000))
+
+    parts = [part for message in history for part in message.parts]
+    assert not any(isinstance(part, ThinkingPart) for part in parts)
+    call = next(part for part in parts if isinstance(part, ToolCallPart))
+    assert call.id is None and call.tool_call_id == "call_1"  # continua ligada ao resultado
+    assert next(part for part in parts if isinstance(part, TextPart)).id is None

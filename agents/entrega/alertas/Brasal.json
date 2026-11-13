@@ -3,34 +3,39 @@
   "empresa": "Brasal Brasília Holding S.A.",
   "alertas": [
     {
-      "tipo": "validacao",
-      "codigo": "secao_inesperada",
-      "severidade": "informacao",
-      "campo": "caixa_equivalentes",
-      "mensagem": "Caixa e equivalentes de caixa (2022): o valor veio da seção '25. Gestão de riscos dos instrumentos financeiros', e não de uma demonstração de balanço.",
-      "detalhes": {
-        "pagina": 48
-      },
-      "registrado_por": "extrator"
-    },
-    {
-      "tipo": "validacao",
-      "codigo": "periodo_nao_confirmado",
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
-      "campo": "caixa_equivalentes",
-      "mensagem": "Caixa e equivalentes de caixa (2022): a fonte citada não escreve o período 2022. Confira se o valor é mesmo desse período.",
+      "campo": null,
+      "mensagem": "Há inconsistência de período: a frase usa a data-base de 31 de dezembro de 2022, mas diz que o cenário provável foi definido para os 12 meses de 2020.",
       "detalhes": {
-        "pagina": 48,
-        "trecho": "|  | Controladora - Custo amortizado | Controladora - Valor justo | Consolidado - Custo amortizado | Consolidado - Valor justo |\n| Caixa e equivalentes de caixa | 3.714 | 3.714 | 96.453 | 96.453 |"
+        "pagina": 49,
+        "chunk_index": 126,
+        "secao": "26. Gestão de riscos",
+        "citacao": "Análise de sensibilidade A Companhia realiza suas análises de sensibilidade em três cenários, sendo um provável e dois que possam representar efeitos adversos com deterioração de 25% e 50% da variável do risco considerado pela Administração. A Companhia acompanha e analisa somente as variações nos preços de commodities, variação cambial e variação nas taxas de juros como fatores principais de risco. Com a finalidade de verificar a sensibilidade dos indexadores nas dívidas ao qual a Companhia está exposta na data base de 31 de dezembro de 2022, foram estimados 3 cenários distintos, considerando o volume de financiamento total. Com base nesses montantes em 31 de dezembro de 2022, definimos o Cenário Provável para os 12 meses de 2020 (Cenário I). A partir do Cenário I (Provável), simulamos acréscimo de 25% (Cenário II) e 50% (Cenário III) sobre as projeções dos índices de correção de cada contrato. Para cada cenário foi calculada a despesa financeira bruta não levando em consideração a incidência de tributos bem como o fluxo de vencimentos de cada contrato programado."
       },
-      "registrado_por": "extrator"
+      "registrado_por": "validador"
     },
     {
       "tipo": "fonte",
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "Há ano trocado na definição do cenário provável: a frase usa a data-base de 31 de dezembro de 2022, mas diz que o cenário provável é para os 12 meses de 2020.",
+      "mensagem": "A quantidade de ações não fica coerente dentro da própria nota: o texto diz que o aumento de capital foi feito sem emissão de novas ações, mas o total passa de 3.256.699 ações ordinárias para 1.374.240 ações ordinárias.",
+      "detalhes": {
+        "pagina": 42,
+        "chunk_index": 106,
+        "secao": "20. Patrimônio líquido > a) Capital social",
+        "citacao": "Em 31 de dezembro de 2022 o capital social, subscrito e integralizado, é de R$154.000 e em 31 de dezembro de 2021 era de R$94.000 divididos em 3.256.699 ações ordinárias, nominativas, sem valor nominal. Em 28 de março de 2022, através de assembleia geral extraordinária foi aprovado um aumento de capital mediante a capitalização de parte das reservas de lucros R$60.000 sem emissão de novas ações, ficando o capital social da Companhia totalmente subscrito e integralizado ao valor de R$154.000 correspondente ao total de 1.374.240 ações ordinárias, nominativas, sem valor nominal."
+      },
+      "registrado_por": "validador"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
+      "severidade": "atencao",
+      "campo": null,
+      "mensagem": "O texto informa acréscimo de 25% e 50% nos cenários II e III, mas a tabela imediatamente seguinte apresenta cenários com redução das taxas e da despesa financeira projetada.",
       "detalhes": {
         "pagina": 49,
         "chunk_index": 126,
@@ -44,9 +49,9 @@
       "codigo": "revisao_das_fontes_concluida",
       "severidade": "informacao",
       "campo": null,
-      "mensagem": "Fontes revisadas pelo agente validador. Notas de caixa, empréstimos e gestão de riscos lidas; uma inconsistência de ano registrada.",
+      "mensagem": "Fontes revisadas pelo agente validador. Notas de patrimônio líquido, empréstimos e financiamentos, gestão de riscos e eventos subsequentes revisadas; três inconsistências registradas.",
       "detalhes": {
-        "inconsistencias_registradas": 1
+        "inconsistencias_registradas": 3
       },
       "registrado_por": "validador"
     }

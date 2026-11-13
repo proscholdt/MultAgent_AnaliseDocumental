@@ -258,6 +258,15 @@ def _check_source(args: SalvarIndicador, info: Any, found: dict[str, Any], chunk
     table = args.origem == "tabela"
     source = plain(found["linha"] if table else found["trecho"])
     section = plain(" > ".join(chunk.get("section_path") or []))
+    if args.campo in ("emprestimos_circulante", "emprestimos_nao_circulante") and table and "balanco" not in section \
+            and "circulante" not in plain(f"{found['linha']} {found['coluna']} {section}"):
+        # A separação entre curto e longo prazo está no balanço. Uma nota com uma linha só de
+        # empréstimos traz o total: gravado como circulante, somava de novo o não circulante (na
+        # Brasal, 3.417 = 1.849 + 1.568 entrou como circulante, e a dívida líquida saiu errada).
+        raise ToolRejected(
+            f"{info.label}: a tabela apontada ('{' > '.join(chunk.get('section_path') or [])}') não separa circulante "
+            "de não circulante: o valor dela é o total dos empréstimos. Aponte a linha no balanço patrimonial "
+            "(passivo circulante e passivo não circulante), ou numa tabela que diga qual dos dois é.")
     if info.statement and table and info.section and plain(info.section) not in section:
         # A mesma linha aparece em outras tabelas (mutações do patrimônio, valor adicionado), sem as
         # colunas por ano: o valor entra, mas sem o ano anterior. Vale a demonstração do próprio campo.

@@ -197,6 +197,7 @@ def add_performance_details(indexer: "FakeIndexer") -> None:
               unit=None, unit_source=None),
         chunk(CAPITAL, "table", 42, ["22. Gestão de risco", "22.2. Gestão de capital"],
               "|  | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 |\n|---|---|---|\n"
+              "| Total dos empréstimos com terceiros | 24.176 | 25.072 |\n"
               "| (-) Caixa e equivalente de caixa | (10.656) | (8.195) |\n"
               "| (=) Dívida líquida (a) | 13.520 | 16.877 |\n"
               "| Relação dívida liquida sobre capital ajustado (a)/(b) | 0,08 | 0,11 |"),

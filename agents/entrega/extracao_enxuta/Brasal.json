@@ -36,7 +36,7 @@
   "ebitda": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não traz EBITDA/LAJIDA consolidado em texto ou tabela. Procurei nas páginas de desempenho, notas e demonstrações; há apenas resultado operacional e depreciação/amortização, suficientes para cálculo pelo servidor, mas sem linha ou frase com EBITDA informado pela companhia.",
+    "motivo": "O documento não apresenta linha ou frase com 'EBITDA' ou 'LAJIDA' para o consolidado; as demonstrações trazem apenas o lucro operacional antes das receitas e despesas financeiras e a depreciação/amortização, usados como valores de apoio.",
     "busca": {
       "termos_procurados": [
         "ebitda",
@@ -49,7 +49,7 @@
   "margem_ebitda": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não informa margem EBITDA em texto ou tabela. Há dados para cálculo do servidor, mas não há percentual declarado pela companhia.",
+    "motivo": "O documento não informa margem EBITDA em percentual; não há quadro ou frase com esse indicador para o consolidado.",
     "busca": {
       "termos_procurados": [
         "margem ebitda",
@@ -93,7 +93,7 @@
   "divida_liquida": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não informa dívida líquida consolidada em texto ou tabela. Há apenas empréstimos e financiamentos e caixa e equivalentes, que ficam como valores de apoio para cálculo do servidor.",
+    "motivo": "O documento não informa a dívida líquida como indicador explícito; há apenas saldos de empréstimos e financiamentos e caixa e equivalentes de caixa nas demonstrações patrimoniais, usados como valores de apoio.",
     "busca": {
       "termos_procurados": [
         "dívida líquida",
@@ -106,7 +106,7 @@
   "alavancagem": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não informa alavancagem (dívida líquida/EBITDA) em texto ou tabela. Não há múltiplo declarado pela companhia.",
+    "motivo": "O documento não informa alavancagem como múltiplo dívida líquida/EBITDA; há somente menções genéricas à gestão da dívida e à alavancagem financeira, sem o indicador calculado.",
     "busca": {
       "termos_procurados": [
         "alavancagem",
@@ -155,7 +155,7 @@
   "capex": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não informa um total de capex. O fluxo de caixa traz as linhas de aquisição de imobilizado e intangível, que foram registradas como valores de apoio; não há linha consolidada chamada capex ou total de investimentos.",
+    "motivo": "O fluxo de caixa informa a linha 'Imobilizado e intangível' como saída de investimento, mas não apresenta um total de capex com esse nome; por isso a linha de aquisição foi gravada como valor de apoio e o capex total não é informado no documento.",
     "busca": {
       "termos_procurados": [
         "capex",

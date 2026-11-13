@@ -11,20 +11,28 @@ analisar, responder, redigir).
   confere tudo o que eles gravam.
 - Os documentos vêm do [indexador](../indexer/README.md) (sistema 1).
 
+Os agentes são feitos com **PydanticAI**, e a orquestração é um grafo **LangGraph**. O usuário
+conversa: um pedido pode continuar o anterior, e os agentes lembram o que foi feito na conversa.
+
 Não há frontend. Tudo é testável pelo Swagger em `http://localhost:8200/docs`.
 
 ```mermaid
 flowchart TD
     U[Swagger / script] -->|"JWT do indexador"| API
 
-    subgraph ORQ[orquestrador :8200]
-        API[API] --> O[orquestrador<br/>modelo + 1 tool por especialista]
-        O --> CF[conferência final<br/>pelo código]
+    subgraph ORQ[orquestrador :8200 · grafo LangGraph]
+        API[API] --> O[nó orquestrador<br/>PydanticAI: decide a onda]
+        O --> D[nó delegar<br/>uma chamada por delegação,<br/>em paralelo]
+        D --> O
+        O --> CF[nó conferencia<br/>pelo código]
+        CF -->|falta algo| O
+        CK[(checkpoint<br/>por conversa)] -.- O
     end
 
-    O -->|"A2A (JSON-RPC)<br/>token do orquestrador,<br/>emitido para aquele especialista"| ESP
+    D -->|"A2A (JSON-RPC)<br/>token do orquestrador,<br/>emitido para aquele especialista"| ESP
 
-    subgraph ESP[especialistas :8201]
+    subgraph ESP[especialistas :8201 · agentes PydanticAI]
+        MEM[(memória por<br/>conversa)]
         E[extrator]
         V[validador]
         A[analista]
@@ -39,9 +47,8 @@ flowchart TD
     MCP[mcp-server :8100<br/>política, portões, base, auditoria] --> IDX[indexer :8000<br/>busca e chunks]
 ```
 
-É o desenho *orchestrator-workers* (no SDK de agentes da OpenAI, "manager: agents as tools"),
-em hub-and-spoke: o orquestrador é o centro, os especialistas são os raios, e o A2A é o cabo
-entre eles. Os raios não se falam.
+É o desenho *orchestrator-workers* em hub-and-spoke, com um supervisor no grafo: o orquestrador é
+o centro, os especialistas são os raios, e o A2A é o cabo entre eles. Os raios não se falam.
 
 ## Como rodar
 
@@ -81,7 +88,7 @@ Fora do Docker (dois processos):
 uv sync
 uv run uvicorn app.especialistas:app_factory --factory --port 8201
 uv run uvicorn app.main:app_factory --factory --port 8200
-uv run pytest        # 51 testes, sem rede
+uv run pytest        # 63 testes, sem rede
 ```
 
 ## O que dá para pedir
@@ -91,10 +98,17 @@ uv run pytest        # 51 testes, sem rede
 | `POST /api/relatorios` | O relatório consolidado completo dos documentos do usuário |
 | `POST /api/perguntas` | Uma pergunta em linguagem natural; devolve a resposta com as fontes |
 | `POST /api/execucoes` | Pedido em texto livre: o orquestrador decide o que fazer |
-| `GET /api/execucoes/{id}` | Estado, resultado, passos (quem chamou o quê), tokens e custo |
+| `POST /api/conversas` | Abre uma conversa |
+| `POST /api/conversas/{id}/mensagens` | Um turno da conversa: uma pergunta, respondida com fontes, lembrando os turnos anteriores |
+| `GET /api/conversas/{id}` | Os turnos de uma conversa, com as respostas |
+| `GET /api/execucoes/{id}` | Estado, resultado, passos (quem chamou o quê, e o raciocínio do modelo), tokens e custo |
+| `GET /api/execucoes/{id}/mensagens` | As mensagens completas de cada agente: pedido, raciocínio, tools com argumentos e resultados |
 | `GET /api/execucoes` | Execuções do usuário |
 | `GET /api/agentes` | Agentes carregados e as tools que a política do servidor MCP dá a cada um |
 | `GET /health` | Estado do serviço, agentes e modelos |
+
+As rotas de execução, pergunta e relatório aceitam `conversa_id`: sem ele, cada pedido abre uma
+conversa nova.
 
 Uma execução termina como `completa`, `incompleta` (com o que faltou), `falhou` ou
 `interrompida`. O resultado vem **da base**, lido pelo código: o relatório montado pelo servidor,
@@ -149,7 +163,7 @@ em `uv run python -m app.cli validar`.
 
 | Agente | Faz | Modelo | Tools que a política dá |
 |---|---|---|---|
-| `orquestrador` | Entende o pedido, delega e acompanha | padrão | `listar_documentos`, `pendencias`, `ler_extracao` + uma tool por especialista |
+| `orquestrador` | Entende o pedido, delega e acompanha | padrão | `listar_documentos`, `pendencias`, `ler_extracao`; devolve a decisão da onda |
 | `extrator` | Os 8 indicadores de um documento, com a origem | padrão | RAG, `salvar_indicador`, `salvar_nao_encontrado`, `fechar_extracao` |
 | `validador` | Lê o texto da fonte e sinaliza o que não fecha | **forte** | RAG, leitura da base, `registrar_alerta`, `concluir_revisao` |
 | `analista` | Motivos, riscos, guidance, eventos e tom, com citação | padrão | RAG, `salvar_item_analise`, `registrar_ausencia_analise` |
@@ -175,7 +189,8 @@ sequenceDiagram
     participant M as mcp-server
     O->>E: GET /agentes (catálogo: quem está no ar e com que tools)
     O->>E: GET agent-card.json
-    O->>E: SendMessage: tarefa + {doc_id, orçamento restante}<br/>Authorization: token A2A (aud = este especialista)<br/>X-User-Token: JWT do usuário
+    O->>E: SendMessage: tarefa + {doc_id, conversa_id, orçamento restante}<br/>Authorization: token A2A (aud = este especialista)<br/>X-User-Token: JWT do usuário
+    E->>E: memória deste especialista nesta conversa e documento
     E->>M: tools, com o token do PRÓPRIO especialista
     M-->>E: resultado ou recusa do portão
     E->>M: pendencias (como "sistema")
@@ -199,23 +214,52 @@ sequenceDiagram
 O ganho é a fronteira: cada especialista é um serviço com endereço, identidade e contrato
 (o card), que pode ser implantado, escalado e trocado sozinho, e que outro orquestrador poderia
 chamar. O custo é uma chamada de rede a mais por delegação e mais peças para operar. Dentro de um
-processo só, `agent.as_tool()` faria o mesmo com menos código; o desenho com A2A foi uma escolha
-por separar as responsabilidades do jeito que elas se separariam em produção.
+processo só, o nó `delegar` chamaria o agente direto, com menos código; o desenho com A2A foi uma
+escolha por separar as responsabilidades do jeito que elas se separariam em produção.
 
-## Como uma execução acontece
+## Como uma execução acontece: o grafo
 
-1. O orquestrador busca o catálogo dos especialistas (A2A) e ganha uma tool para cada um.
-2. Ele trabalha **em ondas**: chama `pendencias`, delega no mesmo passo tudo o que está
-   `liberada`, espera os relatos e repete. Chamadas do mesmo passo rodam em paralelo.
-3. A ordem não depende dele: é o servidor MCP que diz o que está liberado e que recusa o que
-   chega antes da hora (as perguntas esperam a extração e a análise de todos os documentos).
-4. **Conferência final, pelo código.** Quando o orquestrador diz que terminou, o sistema pergunta
-   ao servidor MCP o que falta. Se faltar, o orquestrador roda de novo com a lista, até 2 vezes.
-   Depois disso a execução termina como `incompleta`, com o motivo. "Terminei" dito pelo modelo
-   não encerra nada.
+```
+START → orquestrador ──(delegações)──► delegar (uma por delegação, em paralelo) ──► orquestrador
+                     └─(terminado, ou nada a delegar)──► conferencia ──(completo)──► fim → END
+                                                                     └─(falta algo)──► orquestrador
+```
 
-Não há estado de conversa entre as rodadas: o que foi feito está na base, e a lista de pendências
-diz o que resta.
+| Nó | O que faz |
+|---|---|
+| `orquestrador` | Um agente PydanticAI. Lê `pendencias` e os documentos pelo servidor MCP e devolve uma **decisão estruturada**: as delegações desta onda, se terminou e a mensagem ao usuário. Ele não chama os especialistas: o grafo chama |
+| `delegar` | Uma chamada A2A a um especialista. As delegações de uma onda rodam em paralelo (`Send` do LangGraph), e o grafo só volta ao orquestrador quando todas terminam, com os relatos |
+| `conferencia` | O código pergunta ao servidor MCP o que falta. Se faltar, o orquestrador recomeça com a lista, até 2 vezes; depois disso a execução termina como `incompleta`. "Terminei" dito pelo modelo não encerra nada |
+| `fim` | Registra o turno na conversa (pedido, resposta, estado) |
+
+O relatório anda em ondas: extração e análise dos três documentos juntas; revisão das fontes;
+as cinco perguntas e os resumos; a montagem. A ordem não depende do orquestrador: é o servidor
+MCP que diz o que está liberado e recusa o que chega antes da hora.
+
+## Estado, memória e conversa
+
+| O quê | Onde fica | Quem usa |
+|---|---|---|
+| **O que foi produzido** (valores, análise, alertas, respostas, relatório) | base do servidor MCP | todos os agentes, pelas tools; é a fonte da verdade |
+| **A conversa do usuário** (os turnos: pedido, resposta, estado) | checkpoint do grafo, em SQLite, por conversa (`thread_id`) | o orquestrador: os turnos anteriores entram no pedido dele |
+| **A memória de cada especialista** | SQLite no serviço dos especialistas, por (usuário, conversa, agente, documento) | o especialista: as chamadas anteriores dele voltam como histórico |
+| **As mensagens completas de cada agente** (pedido, raciocínio, tools, resposta) | `data/execucoes/<id>/` | quem depura: `GET /api/execucoes/{id}/mensagens` |
+| **O trace** (cada passo, com o raciocínio) | `data/execucoes/<id>.jsonl` | `GET /api/execucoes/{id}` |
+
+**Pergunta de seguimento.** Um turno de conversa é uma pergunta. O orquestrador recebe os turnos
+anteriores ("A conversa até aqui") e delega ao pesquisador a pergunta já resolvida: "E a menor?"
+vira "qual empresa teve a MENOR margem EBITDA?". A conferência final só fecha o turno com uma
+resposta gravada pelo pesquisador, com fontes. Na primeira versão o turno era um pedido livre, e
+o orquestrador respondia sozinho, na mensagem, sem fonte: virou regra de código.
+
+**Memória do especialista.** Chamado de novo na mesma conversa, para o mesmo documento, o
+especialista recebe a própria conversa das vezes anteriores e não recomeça do zero. Como ela dura
+a conversa inteira, o código controla o tamanho na leitura: o resultado das tools antigas vira uma
+linha ("leu o chunk 11, 1.200 caracteres; chame de novo se precisar"), o raciocínio antigo sai, e
+acima do teto (`MEMORIA_MAX_TOKENS`) saem as chamadas mais antigas. O guardado é o histórico
+inteiro; o encurtamento é só no que volta ao modelo.
+
+O que vale continua na base. A memória poupa releituras e dá continuidade; não é fonte de valor.
 
 ### Freios
 
@@ -226,13 +270,18 @@ diz o que resta.
 | Chamadas de tool por execução, por agente | `policy.yaml` do servidor MCP |
 | Rodadas de conferência | `.env` (`RODADAS_PENDENCIAS`) |
 | Validade do token do usuário | uma execução não começa se o token vence em menos de 15 min |
+| Ondas por rodada | `.env` (`MAX_ONDAS`): o orquestrador não decide para sempre |
+| Tamanho da memória reenviada | `.env` (`MEMORIA_MAX_TOKENS`) |
 
 ## Trace, tokens e custo
 
 Cada execução grava um trace local, uma linha por passo (`data/execucoes/<id>.jsonl`), e o
-resumo aparece em `GET /api/execucoes/{id}`:
+resumo aparece em `GET /api/execucoes/{id}`. O raciocínio do modelo entra como passo próprio,
+antes da tool que ele motivou:
 
 ```json
+{"em": "...", "tipo": "raciocinio", "agente": "extrator", "doc_id": "5905cd34...",
+ "texto": "**Considering investment lines**\n\nI'm thinking I might need to look at the capital expenditures related to intangible assets. [...] I should definitely check out pages 11 and 12 for those investment lines."}
 {"em": "...", "tipo": "tool", "agente": "extrator", "doc_id": "5905cd34...", "tool": "salvar_indicador",
  "ok": false, "ms": 271, "argumentos": "{\"campo\": \"alavancagem\", ...}"}
 {"em": "...", "tipo": "especialista", "agente": "extrator", "doc_id": "5905cd34...", "estado": "concluido",
@@ -242,8 +291,13 @@ resumo aparece em `GET /api/execucoes/{id}`:
 
 - **Tokens e custo** são contados por agente e por documento. O preço vem da tabela `PRECOS` do
   `.env`; modelo sem preço aparece com os tokens e com custo nulo, não com um número inventado.
-- **O trace é local de propósito.** Ele traz argumentos de tools, que contêm texto dos
-  documentos. O envio ao painel da OpenAI existe (`OPENAI_TRACING=true`) e vem desligado.
+- **O raciocínio** é o resumo que a OpenAI devolve (`ESFORCO_RACIOCINIO` e `RESUMO_RACIOCINIO`
+  no `.env`), em inglês, mesmo com o prompt em português. Sem um esforço de raciocínio ligado o modelo não raciocina, e não há o que
+  registrar: foi o que aconteceu nas primeiras execuções com a base nova.
+- **As mensagens completas** de cada agente ficam em `data/execucoes/<id>/` e saem em
+  `GET /api/execucoes/{id}/mensagens?agente=`: o pedido, o raciocínio, cada tool com os
+  argumentos e o resultado, e a resposta. É o que permite entender uma escolha errada.
+- **Tudo é local de propósito.** O trace e as mensagens têm texto dos documentos.
 - A **auditoria do servidor MCP** é o registro completo: toda chamada de toda tool, com o
   resultado, por execução.
 
@@ -290,7 +344,10 @@ O detalhe de cada conferência, com o erro que ela barra, está no
 uv run python scripts/avaliar.py --usuario <usuário> --senha <senha>
 ```
 
-### Resultado (12ª execução, a que está em `entrega/`)
+### Resultado (15ª execução, a que está em `entrega/`)
+
+A 15ª é a execução final com PydanticAI e LangGraph, o raciocínio ligado e a memória dos
+especialistas.
 
 | Medida | Resultado |
 |---|---|
@@ -301,16 +358,15 @@ uv run python scripts/avaliar.py --usuario <usuário> --senha <senha>
 | Valor calculado certo | 10 de 10 |
 | Invenção (não informado gravado como informado) | 0 de 11 |
 | Alertas automáticos esperados que dispararam | 2 de 2 |
-| Inconsistências conhecidas do texto da fonte registradas | 5 de 6 |
+| Inconsistências conhecidas do texto da fonte registradas | 4 de 6 |
 | Perguntas com o conteúdo e a fonte esperados | 5 de 5 |
-| Citações que existem literalmente no trecho citado | 30 de 30 |
+| Citações que existem literalmente no trecho citado | 33 de 33 |
 
 A tabela campo a campo está em [`entrega/avaliacao.md`](entrega/avaliacao.md).
 
 O que ficou abaixo do máximo: das seis inconsistências conhecidas no texto dos documentos, o
-validador registrou cinco. Faltou a frase do EBITDA da distribuidora da Light (p. 8); a frase
-análoga do EBITDA consolidado (p. 9) foi registrada, e o alerta automático do EBITDA cobre o mesmo
-problema.
+validador registrou quatro. É a medida que mais varia entre execuções (de 3 a 5), com qualquer
+uma das duas bases.
 
 Sobre essa medida: a lista de inconsistências do gabarito é o que foi conferido no PDF, não tudo o
 que existe. Duas saíram da minha leitura; as outras quatro foram apontadas pelo validador em alguma
@@ -336,9 +392,13 @@ prompt. Todas as linhas abaixo usam o gabarito final.
 | 9 | 116 s | US$ 0,64 | 24/24 | 13/13 | 10/10 | 0/11 | 5/5 | Sem erro nos indicadores nem nas perguntas |
 | 10 | 156 s | US$ 0,69 | 24/24 | 12/13 | 10/10 | 0/11 | 5/5 | Repetição da anterior: o lucro da Millet veio da linha dos controladores (14.743 de 18.891) → o lucro é o total, antes da participação dos minoritários |
 | 11 | 297 s | US$ 0,86 | 24/24 | 13/13 | 10/10 | 0/11 | 5/5 | Só ficou completa na 3ª rodada da conferência final. Os operandos do EBITDA da Light não foram gravados, e o alerta do sinal omitido não disparou → operandos exigidos mesmo com o EBITDA informado |
-| 12 | 130 s | US$ 0,63 | 24/24 | 13/13 | 10/10 | 0/11 | 5/5 | **A entregue.** Sem erro nos indicadores, nos alertas automáticos nem nas perguntas |
+| 12 | 130 s | US$ 0,63 | 24/24 | 13/13 | 10/10 | 0/11 | 5/5 | A entregue com o SDK de agentes da OpenAI. Sem erro nos indicadores, nos alertas automáticos nem nas perguntas |
+| 13 | ~3 min | US$ 0,75 | 24/24 | 13/13 | 8/10 | 0/11 | 5/5 | **Primeira com PydanticAI e LangGraph.** O total da nota de empréstimos da Brasal (3.417) gravado como a parte circulante: dívida contada duas vezes, e a dívida líquida e a alavancagem calculadas erradas → empréstimo circulante e não circulante vêm do balanço |
+| 14 | 146 s | US$ 0,58 | 24/24 | 13/13 | 10/10 | 0/11 | 5/5 | Sem erro nos indicadores. Ainda sem raciocínio registrado: sem um esforço de raciocínio configurado, o modelo não raciocina → `ESFORCO_RACIOCINIO` |
+| 15 | 332 s | US$ 1,02 | 24/24 | 13/13 | 10/10 | 0/11 | 5/5 | **A entregue.** Com o raciocínio ligado. A segunda chamada do extrator da Light, a que levava a memória, foi recusada pela OpenAI (erro 400: chamada de tool sem o raciocínio que a precedeu); a terceira fechou a extração → a memória tira também o id do item, com teste e conferido numa conversa real |
 
 As execuções 1 a 8 rodaram com os serviços fora do Docker; da 9 em diante, pelos contêineres.
+Da 13 em diante, com PydanticAI e LangGraph.
 
 O que o histórico mostra:
 
@@ -349,6 +409,9 @@ O que o histórico mostra:
   Por isso as regras estão no servidor, e não no prompt.
 - **Um portão pode errar** (execução 7). O sistema respondeu do jeito certo: não entregou
   relatório, terminou como `incompleta` e a auditoria mostrou onde travou.
+- **Trocar a base não mudou a qualidade** (execuções 13 a 15): o mesmo status, zero invenção e
+  as cinco perguntas. O erro da 13 foi de escolha de linha, do tipo que os portões cobrem, e virou
+  portão.
 - **A conferência final faz diferença** (execução 11): o orquestrador disse que tinha terminado
   duas vezes com pendências na base; o código devolveu a lista, e a terceira rodada fechou.
 - **A avaliação também precisou ser corrigida.** A conferência das perguntas por nome de empresa
@@ -357,59 +420,71 @@ O que o histórico mostra:
 
 ### Estabilidade entre execuções
 
-Nas quatro últimas execuções (9 a 12), comparando indicador a indicador (mesmo status, mesma
-origem e mesmo valor):
+Comparando indicador a indicador (mesmo status, mesma origem e mesmo valor):
 
 | Comparação | Indicadores iguais | O que mudou |
 |---|---|---|
 | 9 e 10 | 23 de 24 | lucro da Millet (a linha dos controladores) |
 | 11 e 12 | 23 de 24 | EBITDA calculado da Light (operandos não gravados na 11) |
 | 9 e 12 | 24 de 24 | nada |
+| 14 e 15 (PydanticAI e LangGraph) | 23 de 24 | dívida líquida da Light: o mesmo valor, lido da tabela (9.032.236 R$ mil) na 14 e da frase (9.032 R$ milhões) na 15; os dois estão certos |
 
-Os dois campos que variaram viraram portão. O status dos 24 campos e as cinco perguntas foram
-iguais nas quatro. O que mais varia é a leitura do validador: ele registrou de 3 a 5 das 6
-inconsistências conhecidas, e não as mesmas a cada vez. Tempo e custo também variam: de 116 a
-297 s e de US$ 0,63 a US$ 0,86.
+Os dois campos que variaram até a 12ª viraram portão. O status dos 24 campos e as cinco perguntas
+foram iguais nas execuções 9 a 15, com as duas bases. O que mais varia é a leitura do validador:
+ele registrou de 3 a 5 das 6 inconsistências conhecidas, e não as mesmas a cada vez. Tempo e custo
+também variam: de 116 a 332 s e de US$ 0,58 a US$ 1,02.
 
 ## Custo e desempenho
 
-Medido na 12ª execução (a entregue): relatório completo dos três documentos, com a base zerada,
-pelos contêineres, num Core i5-10400 sem GPU. Os especialistas rodam em paralelo.
+Medido na 15ª execução (a entregue): relatório completo dos três documentos, com a base zerada,
+pelos contêineres, num Core i5-10400 sem GPU. Os especialistas de uma onda rodam em paralelo.
 
 | | |
 |---|---|
-| Tempo total, do pedido ao relatório montado | **130 s** |
-| Chamadas ao modelo | 163 |
-| Tokens | 2,01 milhões (86% da entrada em cache) |
-| Custo | **US$ 0,63** |
-| Chamadas de tool no servidor MCP | 227, das quais 18 recusadas por um portão e refeitas |
-| Delegações do orquestrador (A2A) | 19 |
+| Tempo total, do pedido ao relatório montado | **332 s** |
+| Chamadas ao modelo | 160 |
+| Tokens | 3,0 milhões (87% da entrada em cache) |
+| Custo | **US$ 1,02** |
+| Chamadas de tool no servidor MCP | 284, das quais 21 recusadas por um portão e refeitas |
+| Decisões do orquestrador (ondas) | 7 |
+| Delegações (A2A) | 20 |
+| Passos de raciocínio registrados | 72 |
 
 Por documento (extração, revisão, análise e resumo; os tempos somam o trabalho dos quatro
 especialistas, que em parte roda em paralelo):
 
 | Documento | Páginas | Tempo dos especialistas | Tokens | Custo |
 |---|---|---|---|---|
-| Brasal | 51 | 111 s | 579 mil | US$ 0,20 |
-| Millet | 43 | 98 s | 635 mil | US$ 0,20 |
-| Light | 124 | 105 s | 623 mil | US$ 0,18 |
+| Brasal | 51 | 155 s | 552 mil | US$ 0,26 |
+| Millet | 43 | 192 s | 962 mil | US$ 0,32 |
+| Light | 124 | 253 s | 1,25 milhão | US$ 0,35 |
 
-As cinco perguntas, a montagem do relatório e o orquestrador somam os US$ 0,05 restantes.
+As cinco perguntas, a montagem do relatório e o orquestrador somam os US$ 0,09 restantes.
 
 Por agente:
 
 | Agente | Modelo | Chamadas | Tokens | Custo |
 |---|---|---|---|---|
-| extrator | gpt-5.4-mini | 60 | 1,01 milhão | US$ 0,15 |
-| validador | gpt-5.4 | 19 | 326 mil | US$ 0,30 |
-| analista | gpt-5.4-mini | 35 | 460 mil | US$ 0,11 |
-| pesquisador | gpt-5.4-mini | 25 | 109 mil | US$ 0,03 |
-| redator | gpt-5.4-mini | 13 | 47 mil | US$ 0,02 |
-| orquestrador | gpt-5.4-mini | 11 | 59 mil | US$ 0,02 |
+| extrator | gpt-5.4-mini | 61 | 1,80 milhão | US$ 0,33 |
+| validador | gpt-5.4 | 26 | 526 mil | US$ 0,47 |
+| analista | gpt-5.4-mini | 25 | 393 mil | US$ 0,11 |
+| pesquisador | gpt-5.4-mini | 21 | 131 mil | US$ 0,05 |
+| redator | gpt-5.4-mini | 13 | 51 mil | US$ 0,02 |
+| orquestrador | gpt-5.4-mini | 14 | 104 mil | US$ 0,03 |
 
-- O **validador** é perto de metade do custo: é o único no modelo forte, e lê páginas inteiras.
+- **O raciocínio quase dobrou custo e tempo.** A 14ª (mesma base, sem raciocínio) custou
+  US$ 0,58 em 146 s; a 15ª, US$ 1,02 em 332 s, com o dobro de tokens de saída (44 mil contra 22
+  mil), que são os mais caros. Parte do tempo foi a extração da Light, que precisou de três
+  chamadas (o erro da memória, ver o histórico). A qualidade medida foi a mesma. Com
+  `ESFORCO_RACIOCINIO` vazio, o raciocínio desliga e o custo volta ao da 14ª; o que se perde é o
+  porquê de cada escolha no trace.
+- O **validador** é perto de metade do custo: é o único no modelo forte, lê páginas inteiras, e é
+  quem mais raciocina.
 - O **extrator** é quem mais gasta tokens, quase todos em cache: cada tabela lida fica no
   histórico e é reenviada a cada passo.
+- **Uma conversa** custa por volta de US$ 0,01 a 0,03 por turno (pergunta respondida com fontes,
+  raciocínio ligado). O terceiro turno de uma conversa medida levou ao pesquisador 2 chamadas
+  anteriores, cerca de 9 mil tokens de memória.
 - Preços usados (por milhão de tokens, da página de cada modelo em 13/11/2026): gpt-5.4-mini a
   US$ 0,75 de entrada, 0,075 em cache e 4,50 de saída; gpt-5.4 a US$ 2,50, 0,25 e 15,00. Ficam em
   `PRECOS`, no `.env`.
@@ -418,8 +493,8 @@ Por agente:
   Document Intelligence (cerca de US$ 2,18 pelas 218 páginas, a preço de tabela) ou 26 min com o
   Docling, sem custo por página; mais US$ 0,03 de embeddings e de leitura de gráficos.
 
-Somando: cerca de **US$ 0,7 por lote de três documentos** (pouco mais de US$ 0,2 por documento) com
-o Docling, ou US$ 2,9 com a leitura pela Azure, e de **2 a 5 minutos** de agentes.
+Somando: cerca de **US$ 1 por lote de três documentos** com o raciocínio ligado (US$ 0,6 sem ele)
+e o Docling, ou de US$ 2,8 a 3,2 com a leitura pela Azure, e de **2 a 6 minutos** de agentes.
 
 ## Decisões e trade-offs
 
@@ -431,7 +506,9 @@ o Docling, ou US$ 2,9 com a leitura pela Azure, e de **2 a 5 minutos** de agente
 | **A2A entre orquestrador e especialistas** | Fronteira de serviço e de identidade entre os agentes | Uma chamada de rede por delegação; dois serviços |
 | **MCP como porta única** | Um lugar só para política, auditoria e portões; os dados extraídos ficam disponíveis para outros agentes | Mais um serviço no caminho de toda chamada |
 | **Modelo pequeno para quase tudo, forte só no validador** | Com os portões, o modelo pequeno basta para apontar e redigir. Conferir contas no texto pede mais: o pequeno achou 2 das 6 inconsistências conhecidas e registrou falsos positivos | O validador responde por perto de metade do custo da execução |
-| **SDK de agentes da OpenAI** | Laço de tools, MCP e limites de turno prontos; pouca coisa para manter | Acopla ao formato de tools da OpenAI. O modelo é configurável; trocar de provedor pede adaptar `app/runner.py` |
+| **PydanticAI para os agentes** | Saída estruturada validada (a decisão do orquestrador), MCP como toolset, histórico serializável (a memória), limites de uso e o raciocínio como parte da resposta. Troca de provedor sem reescrever o runner | A API mudou da versão 1 para a 2 (versões fixadas na série) |
+| **LangGraph para a orquestração** | O fluxo vira um grafo explícito: paralelismo por onda, a conferência como nó, freios por número de ondas, e checkpoint por conversa (a memória do usuário) sem escrever persistência | Uma biblioteca a mais; o estado do grafo vai para o disco, então o que é segredo (o token do usuário) fica fora dele, no contexto da execução |
+| **Memória do especialista na conversa inteira** | Pergunta de seguimento e tarefa continuada não recomeçam do zero | Cada chamada leva o histórico: mais tokens de entrada (a maior parte em cache). O encurtamento e o teto limitam |
 | **Sem framework de RAG** | A busca é do indexador; aqui só há chamadas de tool | — |
 
 ## Segurança
@@ -446,8 +523,11 @@ o Docling, ou US$ 2,9 com a leitura pela Azure, e de **2 a 5 minutos** de agente
      dá, só grava o que passa pelos portões (um "grave o valor 999" não tem célula nem trecho que
      o sustente), só vê os documentos do usuário da execução, e o texto dele não volta ao
      orquestrador, que decide sem nunca ler um trecho.
-- **Isolamento entre usuários.** Uma execução pertence a quem a criou; para outro usuário ela não
-  existe. Os dados são filtrados pelo usuário em cada sistema.
+- **Isolamento entre usuários.** Uma execução e uma conversa pertencem a quem as criou; para outro
+  usuário elas não existem. A memória dos especialistas é guardada por usuário. Os dados são
+  filtrados pelo usuário em cada sistema.
+- **O que vai para o disco.** O checkpoint do grafo, a memória e as mensagens guardam texto dos
+  documentos, e por isso ficam locais. O token do usuário não entra em nenhum deles.
 
 ## Limitações
 
@@ -473,6 +553,13 @@ o Docling, ou US$ 2,9 com a leitura pela Azure, e de **2 a 5 minutos** de agente
   novo retoma do que falta.
 - **Documentos anuais.** Os três PDFs são demonstrações de 2022 com a coluna de 2021. Não há
   dados trimestrais, e "período" aqui é o exercício.
+- **A memória custa tokens.** Cada chamada de um especialista numa conversa longa leva o
+  histórico dele. O encurtamento e o teto limitam, e a maior parte entra como cache, mas o custo
+  cresce com a conversa. O teto é por chamada, não por conversa.
+- **O raciocínio registrado é um resumo.** É o que a OpenAI devolve, não a cadeia completa do
+  modelo. Explica a escolha na maior parte das vezes; não é uma prova dela.
+- **Um turno de conversa é uma pergunta.** Pedir o relatório continua sendo pela rota de
+  relatório (que também aceita `conversa_id`).
 
 ## Caminho para produção no Azure
 
@@ -510,20 +597,21 @@ Para milhares de documentos por trimestre:
 agents/
 ├─ agentes/                 um .md por agente (o orquestrador também)
 ├─ app/
-│  ├─ main.py               API do orquestrador
-│  ├─ orquestrador.py       uma execução: delegar, conferir, pedir o que faltou
-│  ├─ a2a.py                cliente A2A e a tool de cada especialista
-│  ├─ especialistas.py      serviço A2A: card, endpoint, só o orquestrador entra, relato
-│  ├─ runner.py             roda um agente: modelo, conexão MCP, passos, freios
+│  ├─ main.py               API do orquestrador: conversas, execuções, mensagens
+│  ├─ grafo.py              uma execução como grafo LangGraph: orquestrador, delegar, conferencia, fim
+│  ├─ a2a.py                cliente A2A: catálogo e delegação
+│  ├─ especialistas.py      serviço A2A: card, endpoint, só o orquestrador entra, memória, relato
+│  ├─ runner.py             roda um agente PydanticAI: modelo, toolset MCP, passos, raciocínio, freios
+│  ├─ memoria.py            histórico de cada especialista por conversa, e o encurtamento
 │  ├─ registry.py           lê os arquivos de agente, sem reiniciar
 │  ├─ tokens.py  mcp.py     os dois tokens; a conexão MCP de cada agente
-│  ├─ execucoes.py          execuções e trace em arquivo
+│  ├─ execucoes.py          execuções, conversas, trace e mensagens em arquivo
 │  ├─ costs.py              tokens e custo por agente e por documento
 │  ├─ evaluation.py         a conta da avaliação contra o gabarito
 │  ├─ security.py  config.py  cli.py
 ├─ avaliacao/gabarito.json  valores conferidos à mão nos PDFs
 ├─ scripts/                 avaliar.py, gerar_entrega.py
-├─ entrega/                 relatório, JSON por documento, respostas e avaliação
-└─ tests/                   51 testes sem rede: modelo com roteiro, servidor MCP em memória
-                            e A2A de verdade, por ASGI
+├─ entrega/                 relatório, JSON por documento (enxuto e completo), respostas e avaliação
+└─ tests/                   63 testes sem rede: modelo com roteiro, servidor MCP em memória,
+                            A2A de verdade por ASGI e grafo com checkpoint em memória
 ```

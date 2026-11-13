@@ -71,7 +71,7 @@
       "rotulo": "EBITDA",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não traz EBITDA/LAJIDA consolidado em texto ou tabela. Procurei nas páginas de desempenho, notas e demonstrações; há apenas resultado operacional e depreciação/amortização, suficientes para cálculo pelo servidor, mas sem linha ou frase com EBITDA informado pela companhia.",
+        "motivo": "O documento não apresenta linha ou frase com 'EBITDA' ou 'LAJIDA' para o consolidado; as demonstrações trazem apenas o lucro operacional antes das receitas e despesas financeiras e a depreciação/amortização, usados como valores de apoio.",
         "evidencia": {
           "termos_procurados": [
             "ebitda",
@@ -138,7 +138,7 @@
       "rotulo": "Margem EBITDA",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não informa margem EBITDA em texto ou tabela. Há dados para cálculo do servidor, mas não há percentual declarado pela companhia.",
+        "motivo": "O documento não informa margem EBITDA em percentual; não há quadro ou frase com esse indicador para o consolidado.",
         "evidencia": {
           "termos_procurados": [
             "margem ebitda",
@@ -256,7 +256,7 @@
       "rotulo": "Dívida líquida",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não informa dívida líquida consolidada em texto ou tabela. Há apenas empréstimos e financiamentos e caixa e equivalentes, que ficam como valores de apoio para cálculo do servidor.",
+        "motivo": "O documento não informa a dívida líquida como indicador explícito; há apenas saldos de empréstimos e financiamentos e caixa e equivalentes de caixa nas demonstrações patrimoniais, usados como valores de apoio.",
         "evidencia": {
           "termos_procurados": [
             "dívida líquida",
@@ -296,18 +296,50 @@
             "periodo": "2022",
             "valor": "96.453",
             "unidade": "R$ mil",
-            "pagina": 48,
+            "pagina": 6,
             "escopo": "consolidado"
           }
         ],
-        "comparavel": null
+        "comparavel": {
+          "valor": "-55.688",
+          "valor_numerico": -55688.0,
+          "unidade": "R$ mil",
+          "periodo": "2021",
+          "formula": "empréstimos e financiamentos (circulante + não circulante) − caixa e equivalentes",
+          "operandos": [
+            {
+              "campo": "emprestimos_circulante",
+              "periodo": "2021",
+              "valor": "1.902",
+              "unidade": "R$ mil",
+              "pagina": 7,
+              "escopo": "consolidado"
+            },
+            {
+              "campo": "emprestimos_nao_circulante",
+              "periodo": "2021",
+              "valor": "4.576",
+              "unidade": "R$ mil",
+              "pagina": 7,
+              "escopo": "consolidado"
+            },
+            {
+              "campo": "caixa_equivalentes",
+              "periodo": "2021",
+              "valor": "62.166",
+              "unidade": "R$ mil",
+              "pagina": 6,
+              "escopo": "consolidado"
+            }
+          ]
+        }
       }
     },
     "alavancagem": {
       "rotulo": "Alavancagem (dívida líquida / EBITDA)",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não informa alavancagem (dívida líquida/EBITDA) em texto ou tabela. Não há múltiplo declarado pela companhia.",
+        "motivo": "O documento não informa alavancagem como múltiplo dívida líquida/EBITDA; há somente menções genéricas à gestão da dívida e à alavancagem financeira, sem o indicador calculado.",
         "evidencia": {
           "termos_procurados": [
             "alavancagem",
@@ -349,7 +381,31 @@
             "base": "calculado"
           }
         ],
-        "comparavel": null
+        "comparavel": {
+          "valor": "-0,21x",
+          "valor_numerico": -0.21,
+          "unidade": "x",
+          "periodo": "2021",
+          "formula": "dívida líquida / EBITDA",
+          "operandos": [
+            {
+              "campo": "divida_liquida",
+              "periodo": "2021",
+              "valor": "-55.688",
+              "unidade": "R$ mil",
+              "formula": "empréstimos e financiamentos (circulante + não circulante) − caixa e equivalentes",
+              "base": "calculado"
+            },
+            {
+              "campo": "ebitda",
+              "periodo": "2021",
+              "valor": "261.061",
+              "unidade": "R$ mil",
+              "formula": "resultado antes do resultado financeiro + depreciação e amortização",
+              "base": "calculado"
+            }
+          ]
+        }
       }
     },
     "fluxo_caixa_operacional": {
@@ -404,7 +460,7 @@
       "rotulo": "Capex",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não informa um total de capex. O fluxo de caixa traz as linhas de aquisição de imobilizado e intangível, que foram registradas como valores de apoio; não há linha consolidada chamada capex ou total de investimentos.",
+        "motivo": "O fluxo de caixa informa a linha 'Imobilizado e intangível' como saída de investimento, mas não apresenta um total de capex com esse nome; por isso a linha de aquisição foi gravada como valor de apoio e o capex total não é informado no documento.",
         "evidencia": {
           "termos_procurados": [
             "capex",
@@ -457,39 +513,39 @@
     }
   },
   "valores_de_apoio": {
-    "resultado_antes_financeiro": {
-      "rotulo": "Resultado antes do resultado financeiro",
+    "capex_imobilizado_e_intangivel": {
+      "rotulo": "Aquisição de imobilizado e intangível (linha única)",
       "2022": {
         "status": "encontrado",
-        "valor": "192.840",
-        "valor_numerico": 192840.0,
+        "valor": "(45.761)",
+        "valor_numerico": -45761.0,
         "unidade": "R$ mil",
         "periodo": "2022",
         "escopo": "consolidado",
         "origem": {
           "tipo": "tabela",
-          "pagina": 8,
-          "chunk_index": 11,
-          "secao": "Demonstrações dos resultados",
-          "trecho": "|  | Notas | Controladora - 2022 | Controladora - 2021 - (não auditado) | Consolidado - 2022 | Consolidado - 2021 - (não auditado) |\n| Lucro operacional antes das receitas e despesas financeiras |  | 173.736 | 275.244 | 192.840 | 238.224 |",
-          "linha": "Lucro operacional antes das receitas e despesas financeiras",
+          "pagina": 11,
+          "chunk_index": 14,
+          "secao": "Demonstrações dos fluxos de caixa (Método Indireto)",
+          "trecho": "|  | Controladora - 2022 | Controladora - 2021 - (não auditado) | Consolidado - 2022 | Consolidado - 2021 - (não auditado) |\n| Imobilizado e intangível | - | (1.950) | (45.761) | (53.388) |",
+          "linha": "Imobilizado e intangível",
           "coluna": "Consolidado - 2022"
         }
       },
       "2021": {
         "status": "encontrado",
-        "valor": "238.224",
-        "valor_numerico": 238224.0,
+        "valor": "(53.388)",
+        "valor_numerico": -53388.0,
         "unidade": "R$ mil",
         "periodo": "2021",
         "escopo": "consolidado",
         "origem": {
           "tipo": "tabela",
-          "pagina": 8,
-          "chunk_index": 11,
-          "secao": "Demonstrações dos resultados",
-          "trecho": "|  | Notas | Controladora - 2022 | Controladora - 2021 - (não auditado) | Consolidado - 2022 | Consolidado - 2021 - (não auditado) |\n| Lucro operacional antes das receitas e despesas financeiras |  | 173.736 | 275.244 | 192.840 | 238.224 |",
-          "linha": "Lucro operacional antes das receitas e despesas financeiras",
+          "pagina": 11,
+          "chunk_index": 14,
+          "secao": "Demonstrações dos fluxos de caixa (Método Indireto)",
+          "trecho": "|  | Controladora - 2022 | Controladora - 2021 - (não auditado) | Consolidado - 2022 | Consolidado - 2021 - (não auditado) |\n| Imobilizado e intangível | - | (1.950) | (45.761) | (53.388) |",
+          "linha": "Imobilizado e intangível",
           "coluna": "Consolidado - 2021 - (não auditado)"
         }
       }
@@ -531,6 +587,43 @@
         }
       }
     },
+    "resultado_antes_financeiro": {
+      "rotulo": "Resultado antes do resultado financeiro",
+      "2022": {
+        "status": "encontrado",
+        "valor": "192.840",
+        "valor_numerico": 192840.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 8,
+          "chunk_index": 11,
+          "secao": "Demonstrações dos resultados",
+          "trecho": "|  | Notas | Controladora - 2022 | Controladora - 2021 - (não auditado) | Consolidado - 2022 | Consolidado - 2021 - (não auditado) |\n| Lucro operacional antes das receitas e despesas financeiras |  | 173.736 | 275.244 | 192.840 | 238.224 |",
+          "linha": "Lucro operacional antes das receitas e despesas financeiras",
+          "coluna": "Consolidado - 2022"
+        }
+      },
+      "2021": {
+        "status": "encontrado",
+        "valor": "238.224",
+        "valor_numerico": 238224.0,
+        "unidade": "R$ mil",
+        "periodo": "2021",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 8,
+          "chunk_index": 11,
+          "secao": "Demonstrações dos resultados",
+          "trecho": "|  | Notas | Controladora - 2022 | Controladora - 2021 - (não auditado) | Consolidado - 2022 | Consolidado - 2021 - (não auditado) |\n| Lucro operacional antes das receitas e despesas financeiras |  | 173.736 | 275.244 | 192.840 | 238.224 |",
+          "linha": "Lucro operacional antes das receitas e despesas financeiras",
+          "coluna": "Consolidado - 2021 - (não auditado)"
+        }
+      }
+    },
     "emprestimos_circulante": {
       "rotulo": "Empréstimos e financiamentos (circulante)",
       "2022": {
@@ -548,7 +641,8 @@
           "trecho": "|  | Notas | Controladora - 31/12/2022 | Controladora - 31/12/2021 - (não auditado) | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 - (não auditado) |\n| Empréstimos e financiamentos | 16 | - | - | 1.849 | 1.902 |",
           "linha": "Empréstimos e financiamentos",
           "coluna": "Consolidado - 31/12/2022"
-        }
+        },
+        "nota_do_agente": "passivo circulante"
       },
       "2021": {
         "status": "encontrado",
@@ -564,6 +658,43 @@
           "secao": "Balanços patrimoniais",
           "trecho": "|  | Notas | Controladora - 31/12/2022 | Controladora - 31/12/2021 - (não auditado) | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 - (não auditado) |\n| Empréstimos e financiamentos | 16 | - | - | 1.849 | 1.902 |",
           "linha": "Empréstimos e financiamentos",
+          "coluna": "Consolidado - 31/12/2021 - (não auditado)"
+        }
+      }
+    },
+    "caixa_equivalentes": {
+      "rotulo": "Caixa e equivalentes de caixa",
+      "2022": {
+        "status": "encontrado",
+        "valor": "96.453",
+        "valor_numerico": 96453.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 6,
+          "chunk_index": 9,
+          "secao": "Balanços patrimoniais",
+          "trecho": "|  | Notas | Controladora - 31/12/2022 | Controladora - 31/12/2021 - (não auditado) | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 - (não auditado) |\n| Caixa e equivalentes de caixa | 4 | 3.714 | 1.146 | 96.453 | 62.166 |",
+          "linha": "Caixa e equivalentes de caixa",
+          "coluna": "Consolidado - 31/12/2022"
+        }
+      },
+      "2021": {
+        "status": "encontrado",
+        "valor": "62.166",
+        "valor_numerico": 62166.0,
+        "unidade": "R$ mil",
+        "periodo": "2021",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 6,
+          "chunk_index": 9,
+          "secao": "Balanços patrimoniais",
+          "trecho": "|  | Notas | Controladora - 31/12/2022 | Controladora - 31/12/2021 - (não auditado) | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 - (não auditado) |\n| Caixa e equivalentes de caixa | 4 | 3.714 | 1.146 | 96.453 | 62.166 |",
+          "linha": "Caixa e equivalentes de caixa",
           "coluna": "Consolidado - 31/12/2021 - (não auditado)"
         }
       }
@@ -585,7 +716,8 @@
           "trecho": "|  | Notas | Controladora - 31/12/2022 | Controladora - 31/12/2021 - (não auditado) | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 - (não auditado) |\n| Empréstimos e financiamentos | 16 | - | 226 | 1.568 | 4.576 |",
           "linha": "Empréstimos e financiamentos",
           "coluna": "Consolidado - 31/12/2022"
-        }
+        },
+        "nota_do_agente": "passivo não circulante"
       },
       "2021": {
         "status": "encontrado",
@@ -604,85 +736,8 @@
           "coluna": "Consolidado - 31/12/2021 - (não auditado)"
         }
       }
-    },
-    "caixa_equivalentes": {
-      "rotulo": "Caixa e equivalentes de caixa",
-      "2022": {
-        "status": "encontrado",
-        "valor": "96.453",
-        "valor_numerico": 96453.0,
-        "unidade": "R$ mil",
-        "periodo": "2022",
-        "escopo": "consolidado",
-        "origem": {
-          "tipo": "tabela",
-          "pagina": 48,
-          "chunk_index": 122,
-          "secao": "25. Gestão de riscos dos instrumentos financeiros",
-          "trecho": "|  | Controladora - Custo amortizado | Controladora - Valor justo | Consolidado - Custo amortizado | Consolidado - Valor justo |\n| Caixa e equivalentes de caixa | 3.714 | 3.714 | 96.453 | 96.453 |",
-          "linha": "Caixa e equivalentes de caixa",
-          "coluna": "Consolidado - Custo amortizado"
-        }
-      }
-    },
-    "capex_imobilizado_e_intangivel": {
-      "rotulo": "Aquisição de imobilizado e intangível (linha única)",
-      "2022": {
-        "status": "encontrado",
-        "valor": "(45.761)",
-        "valor_numerico": -45761.0,
-        "unidade": "R$ mil",
-        "periodo": "2022",
-        "escopo": "consolidado",
-        "origem": {
-          "tipo": "tabela",
-          "pagina": 11,
-          "chunk_index": 14,
-          "secao": "Demonstrações dos fluxos de caixa (Método Indireto)",
-          "trecho": "|  | Controladora - 2022 | Controladora - 2021 - (não auditado) | Consolidado - 2022 | Consolidado - 2021 - (não auditado) |\n| Imobilizado e intangível | - | (1.950) | (45.761) | (53.388) |",
-          "linha": "Imobilizado e intangível",
-          "coluna": "Consolidado - 2022"
-        }
-      },
-      "2021": {
-        "status": "encontrado",
-        "valor": "(53.388)",
-        "valor_numerico": -53388.0,
-        "unidade": "R$ mil",
-        "periodo": "2021",
-        "escopo": "consolidado",
-        "origem": {
-          "tipo": "tabela",
-          "pagina": 11,
-          "chunk_index": 14,
-          "secao": "Demonstrações dos fluxos de caixa (Método Indireto)",
-          "trecho": "|  | Controladora - 2022 | Controladora - 2021 - (não auditado) | Consolidado - 2022 | Consolidado - 2021 - (não auditado) |\n| Imobilizado e intangível | - | (1.950) | (45.761) | (53.388) |",
-          "linha": "Imobilizado e intangível",
-          "coluna": "Consolidado - 2021 - (não auditado)"
-        }
-      }
     }
   },
-  "alertas_de_validacao": [
-    {
-      "codigo": "secao_inesperada",
-      "severidade": "informacao",
-      "campo": "caixa_equivalentes",
-      "mensagem": "Caixa e equivalentes de caixa (2022): o valor veio da seção '25. Gestão de riscos dos instrumentos financeiros', e não de uma demonstração de balanço.",
-      "detalhes": {
-        "pagina": 48
-      }
-    },
-    {
-      "codigo": "periodo_nao_confirmado",
-      "severidade": "atencao",
-      "campo": "caixa_equivalentes",
-      "mensagem": "Caixa e equivalentes de caixa (2022): a fonte citada não escreve o período 2022. Confira se o valor é mesmo desse período.",
-      "detalhes": {
-        "pagina": 48,
-        "trecho": "|  | Controladora - Custo amortizado | Controladora - Valor justo | Consolidado - Custo amortizado | Consolidado - Valor justo |\n| Caixa e equivalentes de caixa | 3.714 | 3.714 | 96.453 | 96.453 |"
-      }
-    }
-  ],
+  "alertas_de_validacao": [],
   "impressao_do_indice": "2026-11-13T12:52:16.112319Z|136"
 }

@@ -164,7 +164,11 @@ def default_engine(settings: Settings) -> Engine:
     def model(alias: str) -> Model:
         if alias not in settings.modelos:
             raise KeyError(f"o apelido de modelo '{alias}' não está em MODELOS ({', '.join(sorted(settings.modelos))})")
-        model_settings = {"openai_reasoning_summary": settings.resumo_raciocinio} if settings.resumo_raciocinio else None
+        model_settings = None
+        if settings.esforco_raciocinio:  # sem esforço, o modelo não raciocina e não há resumo
+            model_settings = {"thinking": settings.esforco_raciocinio}
+            if settings.resumo_raciocinio:
+                model_settings["openai_reasoning_summary"] = settings.resumo_raciocinio
         return OpenAIResponsesModel(settings.modelos[alias], provider=provider, settings=model_settings)
 
     return Engine(settings, lambda agent, identity: mcp.connect(settings, agent, identity), model)

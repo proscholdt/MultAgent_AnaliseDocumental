@@ -4,19 +4,19 @@
   "analise": {
     "motivo_resultado": [
       {
-        "afirmacao": "A variação de parte dos resultados é explicada pela equivalência patrimonial do investimento na controlada, que reconhece no resultado a parcela do lucro ou prejuízo da investida.",
-        "citacao": "De acordo com esse método, a participação da Companhia, no aumento ou diminuição do patrimônio líquido da controlada, em decorrência da apuração de lucro líquido ou prejuízo no exercício, é reconhecido como receita (ou despesa) operacional.",
-        "pagina": 18,
-        "chunk_index": 31,
-        "secao": "3. Sumário das principais práticas contábeis > 3.1 Políticas contábeis > j) Investimentos",
-        "fonte": "nota explicativa",
-        "tom": null
+        "status": "nao_encontrado",
+        "motivo": "O documento traz notas explicativas e relatório do auditor, mas não apresenta relatório da administração nem comentário de desempenho com explicação da variação de receita e resultado. Procurei termos como \"relatório da administração\" e \"receita líquida\" no corpo do PDF, sem encontrar seção de narrativa gerencial que explique o desempenho.",
+        "evidencia": {
+          "termos_procurados": [],
+          "paginas_com_o_termo": [],
+          "paginas_descartadas": []
+        }
       }
     ],
     "risco": [
       {
-        "afirmacao": "A companhia destaca risco de crédito nas vendas a clientes, mitigado por análise de perfil e monitoramento de saldos a receber.",
-        "citacao": "O principal fator de risco de mercado que afeta o negócio é a concessão de crédito aos clientes. Para reduzir as possíveis perdas com inadimplência, é adotada uma política de gestão na concessão de crédito, que consiste em análises do perfil dos clientes, bem como em monitoramento dos saldos a receber.",
+        "afirmacao": "A companhia destaca risco de crédito, risco de oscilação de preços e risco de juros, com possível impacto sobre resultado operacional e condição financeira. Ela afirma que monitora a concessão de crédito, os preços de matéria-prima e as taxas de juros.",
+        "citacao": "A Companhia está exposta a riscos de mercado decorrentes de suas atividades. Esses riscos envolvem, principalmente, a possibilidade da realização de contas a receber de clientes, de oscilações dos preços dos produtos e de taxas de juros, que podem impactar os resultados operacionais e a condição financeira",
         "pagina": 49,
         "chunk_index": 125,
         "secao": "26. Gestão de riscos",
@@ -24,30 +24,21 @@
         "tom": null
       },
       {
-        "afirmacao": "Há risco de variação de preços ligado à compra de matéria-prima, com monitoramento permanente para antecipar movimentos de preço.",
-        "citacao": "Os produtos comercializados pela Companhia estão sujeitos a oscilações em razão da compra de matéria-prima. Para mitigar os riscos, a Companhia monitora permanentemente os preços buscando antecipar-se a movimentos de preços.",
-        "pagina": 49,
-        "chunk_index": 125,
-        "secao": "26. Gestão de riscos",
-        "fonte": "nota explicativa",
-        "tom": null
-      },
-      {
-        "afirmacao": "A administração também aponta risco de taxa de juros sobre ativos e passivos financeiros, buscando diversificar aplicações e captações.",
-        "citacao": "Decorre da possibilidade de a Companhia sofrer ganhos ou perdas decorrentes de oscilações de taxas de juros incidentes sobre seus ativos e passivos financeiros. Visando à mitigação deste tipo de risco, a Companhia busca diversificar as aplicações e as captações de recursos em termos de taxas pré-fixadas ou pós-fixadas.",
-        "pagina": 49,
-        "chunk_index": 125,
-        "secao": "26. Gestão de riscos",
+        "afirmacao": "Há risco regulatório/judicial ligado aos tributos discutidos na tese da exclusão do ICMS da base de cálculo do PIS e da COFINS, pois a nota menciona a decisão do STF e o monitoramento permanente dos processos. É um ponto de atenção para a recuperação dos créditos tributários e para eventuais efeitos futuros.",
+        "citacao": "Em decisão tomada no dia 08 de fevereiro 2023, por unanimidade, o Plenário do Supremo Tribunal Federal (STF) considerou que uma decisão definitiva, a chamada \"coisa julgada\", sobre tributos recolhidos de forma continuada, perde seus efeitos caso a corte se pronuncie em sentido contrário.",
+        "pagina": 51,
+        "chunk_index": 134,
+        "secao": "28. Eventos subsequentes - Perda de efeitos da \"coisa julgada\" sobre tributos recolhidos de forma continuada",
         "fonte": "nota explicativa",
         "tom": null
       }
     ],
     "guidance": [
       {
-        "afirmacao": "A nota sobre tributos a recuperar traz expectativa de realização dos créditos em 2022 e 2023, com percentuais estimados pela administração.",
-        "citacao": "Plano de compensação dos tributos a recuperar: A Controlada realizou um estudo com base nos últimos recolhimentos de PIS e COFINS, além de considerar também as projeções orçamentárias para o próximo exercício, a expectativa de realização dos saldos dos valores relativos aos créditos fiscais, oriundos da exclusão do ICMS da base de cálculo do PIS e da COFINS e demais créditos de PIS e COFINS, é de que ocorrerá no exercício de 2022 aproximadamente 68,6%, sendo que o restante de 31,4% acontecerá até fevereiro de 2023.",
+        "afirmacao": "A administração indica que a compensação dos créditos tributários continuaria no curto prazo, com saldo remanescente a ser realizado até julho de 2023. Também informa que o estudo considerou projeções orçamentárias do próximo exercício.",
+        "citacao": "Foi realizado em 2022 o acompanhamneto de compensação dos tributos a recuperar oriundos da exclusão do ICMS da base de cálculo do PIS e da COFINS e demais créditos de PIS e COFINS, em função de uma retração no crescimento esperado para o 4º. Semestre de 2022, ficando abaixo um pouco das metas estabelecidas, então ocorreu uma compensação no exercício de 2022 de aproximadamente 61,1%, sendo que o restante de 38,9% deverá acontecer até julho de 2023.",
         "pagina": 28,
-        "chunk_index": 59,
+        "chunk_index": 60,
         "secao": "8. Tributos a recuperar > a) Circulante",
         "fonte": "nota explicativa",
         "tom": null
@@ -55,16 +46,7 @@
     ],
     "evento_relevante": [
       {
-        "afirmacao": "A companhia divulga um evento subsequente relacionado à decisão do STF sobre a perda dos efeitos de coisa julgada em tributos de trato continuado.",
-        "citacao": "Em decisão tomada no dia 08 de fevereiro 2023, por unanimidade, o Plenário do Supremo Tribunal Federal (STF) considerou que uma decisão definitiva, a chamada \"coisa julgada\", sobre tributos recolhidos de forma continuada, perde seus efeitos caso a corte se pronuncie em sentido contrário.",
-        "pagina": 51,
-        "chunk_index": 134,
-        "secao": "28. Eventos subsequentes - Perda de efeitos da \"coisa julgada\" sobre tributos recolhidos de forma continuada",
-        "fonte": "nota explicativa",
-        "tom": null
-      },
-      {
-        "afirmacao": "A administração informou que, apesar da decisão, não identificou impactos para estas demonstrações financeiras e seguirá monitorando os processos.",
+        "afirmacao": "O principal evento relevante divulgado é um evento subsequente judicial: a decisão do STF de 8 de fevereiro de 2023 sobre a perda de efeitos da coisa julgada em tributos de trato continuado. A administração afirma que não identificou impactos para as demonstrações financeiras, mas manterá o monitoramento dos processos.",
         "citacao": "A Administração em conjunto com os assessores jurídicos da Companhia não identificou impactos para estas demonstrações financeiras. No entanto manterá o monitoramento permanente de todos os seus processos, considerando a referida decisão.",
         "pagina": 51,
         "chunk_index": 135,
@@ -75,12 +57,12 @@
     ],
     "tom": [
       {
-        "afirmacao": "O tom da administração é neutro, pois o documento é predominantemente factual e a opinião do auditor afirma que as demonstrações apresentam adequadamente a posição financeira e o desempenho.",
-        "citacao": "Em nossa opinião, as demonstrações financeiras acima referidas apresentam adequadamente, em todos os aspectos relevantes, a posição patrimonial e financeira, individual e consolidada, da Companhia em 31 de dezembro de 2022, o desempenho individual e consolidado de suas operações e os seus respectivos fluxos de caixa individuais e consolidados para o exercício findo nessa data, de acordo com as práticas contábeis adotadas no Brasil.",
-        "pagina": 3,
-        "chunk_index": 2,
-        "secao": "Opinião",
-        "fonte": "relatório",
+        "afirmacao": "O tom geral é neutro, porque as divulgações são majoritariamente factuais e a administração diz não ter identificado impactos relevantes no evento subsequente, sem linguagem de otimismo operacional.",
+        "citacao": "A Administração em conjunto com os assessores jurídicos da Companhia não identificou impactos para estas demonstrações financeiras. No entanto manterá o monitoramento permanente de todos os seus processos, considerando a referida decisão.",
+        "pagina": 51,
+        "chunk_index": 135,
+        "secao": "28. Eventos subsequentes - Perda de efeitos da \"coisa julgada\" sobre tributos recolhidos de forma continuada",
+        "fonte": "nota explicativa",
         "tom": "neutro"
       }
     ]

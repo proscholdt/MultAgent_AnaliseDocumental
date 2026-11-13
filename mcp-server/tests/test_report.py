@@ -328,3 +328,14 @@ async def test_report_question_must_be_answered_as_it_is_written(governance):
     assert [(q["pergunta_id"], q["respondida"]) for q in listed] == [
         ("p1", False), ("p2", False), ("p3", True), ("p4", False), ("p5", False)]
     assert listed[0]["pergunta"] == "Qual empresa teve a maior margem EBITDA no período?"
+
+
+async def test_a_free_question_answered_later_does_not_make_the_report_stale(governance):
+    """Numa conversa, cada pergunta livre fazia o relatório aparecer como desatualizado, e o
+    orquestrador mandava remontá-lo a cada turno."""
+    await complete(governance)
+    await call(governance, "redator", "montar_relatorio")
+    free = await call(governance, "pesquisador", "salvar_resposta", answer(
+        "livre", f"A receita foi de {{{{{DOC_ANA}.receita_liquida}}}}.", "Qual foi a receita?"))
+    assert not free.is_error, payload(free)
+    assert payload(await call(governance, "orquestrador", "pendencias")) == {"completo": True, "pendencias": []}

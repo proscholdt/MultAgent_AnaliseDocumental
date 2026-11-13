@@ -51,7 +51,7 @@
   "margem_ebitda": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não traz margem EBITDA consolidada em percentual; encontrei apenas o EBITDA em texto e não há linha/tabela com a margem do exercício.",
+    "motivo": "O relatório divulga EBITDA em valores absolutos e receita líquida, mas não apresenta uma margem EBITDA explícita com esse nome ou em percentual no trecho do desempenho financeiro nem na nota de EBITDA/covenants. Procurei nas páginas de desempenho e nas notas relacionadas a EBITDA e endividamento, sem localizar um percentual de margem EBITDA informado pela companhia.",
     "busca": {
       "termos_procurados": [
         "margem ebitda",
@@ -94,17 +94,15 @@
   },
   "divida_liquida": {
     "status": "encontrado",
-    "valor": 9032236,
-    "valor_como_escrito": "9.032.236",
-    "unidade": "R$ mil",
+    "valor": 9032,
+    "valor_como_escrito": "9.032",
+    "unidade": "R$ milhões",
     "periodo": "2022",
     "escopo": null,
     "origem": {
-      "pagina": 105,
-      "trecho": "| Dívida líquida (A) | 9.032.236 | 7.352.919 |",
-      "tipo": "tabela",
-      "linha": "Dívida líquida (A)",
-      "coluna": "31.12.2022"
+      "pagina": 10,
+      "trecho": "A dívida líquida da Companhia em 31 de dezembro de 2022 totalizou R$9.032 milhões, aumento de 23% em comparação a 2021, de R$7.353 milhões.",
+      "tipo": "texto"
     },
     "periodo_comparavel": {
       "valor": 7352919,
@@ -170,7 +168,7 @@
   "capex": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "A página 66 traz apenas uma linha de composição de custos/fees de empréstimos chamada 'BNDES - Capex', que não é um total de investimentos capex do exercício. O fluxo de caixa traz as linhas de aquisição de imobilizado e intangível, já registradas como apoio; não há capex total informado.",
+    "motivo": "O documento não informa um total de capex com esse nome; a página 23 contém apenas as linhas de aquisição do fluxo de caixa ('Aquisições de bens do ativo imobilizado' e 'Aquisições de bens do ativo intangível e do ativo de contrato'), que foram registradas como valores de apoio. A ocorrência de 'Capex' na p. 66 é apenas uma referência de nome em nota de empréstimos e não é o indicador de investimentos.",
     "busca": {
       "termos_procurados": [
         "capex",

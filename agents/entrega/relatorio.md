@@ -1,6 +1,6 @@
 # Relatório de análise das demonstrações financeiras
 
-Gerado em 13/11/2026 17:32 UTC. Empresas: Brasal Brasília Holding S.A.; LIGHT S.A.; Millet Participações S.A.
+Gerado em 13/11/2026 20:28 UTC. Empresas: Brasal Brasília Holding S.A.; LIGHT S.A.; Millet Participações S.A.
 
 Todo número deste relatório foi lido do documento pelo código (célula de tabela ou trecho conferido) ou calculado por fórmula fixa a partir desses valores. O que a empresa não informa aparece como "não informado", e o que foi calculado vem marcado como calculado.
 
@@ -8,27 +8,27 @@ Todo número deste relatório foi lido do documento pelo código (célula de tab
 
 ### Brasal Brasília Holding S.A. (2022)
 
-A receita líquida foi de R$ 1.325.059 mil (Brasal.pdf, p. 8) com variação de +24,84%.
-A rentabilidade ficou apoiada em EBITDA de R$ 221.854 mil (calculado; Brasal.pdf, p. 8 e 11) e margem EBITDA de 16,74% (calculado; Brasal.pdf, p. 8 e 11), com lucro líquido de R$ 174.602 mil (Brasal.pdf, p. 8).
-A dívida líquida foi de R$ -93.036 mil (calculado; Brasal.pdf, p. 7 e 48) e a alavancagem de -0,42x (calculado; Brasal.pdf, p. 7, 8, 11 e 48); o caixa operacional somou R$ 258.248 mil (Brasal.pdf, p. 11).
-O principal fator do resultado foi a equivalência patrimonial do investimento na controlada.
-O principal risco apontado é o crédito aos clientes, além da variação de preços de matérias-primas e das taxas de juros; há alerta de inconsistência de ano em nota de gestão de riscos.
+Em 2022, a receita líquida foi de R$ 1.325.059 mil (Brasal.pdf, p. 8) e teve variação de +24,84%.
+A rentabilidade foi sustentada por EBITDA calculado de R$ 221.854 mil (calculado; Brasal.pdf, p. 8 e 11) e margem EBITDA calculada de 16,74% (calculado; Brasal.pdf, p. 8 e 11); o lucro líquido foi de R$ 174.602 mil (Brasal.pdf, p. 8).
+A dívida líquida foi calculada em R$ -93.036 mil (calculado; Brasal.pdf, p. 6 e 7) e a alavancagem calculada em -0,42x (calculado; Brasal.pdf, p. 6, 7, 8 e 11); o fluxo de caixa operacional foi de R$ 258.248 mil (Brasal.pdf, p. 11).
+O principal motivo do resultado não foi informado na base; o principal risco apontado é de crédito, preços e juros.
+Há alerta de inconsistência na fonte em notas de risco e patrimônio líquido, então o documento merece leitura cautelosa.
 
 ### LIGHT S.A. (2022)
 
 A receita líquida foi de R$ 13.253.286 mil (Light.pdf, p. 20), com variação de -11,04%.
-O EBITDA informado foi de R$ 1.180 milhões (Light.pdf, p. 9); o EBITDA calculado foi R$ -1.179.644 mil (calculado; Light.pdf, p. 20 e 23), e a margem EBITDA calculada foi 8,90% (calculado; Light.pdf, p. 9 e 20). O lucro líquido foi de R$ (5.672.203) mil (Light.pdf, p. 20).
-A dívida líquida foi de R$ 9.032.236 mil (Light.pdf, p. 105), com alavancagem calculada de 7,65x (calculado; Light.pdf, p. 9 e 105). O fluxo de caixa operacional foi de R$ 200.763 mil (Light.pdf, p. 23) e o capex foi calculado em R$ 1.470.292 mil (calculado; Light.pdf, p. 23).
-O resultado foi pressionado principalmente pelos estornos de faturamento, pelo não acionamento das bandeiras tarifárias e pela variação negativa na CVA. O principal risco é a incerteza sobre a continuidade operacional.
-Há alerta para divergência entre o EBITDA informado e o calculado, além de inconsistência na alavancagem e na fonte do indicador.
+A rentabilidade foi pressionada; o EBITDA informado foi R$ 1.180 milhões (Light.pdf, p. 9), mas há alerta de divergência na base, e o lucro líquido ficou em R$ (5.672.203) mil (Light.pdf, p. 20).
+O endividamento ficou em R$ 9.032 milhões (Light.pdf, p. 10), com alavancagem informada de 3,32x (Light.pdf, p. 10) e cálculo interno de 7,65x (calculado; Light.pdf, p. 9 e 10).
+O resultado foi afetado por estornos de faturamento, bandeiras tarifárias não acionadas e variação negativa da CVA; o principal risco é a continuidade operacional.
+Há alerta relevante de inconsistência entre EBITDA e alavancagem informados e os valores calculados na base.
 
 ### Millet Participações S.A. (2022)
 
-A receita líquida foi de R$ 462.127 mil (Millet.pdf, p. 7) e teve variação de +131,92%.
-O EBITDA foi R$ 43.546 mil (calculado; Millet.pdf, p. 7 e 10) e a margem EBITDA foi 9,42% (calculado; Millet.pdf, p. 7 e 10); o lucro líquido foi de R$ 18.891 mil (Millet.pdf, p. 7).
-A dívida líquida foi de R$ 13.520 mil (Millet.pdf, p. 42) e a alavancagem foi de 0,31x (calculado; Millet.pdf, p. 7, 10 e 42); o caixa operacional foi de R$ 24.799 mil (Millet.pdf, p. 10).
-O resultado foi impulsionado pela melhora operacional da Alibra, com vendas dentro do esperado e efeito positivo da equivalência patrimonial.
-O principal risco é a exposição a crédito, liquidez e mercado; há também alerta de inconsistência em quadros de riscos nas notas.
+A receita líquida foi de R$ 462.127 mil (Millet.pdf, p. 7), com variação de +131,92% na comparação com 2021.
+A rentabilidade avançou, com EBITDA calculado de R$ 43.546 mil (calculado; Millet.pdf, p. 7 e 10) e margem EBITDA calculada de 9,42% (calculado; Millet.pdf, p. 7 e 10); o lucro líquido foi de R$ 18.891 mil (Millet.pdf, p. 8).
+A dívida líquida foi de R$ 13.520 mil (Millet.pdf, p. 42) e a alavancagem calculada foi de 0,31x (calculado; Millet.pdf, p. 7, 10 e 42)x, enquanto o fluxo de caixa operacional foi de R$ 24.799 mil (Millet.pdf, p. 10).
+O resultado foi explicado pelo atendimento às vendas projetadas, apesar de demanda mais fraca e maior custo de matérias-primas, com repasses de preço e pressão sobre a margem.
+O principal risco é de liquidez e crédito; há ainda alerta de inconsistência na fonte sobre a aprovação das demonstrações de 2022.
 
 ## 2. Indicadores comparados
 
@@ -37,8 +37,8 @@ O principal risco é a exposição a crédito, liquidez e mercado; há também a
 | Receita líquida | R$ 1.325.059 mil (p. 8)<br>var.: +24,84% | R$ 13.253.286 mil (p. 20)<br>var.: -11,04% | R$ 462.127 mil (p. 7)<br>var.: +131,92% |
 | EBITDA | não informado<br>calculado: R$ 221.854 mil | R$ 1.180 milhões (p. 9)<br>calculado: R$ -1.179.644 mil | não informado<br>calculado: R$ 43.546 mil |
 | Margem EBITDA | não informado<br>calculado: 16,74% | não informado<br>calculado: 8,90% | não informado<br>calculado: 9,42% |
-| Lucro líquido | R$ 174.602 mil (p. 8)<br>var.: -36,64% | R$ (5.672.203) mil (p. 20)<br>var.: -1.525,37% ¹ | R$ 18.891 mil (p. 7)<br>var.: +191,98% |
-| Dívida líquida | não informado<br>calculado: R$ -93.036 mil | R$ 9.032.236 mil (p. 105)<br>var.: +22,84% | R$ 13.520 mil (p. 42)<br>var.: -19,89% |
+| Lucro líquido | R$ 174.602 mil (p. 8)<br>var.: -36,64% | R$ (5.672.203) mil (p. 20)<br>var.: -1.525,37% ¹ | R$ 18.891 mil (p. 8)<br>var.: +191,98% |
+| Dívida líquida | não informado<br>calculado: R$ -93.036 mil | R$ 9.032 milhões (p. 10)<br>var.: +22,84% | R$ 13.520 mil (p. 42)<br>var.: -19,89% |
 | Alavancagem (dívida líquida / EBITDA) | não informado<br>calculado: -0,42x | 3,32x (p. 10)<br>calculado: 7,65x | não informado<br>calculado: 0,31x |
 | Fluxo de caixa operacional | R$ 258.248 mil (p. 11)<br>var.: +112,62% | R$ 200.763 mil (p. 23)<br>var.: +577,50% ¹ | R$ 24.799 mil (p. 10)<br>var.: +273,50% ¹ |
 | Capex | não informado<br>calculado: R$ 45.761 mil | não informado<br>calculado: R$ 1.470.292 mil | não informado<br>calculado: R$ 17.732 mil |
@@ -60,179 +60,184 @@ Fórmulas dos valores calculados:
 
 **Principais motivos do resultado**
 
-- A variação de parte dos resultados é explicada pela equivalência patrimonial do investimento na controlada, que reconhece no resultado a parcela do lucro ou prejuízo da investida.  
-  > "De acordo com esse método, a participação da Companhia, no aumento ou diminuição do patrimônio líquido da controlada, em decorrência da apuração de lucro líquido ou prejuízo no exercício, é reconhecido como receita (ou despesa) operacional." (p. 18, nota explicativa)
+- Não encontrado no documento. O documento traz notas explicativas e relatório do auditor, mas não apresenta relatório da administração nem comentário de desempenho com explicação da variação de receita e resultado. Procurei termos como "relatório da administração" e "receita líquida" no corpo do PDF, sem encontrar seção de narrativa gerencial que explique o desempenho.
 
 **Riscos e pontos de atenção**
 
-- A companhia destaca risco de crédito nas vendas a clientes, mitigado por análise de perfil e monitoramento de saldos a receber.  
-  > "O principal fator de risco de mercado que afeta o negócio é a concessão de crédito aos clientes. Para reduzir as possíveis perdas com inadimplência, é adotada uma política de gestão na concessão de crédito, que consiste em análises do perfil dos clientes, bem como em monitoramento dos saldos a receber." (p. 49, nota explicativa)
-- Há risco de variação de preços ligado à compra de matéria-prima, com monitoramento permanente para antecipar movimentos de preço.  
-  > "Os produtos comercializados pela Companhia estão sujeitos a oscilações em razão da compra de matéria-prima. Para mitigar os riscos, a Companhia monitora permanentemente os preços buscando antecipar-se a movimentos de preços." (p. 49, nota explicativa)
-- A administração também aponta risco de taxa de juros sobre ativos e passivos financeiros, buscando diversificar aplicações e captações.  
-  > "Decorre da possibilidade de a Companhia sofrer ganhos ou perdas decorrentes de oscilações de taxas de juros incidentes sobre seus ativos e passivos financeiros. Visando à mitigação deste tipo de risco, a Companhia busca diversificar as aplicações e as captações de recursos em termos de taxas pré-fixadas ou pós-fixadas." (p. 49, nota explicativa)
+- A companhia destaca risco de crédito, risco de oscilação de preços e risco de juros, com possível impacto sobre resultado operacional e condição financeira. Ela afirma que monitora a concessão de crédito, os preços de matéria-prima e as taxas de juros.  
+  > "A Companhia está exposta a riscos de mercado decorrentes de suas atividades. Esses riscos envolvem, principalmente, a possibilidade da realização de contas a receber de clientes, de oscilações dos preços dos produtos e de taxas de juros, que podem impactar os resultados operacionais e a condição financeira" (p. 49, nota explicativa)
+- Há risco regulatório/judicial ligado aos tributos discutidos na tese da exclusão do ICMS da base de cálculo do PIS e da COFINS, pois a nota menciona a decisão do STF e o monitoramento permanente dos processos. É um ponto de atenção para a recuperação dos créditos tributários e para eventuais efeitos futuros.  
+  > "Em decisão tomada no dia 08 de fevereiro 2023, por unanimidade, o Plenário do Supremo Tribunal Federal (STF) considerou que uma decisão definitiva, a chamada "coisa julgada", sobre tributos recolhidos de forma continuada, perde seus efeitos caso a corte se pronuncie em sentido contrário." (p. 51, nota explicativa)
 
 **Guidance e perspectivas**
 
-- A nota sobre tributos a recuperar traz expectativa de realização dos créditos em 2022 e 2023, com percentuais estimados pela administração.  
-  > "Plano de compensação dos tributos a recuperar: A Controlada realizou um estudo com base nos últimos recolhimentos de PIS e COFINS, além de considerar também as projeções orçamentárias para o próximo exercício, a expectativa de realização dos saldos dos valores relativos aos créditos fiscais, oriundos da exclusão do ICMS da base de cálculo do PIS e da COFINS e demais créditos de PIS e COFINS, é de que ocorrerá no exercício de 2022 aproximadamente 68,6%, sendo que o restante de 31,4% acontecerá até fevereiro de 2023." (p. 28, nota explicativa)
+- A administração indica que a compensação dos créditos tributários continuaria no curto prazo, com saldo remanescente a ser realizado até julho de 2023. Também informa que o estudo considerou projeções orçamentárias do próximo exercício.  
+  > "Foi realizado em 2022 o acompanhamneto de compensação dos tributos a recuperar oriundos da exclusão do ICMS da base de cálculo do PIS e da COFINS e demais créditos de PIS e COFINS, em função de uma retração no crescimento esperado para o 4º. Semestre de 2022, ficando abaixo um pouco das metas estabelecidas, então ocorreu uma compensação no exercício de 2022 de aproximadamente 61,1%, sendo que o restante de 38,9% deverá acontecer até julho de 2023." (p. 28, nota explicativa)
 
 **Eventos relevantes**
 
-- A companhia divulga um evento subsequente relacionado à decisão do STF sobre a perda dos efeitos de coisa julgada em tributos de trato continuado.  
-  > "Em decisão tomada no dia 08 de fevereiro 2023, por unanimidade, o Plenário do Supremo Tribunal Federal (STF) considerou que uma decisão definitiva, a chamada "coisa julgada", sobre tributos recolhidos de forma continuada, perde seus efeitos caso a corte se pronuncie em sentido contrário." (p. 51, nota explicativa)
-- A administração informou que, apesar da decisão, não identificou impactos para estas demonstrações financeiras e seguirá monitorando os processos.  
+- O principal evento relevante divulgado é um evento subsequente judicial: a decisão do STF de 8 de fevereiro de 2023 sobre a perda de efeitos da coisa julgada em tributos de trato continuado. A administração afirma que não identificou impactos para as demonstrações financeiras, mas manterá o monitoramento dos processos.  
   > "A Administração em conjunto com os assessores jurídicos da Companhia não identificou impactos para estas demonstrações financeiras. No entanto manterá o monitoramento permanente de todos os seus processos, considerando a referida decisão." (p. 51, nota explicativa)
 
 **Tom geral da administração**
 
-- **Tom: neutro.** O tom da administração é neutro, pois o documento é predominantemente factual e a opinião do auditor afirma que as demonstrações apresentam adequadamente a posição financeira e o desempenho.  
-  > "Em nossa opinião, as demonstrações financeiras acima referidas apresentam adequadamente, em todos os aspectos relevantes, a posição patrimonial e financeira, individual e consolidada, da Companhia em 31 de dezembro de 2022, o desempenho individual e consolidado de suas operações e os seus respectivos fluxos de caixa individuais e consolidados para o exercício findo nessa data, de acordo com as práticas contábeis adotadas no Brasil." (p. 3, relatório)
+- **Tom: neutro.** O tom geral é neutro, porque as divulgações são majoritariamente factuais e a administração diz não ter identificado impactos relevantes no evento subsequente, sem linguagem de otimismo operacional.  
+  > "A Administração em conjunto com os assessores jurídicos da Companhia não identificou impactos para estas demonstrações financeiras. No entanto manterá o monitoramento permanente de todos os seus processos, considerando a referida decisão." (p. 51, nota explicativa)
 
 ### LIGHT S.A.
 
 **Principais motivos do resultado**
 
-- A queda da receita operacional líquida da holding em 2022 foi atribuída a estornos de faturamento de regularizações, ao não acionamento das bandeiras tarifárias e à variação negativa na CVA.  
+- A queda da receita operacional líquida da holding em 2022 foi explicada pelos estornos de faturamento de regularizações, pelo não acionamento das bandeiras tarifárias e pela variação negativa na conta CVA.  
   > "A receita operacional líquida, desconsiderando a receita de construção, totalizou em 2022 R$12.107 milhões, 13% abaixo da registrada em 2021. Essa redução foi influenciada pelos estornos de faturamento de regularizações, pelo não acionamento das bandeiras tarifárias e pela variação negativa na conta CVA, que é uma compensação para cobertura dos custos com a Parcela A." (p. 9, relatório)
-- Na geração, o resultado líquido melhorou com o cenário hidrológico mais favorável, que elevou o GSF e reduziu o PLD, diminuindo os custos de compra de energia.  
-  > "Essa variação pode ser explicada pela melhora do cenário hidrológico ao longo do ano de 2022, que levou ao aumento do GSF e à queda do PLD, reduzindo os custos com compra de energia." (p. 9, relatório)
-- No consolidado, o prejuízo foi pressionado principalmente pelo segmento de distribuição, com provisão para devolução de créditos de PIS/COFINS, atualização financeira desses valores e impairment de IR/CS diferidos.  
-  > "Essa retração ocorreu, principalmente, no segmento de Distribuição, em função do reconhecimento de provisão de -R$1.081 milhões para devolução de créditos de PIS/COFINS aos consumidores, da atualização financeira desses valores, que totalizaram -R$1.584 milhões, e do impairment da recuperabilidade de IR/CS diferidos, no valor de -R$1.634 milhões." (p. 10, relatório)
+- No desempenho operacional, a companhia apontou que a queda do mercado faturado total em 2022 decorreu principalmente do menor consumo médio de residências e da menor demanda do setor siderúrgico.  
+  > "Em 2022, o mercado faturado total apresentou uma queda de 0,4% em relação ao mesmo período do ano anterior. Essa retração é decorrente, em especial, do menor consumo médio de residências, com a retomada de atividades externas após o período mais crítico da Pandemia, e da atividade do setor siderúrgico, que passa por um momento de menor demanda global." (p. 5, relatório)
+- O prejuízo líquido de 2022 foi explicado, sobretudo, pela provisão para devolução de créditos de PIS/COFINS, pela atualização financeira desses valores e pelo impairment dos créditos de IR/CS diferidos.  
+  > "Em 2022, a Light S.A. apurou um resultado líquido de -R$5.673 milhões, R$6.070 milhões abaixo em relação ao ano anterior. Essa retração ocorreu, principalmente, no segmento de Distribuição, em função do reconhecimento de provisão de -R$1.081 milhões para devolução de créditos de PIS/COFINS aos consumidores, da atualização financeira desses valores, que totalizaram -R$1.584 milhões, e do impairment da recuperabilidade de IR/CS diferidos, no valor de -R$1.634 milhões." (p. 10, relatório)
 
 **Riscos e pontos de atenção**
 
-- A companhia destaca risco de continuidade operacional, afirmando que há incerteza significativa que pode levantar dúvida significativa quanto à capacidade de continuidade da Light e da Light SESA.  
-  > "existindo, portanto, uma incerteza sobre seu sucesso. Os eventos e condições, anteriormente mencionados, individual ou coletivamente, indicam, no julgamento da Administração da Companhia, a existência de incerteza significativa que pode levantar dúvida significativa quanto à capacidade de continuidade operacional da Light e da Light SESA, controlada da Companhia." (p. 3, relatório)
+- A companhia destaca risco de continuidade operacional, dizendo que há incerteza significativa sobre o sucesso das estratégias e que isso pode levantar dúvida significativa quanto à continuidade da Light e da Light SESA.  
+  > "Os eventos e condições, anteriormente mencionados, individual ou coletivamente, indicam, no julgamento da Administração da Companhia, a existência de incerteza significativa que pode levantar dúvida significativa quanto à capacidade de continuidade operacional da Light e da Light SESA, controlada da Companhia." (p. 3, relatório)
+- A nota de risco de crédito informa exposição à inadimplência de consumidores e de instituições financeiras, com uso de ferramentas de cobrança e monitoramento do risco.  
+  > "Decorre da possibilidade da Companhia sofrer perdas decorrentes de inadimplência dos seus consumidores ou de instituições financeiras depositárias de recursos ou de investimentos financeiros. Para mitigar esses riscos, a Companhia utiliza de todas as ferramentas de cobrança permitidas pelo órgão regulador, tais como corte por inadimplência, negativação de clientes inadimplentes em empresas de proteção ao crédito e cobrança judicial." (p. 101, nota explicativa)
+- O documento também evidencia risco regulatório e contingencial ao tratar da provisão ligada ao crédito de PIS/COFINS sobre ICMS a devolver ao consumidor.  
+  > "Conforme detalhado na Nota 1.2, a controlada Light SESA reconheceu uma estimativa de contingência passiva relativa os valores do crédito que poderá ser repassado aos consumidores referentes ao crédito de PIS/COFINS sobre ICMS a devolver ao consumidor." (p. 75, nota explicativa)
+- Há risco de liquidez, com a administração dizendo que acompanha os fluxos de caixa previstos e reais e a combinação dos perfis de vencimento dos passivos financeiros.  
+  > "Conforme divulgado na Nota 1.1, a Administração da Companhia está acompanhando atentamente todos os riscos relacionados a continuidade operacional do Grupo e gerencia o risco de liquidez por meio do acompanhamento contínuo dos fluxos de caixa previstos e reais, bem como pela combinação dos perfis de vencimento dos seus passivos financeiros." (p. 101, nota explicativa)
 
 **Guidance e perspectivas**
 
-- A administração afirma que buscará executar as estratégias mencionadas nas demonstrações, mas admite que não há garantia de êxito e que parte relevante dos fatores está fora de seu controle.  
-  > "Adicionalmente, a Administração da Companhia perseguirá e envidará os melhores esforços nas diversas estratégias mencionadas na seção 1.1 das DFs de 2022. Porém, não há garantia de que a Companhia terá êxito nas estratégias, visto que parte relevante dos elementos das estratégias não está sob o controle da Administração da Companhia" (p. 3, relatório)
+- A companhia indica como prioridade a renovação antecipada da concessão da Light SESA, com discussões já iniciadas com a Aneel e o Ministério de Minas e Energia.  
+  > "Essas alternativas passam pela renovação da concessão da Light SESA, que vence em 2026. Nosso objetivo é antecipar esse processo. Nós iniciamos discussões com a Aneel e o Ministério de Minas e Energia em busca da renovação antecipada em bases que garantam a sustentabilidade da concessão e do nosso negócio." (p. 2, relatório)
+- A administração também orienta o foco em investimentos constantes para transformação digital e melhoria da experiência dos clientes.  
+  > "Para a transformação digital da Companhia, procuramos otimizar nossa evolução tecnológica com investimentos constantes que assegurem uma experiência de qualidade aos nossos 4,3 milhões de clientes cariocas e fluminenses." (p. 3, relatório)
 
 **Eventos relevantes**
 
-- A Light assinou acordo para adquirir 49% da Axxiom, passando a deter 100% da controlada em conjunto, com expectativa de conclusão no segundo trimestre de 2023.  
-  > "Em 21 de dezembro de 2022, a Light S.A. assinou um Contrato de Compra e Venda de Ações e Outras Avenças para aquisição de 49% das ações da controlada em conjunto Axxiom Soluções pertencentes a Companhia Energética de Minas Gerais ("CEMIG"). A operação foi realizada por R$1,00 (um real) onde o Grupo Light S.A. terá 100% das ações da Axxiom. Em 25 de janeiro de 2023, o Conselho de Administrativo de Defesa Econômica ("CADE") aprovou a operação. Para que essa operação seja finalizada, existem algumas condições precedentes a serem cumpridas e a Companhia tem expectativa para conclusão da operação no segundo trimestre de 2023." (p. 107, nota explicativa)
+- Em 2022, a companhia intensificou uma reestruturação interna com reorganização, modernização de processos e sistemas, buscando maior eficiência operacional.  
+  > "Nos últimos meses, intensificamos o processo de reestruturação interna da Light, com o objetivo de torná-la mais eficiente. Aceleramos a modernização da companhia com a atualização de processos e sistemas, desburocratização, busca de eficiência e excelência operacional." (p. 2, relatório)
+- A Light assinou contrato para adquirir 49% da Axxiom, o que levaria o grupo a deter 100% das ações, com expectativa de conclusão no segundo trimestre de 2023.  
+  > "Em 21 de dezembro de 2022, a Light S.A. assinou um Contrato de Compra e Venda de Ações e Outras Avenças para aquisição de 49% das ações da controlada em conjunto Axxiom Soluções pertencentes a Companhia Energética de Minas Gerais ("CEMIG"). A operação foi realizada por R$1,00 (um real) onde o Grupo Light S.A. terá 100% das ações da Axxiom." (p. 107, nota explicativa)
 
 **Tom geral da administração**
 
-- **Tom: negativo.** O tom da administração é negativo, porque o texto ressalta desafios estruturais, necessidade de readequação de capital e incerteza relevante sobre a continuidade operacional.  
+- **Tom: negativo.** O tom geral é negativo, porque a administração enfatiza dificuldades estruturais, necessidade de readequação de capital, perdas crescentes e incerteza significativa sobre a continuidade operacional.  
   > "Minha chegada ocorreu nesse momento especialmente desafiador, em que as dificuldades estruturais históricas da área de concessão da Light SESA, por conta das particularidades do Rio de Janeiro, foram agravadas por questões macroeconômicas, tendo sido constatada a necessidade de buscar uma readequação da estrutura de capital da companhia." (p. 2, relatório)
 
 ### Millet Participações S.A.
 
 **Principais motivos do resultado**
 
-- A companhia atribui o desempenho de 2022 à melhora operacional da Alibra, com lucro líquido do exercício e reflexo positivo da equivalência patrimonial; também destacou que as vendas ficaram dentro do esperado, apesar de demanda mais fraca e custos maiores de insumos.  
-  > "No ano de 2022 não fomos impactados por nenhum efeito direto decorrente da pandemia do COVID. A performance das vendas atendeu às projeções e expectativas, mesmo com uma demanda mais fraca do que era previsto para o ano. Como ponto residual e contínuo de 2020, verificou-se a continuidade de aumento no custo de matérias primas principalmente dos derivados lácteos, com necessidade de repasse no preço de venda." (p. 11, nota explicativa)
+- A administração atribui o desempenho de 2022 ao atendimento das vendas às projeções, embora com demanda mais fraca e aumento do custo de matérias-primas, o que exigiu repasses de preço e ainda assim não recuperou a margem pré-pandemia.  
+  > "A performance das vendas atendeu às projeções e expectativas, mesmo com uma demanda mais fraca do que era previsto para o ano. Como ponto residual e contínuo de 2020, verificou-se a continuidade de aumento no custo de matérias primas principalmente dos derivados lácteos, com necessidade de repasse no preço de venda. Apesar desses repasses, em termos percentuais, não foi possível recuperar o mesmo nível de margem antes da pandemia." (p. 11, nota explicativa)
 
 **Riscos e pontos de atenção**
 
-- A companhia explicita exposição a risco de crédito, liquidez e mercado, e informa que revisa frequentemente suas políticas e sistemas de gerenciamento de riscos.  
-  > "A companhia está exposta aos seguintes riscos: · Risco de Crédito; · Risco de Liquidez; e · Risco de Mercado Essa nota apresenta informações sobre a exposição da Companhia sobre cada um dos riscos acima." (p. 40, nota explicativa)
-- No crédito, a nota mostra exposição relevante em caixa, equivalentes e contas a receber no consolidado, indicando foco na cobrança e no risco de inadimplência.  
-  > "Caixa e equivalentes de caixa | 355 | 871 | 10.656 | 8.194 | | Contas a receber de clientes | - | - | 98.663 | 69.645 | | Outros créditos | 2 | - | 1.033 | 916 | | Total | 357 | 871 | 110.352 | 78.755 |" (p. 40, nota explicativa)
-- A administração monitora o risco de mercado por meio do acompanhamento das tendências de mercado e revisões periódicas dos ativos e do endividamento.  
-  > "A Administração da Companhia monitora os fatores de risco mediante acompanhamento das tendências de mercado e revisões periódicas dos ativos e de seu endividamento." (p. 41, nota explicativa)
-- Há risco operacional coberto por seguro, incluindo perdas por interrupção de produção e danos materiais a ativos da companhia.  
-  > "Riscos operacionais: cobertura de danos materiais ocasionados a prédios, máquinas e equipamentos, móveis e utensílios decorrentes de incêndio, raio e explosão, desentulho, alagamentos, quebra de maquinário e danos elétricos, bem como perda de receita bruta causada pela interrupção de produção consequente de danos materiais." (p. 43, nota explicativa)
+- A gestão de liquidez busca manter recursos suficientes para cumprir obrigações no vencimento, inclusive em cenários normais e de estresse.  
+  > "A abordagem da Companhia na administração de liquidez é de garantir, o máximo possível, que sempre tenha liquidez suficiente para cumprir com suas obrigações ao vencerem, sob condições normais e de estresse, sem causar perdas inaceitáveis ou com risco de prejudicar a reputação da Companhia." (p. 41, nota explicativa)
+- A companhia informa exposição a risco de crédito, liquidez e mercado, com políticas formais para identificar, analisar e monitorar esses riscos.  
+  > "A companhia está exposta aos seguintes riscos: · Risco de Crédito; · Risco de Liquidez; e · Risco de Mercado" (p. 40, nota explicativa)
+- A nota de instrumentos financeiros aponta que a companhia reconhece perdas de crédito esperadas, inclusive para exposições com aumento significativo de risco de crédito.  
+  > "A Companhia reconhece as perdas de crédito esperadas para todos os instrumentos de dívida não detidos pelo valor justo por meio do resultado. As perdas de crédito esperadas baseiam-se na diferença entre os fluxos de caixa contratuais devidos de acordo com o contrato e todos os fluxos de caixa que a Companhia espera receber, descontados a uma taxa de juros efetiva que se aproxime da taxa original da transação. Os fluxos de caixa esperados incluirão fluxos de caixa da venda de garantias detidas ou outras melhorias de crédito que sejam integrantes dos termos contratuais. As perdas de crédito esperadas são reconhecidas em duas etapas. Para as exposições de crédito para as quais não houve aumento significativo no risco de crédito desde o reconhecimento inicial, as perdas de crédito esperadas são resultantes de eventos de inadimplência possíveis nos próximos 12 meses (perda de crédito esperada de 12 meses). Para as exposições de crédito para as quais houve um aumento significativo no risco de crédito desde o reconhecimento inicial, é necessária uma complementação para perdas de crédito esperadas durante a vida remanescente da exposição," (p. 20, nota explicativa)
 
 **Guidance e perspectivas**
 
-- A administração indica que continuará monitorando a crise e seus impactos nas operações e nas demonstrações financeiras, sinalizando acompanhamento dos efeitos futuros sem uma meta operacional específica.  
+- A companhia indica que seguirá monitorando os efeitos da crise e seus impactos nas operações e nas demonstrações financeiras.  
   > "A Companhia continuará monitorando os efeitos da crise e os impactos nas suas operações e nas demonstrações financeiras." (p. 11, nota explicativa)
 
 **Eventos relevantes**
 
-- O principal evento relevante foi a aquisição de 85% da Alibra Ingredientes S.A., que passou a integrar a companhia em junho de 2021.  
-  > "Permaneceu em processo pré-operacional realizando avaliações e negociações de investimentos até junho de 2021 quando a Companhia adquiriu 85% de participação na Alibra Ingredientes S.A. ("Alibra")." (p. 11, nota explicativa)
-- Em 2022 houve alocação do preço de aquisição, com reclassificação de valores para good-will e mais-valia após a mensuração a valor justo.  
-  > "Após emissão do relatório citado acima, os valores de Good-Will e Mais-Valia foram alocados, conforme mensuração do valor justo. O Good-Will refere-se ao valor pago a mais sobre o valor justo do Patrimônio Líquido da entidade adquirida, devido a uma expectativa de lucros futuros." (p. 28, nota explicativa)
-- A nota de eventos subsequentes informa que não houve eventos após 31 de dezembro de 2022 que exigissem divulgação.  
-  > "Após 31 de dezembro de 2022, até a data da aprovação das demonstrações financeiras pela Administração da Companhia, não ocorreram eventos que necessitam de divulgação nas demonstrações financeiras." (p. 43, nota explicativa)
+- A companhia menciona a adoção de normas e interpretações novas e alteradas, sem impacto nas demonstrações financeiras e com adoção futura quando aplicável.  
+  > "As normas e interpretações novas e alteradas emitidas, mas não ainda em vigor até a data de emissão das demonstrações financeiras da Companhia, estão descritas a seguir. A Companhia pretende adotar essas normas e interpretações novas e alteradas, se cabível, quando entrarem em vigor." (p. 23, nota explicativa)
 
 **Tom geral da administração**
 
-- **Tom: neutro.** Tom neutro, porque o documento é predominantemente técnico e factual, sem mensagem gerencial explicitamente otimista ou pessimista.  
-  > "Em nossa opinião, as demonstrações financeiras acima referidas apresentam adequadamente, em todos os aspectos relevantes, a posição patrimonial e financeira individual e consolidada da Companhia em 31 de dezembro de 2022, o desempenho individual e consolidado de suas operações" (p. 3, parecer do auditor)
+- **Tom: neutro.** O tom geral é neutro, pois o documento é predominantemente técnico e descritivo, sem mensagem gerencial de viés forte, destacando políticas, riscos e divulgações factuais.  
+  > "As demonstrações financeiras foram elaboradas com apoio em diversas bases de avaliação utilizadas nas estimativas contábeis. As estimativas contábeis envolvidas na preparação das demonstrações financeiras foram apoiadas em fatores objetivos e subjetivos, com base no julgamento da Administração para determinação do valor adequado a ser registrado nas demonstrações financeiras." (p. 22, nota explicativa)
 
 ## 4. Perguntas e respostas
 
 ### 1. Qual empresa teve a maior margem EBITDA no período?
 
-A maior margem EBITDA foi da Brasal Brasília Holding S.A., com 16,74% (calculado: EBITDA / receita líquida × 100; valores de origem em Brasal.pdf, p. 8 e 11). Em seguida vieram a Millet Participações S.A., com 9,42% (calculado: EBITDA / receita líquida × 100; valores de origem em Millet.pdf, p. 7 e 10), e a LIGHT S.A., com 8,90% (calculado: EBITDA / receita líquida × 100; valores de origem em Light.pdf, p. 9 e 20). Os três valores são calculados pelo servidor, não informados diretamente pelas empresas.
+A maior margem EBITDA no período foi da Brasal Brasília Holding S.A., com 16,74% (calculado: EBITDA / receita líquida × 100; valores de origem em Brasal.pdf, p. 8 e 11); esse valor é calculado pelo servidor, não informado diretamente pela empresa. As demais ficaram abaixo disso: Millet Participações S.A. com 9,42% (calculado: EBITDA / receita líquida × 100; valores de origem em Millet.pdf, p. 7 e 10) e LIGHT S.A. com 8,90% (calculado: EBITDA / receita líquida × 100; valores de origem em Light.pdf, p. 9 e 20).
 
 Fontes: Brasal.pdf, p. 8; Brasal.pdf, p. 11; Millet.pdf, p. 7; Millet.pdf, p. 10; Light.pdf, p. 9; Light.pdf, p. 20.
 
 ### 2. O que a administração de cada empresa apontou como principal motivo da variação da receita?
 
-Millet Participações S.A.: a administração atribuiu a variação da receita principalmente ao aumento no custo de matérias-primas, sobretudo derivados lácteos, com necessidade de repasse no preço de venda; apesar disso, não foi possível recuperar o nível de margem anterior à pandemia (Millet.pdf, p. 11).
-LIGHT S.A.: a redução da receita operacional líquida foi explicada pelos estornos de faturamento de regularizações, pelo não acionamento das bandeiras tarifárias e pela variação negativa na conta CVA (Light.pdf, p. 9).
-Brasal Brasília Holding S.A.: a base não traz uma explicação gerencial direta para a variação da receita; o documento apenas informa que a receita vem principalmente da venda de produtos e que é reconhecida na entrega ao cliente (Brasal.pdf, p. 15) (Brasal.pdf, p. 16).
+Millet Participações S.A.: a administração ligou a variação ao desempenho das vendas, que atendeu às projeções mesmo com uma demanda mais fraca do que a prevista; o texto também destaca a alta no custo das matérias-primas e a necessidade de repasse de preços. (Millet.pdf, p. 11)
+LIGHT S.A.: a queda da receita operacional líquida foi atribuída aos estornos de faturamento de regularizações, ao não acionamento das bandeiras tarifárias e à variação negativa na conta CVA. (Light.pdf, p. 9)
+Brasal Brasília Holding S.A.: a administração aponta que a receita varia principalmente pela venda de produtos; o reconhecimento ocorre na entrega aos clientes, e o negócio está exposto à oscilação do preço das matérias-primas, que afeta o desempenho comercial. (Brasal.pdf, p. 15)(Brasal.pdf, p. 49)
 
-Fontes: Millet.pdf, p. 11; Light.pdf, p. 9; Brasal.pdf, p. 15; Brasal.pdf, p. 16.
+Fontes: Millet.pdf, p. 11; Light.pdf, p. 9; Brasal.pdf, p. 15; Brasal.pdf, p. 49.
 
 ### 3. Alguma das empresas está com alavancagem acima de 3x? Qual?
 
-Sim: a LIGHT S.A. está acima de 3x, com 3,32x (Light.pdf, p. 10); esse valor é informado pela empresa. A Millet Participações S.A. está em 0,31x (calculado: dívida líquida / EBITDA; valores de origem em Millet.pdf, p. 7, 10 e 42), calculado pelo servidor, e a Brasal Brasília Holding S.A. em -0,42x (calculado: dívida líquida / EBITDA; valores de origem em Brasal.pdf, p. 7, 8, 11 e 48), também calculado pelo servidor; portanto, nenhuma delas supera 3x além da LIGHT S.A.
+Sim. A LIGHT S.A. está com alavancagem acima de 3x, em 3,32x (Light.pdf, p. 10), valor informado pela própria empresa. As demais empresas não aparecem na comparação acima de 3x com valor registrado na base.
 
-Fontes: Light.pdf, p. 10; Millet.pdf, p. 7; Millet.pdf, p. 10; Millet.pdf, p. 42; Brasal.pdf, p. 7; Brasal.pdf, p. 8; Brasal.pdf, p. 11; Brasal.pdf, p. 48.
+Fontes: Light.pdf, p. 10.
 
 ### 4. Quais riscos são citados por mais de uma empresa?
 
-Os riscos citados por mais de uma empresa são: crédito, mercado/taxa de juros e continuidade operacional/incerteza de continuidade. A Millet menciona risco de crédito, liquidez e mercado (Millet.pdf, p. 40), enquanto a Brasal cita risco de crédito e risco de taxa de juros (Brasal.pdf, p. 49). A Light destaca risco de continuidade operacional (Light.pdf, p. 3), e também menciona estratégia/execução sob incerteza na administração (Light.pdf, p. 3), mas esse último não aparece nas outras duas de forma equivalente. Em comum entre mais de uma, crédito aparece na Millet e na Brasal; mercado aparece na Millet e, na prática, a Brasal detalha taxa de juros como componente de risco financeiro (Millet.pdf, p. 40) (Brasal.pdf, p. 49).
+Os riscos citados por mais de uma empresa são: **risco de crédito, risco de liquidez e risco de mercado**. A Millet menciona crédito, liquidez e mercado (Millet.pdf, p. 40), a Light cita crédito e liquidez (Light.pdf, p. 101)(Light.pdf, p. 101), e a Brasal destaca risco de mercado ligado a contas a receber, preços e juros, além de tributos/judicial (Brasal.pdf, p. 49)(Brasal.pdf, p. 51). O único risco claramente apontado por apenas uma delas, entre as analisadas, é o de juros na Brasal. Isso é o que aparece de forma recorrente nas divulgações de risco das três empresas.
 
-Fontes: Millet.pdf, p. 40; Brasal.pdf, p. 49; Light.pdf, p. 3.
+Fontes: Millet.pdf, p. 40; Light.pdf, p. 101; Brasal.pdf, p. 49; Brasal.pdf, p. 51.
 
 ### 5. Qual é o guidance de cada empresa para o próximo ano?
 
-Millet Participações S.A.: a administração informa que continuará monitorando os efeitos da crise e seus impactos nas operações e nas demonstrações financeiras, sem uma meta operacional específica para o próximo ano (Millet.pdf, p. 11).
-LIGHT S.A.: o guidance é seguir executando as estratégias descritas nas demonstrações, mas a própria administração ressalta que não há garantia de êxito, porque parte relevante desses fatores não está sob seu controle (Light.pdf, p. 3).
-Brasal Brasília Holding S.A.: não há guidance claro de negócio para o próximo ano; o texto traz apenas uma expectativa de realização dos créditos tributários e manutenção do monitoramento dos processos (Brasal.pdf, p. 28)(Brasal.pdf, p. 51).
-Em resumo, as três companhias não apresentam um guidance quantitativo; a Millet e a Brasal mostram apenas acompanhamento/expectativas pontuais, e a Light indica execução estratégica sem garantia de sucesso.
+Millet Participações S.A.: não há guidance operacional explícito para o próximo ano; a administração diz apenas que continuará monitorando os efeitos da crise e seus impactos nas operações e nas demonstrações financeiras (Millet.pdf, p. 11).
+LIGHT S.A.: a orientação é seguir com a renovação antecipada da concessão da Light SESA e manter investimentos constantes em transformação digital e melhoria da experiência dos clientes (Light.pdf, p. 2) (Light.pdf, p. 3).
+Brasal Brasília Holding S.A.: também não encontrei guidance operacional explícito; o documento só traz que a compensação dos créditos tributários seguirá no curto prazo, com saldo remanescente a ser realizado até julho de 2023 (Brasal.pdf, p. 28).
 
-Fontes: Millet.pdf, p. 11; Light.pdf, p. 3; Brasal.pdf, p. 28; Brasal.pdf, p. 51.
+Fontes: Millet.pdf, p. 11; Light.pdf, p. 2; Light.pdf, p. 3; Brasal.pdf, p. 28.
 
 ## 5. Alertas e informações não encontradas
 
 ### Brasal Brasília Holding S.A.
 
-- **EBITDA: não encontrado.** O documento não traz EBITDA/LAJIDA consolidado em texto ou tabela. Procurei nas páginas de desempenho, notas e demonstrações; há apenas resultado operacional e depreciação/amortização, suficientes para cálculo pelo servidor, mas sem linha ou frase com EBITDA informado pela companhia. (Procurado: ebitda, lajida. Os termos não aparecem em nenhuma página.)
-- **Margem EBITDA: não encontrado.** O documento não informa margem EBITDA em texto ou tabela. Há dados para cálculo do servidor, mas não há percentual declarado pela companhia. (Procurado: margem ebitda, margem lajida, margem do ebitda. Os termos não aparecem em nenhuma página.)
-- **Dívida líquida: não encontrado.** O documento não informa dívida líquida consolidada em texto ou tabela. Há apenas empréstimos e financiamentos e caixa e equivalentes, que ficam como valores de apoio para cálculo do servidor. (Procurado: dívida líquida, endividamento líquido. Os termos não aparecem em nenhuma página.)
-- **Alavancagem (dívida líquida / EBITDA): não encontrado.** O documento não informa alavancagem (dívida líquida/EBITDA) em texto ou tabela. Não há múltiplo declarado pela companhia. (Procurado: alavancagem, dívida líquida/ebitda, dívida líquida / ebitda, dívida líquida sobre ebitda. Os termos aparecem nas p. 48, descartadas.)
-- **Capex: não encontrado.** O documento não informa um total de capex. O fluxo de caixa traz as linhas de aquisição de imobilizado e intangível, que foram registradas como valores de apoio; não há linha consolidada chamada capex ou total de investimentos. (Procurado: capex, aquisição de imobilizado, aquisições de imobilizado, aquisição de ativo imobilizado, aquisições de bens do ativo imobilizado, adições ao imobilizado. Os termos não aparecem em nenhuma página.)
+- **EBITDA: não encontrado.** O documento não apresenta linha ou frase com 'EBITDA' ou 'LAJIDA' para o consolidado; as demonstrações trazem apenas o lucro operacional antes das receitas e despesas financeiras e a depreciação/amortização, usados como valores de apoio. (Procurado: ebitda, lajida. Os termos não aparecem em nenhuma página.)
+- **Margem EBITDA: não encontrado.** O documento não informa margem EBITDA em percentual; não há quadro ou frase com esse indicador para o consolidado. (Procurado: margem ebitda, margem lajida, margem do ebitda. Os termos não aparecem em nenhuma página.)
+- **Dívida líquida: não encontrado.** O documento não informa a dívida líquida como indicador explícito; há apenas saldos de empréstimos e financiamentos e caixa e equivalentes de caixa nas demonstrações patrimoniais, usados como valores de apoio. (Procurado: dívida líquida, endividamento líquido. Os termos não aparecem em nenhuma página.)
+- **Alavancagem (dívida líquida / EBITDA): não encontrado.** O documento não informa alavancagem como múltiplo dívida líquida/EBITDA; há somente menções genéricas à gestão da dívida e à alavancagem financeira, sem o indicador calculado. (Procurado: alavancagem, dívida líquida/ebitda, dívida líquida / ebitda, dívida líquida sobre ebitda. Os termos aparecem nas p. 48, descartadas.)
+- **Capex: não encontrado.** O fluxo de caixa informa a linha 'Imobilizado e intangível' como saída de investimento, mas não apresenta um total de capex com esse nome; por isso a linha de aquisição foi gravada como valor de apoio e o capex total não é informado no documento. (Procurado: capex, aquisição de imobilizado, aquisições de imobilizado, aquisição de ativo imobilizado, aquisições de bens do ativo imobilizado, adições ao imobilizado. Os termos não aparecem em nenhuma página.)
 
-- [atenção] Caixa e equivalentes de caixa (2022): a fonte citada não escreve o período 2022. Confira se o valor é mesmo desse período. (p. 48)
-- [atenção] Há ano trocado na definição do cenário provável: a frase usa a data-base de 31 de dezembro de 2022, mas diz que o cenário provável é para os 12 meses de 2020. (p. 49)  
+- [atenção] Há inconsistência de período: a frase usa a data-base de 31 de dezembro de 2022, mas diz que o cenário provável foi definido para os 12 meses de 2020. (p. 49)  
   > "Análise de sensibilidade A Companhia realiza suas análises de sensibilidade em três cenários, sendo um provável e dois que possam representar efeitos adversos com deterioração de 25% e 50% da variável do risco considerado pela Administração. A Companhia acompanha e analisa somente as variações nos preços de commodities, variação cambial e variação nas taxas de juros como fatores principais de risco. Com a finalidade de verificar a sensibilidade dos indexadores nas dívidas ao qual a Companhia está exposta na data base de 31 de dezembro de 2022, foram estimados 3 cenários distintos, considerando o volume de financiamento total. Com base nesses montantes em 31 de dezembro de 2022, definimos o Cenário Provável para os 12 meses de 2020 (Cenário I). A partir do Cenário I (Provável), simulamos acréscimo de 25% (Cenário II) e 50% (Cenário III) sobre as projeções dos índices de correção de cada contrato. Para cada cenário foi calculada a despesa financeira bruta não levando em consideração a incidência de tributos bem como o fluxo de vencimentos de cada contrato programado."
-- [informação] Caixa e equivalentes de caixa (2022): o valor veio da seção '25. Gestão de riscos dos instrumentos financeiros', e não de uma demonstração de balanço. (p. 48)
+- [atenção] A quantidade de ações não fica coerente dentro da própria nota: o texto diz que o aumento de capital foi feito sem emissão de novas ações, mas o total passa de 3.256.699 ações ordinárias para 1.374.240 ações ordinárias. (p. 42)  
+  > "Em 31 de dezembro de 2022 o capital social, subscrito e integralizado, é de R$154.000 e em 31 de dezembro de 2021 era de R$94.000 divididos em 3.256.699 ações ordinárias, nominativas, sem valor nominal. Em 28 de março de 2022, através de assembleia geral extraordinária foi aprovado um aumento de capital mediante a capitalização de parte das reservas de lucros R$60.000 sem emissão de novas ações, ficando o capital social da Companhia totalmente subscrito e integralizado ao valor de R$154.000 correspondente ao total de 1.374.240 ações ordinárias, nominativas, sem valor nominal."
+- [atenção] O texto informa acréscimo de 25% e 50% nos cenários II e III, mas a tabela imediatamente seguinte apresenta cenários com redução das taxas e da despesa financeira projetada. (p. 49)  
+  > "Análise de sensibilidade A Companhia realiza suas análises de sensibilidade em três cenários, sendo um provável e dois que possam representar efeitos adversos com deterioração de 25% e 50% da variável do risco considerado pela Administração. A Companhia acompanha e analisa somente as variações nos preços de commodities, variação cambial e variação nas taxas de juros como fatores principais de risco. Com a finalidade de verificar a sensibilidade dos indexadores nas dívidas ao qual a Companhia está exposta na data base de 31 de dezembro de 2022, foram estimados 3 cenários distintos, considerando o volume de financiamento total. Com base nesses montantes em 31 de dezembro de 2022, definimos o Cenário Provável para os 12 meses de 2020 (Cenário I). A partir do Cenário I (Provável), simulamos acréscimo de 25% (Cenário II) e 50% (Cenário III) sobre as projeções dos índices de correção de cada contrato. Para cada cenário foi calculada a despesa financeira bruta não levando em consideração a incidência de tributos bem como o fluxo de vencimentos de cada contrato programado."
 
 ### LIGHT S.A.
 
-- **Margem EBITDA: não encontrado.** O documento não traz margem EBITDA consolidada em percentual; encontrei apenas o EBITDA em texto e não há linha/tabela com a margem do exercício. (Procurado: margem ebitda, margem lajida, margem do ebitda. Os termos não aparecem em nenhuma página.)
-- **Capex: não encontrado.** A página 66 traz apenas uma linha de composição de custos/fees de empréstimos chamada 'BNDES - Capex', que não é um total de investimentos capex do exercício. O fluxo de caixa traz as linhas de aquisição de imobilizado e intangível, já registradas como apoio; não há capex total informado. (Procurado: capex, aquisição de imobilizado, aquisições de imobilizado, aquisição de ativo imobilizado, aquisições de bens do ativo imobilizado, adições ao imobilizado. Os termos aparecem nas p. 23, 66, descartadas.)
+- **Margem EBITDA: não encontrado.** O relatório divulga EBITDA em valores absolutos e receita líquida, mas não apresenta uma margem EBITDA explícita com esse nome ou em percentual no trecho do desempenho financeiro nem na nota de EBITDA/covenants. Procurei nas páginas de desempenho e nas notas relacionadas a EBITDA e endividamento, sem localizar um percentual de margem EBITDA informado pela companhia. (Procurado: margem ebitda, margem lajida, margem do ebitda. Os termos não aparecem em nenhuma página.)
+- **Capex: não encontrado.** O documento não informa um total de capex com esse nome; a página 23 contém apenas as linhas de aquisição do fluxo de caixa ('Aquisições de bens do ativo imobilizado' e 'Aquisições de bens do ativo intangível e do ativo de contrato'), que foram registradas como valores de apoio. A ocorrência de 'Capex' na p. 66 é apenas uma referência de nome em nota de empréstimos e não é o indicador de investimentos. (Procurado: capex, aquisição de imobilizado, aquisições de imobilizado, aquisição de ativo imobilizado, aquisições de bens do ativo imobilizado, adições ao imobilizado. Os termos aparecem nas p. 23, 66, descartadas.)
 
 - [atenção] O EBITDA informado (1.180 R$ milhões) não bate com o resultado antes do resultado financeiro mais depreciação e amortização (-1.179.644 R$ mil). Pode ser um EBITDA ajustado, o valor de uma controlada ou um sinal omitido no texto. (p. 9)
 - [atenção] A alavancagem informada (3,32x) não bate com dívida líquida dividida pelo EBITDA informados (7,65x). Pode ser um EBITDA ajustado. (p. 10)
 - [atenção] Alavancagem (dívida líquida / EBITDA) (2022): a fonte citada não escreve o período 2022. Confira se o valor é mesmo desse período. (p. 10)
-- [atenção] A frase compara 2021 com 2021, indicando ano trocado no próprio texto. (p. 10)  
-  > "O indicador de covenants Dívida Líquida/EBITDA ajustado para fins de covenants encerrou 2021 em 3,32x, menor do que no 2021 (3,48x). O EBITDA ajustado para fins de covenants das dívidas da Companhia e de suas subsidiárias exclui efeitos não-caixa, tais como Equivalência Patrimonial, Provisões, VNR e Outras Receitas/Despesas Operacionais."
-- [atenção] A redução citada não fecha com os dois valores da frase: se foi de R$3.001 milhões e o valor de 2022 foi de R$1.180 milhões, o comparativo implícito de 2021 não é compatível com a redução escrita. (p. 9)  
-  > "Em 2022, o EBITDA CVM foi de R$1.180 milhões, apresentando uma redução R$3.001 milhões se comparado a 2021. Essa retração foi devida, principalmente, a provisões de - R$2.513 milhões no período, sendo referentes, em especial, ao reconhecimento de provisão para devolução de créditos de PIS/COFINS aos consumidores, conforme Lei 14.385/22 (- R$1.081 milhões), revisões nas metodologias e estimativas de PECLD (-R$855 milhões) e de provisões para contingências JEC e Cível (-R$379 milhões)."
+- [atenção] Há ano trocado na redação: o texto diz que o indicador encerrou 2021 em 3,32x e o compara com 2021 (3,48x), repetindo o mesmo ano para os dois valores. (p. 10)  
+  > "A dívida líquida da Companhia em 31 de dezembro de 2022 totalizou R$9.032 milhões, aumento de 23% em comparação a 2021, de R$7.353 milhões. O indicador de covenants Dívida Líquida/EBITDA ajustado para fins de covenants encerrou 2021 em 3,32x, menor do que no 2021 (3,48x). O EBITDA ajustado para fins de covenants das dívidas da Companhia e de suas subsidiárias exclui efeitos não-caixa, tais como Equivalência Patrimonial, Provisões, VNR e Outras Receitas/Despesas Operacionais. Em 31 de dezembro de 2022, a Companhia estava adimplente com os covenants financeiros estabelecido em contratos de dívidas."
+- [atenção] A redução citada não fecha com os dois valores da frase: se o EBITDA de 2022 foi de R$1.817 milhões, uma redução de R$2.996 milhões não é compatível com os R$1.179 milhões apurados em 2021. (p. 8)  
+  > "Em 2022, o EBITDA CVM1 da distribuidora foi de R$1.817 milhões, uma redução de R$2.996 milhões em relação aos R$1.179 milhões apurados em 2021. Essa retração foi devida, principalmente, a provisões de -R$2.513 milhões no período, sendo referentes, em especial, ao reconhecimento de provisão para devolução de créditos de PIS/COFINS aos consumidores, conforme Lei 14.385/22 (-R$1.081 milhões), revisão nas metodologias e estimativas de PECLD (-R$855 milhões) e de provisões para contingências JEC e Cível (- R$379 milhões)."
 - [informação] Sem o valor de 2021, a variação não foi calculada para: EBITDA, Alavancagem (dívida líquida / EBITDA).
-- [informação] Dívida líquida (2022): a unidade (R$ mil) vem de uma convenção declarada em página anterior, não da própria página. (p. 105)
 - [informação] Os indicadores estão em unidades diferentes (R$ mil, R$ milhões). As contas entre eles foram feitas em reais.
 
 ### Millet Participações S.A.
 
-- **EBITDA: não encontrado.** O documento não traz EBITDA/LAJIDA em texto ou tabela; há apenas os dados para cálculo no resultado e no fluxo de caixa, usados pelo servidor para conferir o indicador. Procurei por 'EBITDA', 'LAJIDA' e 'resultado antes do resultado financeiro'. (Procurado: ebitda, lajida. Os termos não aparecem em nenhuma página.)
-- **Margem EBITDA: não encontrado.** O documento não informa margem EBITDA em texto ou tabela. Há somente o resultado operacional e a depreciação/amortização para cálculo indireto pelo servidor; não há percentual escrito pela companhia. Procurei por 'margem EBITDA', 'EBITDA' e 'LAJIDA'. (Procurado: margem ebitda, margem lajida, margem do ebitda. Os termos não aparecem em nenhuma página.)
-- **Alavancagem (dívida líquida / EBITDA): não encontrado.** O documento não informa alavancagem dívida líquida/EBITDA. Na página 42, a companhia divulga 'Relação dívida liquida sobre capital ajustado (a)/(b)', que é outro índice, não o múltiplo dívida líquida / EBITDA. Procurei por 'alavancagem', 'EBITDA' e 'LAJIDA'. (Procurado: alavancagem, dívida líquida/ebitda, dívida líquida / ebitda, dívida líquida sobre ebitda. Os termos não aparecem em nenhuma página.)
-- **Capex: não encontrado.** O documento não informa capex como total; no fluxo de caixa há apenas as linhas de aquisição de imobilizado e de intangível, que foram tratadas como valores de apoio. Procurei por 'capex' e 'total de investimentos'. (Procurado: capex, aquisição de imobilizado, aquisições de imobilizado, aquisição de ativo imobilizado, aquisições de bens do ativo imobilizado, adições ao imobilizado. Os termos aparecem nas p. 10, descartadas.)
+- **EBITDA: não encontrado.** O documento não traz um quadro ou frase com EBITDA/LAJIDA consolidado. As demonstrações trazem apenas o resultado antes do resultado financeiro e a depreciação e amortização, usados como apoio para o servidor calcular o EBITDA. (Procurado: ebitda, lajida. Os termos não aparecem em nenhuma página.)
+- **Margem EBITDA: não encontrado.** O documento não informa a margem EBITDA em texto ou tabela; não há quadro de desempenho com esse percentual consolidado. (Procurado: margem ebitda, margem lajida, margem do ebitda. Os termos não aparecem em nenhuma página.)
+- **Alavancagem (dívida líquida / EBITDA): não encontrado.** O documento não informa a alavancagem dívida líquida / EBITDA. Na página 42, a gestão de capital mostra apenas a 'Relação dívida liquida sobre capital ajustado (a)/(b)', que é outro índice e não usa EBITDA. (Procurado: alavancagem, dívida líquida/ebitda, dívida líquida / ebitda, dívida líquida sobre ebitda. Os termos não aparecem em nenhuma página.)
+- **Capex: não encontrado.** O documento não informa um total de capex com esse nome; no fluxo de caixa só traz as linhas de aquisição de imobilizado e aquisição de intangível, que foram gravadas como valores de apoio para cálculo do capex pelo servidor. (Procurado: capex, aquisição de imobilizado, aquisições de imobilizado, aquisição de ativo imobilizado, aquisições de bens do ativo imobilizado, adições ao imobilizado. Os termos aparecem nas p. 10, descartadas.)
 
-- [atenção] A tabela diz que o quadro demonstra os riscos de liquidez em 31 de dezembro de 2021, mas os valores mostrados na mesma tabela estão sob a coluna de 2022, o que torna a referência de data inconsistente dentro do próprio quadro. (p. 41)  
-  > "O quadro a seguir demonstra os riscos de liquidez por faixa de vencimento e refletem o fluxo financeiro da Companhia e suas controladas em 31 de dezembro de 2021: | 2022 | Valor contábil | Fluxo financeiro projetado | Até 12 meses | De 13 a 24 meses | De 25 a 36 meses | |---|---|---|---|---|---| | Passivo | | | | | | | Empréstimos e Financiamentos | 24.176 | 24.176 | 18.115 | 6.061 | - | | Contas a Pagar a Fornecedores | 41.873 | 41.873 | 41.873 | - | - | | Arrendamentos a Pagar | 636 | 636 | 399 | 118 | 118 | | Outras Obrigações | 6.469 | 6.469 | 3.990 | 2.479 | - | | Total | 73.154 | 73.154 | 64.377 | 8.658 | 118 |"
-- [atenção] A tabela de instrumentos financeiros repete 'Controladora - 31/12/2021' nas duas primeiras colunas, de modo que falta a identificação de 2022 e o cabeçalho fica inconsistente com os períodos apresentados no restante do quadro. (p. 42)  
-  > "Diversas políticas e divulgações contábeis da Companhia exigem a determinação do valor justo, tanto para os ativos e passivos financeiros como para os não financeiros. Os valores justos têm sido apurados para propósitos de mensuração e/ou divulgação. | | Controladora - 31/12/2021 | Controladora - 31/12/2021 | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 | |---|---|---|---|---| | Ativos financeiros mensurados a custo amortizado | | | | | | Caixa e Equivalente de Caixa | 355 | 871 | 10.656 | 8.194 | | Contas a Receber de Clientes | - | - | 98.663 | 69.645 | | Outros Créditos | 3 | - | 1.033 | 916 | | Total | 358 | 871 | 10.352 | 78.755 | | Passivos financeiros mensurados a custo amortizado | | | | | | Contas a Pagar a Fornecedores | 5 | - | 41.873 | 32.854 | | Arrendamentos Operacionais a pagar | - | - | 636 | 972 | | Empréstimos e Financiamentos | - | - | 24.176 | 25.075 | | Antecipações de clientes e faturamento antecipado | - | - | 372 | 377 | | Outros Passivos | - | - | 814 | 2.120 | | Total | 5 | - | 67.871 | 61.398 |"
+- [atenção] Há ano trocado: a nota diz que as demonstrações de 31 de dezembro de 2022 foram aprovadas em 14 de março de 2022. (p. 12)  
+  > "Adicionalmente, a Companhia considerou as orientações emanadas da Orientação Técnica OCPC 07, emitida pelo CPC em novembro de 2014, na preparação das suas demonstrações financeiras. Dessa forma, as informações relevantes próprias das demonstrações financeiras estão sendo evidenciadas e correspondem às utilizadas pela administração na sua gestão. A apresentação das demonstrações financeiras foi aprovada e pela administração em 14 de março de 2022."
+- [atenção] O saldo final não fecha com a movimentação: pelos valores da tabela, o saldo final deveria permanecer positivo, mas foi apresentado como (24.176). (p. 32)  
+  > "Os empréstimos e financiamentos estão garantidos por recebíveis, a qual foi exigida pelos Agentes Financeiros intermediadores da operação. A tabela a seguir demonstra amortizações e captações durante o período: | | Consolidado - 2022 | Consolidado - 2021 | |---|---|---| | Saldo Inicial | 25.075 | 13.818 | | Captações no período | 14.378 | 35.170 | | Provisão de encargos no período | 3.706 | 735 | | Amortização do principal no período | (17.140) | (24.109) | | Pagamento de juros no período | (1.843) | (539) | | Saldo final | (24.176) | 25.075 |"
+- [atenção] O total dos ativos financeiros mensurados a custo amortizado não fecha com as linhas da própria tabela: 10.656, 98.663 e 1.033 não somam 10.352. (p. 42)  
+  > "Diversas políticas e divulgações contábeis da Companhia exigem a determinação do valor justo, tanto para os ativos e passivos financeiros como para os não financeiros. Os valores justos têm sido apurados para propósitos de mensuração e/ou divulgação. | | Controladora - 31/12/2021 | Controladora - 31/12/2021 | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 | |---|---|---|---|---| | Ativos financeiros mensurados a custo amortizado | | | | | | Caixa e Equivalente de Caixa | 355 | 871 | 10.656 | 8.194 | | Contas a Receber de Clientes | - | - | 98.663 | 69.645 | | Outros Créditos | 3 | - | 1.033 | 916 | | Total | 358 | 871 | 10.352 | 78.755 |"
+- [atenção] Há ano trocado no cabeçalho da tabela: a controladora aparece com 31/12/2021 nas duas colunas comparativas. (p. 42)  
+  > "Diversas políticas e divulgações contábeis da Companhia exigem a determinação do valor justo, tanto para os ativos e passivos financeiros como para os não financeiros. Os valores justos têm sido apurados para propósitos de mensuração e/ou divulgação. | | Controladora - 31/12/2021 | Controladora - 31/12/2021 | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 | |---|---|---|---|---| | Ativos financeiros mensurados a custo amortizado | | | | | | Caixa e Equivalente de Caixa | 355 | 871 | 10.656 | 8.194 | | Contas a Receber de Clientes | - | - | 98.663 | 69.645 | | Outros Créditos | 3 | - | 1.033 | 916 | | Total | 358 | 871 | 10.352 | 78.755 |"
+- [informação] Empréstimos e financiamentos (circulante) (2022): o valor veio da seção '11. Empréstimos e financiamentos', e não de uma demonstração de balanço. (p. 32)
+- [informação] Empréstimos e financiamentos (não circulante) (2022): o valor veio da seção '11. Empréstimos e financiamentos', e não de uma demonstração de balanço. (p. 32)

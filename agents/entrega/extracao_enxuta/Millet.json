@@ -36,7 +36,7 @@
   "ebitda": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não traz EBITDA/LAJIDA em texto ou tabela; há apenas os dados para cálculo no resultado e no fluxo de caixa, usados pelo servidor para conferir o indicador. Procurei por 'EBITDA', 'LAJIDA' e 'resultado antes do resultado financeiro'.",
+    "motivo": "O documento não traz um quadro ou frase com EBITDA/LAJIDA consolidado. As demonstrações trazem apenas o resultado antes do resultado financeiro e a depreciação e amortização, usados como apoio para o servidor calcular o EBITDA.",
     "busca": {
       "termos_procurados": [
         "ebitda",
@@ -49,7 +49,7 @@
   "margem_ebitda": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não informa margem EBITDA em texto ou tabela. Há somente o resultado operacional e a depreciação/amortização para cálculo indireto pelo servidor; não há percentual escrito pela companhia. Procurei por 'margem EBITDA', 'EBITDA' e 'LAJIDA'.",
+    "motivo": "O documento não informa a margem EBITDA em texto ou tabela; não há quadro de desempenho com esse percentual consolidado.",
     "busca": {
       "termos_procurados": [
         "margem ebitda",
@@ -68,8 +68,8 @@
     "periodo": "2022",
     "escopo": "consolidado",
     "origem": {
-      "pagina": 7,
-      "trecho": "| Lucro líquido do exercício |  | 14.743 | 5.371 | 18.891 | 6.470 |",
+      "pagina": 8,
+      "trecho": "| Lucro líquido do exercício | 14.743 | 5.371 | 18.891 | 6.470 |",
       "tipo": "tabela",
       "linha": "Lucro líquido do exercício",
       "coluna": "Consolidado - 2022"
@@ -81,8 +81,8 @@
       "periodo": "2021",
       "escopo": "consolidado",
       "origem": {
-        "pagina": 7,
-        "trecho": "| Lucro líquido do exercício |  | 14.743 | 5.371 | 18.891 | 6.470 |",
+        "pagina": 8,
+        "trecho": "| Lucro líquido do exercício | 14.743 | 5.371 | 18.891 | 6.470 |",
         "tipo": "tabela",
         "linha": "Lucro líquido do exercício",
         "coluna": "Consolidado - 2021"
@@ -123,7 +123,7 @@
   "alavancagem": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não informa alavancagem dívida líquida/EBITDA. Na página 42, a companhia divulga 'Relação dívida liquida sobre capital ajustado (a)/(b)', que é outro índice, não o múltiplo dívida líquida / EBITDA. Procurei por 'alavancagem', 'EBITDA' e 'LAJIDA'.",
+    "motivo": "O documento não informa a alavancagem dívida líquida / EBITDA. Na página 42, a gestão de capital mostra apenas a 'Relação dívida liquida sobre capital ajustado (a)/(b)', que é outro índice e não usa EBITDA.",
     "busca": {
       "termos_procurados": [
         "alavancagem",
@@ -168,7 +168,7 @@
   "capex": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não informa capex como total; no fluxo de caixa há apenas as linhas de aquisição de imobilizado e de intangível, que foram tratadas como valores de apoio. Procurei por 'capex' e 'total de investimentos'.",
+    "motivo": "O documento não informa um total de capex com esse nome; no fluxo de caixa só traz as linhas de aquisição de imobilizado e aquisição de intangível, que foram gravadas como valores de apoio para cálculo do capex pelo servidor.",
     "busca": {
       "termos_procurados": [
         "capex",

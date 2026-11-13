@@ -171,9 +171,12 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
                 "turnos": [turn_view(run) for run in deps.runs.of_conversation(conversation.id)]}
 
     @app.post("/api/conversas/{conversa_id}/mensagens", tags=["Conversas"],
-              summary="Um turno da conversa: o orquestrador responde lembrando os turnos anteriores")
+              summary="Um turno da conversa: uma pergunta, respondida com fontes, lembrando os turnos anteriores")
     async def send_message(conversa_id: str, body: Mensagem, user: Caller) -> dict[str, Any]:
-        return await start(user, "livre", body.texto, wait=body.aguardar, conversa_id=conversa_id)
+        # Um turno de conversa é uma pergunta: a conferência final só o aceita com uma resposta
+        # gravada pelo pesquisador, com fontes. Na primeira versão (pedido livre) o orquestrador
+        # respondia sozinho, na mensagem de estado, sem fonte.
+        return await start(user, "pergunta", body.texto, wait=body.aguardar, conversa_id=conversa_id)
 
     # --- execuções ----------------------------------------------------------------------------
 

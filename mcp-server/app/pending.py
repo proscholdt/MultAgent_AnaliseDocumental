@@ -156,7 +156,10 @@ async def pending(call: Call, *, include_report: bool = True) -> list[dict[str, 
 
     if include_report and not items:
         report = await call.deps.store.report(call.caller.user_id)
-        newest = _latest(*(state.newest for state in states), *(answer.at for answer in answers.values()))
+        # Só as cinco perguntas entram no relatório: uma pergunta livre do usuário respondida depois
+        # não o deixa desatualizado (antes, cada pergunta de conversa fazia remontar o relatório).
+        newest = _latest(*(state.newest for state in states),
+                         *(answer.at for question_id, answer in answers.items() if question_id in QUESTIONS))
         if report is None:
             add("montagem do relatório (montar_relatorio)", "redator")
         elif newest is not None and report.at < newest:

@@ -4,7 +4,7 @@
   "analise": {
     "motivo_resultado": [
       {
-        "afirmacao": "A queda da receita operacional líquida da holding em 2022 foi atribuída a estornos de faturamento de regularizações, ao não acionamento das bandeiras tarifárias e à variação negativa na CVA.",
+        "afirmacao": "A queda da receita operacional líquida da holding em 2022 foi explicada pelos estornos de faturamento de regularizações, pelo não acionamento das bandeiras tarifárias e pela variação negativa na conta CVA.",
         "citacao": "A receita operacional líquida, desconsiderando a receita de construção, totalizou em 2022 R$12.107 milhões, 13% abaixo da registrada em 2021. Essa redução foi influenciada pelos estornos de faturamento de regularizações, pelo não acionamento das bandeiras tarifárias e pela variação negativa na conta CVA, que é uma compensação para cobertura dos custos com a Parcela A.",
         "pagina": 9,
         "chunk_index": 33,
@@ -13,17 +13,17 @@
         "tom": null
       },
       {
-        "afirmacao": "Na geração, o resultado líquido melhorou com o cenário hidrológico mais favorável, que elevou o GSF e reduziu o PLD, diminuindo os custos de compra de energia.",
-        "citacao": "Essa variação pode ser explicada pela melhora do cenário hidrológico ao longo do ano de 2022, que levou ao aumento do GSF e à queda do PLD, reduzindo os custos com compra de energia.",
-        "pagina": 9,
-        "chunk_index": 30,
-        "secao": "Desempenho Financeiro",
+        "afirmacao": "No desempenho operacional, a companhia apontou que a queda do mercado faturado total em 2022 decorreu principalmente do menor consumo médio de residências e da menor demanda do setor siderúrgico.",
+        "citacao": "Em 2022, o mercado faturado total apresentou uma queda de 0,4% em relação ao mesmo período do ano anterior. Essa retração é decorrente, em especial, do menor consumo médio de residências, com a retomada de atividades externas após o período mais crítico da Pandemia, e da atividade do setor siderúrgico, que passa por um momento de menor demanda global.",
+        "pagina": 5,
+        "chunk_index": 11,
+        "secao": "Desempenho Operacional",
         "fonte": "relatório",
         "tom": null
       },
       {
-        "afirmacao": "No consolidado, o prejuízo foi pressionado principalmente pelo segmento de distribuição, com provisão para devolução de créditos de PIS/COFINS, atualização financeira desses valores e impairment de IR/CS diferidos.",
-        "citacao": "Essa retração ocorreu, principalmente, no segmento de Distribuição, em função do reconhecimento de provisão de -R$1.081 milhões para devolução de créditos de PIS/COFINS aos consumidores, da atualização financeira desses valores, que totalizaram -R$1.584 milhões, e do impairment da recuperabilidade de IR/CS diferidos, no valor de -R$1.634 milhões.",
+        "afirmacao": "O prejuízo líquido de 2022 foi explicado, sobretudo, pela provisão para devolução de créditos de PIS/COFINS, pela atualização financeira desses valores e pelo impairment dos créditos de IR/CS diferidos.",
+        "citacao": "Em 2022, a Light S.A. apurou um resultado líquido de -R$5.673 milhões, R$6.070 milhões abaixo em relação ao ano anterior. Essa retração ocorreu, principalmente, no segmento de Distribuição, em função do reconhecimento de provisão de -R$1.081 milhões para devolução de créditos de PIS/COFINS aos consumidores, da atualização financeira desses valores, que totalizaram -R$1.584 milhões, e do impairment da recuperabilidade de IR/CS diferidos, no valor de -R$1.634 milhões.",
         "pagina": 10,
         "chunk_index": 36,
         "secao": "Resultado Líquido",
@@ -33,21 +33,57 @@
     ],
     "risco": [
       {
-        "afirmacao": "A companhia destaca risco de continuidade operacional, afirmando que há incerteza significativa que pode levantar dúvida significativa quanto à capacidade de continuidade da Light e da Light SESA.",
-        "citacao": "existindo, portanto, uma incerteza sobre seu sucesso. Os eventos e condições, anteriormente mencionados, individual ou coletivamente, indicam, no julgamento da Administração da Companhia, a existência de incerteza significativa que pode levantar dúvida significativa quanto à capacidade de continuidade operacional da Light e da Light SESA, controlada da Companhia.",
+        "afirmacao": "A companhia destaca risco de continuidade operacional, dizendo que há incerteza significativa sobre o sucesso das estratégias e que isso pode levantar dúvida significativa quanto à continuidade da Light e da Light SESA.",
+        "citacao": "Os eventos e condições, anteriormente mencionados, individual ou coletivamente, indicam, no julgamento da Administração da Companhia, a existência de incerteza significativa que pode levantar dúvida significativa quanto à capacidade de continuidade operacional da Light e da Light SESA, controlada da Companhia.",
         "pagina": 3,
         "chunk_index": 5,
         "secao": "Mensagem da Administração",
         "fonte": "relatório",
         "tom": null
+      },
+      {
+        "afirmacao": "A nota de risco de crédito informa exposição à inadimplência de consumidores e de instituições financeiras, com uso de ferramentas de cobrança e monitoramento do risco.",
+        "citacao": "Decorre da possibilidade da Companhia sofrer perdas decorrentes de inadimplência dos seus consumidores ou de instituições financeiras depositárias de recursos ou de investimentos financeiros. Para mitigar esses riscos, a Companhia utiliza de todas as ferramentas de cobrança permitidas pelo órgão regulador, tais como corte por inadimplência, negativação de clientes inadimplentes em empresas de proteção ao crédito e cobrança judicial.",
+        "pagina": 101,
+        "chunk_index": 322,
+        "secao": "34. INSTRUMENTOS FINANCEIROS E GERENCIAMENTO DE RISCOS > 34.2 Gerenciamento de riscos e objetivos alcançados > 34.2.4 Risco de crédito",
+        "fonte": "nota explicativa",
+        "tom": null
+      },
+      {
+        "afirmacao": "O documento também evidencia risco regulatório e contingencial ao tratar da provisão ligada ao crédito de PIS/COFINS sobre ICMS a devolver ao consumidor.",
+        "citacao": "Conforme detalhado na Nota 1.2, a controlada Light SESA reconheceu uma estimativa de contingência passiva relativa os valores do crédito que poderá ser repassado aos consumidores referentes ao crédito de PIS/COFINS sobre ICMS a devolver ao consumidor.",
+        "pagina": 75,
+        "chunk_index": 237,
+        "secao": "22. PROVISÕES PARA CONTINGÊNCIAS > 22.1 Provisões para contingências > 22.1.5 Crédito de PIS/COFINS sobre ICMS a devolver ao consumidor",
+        "fonte": "nota explicativa",
+        "tom": null
+      },
+      {
+        "afirmacao": "Há risco de liquidez, com a administração dizendo que acompanha os fluxos de caixa previstos e reais e a combinação dos perfis de vencimento dos passivos financeiros.",
+        "citacao": "Conforme divulgado na Nota 1.1, a Administração da Companhia está acompanhando atentamente todos os riscos relacionados a continuidade operacional do Grupo e gerencia o risco de liquidez por meio do acompanhamento contínuo dos fluxos de caixa previstos e reais, bem como pela combinação dos perfis de vencimento dos seus passivos financeiros.",
+        "pagina": 101,
+        "chunk_index": 323,
+        "secao": "34. INSTRUMENTOS FINANCEIROS E GERENCIAMENTO DE RISCOS > 34.2 Gerenciamento de riscos e objetivos alcançados > 34.2.5 Risco de liquidez",
+        "fonte": "nota explicativa",
+        "tom": null
       }
     ],
     "guidance": [
       {
-        "afirmacao": "A administração afirma que buscará executar as estratégias mencionadas nas demonstrações, mas admite que não há garantia de êxito e que parte relevante dos fatores está fora de seu controle.",
-        "citacao": "Adicionalmente, a Administração da Companhia perseguirá e envidará os melhores esforços nas diversas estratégias mencionadas na seção 1.1 das DFs de 2022. Porém, não há garantia de que a Companhia terá êxito nas estratégias, visto que parte relevante dos elementos das estratégias não está sob o controle da Administração da Companhia",
+        "afirmacao": "A companhia indica como prioridade a renovação antecipada da concessão da Light SESA, com discussões já iniciadas com a Aneel e o Ministério de Minas e Energia.",
+        "citacao": "Essas alternativas passam pela renovação da concessão da Light SESA, que vence em 2026. Nosso objetivo é antecipar esse processo. Nós iniciamos discussões com a Aneel e o Ministério de Minas e Energia em busca da renovação antecipada em bases que garantam a sustentabilidade da concessão e do nosso negócio.",
+        "pagina": 2,
+        "chunk_index": 2,
+        "secao": "Mensagem da Administração",
+        "fonte": "relatório",
+        "tom": null
+      },
+      {
+        "afirmacao": "A administração também orienta o foco em investimentos constantes para transformação digital e melhoria da experiência dos clientes.",
+        "citacao": "Para a transformação digital da Companhia, procuramos otimizar nossa evolução tecnológica com investimentos constantes que assegurem uma experiência de qualidade aos nossos 4,3 milhões de clientes cariocas e fluminenses.",
         "pagina": 3,
-        "chunk_index": 5,
+        "chunk_index": 4,
         "secao": "Mensagem da Administração",
         "fonte": "relatório",
         "tom": null
@@ -55,8 +91,17 @@
     ],
     "evento_relevante": [
       {
-        "afirmacao": "A Light assinou acordo para adquirir 49% da Axxiom, passando a deter 100% da controlada em conjunto, com expectativa de conclusão no segundo trimestre de 2023.",
-        "citacao": "Em 21 de dezembro de 2022, a Light S.A. assinou um Contrato de Compra e Venda de Ações e Outras Avenças para aquisição de 49% das ações da controlada em conjunto Axxiom Soluções pertencentes a Companhia Energética de Minas Gerais (\"CEMIG\"). A operação foi realizada por R$1,00 (um real) onde o Grupo Light S.A. terá 100% das ações da Axxiom. Em 25 de janeiro de 2023, o Conselho de Administrativo de Defesa Econômica (\"CADE\") aprovou a operação. Para que essa operação seja finalizada, existem algumas condições precedentes a serem cumpridas e a Companhia tem expectativa para conclusão da operação no segundo trimestre de 2023.",
+        "afirmacao": "Em 2022, a companhia intensificou uma reestruturação interna com reorganização, modernização de processos e sistemas, buscando maior eficiência operacional.",
+        "citacao": "Nos últimos meses, intensificamos o processo de reestruturação interna da Light, com o objetivo de torná-la mais eficiente. Aceleramos a modernização da companhia com a atualização de processos e sistemas, desburocratização, busca de eficiência e excelência operacional.",
+        "pagina": 2,
+        "chunk_index": 3,
+        "secao": "Mensagem da Administração",
+        "fonte": "relatório",
+        "tom": null
+      },
+      {
+        "afirmacao": "A Light assinou contrato para adquirir 49% da Axxiom, o que levaria o grupo a deter 100% das ações, com expectativa de conclusão no segundo trimestre de 2023.",
+        "citacao": "Em 21 de dezembro de 2022, a Light S.A. assinou um Contrato de Compra e Venda de Ações e Outras Avenças para aquisição de 49% das ações da controlada em conjunto Axxiom Soluções pertencentes a Companhia Energética de Minas Gerais (\"CEMIG\"). A operação foi realizada por R$1,00 (um real) onde o Grupo Light S.A. terá 100% das ações da Axxiom.",
         "pagina": 107,
         "chunk_index": 341,
         "secao": "38. EVENTOS SUBSEQUENTES > 38.2 Contrato de Compra e Venda de Ações da controlada em conjunto AXXIOM",
@@ -66,7 +111,7 @@
     ],
     "tom": [
       {
-        "afirmacao": "O tom da administração é negativo, porque o texto ressalta desafios estruturais, necessidade de readequação de capital e incerteza relevante sobre a continuidade operacional.",
+        "afirmacao": "O tom geral é negativo, porque a administração enfatiza dificuldades estruturais, necessidade de readequação de capital, perdas crescentes e incerteza significativa sobre a continuidade operacional.",
         "citacao": "Minha chegada ocorreu nesse momento especialmente desafiador, em que as dificuldades estruturais históricas da área de concessão da Light SESA, por conta das particularidades do Rio de Janeiro, foram agravadas por questões macroeconômicas, tendo sido constatada a necessidade de buscar uma readequação da estrutura de capital da companhia.",
         "pagina": 2,
         "chunk_index": 1,

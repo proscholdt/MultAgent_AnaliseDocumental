@@ -70,22 +70,22 @@ async def snapshot(settings: Settings, identity: Identity) -> dict[str, Any]:
     """Tudo o que a base tem para o usuário: extração completa, análise, alertas, respostas,
     relatório e pendências."""
     async with mcp.connect(settings, mcp.SYSTEM, identity) as server:
-        listed = (await mcp.call(server, "ler_extracao", {"doc_id": None, "detalhe": "completo"}))["documentos"]
+        listed = (await server.call("ler_extracao", {"doc_id": None, "detalhe": "completo"}))["documentos"]
         compact = {doc["doc_id"]: doc["extracao"] for doc in
-                   (await mcp.call(server, "ler_extracao", {"doc_id": None, "detalhe": "enxuto"}))["documentos"]}
+                   (await server.call("ler_extracao", {"doc_id": None, "detalhe": "enxuto"}))["documentos"]}
         documents = []
         for doc in listed:
             documents.append({
                 **doc,
                 "extracao_enxuta": compact.get(doc["doc_id"]),
-                "analise": (await mcp.call(server, "ler_analise", {"doc_id": doc["doc_id"]}))["analise"],
-                "alertas": (await mcp.call(server, "ler_alertas", {"doc_id": doc["doc_id"]}))["alertas"]})
+                "analise": (await server.call("ler_analise", {"doc_id": doc["doc_id"]}))["analise"],
+                "alertas": (await server.call("ler_alertas", {"doc_id": doc["doc_id"]}))["alertas"]})
         result = {
             "gerado_em": datetime.now(UTC).isoformat(timespec="seconds"),
             "documentos": sorted(documents, key=lambda doc: doc["arquivo"]),
-            "respostas": (await mcp.call(server, "ler_respostas"))["respostas"],
-            "relatorio": (await mcp.call(server, "ler_relatorio")).get("relatorio"),
-            "pendencias": (await mcp.call(server, "pendencias"))["pendencias"],
+            "respostas": (await server.call("ler_respostas"))["respostas"],
+            "relatorio": (await server.call("ler_relatorio")).get("relatorio"),
+            "pendencias": (await server.call("pendencias"))["pendencias"],
         }
     result["citacoes"] = await _citations(settings, identity, result["documentos"])
     return result

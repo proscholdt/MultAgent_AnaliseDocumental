@@ -71,7 +71,7 @@
       "rotulo": "EBITDA",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não traz EBITDA/LAJIDA em texto ou tabela; há apenas os dados para cálculo no resultado e no fluxo de caixa, usados pelo servidor para conferir o indicador. Procurei por 'EBITDA', 'LAJIDA' e 'resultado antes do resultado financeiro'.",
+        "motivo": "O documento não traz um quadro ou frase com EBITDA/LAJIDA consolidado. As demonstrações trazem apenas o resultado antes do resultado financeiro e a depreciação e amortização, usados como apoio para o servidor calcular o EBITDA.",
         "evidencia": {
           "termos_procurados": [
             "ebitda",
@@ -138,7 +138,7 @@
       "rotulo": "Margem EBITDA",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não informa margem EBITDA em texto ou tabela. Há somente o resultado operacional e a depreciação/amortização para cálculo indireto pelo servidor; não há percentual escrito pela companhia. Procurei por 'margem EBITDA', 'EBITDA' e 'LAJIDA'.",
+        "motivo": "O documento não informa a margem EBITDA em texto ou tabela; não há quadro de desempenho com esse percentual consolidado.",
         "evidencia": {
           "termos_procurados": [
             "margem ebitda",
@@ -215,14 +215,14 @@
         "escopo": "consolidado",
         "origem": {
           "tipo": "tabela",
-          "pagina": 7,
-          "chunk_index": 8,
-          "secao": "Demonstrações do resultado",
-          "trecho": "|  | Nota | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Lucro líquido do exercício |  | 14.743 | 5.371 | 18.891 | 6.470 |",
+          "pagina": 8,
+          "chunk_index": 9,
+          "secao": "Demonstrações do resultado abrangente",
+          "trecho": "|  | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Lucro líquido do exercício | 14.743 | 5.371 | 18.891 | 6.470 |",
           "linha": "Lucro líquido do exercício",
           "coluna": "Consolidado - 2022"
         },
-        "nota_do_agente": "Lucro líquido total consolidado antes da distribuição aos minoritários"
+        "nota_do_agente": "Demonstração do resultado abrangente consolidada; valor do exercício atribuível ao consolidado."
       },
       "comparavel": {
         "status": "encontrado",
@@ -233,10 +233,10 @@
         "escopo": "consolidado",
         "origem": {
           "tipo": "tabela",
-          "pagina": 7,
-          "chunk_index": 8,
-          "secao": "Demonstrações do resultado",
-          "trecho": "|  | Nota | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Lucro líquido do exercício |  | 14.743 | 5.371 | 18.891 | 6.470 |",
+          "pagina": 8,
+          "chunk_index": 9,
+          "secao": "Demonstrações do resultado abrangente",
+          "trecho": "|  | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Lucro líquido do exercício | 14.743 | 5.371 | 18.891 | 6.470 |",
           "linha": "Lucro líquido do exercício",
           "coluna": "Consolidado - 2021"
         }
@@ -270,7 +270,8 @@
           "trecho": "|  | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 |\n| (=) Dívida líquida (a) | 13.520 | 16.877 |",
           "linha": "(=) Dívida líquida (a)",
           "coluna": "Consolidado - 31/12/2022"
-        }
+        },
+        "nota_do_agente": "Nota de gestão de capital."
       },
       "comparavel": {
         "status": "encontrado",
@@ -305,7 +306,7 @@
       "rotulo": "Alavancagem (dívida líquida / EBITDA)",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não informa alavancagem dívida líquida/EBITDA. Na página 42, a companhia divulga 'Relação dívida liquida sobre capital ajustado (a)/(b)', que é outro índice, não o múltiplo dívida líquida / EBITDA. Procurei por 'alavancagem', 'EBITDA' e 'LAJIDA'.",
+        "motivo": "O documento não informa a alavancagem dívida líquida / EBITDA. Na página 42, a gestão de capital mostra apenas a 'Relação dívida liquida sobre capital ajustado (a)/(b)', que é outro índice e não usa EBITDA.",
         "evidencia": {
           "termos_procurados": [
             "alavancagem",
@@ -424,7 +425,7 @@
       "rotulo": "Capex",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não informa capex como total; no fluxo de caixa há apenas as linhas de aquisição de imobilizado e de intangível, que foram tratadas como valores de apoio. Procurei por 'capex' e 'total de investimentos'.",
+        "motivo": "O documento não informa um total de capex com esse nome; no fluxo de caixa só traz as linhas de aquisição de imobilizado e aquisição de intangível, que foram gravadas como valores de apoio para cálculo do capex pelo servidor.",
         "evidencia": {
           "termos_procurados": [
             "capex",
@@ -497,43 +498,6 @@
     }
   },
   "valores_de_apoio": {
-    "resultado_antes_financeiro": {
-      "rotulo": "Resultado antes do resultado financeiro",
-      "2022": {
-        "status": "encontrado",
-        "valor": "25.298",
-        "valor_numerico": 25298.0,
-        "unidade": "R$ mil",
-        "periodo": "2022",
-        "escopo": "consolidado",
-        "origem": {
-          "tipo": "tabela",
-          "pagina": 7,
-          "chunk_index": 8,
-          "secao": "Demonstrações do resultado",
-          "trecho": "|  | Nota | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Resultado antes do resultado financeiro |  | 14.750 | 5.374 | 25.298 | 4.482 |",
-          "linha": "Resultado antes do resultado financeiro",
-          "coluna": "Consolidado - 2022"
-        }
-      },
-      "2021": {
-        "status": "encontrado",
-        "valor": "4.482",
-        "valor_numerico": 4482.0,
-        "unidade": "R$ mil",
-        "periodo": "2021",
-        "escopo": "consolidado",
-        "origem": {
-          "tipo": "tabela",
-          "pagina": 7,
-          "chunk_index": 8,
-          "secao": "Demonstrações do resultado",
-          "trecho": "|  | Nota | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Resultado antes do resultado financeiro |  | 14.750 | 5.374 | 25.298 | 4.482 |",
-          "linha": "Resultado antes do resultado financeiro",
-          "coluna": "Consolidado - 2021"
-        }
-      }
-    },
     "depreciacao_amortizacao": {
       "rotulo": "Depreciação e amortização",
       "2022": {
@@ -568,80 +532,6 @@
           "trecho": "| (em milhares de Reais) | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Depreciação e amortização | 13.295 | - | 18.248 | 2.975 |",
           "linha": "Depreciação e amortização",
           "coluna": "Consolidado - 2021"
-        }
-      }
-    },
-    "emprestimos_circulante": {
-      "rotulo": "Empréstimos e financiamentos (circulante)",
-      "2022": {
-        "status": "encontrado",
-        "valor": "18.115",
-        "valor_numerico": 18115.0,
-        "unidade": "R$ mil",
-        "periodo": "2022",
-        "escopo": "consolidado",
-        "origem": {
-          "tipo": "tabela",
-          "pagina": 6,
-          "chunk_index": 7,
-          "secao": "Balanços patrimoniais",
-          "trecho": "|  | Nota | Controladora - 31/12/2022 | Controladora - 31/12/2021 | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 |\n| Empréstimos e financiamentos | 11 | - | - | 18.115 | 11.742 |",
-          "linha": "Empréstimos e financiamentos",
-          "coluna": "Consolidado - 31/12/2022"
-        }
-      },
-      "2021": {
-        "status": "encontrado",
-        "valor": "11.742",
-        "valor_numerico": 11742.0,
-        "unidade": "R$ mil",
-        "periodo": "2021",
-        "escopo": "consolidado",
-        "origem": {
-          "tipo": "tabela",
-          "pagina": 6,
-          "chunk_index": 7,
-          "secao": "Balanços patrimoniais",
-          "trecho": "|  | Nota | Controladora - 31/12/2022 | Controladora - 31/12/2021 | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 |\n| Empréstimos e financiamentos | 11 | - | - | 18.115 | 11.742 |",
-          "linha": "Empréstimos e financiamentos",
-          "coluna": "Consolidado - 31/12/2021"
-        }
-      }
-    },
-    "emprestimos_nao_circulante": {
-      "rotulo": "Empréstimos e financiamentos (não circulante)",
-      "2022": {
-        "status": "encontrado",
-        "valor": "6.061",
-        "valor_numerico": 6061.0,
-        "unidade": "R$ mil",
-        "periodo": "2022",
-        "escopo": "consolidado",
-        "origem": {
-          "tipo": "tabela",
-          "pagina": 6,
-          "chunk_index": 7,
-          "secao": "Balanços patrimoniais",
-          "trecho": "|  | Nota | Controladora - 31/12/2022 | Controladora - 31/12/2021 | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 |\n| Empréstimos e financiamentos | 11 | - | - | 6.061 | 13.333 |",
-          "linha": "Empréstimos e financiamentos",
-          "coluna": "Consolidado - 31/12/2022"
-        }
-      },
-      "2021": {
-        "status": "encontrado",
-        "valor": "13.333",
-        "valor_numerico": 13333.0,
-        "unidade": "R$ mil",
-        "periodo": "2021",
-        "escopo": "consolidado",
-        "origem": {
-          "tipo": "tabela",
-          "pagina": 6,
-          "chunk_index": 7,
-          "secao": "Balanços patrimoniais",
-          "trecho": "|  | Nota | Controladora - 31/12/2022 | Controladora - 31/12/2021 | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 |\n| Empréstimos e financiamentos | 11 | - | - | 6.061 | 13.333 |",
-          "linha": "Empréstimos e financiamentos",
-          "coluna": "Consolidado - 31/12/2021"
         }
       }
     },
@@ -682,6 +572,80 @@
         }
       }
     },
+    "capex_intangivel": {
+      "rotulo": "Aquisição de intangível",
+      "2022": {
+        "status": "encontrado",
+        "valor": "(11.469)",
+        "valor_numerico": -11469.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 10,
+          "chunk_index": 11,
+          "secao": "Demonstrações dos fluxos de caixa",
+          "trecho": "| (em milhares de Reais) | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Aquisição de intangível | - | - | (11.469) | (12) |",
+          "linha": "Aquisição de intangível",
+          "coluna": "Consolidado - 2022"
+        }
+      },
+      "2021": {
+        "status": "encontrado",
+        "valor": "(12)",
+        "valor_numerico": -12.0,
+        "unidade": "R$ mil",
+        "periodo": "2021",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 10,
+          "chunk_index": 11,
+          "secao": "Demonstrações dos fluxos de caixa",
+          "trecho": "| (em milhares de Reais) | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Aquisição de intangível | - | - | (11.469) | (12) |",
+          "linha": "Aquisição de intangível",
+          "coluna": "Consolidado - 2021"
+        }
+      }
+    },
+    "resultado_antes_financeiro": {
+      "rotulo": "Resultado antes do resultado financeiro",
+      "2022": {
+        "status": "encontrado",
+        "valor": "25.298",
+        "valor_numerico": 25298.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 7,
+          "chunk_index": 8,
+          "secao": "Demonstrações do resultado",
+          "trecho": "|  | Nota | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Resultado antes do resultado financeiro |  | 14.750 | 5.374 | 25.298 | 4.482 |",
+          "linha": "Resultado antes do resultado financeiro",
+          "coluna": "Consolidado - 2022"
+        }
+      },
+      "2021": {
+        "status": "encontrado",
+        "valor": "4.482",
+        "valor_numerico": 4482.0,
+        "unidade": "R$ mil",
+        "periodo": "2021",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 7,
+          "chunk_index": 8,
+          "secao": "Demonstrações do resultado",
+          "trecho": "|  | Nota | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Resultado antes do resultado financeiro |  | 14.750 | 5.374 | 25.298 | 4.482 |",
+          "linha": "Resultado antes do resultado financeiro",
+          "coluna": "Consolidado - 2021"
+        }
+      }
+    },
     "capex_imobilizado": {
       "rotulo": "Aquisição de imobilizado",
       "2022": {
@@ -719,44 +683,102 @@
         }
       }
     },
-    "capex_intangivel": {
-      "rotulo": "Aquisição de intangível",
+    "emprestimos_circulante": {
+      "rotulo": "Empréstimos e financiamentos (circulante)",
       "2022": {
         "status": "encontrado",
-        "valor": "(11.469)",
-        "valor_numerico": -11469.0,
+        "valor": "18.115",
+        "valor_numerico": 18115.0,
         "unidade": "R$ mil",
         "periodo": "2022",
         "escopo": "consolidado",
         "origem": {
           "tipo": "tabela",
-          "pagina": 10,
-          "chunk_index": 11,
-          "secao": "Demonstrações dos fluxos de caixa",
-          "trecho": "| (em milhares de Reais) | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Aquisição de intangível | - | - | (11.469) | (12) |",
-          "linha": "Aquisição de intangível",
-          "coluna": "Consolidado - 2022"
-        }
+          "pagina": 32,
+          "chunk_index": 86,
+          "secao": "11. Empréstimos e financiamentos",
+          "trecho": "|  | Taxa a.m. | Indexador | Vencimento | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 |\n| Circulante |  |  |  | 18.115 | 11.742 |",
+          "linha": "Circulante",
+          "coluna": "Consolidado - 31/12/2022"
+        },
+        "nota_do_agente": "Sublinha de empréstimos e financiamentos."
       },
       "2021": {
         "status": "encontrado",
-        "valor": "(12)",
-        "valor_numerico": -12.0,
+        "valor": "11.742",
+        "valor_numerico": 11742.0,
         "unidade": "R$ mil",
         "periodo": "2021",
         "escopo": "consolidado",
         "origem": {
           "tipo": "tabela",
-          "pagina": 10,
-          "chunk_index": 11,
-          "secao": "Demonstrações dos fluxos de caixa",
-          "trecho": "| (em milhares de Reais) | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Aquisição de intangível | - | - | (11.469) | (12) |",
-          "linha": "Aquisição de intangível",
-          "coluna": "Consolidado - 2021"
+          "pagina": 32,
+          "chunk_index": 86,
+          "secao": "11. Empréstimos e financiamentos",
+          "trecho": "|  | Taxa a.m. | Indexador | Vencimento | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 |\n| Circulante |  |  |  | 18.115 | 11.742 |",
+          "linha": "Circulante",
+          "coluna": "Consolidado - 31/12/2021"
+        }
+      }
+    },
+    "emprestimos_nao_circulante": {
+      "rotulo": "Empréstimos e financiamentos (não circulante)",
+      "2022": {
+        "status": "encontrado",
+        "valor": "6.061",
+        "valor_numerico": 6061.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 32,
+          "chunk_index": 86,
+          "secao": "11. Empréstimos e financiamentos",
+          "trecho": "|  | Taxa a.m. | Indexador | Vencimento | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 |\n| Não Circulante |  |  |  | 6.061 | 13.333 |",
+          "linha": "Não Circulante",
+          "coluna": "Consolidado - 31/12/2022"
+        },
+        "nota_do_agente": "Sublinha de empréstimos e financiamentos."
+      },
+      "2021": {
+        "status": "encontrado",
+        "valor": "13.333",
+        "valor_numerico": 13333.0,
+        "unidade": "R$ mil",
+        "periodo": "2021",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 32,
+          "chunk_index": 86,
+          "secao": "11. Empréstimos e financiamentos",
+          "trecho": "|  | Taxa a.m. | Indexador | Vencimento | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 |\n| Não Circulante |  |  |  | 6.061 | 13.333 |",
+          "linha": "Não Circulante",
+          "coluna": "Consolidado - 31/12/2021"
         }
       }
     }
   },
-  "alertas_de_validacao": [],
+  "alertas_de_validacao": [
+    {
+      "codigo": "secao_inesperada",
+      "severidade": "informacao",
+      "campo": "emprestimos_circulante",
+      "mensagem": "Empréstimos e financiamentos (circulante) (2022): o valor veio da seção '11. Empréstimos e financiamentos', e não de uma demonstração de balanço.",
+      "detalhes": {
+        "pagina": 32
+      }
+    },
+    {
+      "codigo": "secao_inesperada",
+      "severidade": "informacao",
+      "campo": "emprestimos_nao_circulante",
+      "mensagem": "Empréstimos e financiamentos (não circulante) (2022): o valor veio da seção '11. Empréstimos e financiamentos', e não de uma demonstração de balanço.",
+      "detalhes": {
+        "pagina": 32
+      }
+    }
+  ],
   "impressao_do_indice": "2026-11-13T12:52:26.975334Z|121"
 }

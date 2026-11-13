@@ -55,7 +55,7 @@ Fora do Docker:
 ```bash
 uv sync
 uv run uvicorn app.main:app_factory --factory --port 8100
-uv run pytest        # 93 testes, sem rede
+uv run pytest        # 95 testes, sem rede
 ```
 
 ## Governança: quem pode o quê
@@ -164,6 +164,7 @@ qual.
 | Trecho que fala de uma parte do grupo (distribuidora, controlada) exige uma nota dizendo o que o valor é | O EBITDA da distribuidora da Light gravado como o da companhia |
 | Receita, lucro e caixa operacional vêm da demonstração do próprio campo (resultado, fluxo de caixa), não de outra tabela em que a linha se repete | O lucro tirado da demonstração do resultado abrangente com cabeçalho duplicado, ou das mutações do patrimônio, sem colunas por ano |
 | O lucro líquido é o total do exercício, não a linha de mesmo rótulo que vem depois da participação dos minoritários | O lucro da Millet veio da parte dos controladores (14.743 de 18.891) numa repetição da execução |
+| Empréstimos circulante e não circulante vêm do balanço, ou de uma frase que diga "circulante" | O total da nota de empréstimos da Brasal (3.417) gravado como a parte circulante: dívida contada duas vezes (1ª execução com PydanticAI) |
 | O campo capex é o total de investimentos que a empresa declara, não uma linha de aquisição | "Aquisições de bens do ativo imobilizado" (307.759) gravada como o capex da Light (1.470.292 com o intangível) |
 | Receita, lucro e caixa operacional vêm da tabela da demonstração, não de frase | O prejuízo da Light tirado de "-R$5.673 milhões" do texto, sem o sinal |
 | Uma célula não pode ser gravada em dois campos | A linha única "Imobilizado e intangível" da Brasal gravada duas vezes: capex dobrado |
@@ -288,7 +289,9 @@ duas extrações ainda rodando, e as respostas saíram dizendo "sem extração p
 
 O que foi escrito antes de a base mudar volta para a lista: resposta ou resumo mais antigo que a
 extração ou a análise de que depende está desatualizado, e o relatório mais antigo que qualquer
-um deles também.
+um deles também. Só as cinco perguntas do relatório contam: uma pergunta livre do usuário,
+respondida numa conversa, não deixa o relatório desatualizado (antes, cada pergunta fazia
+remontá-lo).
 
 ## Relatório
 
@@ -368,7 +371,7 @@ mcp-server/
 │  ├─ report.py             marcadores e montagem do relatório
 │  ├─ store.py  models.py   SQLite
 │  └─ tools/                rag, extraction, analysis, answers, reporting
-└─ tests/                   93 testes: governança, portões, fórmulas, pendências, relatório
+└─ tests/                   95 testes: governança, portões, fórmulas, pendências, relatório
 ```
 
 ## Caminho para produção no Azure

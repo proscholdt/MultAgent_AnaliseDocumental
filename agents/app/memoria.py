@@ -42,8 +42,18 @@ def _shorten_result(part: dict[str, Any]) -> dict[str, Any]:
     return {**part, "content": note}
 
 
+def _without_item_id(part: dict[str, Any]) -> dict[str, Any]:
+    """Tira o id do item no provedor. Na API de Responses da OpenAI, a chamada de tool e o texto de
+    um modelo que raciocinou trazem o id do item, e um item com id só é aceito de volta junto com o
+    raciocínio que o precedeu: sem ele, a OpenAI recusa o pedido inteiro (erro 400, "provided
+    without its required 'reasoning' item"). Como o raciocínio sai da memória, o id sai junto; a
+    chamada continua ligada ao resultado pelo `tool_call_id`."""
+    return {**part, "id": None} if part.get("id") else part
+
+
 def shorten(run_messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Uma chamada anterior, encurtada: sem raciocínio e com os resultados longos de tools em uma linha."""
+    """Uma chamada anterior, encurtada: sem raciocínio (e sem os ids de item que dependem dele) e
+    com os resultados longos de tools em uma linha."""
     out = []
     for message in run_messages:
         parts = []
@@ -51,7 +61,12 @@ def shorten(run_messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
             kind = part.get("part_kind")
             if kind == "thinking":
                 continue
-            parts.append(_shorten_result(part) if kind == "tool-return" else part)
+            if kind == "tool-return":
+                parts.append(_shorten_result(part))
+            elif kind in ("tool-call", "text"):
+                parts.append(_without_item_id(part))
+            else:
+                parts.append(part)
         if parts:
             out.append({**message, "parts": parts})
     return out

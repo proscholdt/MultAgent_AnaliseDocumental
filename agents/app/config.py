@@ -15,9 +15,10 @@ class Settings(BaseSettings):
     # US$ por milhão de tokens, por modelo: {"modelo": {"entrada": x, "entrada_cache": y, "saida": z}}.
     # Modelo sem preço aqui aparece com os tokens e sem custo.
     precos: dict[str, dict[str, float]] = {}
-    # Resumo do raciocínio que a OpenAI devolve junto com a resposta ("detailed", "auto" ou "" para
-    # não pedir). Ele entra no trace e nas mensagens guardadas de cada agente. Com "auto", em
-    # passos curtos, o resumo costuma vir vazio.
+    # Raciocínio do modelo: o esforço ("minimal", "low", "medium", "high"; "" desliga) e o resumo
+    # que a OpenAI devolve ("detailed", "auto"). Sem o esforço, o modelo responde sem raciocinar e
+    # não há o que registrar. O resumo entra no trace e nas mensagens guardadas de cada agente.
+    esforco_raciocinio: str = "low"
     resumo_raciocinio: str = "detailed"
 
     # Servidor MCP: a única porta dos agentes para tools e RAG. O segredo é o mesmo do servidor.
