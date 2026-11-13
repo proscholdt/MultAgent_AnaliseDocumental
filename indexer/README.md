@@ -688,7 +688,7 @@ Docling: `PARSER=docling`. Azure: `PARSER=azure`, recurso S0 em East US.
 | Parse dos 3 PDFs | 26 min | 86 s (Brasal 20 s, Light 46 s, Millet 20 s) |
 | Custo do parse | zero | US$ 2,18 (218 páginas a US$ 10 por mil, preço de referência) |
 | Chunks (texto / tabela / gráfico) | 641 (407 / 227 / 7) | 638 (396 / 234 / 8) |
-| Números das tabelas que existem no texto da página | 6.831 de 6.831 | 6.760 de 6.760 |
+| Números escritos nos chunks de tabela que não existem no texto da página | 0 de 6.831 | 0 de 6.760 |
 | Números do PDF (4 dígitos ou mais) presentes nos chunks | 6.934 de 7.018 | 6.934 de 7.018 |
 | Páginas com texto e sem chunk | os índices da Millet e da Light | os índices da Brasal, da Millet e da Light |
 | Busca: chunk certo entre os 8 primeiros | 38 de 38 | 38 de 38 |
@@ -700,6 +700,16 @@ Os dois índices são equivalentes para o que o agente precisa. Na busca, duas i
 com a Azure deram 23 e 22 perguntas em 1º lugar (MRR 0,75 e 0,74); a tabela traz a última. As
 diferenças:
 
+- **Por que 6.831 e 6.760.** A primeira linha conta os números que cada parser escreveu nos
+  chunks de tabela, não os números do PDF. Os totais diferem porque os dois escrevem as tabelas
+  de formas diferentes, não porque um perdeu números. Quase tudo vem de uma página: na tabela do
+  balanço social da Light (p. 15), o Docling repete o valor de uma célula mesclada em todas as
+  colunas que ela cobre ("1.893.435" aparece 9 vezes no chunk dele e 1 no da Azure), e essa
+  página sozinha tem 75 números a mais no Docling. No resto as diferenças quase se compensam:
+  trechos que um parser põe no chunk da tabela e o outro num chunk de texto, e o cabeçalho com
+  os anos, que se repete quando uma tabela vira duas. Nas páginas conferidas, nenhum número que
+  está só nas tabelas do Docling falta nos chunks da Azure. A medida que diz se algo se perdeu é
+  a da linha seguinte.
 - **Tempo e custo.** A Azure lê os três documentos em um minuto e meio, contra 26 minutos, e
   cobra por página. O preço usado na conta é o padrão do indexador, não o da tabela da Azure.
 - **Conteúdo.** As duas contagens de 6.934 coincidem no total, mas não são os mesmos números. A
