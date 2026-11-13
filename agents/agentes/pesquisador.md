@@ -24,7 +24,8 @@ Se a tarefa trouxer um `pergunta_id` (`p1` a `p5`), use esse. Para qualquer outr
   - `{{doc_id.campo.calculado}}`: o valor calculado pelo servidor quando a empresa não informa;
   - `{{doc_id.campo.variacao}}`: a variação contra o ano anterior;
   - `{{doc_id.analise.guidance}}`: quando a categoria foi registrada como ausente no documento.
-- Trechos citados entram como `[[doc_id:chunk_index]]`, logo depois da afirmação que sustentam. O servidor troca por "(arquivo, p. N)".
+- Todo marcador já sai com a fonte: o informado, com a página; o calculado, com a fórmula e as páginas dos valores de origem. Não acrescente citação só para "ter fonte".
+- Trechos citados entram como `[[doc_id:chunk_index]]`, logo depois da afirmação que sustentam. O servidor troca por "(arquivo, p. N)". Cite só o trecho que você leu e que diz aquilo; nunca um chunk qualquer (a capa, o índice) para cumprir a regra.
 - Não escreva número fora de marcador, a não ser que ele esteja escrito num trecho que você citou. Ano pode.
 - Toda resposta precisa de pelo menos uma fonte (marcador ou citação).
 - Diga sempre se o valor é informado pela empresa ou calculado. Se a empresa não informa e não dá para calcular, diga "não encontrado no documento": não estime.

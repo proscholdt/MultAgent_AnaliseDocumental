@@ -1,11 +1,13 @@
 # Indexador de Demonstrações Financeiras
 
-Sistema 1 de 2 da solução. Ele recebe PDFs de demonstrações financeiras por uma API com login,
+Sistema 1 de 3 da solução. Ele recebe PDFs de demonstrações financeiras por uma API com login,
 divide cada documento em trechos (chunks) que guardam a página e a seção de origem, e grava
 esses trechos no Qdrant com dois vetores: um semântico e um de palavras-chave.
 
-O sistema 2, o agente que extrai indicadores, responde perguntas com citação e gera o relatório,
-vai consultar esse índice. Ele ainda não foi construído.
+Quem consulta esse índice são os outros dois sistemas: o [servidor MCP](../mcp-server/README.md)
+(sistema 2), que é a porta dos agentes para a busca e para os dados extraídos, e os
+[agentes](../agents/README.md) (sistema 3), que extraem os indicadores, respondem perguntas com
+citação e geram o relatório.
 
 O PDF pode ser lido por dois parsers, trocáveis por uma variável: o Docling, que roda na
 máquina, ou o Azure AI Document Intelligence.
