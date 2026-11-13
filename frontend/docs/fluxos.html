@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frontend · Demonstrações</title>
+<style>
+:root {
+  --bg: #f5f7f6; --surface: #ffffff; --surface-2: #eef2f0; --ink: #16201d; --ink-soft: #4a5753;
+  --muted: #5d6b66; --line: #d9e1de; --line-strong: #9fb0aa; --accent: #0f5f55; --accent-soft: #e1efeb;
+  --llm: #9a5b00; --llm-soft: #fbf0dc; --gate: #a3302b; --gate-soft: #fbe9e7; --code-bg: #eef2f0;
+  --font: 'Inter', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  --mono: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1312; --surface: #151c1a; --surface-2: #1c2523; --ink: #e3ebe8; --ink-soft: #b4c2bd;
+    --muted: #93a49e; --line: #27322f; --line-strong: #4b5c57; --accent: #4db3a2; --accent-soft: #15302b;
+    --llm: #e2a84e; --llm-soft: #2d2415; --gate: #ef7c73; --gate-soft: #341b19; --code-bg: #1c2523;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 var(--font); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+.topo { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+.topo .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; padding-block: 12px; }
+.marca { font-weight: 700; color: var(--ink); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+.marca svg { flex: none; }
+nav { display: flex; flex-wrap: wrap; gap: 4px; }
+nav a { color: var(--muted); text-decoration: none; font-size: 14px; padding: 4px 10px; border-radius: 6px; }
+nav a:hover { background: var(--surface-2); color: var(--ink); }
+nav a.atual { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+main { padding-block: 40px 64px; }
+.kicker { margin: 0 0 6px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+h1 { font-size: 34px; line-height: 1.2; margin: 0 0 12px; text-wrap: balance; }
+h2 { font-size: 23px; line-height: 1.3; margin: 56px 0 12px; padding-top: 8px; text-wrap: balance; }
+h3 { font-size: 17px; margin: 28px 0 8px; }
+p, li { max-width: 74ch; }
+.lead { font-size: 18px; color: var(--ink-soft); margin: 0; max-width: 70ch; }
+.indice { margin: 28px 0 0; padding: 14px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.indice ol { margin: 6px 0 0; padding-left: 20px; columns: 2 260px; column-gap: 32px; }
+.indice li { font-size: 15px; }
+a { color: var(--accent); }
+code { font-family: var(--mono); font-size: .86em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre { font-family: var(--mono); font-size: 13.5px; background: var(--code-bg); padding: 14px 16px; border-radius: 8px; overflow-x: auto; line-height: 1.5; }
+pre code { background: none; padding: 0; }
+figure { margin: 22px 0 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 18px 12px; }
+.rolagem { overflow-x: auto; }
+figure svg { display: block; width: 100%; height: auto; min-width: 640px; }
+figcaption { margin-top: 10px; font-size: 14px; color: var(--muted); max-width: none; }
+figure img { display: block; max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); }
+.tabela { overflow-x: auto; margin: 16px 0; }
+table { border-collapse: collapse; font-size: 14.5px; min-width: 520px; width: 100%; }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+th { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.cartoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 18px 0; }
+.cartao { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.cartao h3 { margin: 0 0 4px; font-size: 16px; }
+.cartao p { margin: 0; font-size: 14.5px; color: var(--ink-soft); }
+.cartao a.ir { display: inline-block; margin-top: 8px; font-size: 14px; font-weight: 600; text-decoration: none; }
+.nota { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 18px 0; max-width: 74ch; }
+.nota p { margin: 0; }
+.dupla { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin: 18px 0; }
+.dupla figure { margin: 0; }
+footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; padding-block: 18px; }
+/* diagramas */
+.n { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.3; }
+.n-svc { stroke: var(--accent); stroke-width: 1.6; }
+.n-hl { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.6; }
+.n-db { fill: var(--surface-2); }
+.n-fila { fill: var(--surface-2); stroke-dasharray: 2 3; }
+.n-ext { stroke-dasharray: 6 4; }
+.n-llm { fill: var(--llm-soft); stroke: var(--llm); }
+.n-gate { fill: var(--gate-soft); stroke: var(--gate); }
+.n-nota { fill: var(--surface-2); stroke: none; }
+.t { fill: var(--ink); font: 600 13px var(--font); }
+.s { fill: var(--muted); font: 11.5px var(--font); }
+.mono { font-family: var(--mono); font-size: 11px; }
+.h { fill: var(--muted); font: 700 11px var(--font); letter-spacing: .08em; text-transform: uppercase; }
+.e { stroke: var(--ink-soft); stroke-width: 1.4; fill: none; }
+.e-dash { stroke-dasharray: 5 4; }
+.e-acc { stroke: var(--accent); stroke-width: 1.8; }
+.e-gate { stroke: var(--gate); }
+.lbl { fill: var(--ink-soft); font: 11.5px var(--font); paint-order: stroke; stroke: var(--surface); stroke-width: 5px; stroke-linejoin: round; }
+.mk { fill: var(--ink-soft); }
+.mk-acc { fill: var(--accent); }
+.mk-gate { fill: var(--gate); }
+.vida { stroke: var(--line-strong); stroke-dasharray: 3 4; }
+.passo { fill: var(--accent); }
+.passo-t { fill: var(--surface); font: 700 10.5px var(--font); }
+@media (max-width: 640px) { h1 { font-size: 27px; } h2 { font-size: 20px; } }
+</style>
+</head>
+<body>
+<header class="topo"><div class="wrap">
+<a class="marca" href="../../docs/visao-geral.html"><svg width="22" height="22" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="var(--accent)"/><path d="M8 22V14M14 22V9M20 22v-6M26 22V11" stroke="var(--surface)" stroke-width="3" stroke-linecap="round"/></svg> Demonstrações</a>
+<nav aria-label="Páginas"><a href="../../docs/visao-geral.html">Visão geral</a><a href="../../indexer/docs/fluxos.html">Indexador</a><a href="../../mcp-server/docs/fluxos.html">Servidor MCP</a><a href="../../agents/docs/fluxos.html">Agentes</a><a href="fluxos.html" class="atual" aria-current="page">Frontend</a></nav>
+</div></header>
+<main class="wrap">
+<p class="kicker">Sistema 4 · frontend/</p>
+<h1>Frontend</h1>
+<p class="lead">A tela do usuário, em SvelteKit: envio dos PDFs com o progresso da indexação, e o chat com os agentes, bloqueado até a resposta e mostrando o que o sistema está fazendo.</p>
+<div class="indice"><strong>Nesta página</strong><ol><li><a href="#bff">Login e proxy</a></li><li><a href="#chat">O chat</a></li><li><a href="#avisos">De onde vem o “pensando…”</a></li><li><a href="#resposta">A resposta</a></li><li><a href="#envio">Documentos</a></li></ol></div>
+<section id="bff"><h2>Login e proxy</h2><figure><div class="rolagem"><svg viewBox="0 0 940 300" role="img" aria-label="O servidor do SvelteKit entre o navegador e as APIs" xmlns="http://www.w3.org/2000/svg"><defs><marker id="d16-seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker><marker id="d16-seta-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-acc" d="M0,0 L10,5 L0,10 z"/></marker><marker id="d16-seta-gate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-gate" d="M0,0 L10,5 L0,10 z"/></marker></defs><rect class="n n-ext" x="20" y="100" width="150" height="90" rx="9"/><text class="t" x="95.0" y="134.0" text-anchor="middle">Navegador</text><text class="s" x="95.0" y="151.0" text-anchor="middle">páginas Svelte</text><text class="s" x="95.0" y="166.0" text-anchor="middle">sem acesso ao token</text><rect class="n n-svc" x="230" y="20" width="420" height="260" rx="12"/><text class="h" x="246" y="44" text-anchor="start">SVELTEKIT · NODE · :3000</text><rect class="n n-svc" x="250" y="60" width="180" height="70" rx="9"/><text class="t" x="340.0" y="84.0" text-anchor="middle">login / criar conta</text><text class="s" x="340.0" y="101.0" text-anchor="middle">form actions</text><text class="s" x="340.0" y="116.0" text-anchor="middle">grava o cookie</text><rect class="n n-gate" x="250" y="160" width="180" height="90" rx="9"/><text class="t" x="340.0" y="186.5" text-anchor="middle">hooks.server</text><text class="s" x="340.0" y="203.5" text-anchor="middle">lê o cookie da sessão,</text><text class="s" x="340.0" y="218.5" text-anchor="middle">vence com &lt; 16 min,</text><text class="s" x="340.0" y="233.5" text-anchor="middle">barra quem não entrou</text><rect class="n n-gate" x="460" y="110" width="170" height="100" rx="9"/><text class="t" x="545.0" y="141.5" text-anchor="middle">proxy</text><text class="s" x="545.0" y="158.5" text-anchor="middle">/api/indexador/…</text><text class="s" x="545.0" y="173.5" text-anchor="middle">/api/agentes/…</text><text class="s" x="545.0" y="188.5" text-anchor="middle">só a lista liberada</text><rect class="n n-ext" x="720" y="50" width="200" height="70" rx="9"/><text class="t" x="820.0" y="74.0" text-anchor="middle">Indexador</text><text class="s" x="820.0" y="91.0" text-anchor="middle">/auth/login, documentos,</text><text class="s" x="820.0" y="106.0" text-anchor="middle">jobs</text><rect class="n n-ext" x="720" y="180" width="200" height="70" rx="9"/><text class="t" x="820.0" y="211.5" text-anchor="middle">Orquestrador</text><text class="s" x="820.0" y="228.5" text-anchor="middle">conversas, execuções</text><path class="e" d="M170,125 L250,95" marker-end="url(#d16-seta)"/><text class="lbl" x="200" y="98" text-anchor="middle">usuário e senha</text><path class="e" d="M170,165 L250,205" marker-end="url(#d16-seta)"/><text class="lbl" x="200" y="210" text-anchor="middle">cookie httpOnly</text><path class="e" d="M430,205 L445,205 L445,160 L460,160" marker-end="url(#d16-seta)"/><path class="e" d="M430,75 L720,75" marker-end="url(#d16-seta)"/><text class="lbl" x="575" y="69" text-anchor="middle">POST /auth/login</text><path class="e" d="M630,140 L675,140 L675,105 L720,105" marker-end="url(#d16-seta)"/><text class="lbl" x="678" y="128" text-anchor="start">Bearer JWT</text><path class="e" d="M630,180 L675,180 L675,215 L720,215" marker-end="url(#d16-seta)"/></svg></div><figcaption>O JWT do indexador fica num cookie httpOnly e SameSite=Strict; o JavaScript da página não o lê. Como o navegador só fala com a própria tela, as APIs não precisam de CORS. Um 401 vindo de cima apaga o cookie e manda para o login.</figcaption></figure><p>Qualquer outro caminho responde 404, e método errado, 405. Busca direta, mensagens completas dos agentes e rotas administrativas ficam de fora.</p><div class="tabela"><table><thead><tr><th>Sistema</th><th>O proxy repassa</th></tr></thead><tbody><tr><td>indexador</td><td><code>GET</code>/<code>POST /api/documents</code>, <code>GET</code>/<code>DELETE /api/documents/{id}</code>, <code>GET /api/documents/{id}/jobs</code>, <code>GET /api/jobs/{id}</code></td></tr><tr><td>orquestrador</td><td><code>GET</code>/<code>POST /api/conversas</code>, <code>GET /api/conversas/{id}</code>, <code>POST /api/conversas/{id}/mensagens</code>, <code>GET /api/execucoes/{id}</code></td></tr></tbody></table></div></section><section id="chat"><h2>O chat</h2><figure><div class="rolagem"><svg viewBox="0 0 940 300" role="img" aria-label="O ciclo de uma mensagem no chat" xmlns="http://www.w3.org/2000/svg"><defs><marker id="d17-seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker><marker id="d17-seta-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-acc" d="M0,0 L10,5 L0,10 z"/></marker><marker id="d17-seta-gate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-gate" d="M0,0 L10,5 L0,10 z"/></marker></defs><rect class="n n-hl" x="20" y="110" width="140" height="70" rx="9"/><text class="t" x="90.0" y="141.5" text-anchor="middle">Livre</text><text class="s" x="90.0" y="158.5" text-anchor="middle">caixa habilitada</text><rect class="n n-svc" x="220" y="110" width="150" height="70" rx="9"/><text class="t" x="295.0" y="134.0" text-anchor="middle">Enviando</text><text class="s" x="295.0" y="151.0" text-anchor="middle">POST mensagem</text><text class="s" x="295.0" y="166.0" text-anchor="middle">aguardar = false</text><rect class="n n-gate" x="440" y="90" width="240" height="110" rx="9"/><text class="t" x="560.0" y="119.0" text-anchor="middle">Bloqueado</text><text class="s" x="560.0" y="136.0" text-anchor="middle">caixa, botão e sugestões desabilitados</text><text class="s" x="560.0" y="151.0" text-anchor="middle">GET execução a cada 1,5 s</text><text class="s" x="560.0" y="166.0" text-anchor="middle">aviso lido dos passos do trace</text><text class="s" x="560.0" y="181.0" text-anchor="middle">tempo decorrido</text><rect class="n n-svc" x="760" y="110" width="160" height="70" rx="9"/><text class="t" x="840.0" y="134.0" text-anchor="middle">Resposta</text><text class="s" x="840.0" y="151.0" text-anchor="middle">completa, incompleta</text><text class="s" x="840.0" y="166.0" text-anchor="middle">ou falhou</text><path class="e" d="M160,145.0 L220,145.0" marker-end="url(#d17-seta)"/><text class="lbl" x="190.0" y="139.0" text-anchor="middle">Enter</text><path class="e" d="M370,145.0 L440,145.0" marker-end="url(#d17-seta)"/><text class="lbl" x="405.0" y="139.0" text-anchor="middle">202</text><path class="e" d="M680,145.0 L760,145.0" marker-end="url(#d17-seta)"/><text class="lbl" x="720.0" y="139.0" text-anchor="middle">estado final</text><path class="e" d="M840,180 L840,250 L90,250 L90,180" marker-end="url(#d17-seta)"/><text class="lbl" x="465" y="244" text-anchor="middle">aviso some, caixa volta</text><path class="e e-dash" d="M560,90 L560,40 L600,40"/><text class="s" x="606" y="44" text-anchor="start">recarregar a página: a conversa está em ?c=…;</text><text class="s" x="606" y="60" text-anchor="start">se o último turno ainda roda, volta bloqueado</text><path class="e e-dash" d="M295,180 L295,215 L330,215"/><text class="s" x="336" y="219" text-anchor="start">409: já há pedido nesta conversa → retoma o acompanhamento</text></svg></div><figcaption>O bloqueio é da tela e do servidor: o orquestrador também recusa um segundo pedido na mesma conversa.</figcaption></figure></section><section id="avisos"><h2>De onde vem o “pensando…”</h2><p>O aviso não é uma animação de enfeite: é o que o sistema está fazendo, lido dos passos da execução. Quem está trabalhando sai dos pares <code>delegando</code> (começou) e <code>especialista</code> (terminou).</p><div class="tabela"><table><thead><tr><th>Passo mais recente do trace</th><th>Aviso na tela</th></tr></thead><tbody><tr><td>nenhum ainda</td><td>Carregando…</td></tr><tr><td><code>inicio</code>, <code>especialistas</code>, <code>conversa</code></td><td>Entendendo o pedido…</td></tr><tr><td><code>orquestrador</code>, <code>raciocinio</code>, <code>tool</code> do orquestrador</td><td>Pensando…</td></tr><tr><td><code>delegando</code> pesquisador</td><td>Buscando informações nos documentos…</td></tr><tr><td><code>delegando</code> extrator / validador / analista em X</td><td>Lendo os números de X… / Conferindo as fontes de X… / Analisando o texto de X…</td></tr><tr><td><code>delegando</code> redator</td><td>Escrevendo…</td></tr><tr><td>vários <code>delegando</code> sem <code>especialista</code></td><td>N especialistas trabalhando ao mesmo tempo… (e a lista)</td></tr><tr><td><code>conferencia</code></td><td>Conferindo se está tudo pronto…</td></tr><tr><td>8 s sem passo novo e ninguém trabalhando</td><td>alterna: Pensando… / Buscando informações… / Carregando…</td></tr></tbody></table></div></section><section id="resposta"><h2>A resposta</h2><ul>
+<li><strong>Pergunta</strong>: o texto em Markdown e as fontes como selos (documento e página).</li>
+<li><strong>Relatório</strong>: o Markdown com tabelas, recolhível, com botão para copiar.</li>
+<li><strong>Fora do escopo</strong>: o texto fixo e as opções; clicar manda o exemplo.</li>
+<li><strong>Incompleto ou falhou</strong>: o motivo, escrito pelo código. A mensagem livre do orquestrador nunca aparece como resposta.</li>
+<li>Todo Markdown que vem dos agentes passa pelo DOMPurify antes de ir para a tela.</li>
+</ul>
+<div class="dupla">
+<figure><img src="chat-pensando.png" alt="Chat bloqueado com o aviso Buscando informações nos documentos" loading="lazy"><figcaption>Enquanto responde: caixa bloqueada, aviso e tempo.</figcaption></figure>
+<figure><img src="chat-resposta.png" alt="Resposta com as fontes em documento e página" loading="lazy"><figcaption>A resposta, com as fontes (documento e página).</figcaption></figure>
+<figure><img src="fora-do-escopo.png" alt="Mensagem fora do escopo com as opções" loading="lazy"><figcaption>Fora do escopo: texto fixo e opções clicáveis.</figcaption></figure>
+<figure><img src="chat-relatorio.png" alt="Relatório consolidado no chat" loading="lazy"><figcaption>O relatório pedido no chat, com tabelas e cópia em Markdown.</figcaption></figure>
+</div></section><section id="envio"><h2>Documentos</h2><figure><div class="rolagem"><svg viewBox="0 0 940 170" role="img" aria-label="Envio de um PDF" xmlns="http://www.w3.org/2000/svg"><defs><marker id="d18-seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker><marker id="d18-seta-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-acc" d="M0,0 L10,5 L0,10 z"/></marker><marker id="d18-seta-gate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-gate" d="M0,0 L10,5 L0,10 z"/></marker></defs><rect class="n n-ext" x="20" y="50" width="150" height="64" rx="9"/><text class="t" x="95.0" y="78.5" text-anchor="middle">Arrastar ou escolher</text><text class="s" x="95.0" y="95.5" text-anchor="middle">um ou vários PDFs</text><rect class="n n-svc" x="220" y="50" width="150" height="64" rx="9"/><text class="t" x="295.0" y="78.5" text-anchor="middle">Na fila</text><text class="s" x="295.0" y="95.5" text-anchor="middle">POST multipart</text><rect class="n n-svc" x="420" y="50" width="190" height="64" rx="9"/><text class="t" x="515.0" y="71.0" text-anchor="middle">Processando</text><text class="s" x="515.0" y="88.0" text-anchor="middle">“Lendo páginas: 12 de 51”</text><text class="s" x="515.0" y="103.0" text-anchor="middle">“Indexando os trechos…”</text><rect class="n n-hl" x="660" y="50" width="120" height="64" rx="9"/><text class="t" x="720.0" y="78.5" text-anchor="middle">Indexado</text><text class="s" x="720.0" y="95.5" text-anchor="middle">páginas, trechos</text><rect class="n n-ext" x="820" y="50" width="100" height="64" rx="9"/><text class="t" x="870.0" y="78.5" text-anchor="middle">Remover</text><text class="s" x="870.0" y="95.5" text-anchor="middle">com confirmação</text><path class="e" d="M170,82.0 L220,82.0" marker-end="url(#d18-seta)"/><path class="e" d="M370,82.0 L420,82.0" marker-end="url(#d18-seta)"/><path class="e" d="M610,82.0 L660,82.0" marker-end="url(#d18-seta)"/><path class="e" d="M780,82.0 L820,82.0" marker-end="url(#d18-seta)"/><text class="s" x="420" y="150" text-anchor="start">A lista se atualiza a cada 3 s enquanto houver documento na fila ou em processamento.</text></svg></div><figcaption>O progresso vem do job do indexador (página atual e total durante o parse).</figcaption></figure></section>
+</main>
+<footer><div class="wrap">Documentação técnica · análise de demonstrações financeiras com agentes</div></footer>
+</body>
+</html>
