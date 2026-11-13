@@ -61,7 +61,15 @@
           "unidade": "R$ mil",
           "nota": "linha única 'Imobilizado e intangível' do fluxo de caixa (p. 11)"
         }
-      }
+      },
+      "inconsistencias_na_fonte_esperadas": [
+        {
+          "pagina": 49,
+          "contem": "12 meses de 2020",
+          "origem": "validador",
+          "por_que": "nota de sensibilidade com data-base de 31/12/2022: 'definimos o Cenário Provável para os 12 meses de 2020'."
+        }
+      ]
     },
     "Millet.pdf": {
       "empresa": "Millet",
@@ -128,7 +136,21 @@
           "unidade": "R$ mil",
           "nota": "6.263 (imobilizado) + 11.469 (intangível), fluxo de caixa (p. 10)"
         }
-      }
+      },
+      "inconsistencias_na_fonte_esperadas": [
+        {
+          "pagina": 41,
+          "contem": "em 31 de dezembro de 2021:",
+          "origem": "validador",
+          "por_que": "o quadro de liquidez é anunciado como de 31 de dezembro de 2021 e traz a coluna de 2022."
+        },
+        {
+          "pagina": 42,
+          "contem": "Controladora - 31/12/2021 | Controladora - 31/12/2021",
+          "origem": "validador",
+          "por_que": "no quadro de instrumentos financeiros, as duas colunas da controladora trazem a data 31/12/2021."
+        }
+      ]
     },
     "Light.pdf": {
       "empresa": "Light",
@@ -225,11 +247,19 @@
         {
           "pagina": 8,
           "contem": "2.996",
+          "origem": "leitura",
           "por_que": "EBITDA da distribuidora: 'foi de R$1.817 milhões, uma redução de R$2.996 milhões em relação aos R$1.179 milhões apurados em 2021'. Os três números não fecham."
+        },
+        {
+          "pagina": 9,
+          "contem": "3.001",
+          "origem": "validador",
+          "por_que": "EBITDA consolidado: 'foi de R$1.180 milhões, apresentando uma redução R$3.001 milhões se comparado a 2021'. Em 2021 foi 1.821 (1.143.301 + 678.110): só fecha com o valor de 2022 negativo."
         },
         {
           "pagina": 10,
           "contem": "3,32x",
+          "origem": "leitura",
           "por_que": "'encerrou 2021 em 3,32x, menor do que no 2021 (3,48x)': o ano está trocado."
         }
       ]
@@ -306,5 +336,6 @@
       ],
       "por_que": "a Light fala em antecipar a renovação da concessão, concentrar investimentos e perseguir as estratégias de reestruturação (p. 2, 3 e 28); Brasal e Millet não trazem guidance da administração"
     }
-  }
+  },
+  "_inconsistencias_na_fonte": "Lista do que foi conferido no PDF, não de tudo o que existe. As duas primeiras da Light saíram da minha leitura; as outras foram apontadas pelo validador em alguma execução e conferidas no PDF antes de entrar aqui. A medida é quantas das conhecidas uma execução registrou."
 }

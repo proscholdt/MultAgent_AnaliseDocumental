@@ -1,118 +1,118 @@
 {
-  "execucao_id": "exec-cb0c885ed948",
+  "execucao_id": "exec-702c07cd4f7a",
   "tipo": "relatorio",
   "pedido": "Relatório consolidado completo.",
   "estado": "completa",
-  "criada_em": "2026-11-13T16:35:31+00:00",
-  "iniciada_em": "2026-11-13T16:35:31+00:00",
-  "terminada_em": "2026-11-13T16:38:14+00:00",
+  "criada_em": "2026-11-13T17:30:34+00:00",
+  "iniciada_em": "2026-11-13T17:30:34+00:00",
+  "terminada_em": "2026-11-13T17:32:44+00:00",
   "rodadas": 1,
-  "agentes_digest": "ab95b21d6e74",
-  "mensagem": "Relatório consolidado concluído para os três documentos, com extração, revisão das fontes, análise qualitativa, respostas às cinco perguntas, resumos e montagem final. Não pendência.",
+  "agentes_digest": "b554fc3648d7",
+  "mensagem": "Relatório consolidado concluído com extração, revisão das fontes, análise qualitativa, respostas às cinco perguntas, resumos executivos e montagem final. Houve alertas de consistência registrados na revisão, mas nenhuma pendência restante.",
   "pendencias": [],
   "uso": {
     "total": {
       "uso": {
-        "chamadas": 147,
-        "entrada": 1917101,
-        "entrada_cache": 1629696,
-        "saida": 24068,
-        "total": 1941169
+        "chamadas": 163,
+        "entrada": 1987175,
+        "entrada_cache": 1718656,
+        "saida": 21042,
+        "total": 2008217
       },
-      "custo_usd": 0.7255
+      "custo_usd": 0.6319
     },
     "por_agente": {
       "analista": {
         "uso": {
-          "chamadas": 28,
-          "entrada": 340822,
-          "entrada_cache": 268032,
-          "saida": 6380,
-          "total": 347202
+          "chamadas": 35,
+          "entrada": 453497,
+          "entrada_cache": 384384,
+          "saida": 6174,
+          "total": 459671
         },
-        "custo_usd": 0.1034
+        "custo_usd": 0.1084
       },
       "extrator": {
         "uso": {
-          "chamadas": 47,
-          "entrada": 888302,
-          "entrada_cache": 815360,
-          "saida": 8386,
-          "total": 896688
+          "chamadas": 60,
+          "entrada": 1000073,
+          "entrada_cache": 928256,
+          "saida": 6803,
+          "total": 1006876
         },
-        "custo_usd": 0.1536
+        "custo_usd": 0.1541
+      },
+      "pesquisador": {
+        "uso": {
+          "chamadas": 25,
+          "entrada": 106946,
+          "entrada_cache": 81664,
+          "saida": 2124,
+          "total": 109070
+        },
+        "custo_usd": 0.0346
       },
       "validador": {
         "uso": {
-          "chamadas": 24,
-          "entrada": 499071,
-          "entrada_cache": 408576,
-          "saida": 4714,
-          "total": 503785
+          "chamadas": 19,
+          "entrada": 322681,
+          "entrada_cache": 247296,
+          "saida": 3023,
+          "total": 325704
         },
-        "custo_usd": 0.3991
+        "custo_usd": 0.2956
       },
       "redator": {
         "uso": {
           "chamadas": 13,
-          "entrada": 49541,
-          "entrada_cache": 30592,
-          "saida": 1427,
-          "total": 50968
+          "entrada": 45905,
+          "entrada_cache": 27776,
+          "saida": 1551,
+          "total": 47456
         },
-        "custo_usd": 0.0229
-      },
-      "pesquisador": {
-        "uso": {
-          "chamadas": 26,
-          "entrada": 97002,
-          "entrada_cache": 72704,
-          "saida": 1872,
-          "total": 98874
-        },
-        "custo_usd": 0.0321
+        "custo_usd": 0.0227
       },
       "orquestrador": {
         "uso": {
-          "chamadas": 9,
-          "entrada": 42363,
-          "entrada_cache": 34432,
-          "saida": 1289,
-          "total": 43652
+          "chamadas": 11,
+          "entrada": 58073,
+          "entrada_cache": 49280,
+          "saida": 1367,
+          "total": 59440
         },
-        "custo_usd": 0.0143
+        "custo_usd": 0.0164
       }
     },
     "por_documento": {
       "a87339d097478f1c": {
         "uso": {
-          "chamadas": 26,
-          "entrada": 369974,
-          "entrada_cache": 295552,
-          "saida": 6306,
-          "total": 376280
+          "chamadas": 35,
+          "entrada": 616852,
+          "entrada_cache": 540672,
+          "saida": 5729,
+          "total": 622581
         },
-        "custo_usd": 0.1855
-      },
-      "5905cd3412e40fea": {
-        "uso": {
-          "chamadas": 46,
-          "entrada": 687447,
-          "entrada_cache": 594048,
-          "saida": 6140,
-          "total": 693587
-        },
-        "custo_usd": 0.252
+        "custo_usd": 0.179
       },
       "42589e4b7ad3999b": {
         "uso": {
-          "chamadas": 38,
-          "entrada": 717241,
-          "entrada_cache": 631552,
-          "saida": 8431,
-          "total": 725672
+          "chamadas": 48,
+          "entrada": 628117,
+          "entrada_cache": 546816,
+          "saida": 6628,
+          "total": 634745
         },
-        "custo_usd": 0.24
+        "custo_usd": 0.1957
+      },
+      "5905cd3412e40fea": {
+        "uso": {
+          "chamadas": 42,
+          "entrada": 574105,
+          "entrada_cache": 498816,
+          "saida": 5157,
+          "total": 579262
+        },
+        "custo_usd": 0.2046
       }
     },
     "modelos_sem_preco": []
@@ -120,14 +120,14 @@
   "erro": null,
   "passos": [
     {
-      "em": "2026-11-13T16:35:31+00:00",
+      "em": "2026-11-13T17:30:34+00:00",
       "tipo": "inicio",
-      "execucao": "exec-cb0c885ed948",
+      "execucao": "exec-702c07cd4f7a",
       "pedido_tipo": "relatorio",
       "pedido": "Relatório consolidado completo."
     },
     {
-      "em": "2026-11-13T16:35:32+00:00",
+      "em": "2026-11-13T17:30:34+00:00",
       "tipo": "especialistas",
       "agentes": [
         "analista",
@@ -136,1437 +136,1293 @@
         "redator",
         "validador"
       ],
-      "digest": "ab95b21d6e74"
+      "digest": "b554fc3648d7"
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:06+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "a87339d097478f1c",
-      "ms": 1267,
+      "tool": "listar_documentos",
+      "ok": true,
+      "ms": 21
+    },
+    {
+      "em": "2026-11-13T17:31:06+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "a87339d097478f1c",
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 364
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:06+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "a87339d097478f1c",
-      "ms": 1439,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:17+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "a87339d097478f1c",
-      "ms": 1520,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:17+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "a87339d097478f1c",
-      "ms": 484,
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 744
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:06+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "a87339d097478f1c",
-      "ms": 993,
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 1103
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:06+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "a87339d097478f1c",
-      "ms": 1416,
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 1635
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:06+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "a87339d097478f1c",
-      "ms": 142,
       "tool": "salvar_item_analise",
-      "ok": true
+      "ok": true,
+      "ms": 68
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:06+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "a87339d097478f1c",
-      "ms": 339,
       "tool": "salvar_item_analise",
-      "ok": true
+      "ok": true,
+      "ms": 45
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:06+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "a87339d097478f1c",
-      "ms": 1226,
       "tool": "salvar_item_analise",
-      "ok": true
+      "ok": true,
+      "ms": 118
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:06+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "a87339d097478f1c",
-      "ms": 1582,
       "tool": "salvar_item_analise",
-      "ok": true
+      "ok": true,
+      "ms": 171
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:06+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "a87339d097478f1c",
-      "ms": 2101,
       "tool": "salvar_item_analise",
-      "ok": true
+      "ok": true,
+      "ms": 223
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:06+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "a87339d097478f1c",
-      "ms": 8635,
       "tool": "salvar_item_analise",
-      "ok": true
+      "ok": false,
+      "ms": 273
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:06+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "a87339d097478f1c",
-      "ms": 10351,
       "tool": "salvar_item_analise",
-      "ok": true
+      "ok": true,
+      "ms": 359
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:06+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "a87339d097478f1c",
-      "ms": 10703,
-      "tool": "salvar_item_analise",
-      "ok": true
+      "tool": "ler_chunk",
+      "ok": true,
+      "ms": 32
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:06+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "a87339d097478f1c",
-      "ms": 11503,
       "tool": "salvar_item_analise",
-      "ok": true
+      "ok": true,
+      "ms": 64
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:06+00:00",
       "tipo": "especialista",
       "agente": "analista",
       "doc_id": "a87339d097478f1c",
+      "estado": "concluido",
+      "erro": null,
+      "gravacoes": {
+        "salvar_item_analise": 7
+      },
+      "segundos": 23,
+      "modelo": "gpt-5.4-mini",
+      "uso": {
+        "entrada": 78268,
+        "entrada_cache": 61824,
+        "saida": 1753,
+        "total": 80021,
+        "chamadas": 7
+      }
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "listar_documentos",
+      "ok": true,
+      "ms": 34
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "buscar_trechos",
+      "ok": true,
+      "ms": 543
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "buscar_trechos",
+      "ok": true,
+      "ms": 997
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "ler_pagina",
+      "ok": true,
+      "ms": 59
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "ler_pagina",
+      "ok": true,
+      "ms": 32
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "ler_pagina",
+      "ok": true,
+      "ms": 124
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "ler_pagina",
+      "ok": true,
+      "ms": 209
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "ler_pagina",
+      "ok": true,
+      "ms": 333
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "registrar_ausencia_analise",
+      "ok": false,
+      "ms": 45
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "ler_pagina",
+      "ok": true,
+      "ms": 42
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "ler_pagina",
+      "ok": true,
+      "ms": 85
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "ler_pagina",
+      "ok": true,
+      "ms": 139
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "ler_pagina",
+      "ok": true,
+      "ms": 181
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "ler_pagina",
+      "ok": true,
+      "ms": 225
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "ler_pagina",
+      "ok": true,
+      "ms": 256
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "ler_pagina",
+      "ok": true,
+      "ms": 292
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "salvar_item_analise",
+      "ok": true,
+      "ms": 81
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "salvar_item_analise",
+      "ok": true,
+      "ms": 52
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "salvar_item_analise",
+      "ok": true,
+      "ms": 102
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "salvar_item_analise",
+      "ok": true,
+      "ms": 168
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "salvar_item_analise",
+      "ok": true,
+      "ms": 220
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "salvar_item_analise",
+      "ok": true,
+      "ms": 61
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "salvar_item_analise",
+      "ok": true,
+      "ms": 111
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "salvar_item_analise",
+      "ok": true,
+      "ms": 169
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "salvar_item_analise",
+      "ok": true,
+      "ms": 71
+    },
+    {
+      "em": "2026-11-13T17:31:14+00:00",
+      "tipo": "especialista",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
       "estado": "concluido",
       "erro": null,
       "gravacoes": {
         "salvar_item_analise": 9
       },
-      "segundos": 32.7,
+      "segundos": 31.5,
       "modelo": "gpt-5.4-mini",
       "uso": {
-        "chamadas": 5,
-        "entrada": 60952,
-        "total": 62657,
-        "saida": 1705,
-        "entrada_cache": 43648
+        "entrada": 149882,
+        "entrada_cache": 128640,
+        "saida": 2011,
+        "total": 151893,
+        "chamadas": 11
       }
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 97,
       "tool": "listar_documentos",
-      "ok": true
+      "ok": true,
+      "ms": 19
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 1584,
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 619
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 2090,
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 1029
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 2622,
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 1381
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 102,
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 73
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 244,
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 114
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 334,
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 142
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 549,
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 186
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 633,
-      "tool": "ler_pagina",
-      "ok": true
+      "tool": "salvar_item_analise",
+      "ok": true,
+      "ms": 237
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 756,
-      "tool": "ler_pagina",
-      "ok": true
+      "tool": "salvar_item_analise",
+      "ok": true,
+      "ms": 52
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 843,
-      "tool": "ler_pagina",
-      "ok": true
+      "tool": "salvar_item_analise",
+      "ok": true,
+      "ms": 113
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 945,
-      "tool": "ler_pagina",
-      "ok": true
+      "tool": "salvar_item_analise",
+      "ok": true,
+      "ms": 176
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 1083,
-      "tool": "ler_pagina",
-      "ok": true
+      "tool": "salvar_item_analise",
+      "ok": true,
+      "ms": 227
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 2727,
+      "tool": "salvar_item_analise",
+      "ok": false,
+      "ms": 42
+    },
+    {
+      "em": "2026-11-13T17:31:19+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "5905cd3412e40fea",
       "tool": "registrar_ausencia_analise",
-      "ok": false
+      "ok": false,
+      "ms": 54
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 3691,
-      "tool": "salvar_item_analise",
-      "ok": true
+      "tool": "ler_pagina",
+      "ok": true,
+      "ms": 32
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 6740,
       "tool": "salvar_item_analise",
-      "ok": true
+      "ok": false,
+      "ms": 51
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 7229,
       "tool": "salvar_item_analise",
-      "ok": true
+      "ok": true,
+      "ms": 54
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 7711,
       "tool": "salvar_item_analise",
-      "ok": true
+      "ok": true,
+      "ms": 80
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "tool",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
-      "ms": 9706,
       "tool": "salvar_item_analise",
-      "ok": true
+      "ok": true,
+      "ms": 52
     },
     {
-      "em": "2026-11-13T16:36:17+00:00",
+      "em": "2026-11-13T17:31:19+00:00",
       "tipo": "especialista",
       "agente": "analista",
       "doc_id": "5905cd3412e40fea",
       "estado": "concluido",
       "erro": null,
       "gravacoes": {
-        "salvar_item_analise": 5
+        "salvar_item_analise": 8
       },
-      "segundos": 32.3,
+      "segundos": 36.2,
       "modelo": "gpt-5.4-mini",
       "uso": {
-        "chamadas": 5,
-        "entrada": 52659,
-        "total": 54094,
-        "saida": 1435,
-        "entrada_cache": 32896
+        "entrada": 184447,
+        "entrada_cache": 166272,
+        "saida": 1985,
+        "total": 186432,
+        "chamadas": 13
       }
     },
     {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 527,
-      "tool": "buscar_trechos",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 1713,
-      "tool": "buscar_trechos",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 2304,
-      "tool": "buscar_trechos",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 2954,
-      "tool": "buscar_trechos",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 70,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 233,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 366,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 641,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 144,
-      "tool": "salvar_item_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 299,
-      "tool": "salvar_item_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 468,
-      "tool": "salvar_item_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 630,
-      "tool": "salvar_item_analise",
-      "ok": false
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 735,
-      "tool": "salvar_item_analise",
-      "ok": false
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 862,
-      "tool": "salvar_item_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 1961,
-      "tool": "registrar_ausencia_analise",
-      "ok": false
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 2182,
-      "tool": "registrar_ausencia_analise",
-      "ok": false
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 1201,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 2768,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 4466,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 7649,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 184,
-      "tool": "salvar_item_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 773,
-      "tool": "salvar_item_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 1454,
-      "tool": "salvar_item_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 1678,
-      "tool": "salvar_item_analise",
-      "ok": false
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 1917,
-      "tool": "salvar_item_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 2358,
-      "tool": "salvar_item_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 498,
-      "tool": "salvar_item_analise",
-      "ok": false
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 246,
-      "tool": "salvar_item_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:32+00:00",
-      "tipo": "especialista",
-      "agente": "analista",
-      "doc_id": "42589e4b7ad3999b",
-      "estado": "concluido",
-      "erro": null,
-      "gravacoes": {
-        "salvar_item_analise": 10
-      },
-      "segundos": 49.5,
-      "modelo": "gpt-5.4-mini",
-      "uso": {
-        "chamadas": 9,
-        "entrada": 168155,
-        "total": 170778,
-        "saida": 2623,
-        "entrada_cache": 142336
-      }
-    },
-    {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 294,
+      "doc_id": "5905cd3412e40fea",
       "tool": "ler_extracao",
-      "ok": true
+      "ok": true,
+      "ms": 44
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 1305,
+      "doc_id": "5905cd3412e40fea",
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 435
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 257,
+      "doc_id": "5905cd3412e40fea",
       "tool": "ler_chunk",
-      "ok": true
+      "ok": true,
+      "ms": 68
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 466,
+      "doc_id": "5905cd3412e40fea",
       "tool": "ler_chunk",
-      "ok": true
+      "ok": true,
+      "ms": 119
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 592,
+      "doc_id": "5905cd3412e40fea",
       "tool": "ler_chunk",
-      "ok": true
+      "ok": true,
+      "ms": 167
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 725,
-      "tool": "ler_chunk",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:41+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 805,
-      "tool": "ler_chunk",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:41+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 213,
+      "doc_id": "5905cd3412e40fea",
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 73
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 198,
+      "doc_id": "5905cd3412e40fea",
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 130
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 5815,
+      "doc_id": "5905cd3412e40fea",
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 75
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 8691,
+      "doc_id": "5905cd3412e40fea",
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 66
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 10956,
+      "doc_id": "5905cd3412e40fea",
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 66
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 12967,
+      "doc_id": "5905cd3412e40fea",
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 65
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 13553,
+      "doc_id": "5905cd3412e40fea",
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 102
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 14006,
+      "doc_id": "5905cd3412e40fea",
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 62
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 14241,
-      "tool": "salvar_indicador",
-      "ok": false
-    },
-    {
-      "em": "2026-11-13T16:36:41+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 14383,
+      "doc_id": "5905cd3412e40fea",
       "tool": "salvar_nao_encontrado",
-      "ok": false
+      "ok": true,
+      "ms": 93
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 14755,
+      "doc_id": "5905cd3412e40fea",
       "tool": "salvar_nao_encontrado",
-      "ok": true
+      "ok": true,
+      "ms": 76
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 15257,
+      "doc_id": "5905cd3412e40fea",
       "tool": "salvar_nao_encontrado",
-      "ok": false
+      "ok": true,
+      "ms": 73
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 16277,
+      "doc_id": "5905cd3412e40fea",
       "tool": "salvar_nao_encontrado",
-      "ok": false
+      "ok": true,
+      "ms": 86
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 700,
-      "tool": "salvar_indicador",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:41+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 1783,
-      "tool": "salvar_indicador",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:41+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 2029,
-      "tool": "salvar_indicador",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:41+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 2433,
-      "tool": "salvar_indicador",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:41+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 2835,
-      "tool": "salvar_indicador",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:41+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 2971,
-      "tool": "salvar_indicador",
-      "ok": false
-    },
-    {
-      "em": "2026-11-13T16:36:41+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 194,
+      "doc_id": "5905cd3412e40fea",
       "tool": "salvar_nao_encontrado",
-      "ok": false
+      "ok": true,
+      "ms": 153
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 134,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:41+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 698,
-      "tool": "salvar_nao_encontrado",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:41+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 608,
+      "doc_id": "5905cd3412e40fea",
       "tool": "fechar_extracao",
-      "ok": true
+      "ok": false,
+      "ms": 32
     },
     {
-      "em": "2026-11-13T16:36:41+00:00",
+      "em": "2026-11-13T17:31:26+00:00",
+      "tipo": "tool",
+      "agente": "extrator",
+      "doc_id": "5905cd3412e40fea",
+      "tool": "salvar_indicador",
+      "ok": true,
+      "ms": 65
+    },
+    {
+      "em": "2026-11-13T17:31:26+00:00",
+      "tipo": "tool",
+      "agente": "extrator",
+      "doc_id": "5905cd3412e40fea",
+      "tool": "fechar_extracao",
+      "ok": true,
+      "ms": 73
+    },
+    {
+      "em": "2026-11-13T17:31:26+00:00",
       "tipo": "especialista",
       "agente": "extrator",
-      "doc_id": "a87339d097478f1c",
+      "doc_id": "5905cd3412e40fea",
       "estado": "concluido",
       "erro": null,
       "gravacoes": {
         "fechar_extracao": 1,
-        "salvar_nao_encontrado": 2,
-        "salvar_indicador": 13
+        "salvar_indicador": 9,
+        "salvar_nao_encontrado": 5
       },
-      "segundos": 58.8,
+      "segundos": 43.7,
       "modelo": "gpt-5.4-mini",
       "uso": {
-        "chamadas": 10,
-        "entrada": 162784,
-        "total": 165670,
-        "saida": 2886,
-        "entrada_cache": 139904
+        "entrada": 247061,
+        "entrada_cache": 228992,
+        "saida": 1837,
+        "total": 248898,
+        "chamadas": 20
       }
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 92,
+      "doc_id": "a87339d097478f1c",
+      "tool": "fechar_extracao",
+      "ok": false,
+      "ms": 55
+    },
+    {
+      "em": "2026-11-13T17:31:31+00:00",
+      "tipo": "tool",
+      "agente": "extrator",
+      "doc_id": "a87339d097478f1c",
       "tool": "listar_documentos",
-      "ok": true
+      "ok": true,
+      "ms": 30
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 700,
+      "doc_id": "a87339d097478f1c",
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 414
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 1164,
+      "doc_id": "a87339d097478f1c",
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 805
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 1876,
+      "doc_id": "a87339d097478f1c",
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 1175
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 2439,
+      "doc_id": "a87339d097478f1c",
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 1546
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 183,
+      "doc_id": "a87339d097478f1c",
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 52
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 108,
+      "doc_id": "a87339d097478f1c",
       "tool": "salvar_indicador",
-      "ok": false
+      "ok": false,
+      "ms": 97
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 242,
+      "doc_id": "a87339d097478f1c",
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 161
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 202,
+      "doc_id": "a87339d097478f1c",
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 265
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 445,
+      "doc_id": "a87339d097478f1c",
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 327
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 2700,
+      "doc_id": "a87339d097478f1c",
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 404
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 3276,
+      "doc_id": "a87339d097478f1c",
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 65
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 845,
-      "tool": "salvar_indicador",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:45+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 382,
-      "tool": "salvar_indicador",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:45+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 374,
-      "tool": "salvar_indicador",
-      "ok": false
-    },
-    {
-      "em": "2026-11-13T16:36:45+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 549,
+      "doc_id": "a87339d097478f1c",
       "tool": "salvar_nao_encontrado",
-      "ok": true
+      "ok": false,
+      "ms": 75
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 629,
+      "doc_id": "a87339d097478f1c",
+      "tool": "buscar_trechos",
+      "ok": true,
+      "ms": 671
+    },
+    {
+      "em": "2026-11-13T17:31:31+00:00",
+      "tipo": "tool",
+      "agente": "extrator",
+      "doc_id": "a87339d097478f1c",
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 65
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 166,
+      "doc_id": "a87339d097478f1c",
+      "tool": "salvar_nao_encontrado",
+      "ok": true,
+      "ms": 104
+    },
+    {
+      "em": "2026-11-13T17:31:31+00:00",
+      "tipo": "tool",
+      "agente": "extrator",
+      "doc_id": "a87339d097478f1c",
+      "tool": "salvar_nao_encontrado",
+      "ok": false,
+      "ms": 93
+    },
+    {
+      "em": "2026-11-13T17:31:31+00:00",
+      "tipo": "tool",
+      "agente": "extrator",
+      "doc_id": "a87339d097478f1c",
       "tool": "salvar_indicador",
-      "ok": false
+      "ok": true,
+      "ms": 58
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 300,
+      "doc_id": "a87339d097478f1c",
       "tool": "salvar_nao_encontrado",
-      "ok": true
+      "ok": false,
+      "ms": 39
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 1184,
+      "doc_id": "a87339d097478f1c",
+      "tool": "ler_pagina",
+      "ok": true,
+      "ms": 95
+    },
+    {
+      "em": "2026-11-13T17:31:31+00:00",
+      "tipo": "tool",
+      "agente": "extrator",
+      "doc_id": "a87339d097478f1c",
       "tool": "salvar_nao_encontrado",
-      "ok": true
+      "ok": true,
+      "ms": 61
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "tool",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 412,
-      "tool": "salvar_nao_encontrado",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:45+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 325,
-      "tool": "salvar_nao_encontrado",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:45+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 294,
+      "doc_id": "a87339d097478f1c",
       "tool": "fechar_extracao",
-      "ok": true
+      "ok": false,
+      "ms": 44
     },
     {
-      "em": "2026-11-13T16:36:45+00:00",
+      "em": "2026-11-13T17:31:31+00:00",
+      "tipo": "tool",
+      "agente": "extrator",
+      "doc_id": "a87339d097478f1c",
+      "tool": "salvar_indicador",
+      "ok": true,
+      "ms": 82
+    },
+    {
+      "em": "2026-11-13T17:31:31+00:00",
+      "tipo": "tool",
+      "agente": "extrator",
+      "doc_id": "a87339d097478f1c",
+      "tool": "salvar_indicador",
+      "ok": true,
+      "ms": 146
+    },
+    {
+      "em": "2026-11-13T17:31:31+00:00",
+      "tipo": "tool",
+      "agente": "extrator",
+      "doc_id": "a87339d097478f1c",
+      "tool": "salvar_indicador",
+      "ok": true,
+      "ms": 221
+    },
+    {
+      "em": "2026-11-13T17:31:31+00:00",
+      "tipo": "tool",
+      "agente": "extrator",
+      "doc_id": "a87339d097478f1c",
+      "tool": "fechar_extracao",
+      "ok": true,
+      "ms": 71
+    },
+    {
+      "em": "2026-11-13T17:31:31+00:00",
       "tipo": "especialista",
       "agente": "extrator",
-      "doc_id": "5905cd3412e40fea",
+      "doc_id": "a87339d097478f1c",
       "estado": "concluido",
       "erro": null,
       "gravacoes": {
         "fechar_extracao": 1,
-        "salvar_nao_encontrado": 5,
-        "salvar_indicador": 9
+        "salvar_indicador": 11,
+        "salvar_nao_encontrado": 2
       },
-      "segundos": 63.3,
+      "segundos": 48.5,
       "modelo": "gpt-5.4-mini",
       "uso": {
-        "chamadas": 21,
-        "entrada": 356680,
-        "total": 358910,
-        "saida": 2230,
-        "entrada_cache": 333824
+        "entrada": 432124,
+        "entrada_cache": 398464,
+        "saida": 2568,
+        "total": 434692,
+        "chamadas": 18
       }
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 20,
-      "tool": "listar_documentos",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:55+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 531,
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 908
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 1860,
-      "tool": "buscar_trechos",
-      "ok": true
+      "tool": "ler_chunk",
+      "ok": true,
+      "ms": 60
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 2290,
-      "tool": "buscar_trechos",
-      "ok": true
+      "tool": "ler_chunk",
+      "ok": true,
+      "ms": 123
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 2821,
-      "tool": "buscar_trechos",
-      "ok": true
+      "tool": "ler_chunk",
+      "ok": true,
+      "ms": 155
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 598,
+      "tool": "ler_chunk",
+      "ok": true,
+      "ms": 199
+    },
+    {
+      "em": "2026-11-13T17:31:36+00:00",
+      "tipo": "tool",
+      "agente": "extrator",
+      "doc_id": "42589e4b7ad3999b",
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 65
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 854,
       "tool": "salvar_indicador",
-      "ok": false
+      "ok": false,
+      "ms": 31
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 1090,
       "tool": "salvar_indicador",
-      "ok": false
+      "ok": true,
+      "ms": 67
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 4924,
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 68
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 6020,
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 72
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 7234,
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 95
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 7763,
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 74
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 8157,
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 76
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 10598,
       "tool": "salvar_indicador",
-      "ok": false
+      "ok": true,
+      "ms": 62
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 15725,
-      "tool": "salvar_indicador",
-      "ok": false
-    },
-    {
-      "em": "2026-11-13T16:36:55+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 16461,
       "tool": "salvar_nao_encontrado",
-      "ok": true
+      "ok": true,
+      "ms": 72
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 16781,
       "tool": "salvar_nao_encontrado",
-      "ok": false
+      "ok": true,
+      "ms": 109
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 17042,
+      "tool": "salvar_indicador",
+      "ok": true,
+      "ms": 66
+    },
+    {
+      "em": "2026-11-13T17:31:36+00:00",
+      "tipo": "tool",
+      "agente": "extrator",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "salvar_indicador",
+      "ok": false,
+      "ms": 42
+    },
+    {
+      "em": "2026-11-13T17:31:36+00:00",
+      "tipo": "tool",
+      "agente": "extrator",
+      "doc_id": "42589e4b7ad3999b",
       "tool": "salvar_nao_encontrado",
-      "ok": true
+      "ok": true,
+      "ms": 71
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 231,
-      "tool": "salvar_indicador",
-      "ok": false
-    },
-    {
-      "em": "2026-11-13T16:36:55+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 819,
-      "tool": "salvar_indicador",
-      "ok": false
-    },
-    {
-      "em": "2026-11-13T16:36:55+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 2001,
-      "tool": "salvar_indicador",
-      "ok": false
-    },
-    {
-      "em": "2026-11-13T16:36:55+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 432,
-      "tool": "salvar_indicador",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:55+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 346,
       "tool": "salvar_nao_encontrado",
-      "ok": true
+      "ok": true,
+      "ms": 59
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 161,
       "tool": "fechar_extracao",
-      "ok": false
+      "ok": false,
+      "ms": 51
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 387,
-      "tool": "salvar_nao_encontrado",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:55+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 326,
       "tool": "salvar_indicador",
-      "ok": true
+      "ok": true,
+      "ms": 69
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 58,
       "tool": "salvar_indicador",
-      "ok": false
+      "ok": true,
+      "ms": 66
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "tool",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 366,
-      "tool": "salvar_indicador",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:55+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 54,
       "tool": "fechar_extracao",
-      "ok": false
+      "ok": true,
+      "ms": 67
     },
     {
-      "em": "2026-11-13T16:36:55+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 458,
-      "tool": "salvar_indicador",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:55+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 292,
-      "tool": "salvar_indicador",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:55+00:00",
-      "tipo": "tool",
-      "agente": "extrator",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 430,
-      "tool": "fechar_extracao",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:36:55+00:00",
+      "em": "2026-11-13T17:31:36+00:00",
       "tipo": "especialista",
       "agente": "extrator",
       "doc_id": "42589e4b7ad3999b",
@@ -1574,614 +1430,867 @@
       "erro": null,
       "gravacoes": {
         "fechar_extracao": 1,
-        "salvar_nao_encontrado": 4,
-        "salvar_indicador": 11
+        "salvar_indicador": 11,
+        "salvar_nao_encontrado": 4
       },
-      "segundos": 72.5,
+      "segundos": 53.2,
       "modelo": "gpt-5.4-mini",
       "uso": {
-        "chamadas": 16,
-        "entrada": 368838,
-        "total": 372108,
-        "saida": 3270,
-        "entrada_cache": 341632
+        "entrada": 320888,
+        "entrada_cache": 300800,
+        "saida": 2398,
+        "total": 323286,
+        "chamadas": 22
       }
     },
     {
-      "em": "2026-11-13T16:37:26+00:00",
+      "em": "2026-11-13T17:31:48+00:00",
       "tipo": "tool",
       "agente": "analista",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 627,
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "ler_analise",
+      "ok": true,
+      "ms": 53
+    },
+    {
+      "em": "2026-11-13T17:31:48+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 521
     },
     {
-      "em": "2026-11-13T16:37:26+00:00",
+      "em": "2026-11-13T17:31:48+00:00",
       "tipo": "tool",
       "agente": "analista",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 132,
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "buscar_trechos",
+      "ok": true,
+      "ms": 1009
+    },
+    {
+      "em": "2026-11-13T17:31:48+00:00",
+      "tipo": "tool",
+      "agente": "analista",
+      "doc_id": "42589e4b7ad3999b",
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 29
     },
     {
-      "em": "2026-11-13T16:37:26+00:00",
+      "em": "2026-11-13T17:31:48+00:00",
       "tipo": "tool",
       "agente": "analista",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 125,
-      "tool": "registrar_ausencia_analise",
-      "ok": false
-    },
-    {
-      "em": "2026-11-13T16:37:26+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 1291,
+      "doc_id": "42589e4b7ad3999b",
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 71
     },
     {
-      "em": "2026-11-13T16:37:26+00:00",
+      "em": "2026-11-13T17:31:48+00:00",
       "tipo": "tool",
       "agente": "analista",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 2386,
+      "doc_id": "42589e4b7ad3999b",
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 112
     },
     {
-      "em": "2026-11-13T16:37:26+00:00",
+      "em": "2026-11-13T17:31:48+00:00",
       "tipo": "tool",
       "agente": "analista",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 2480,
+      "doc_id": "42589e4b7ad3999b",
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 164
     },
     {
-      "em": "2026-11-13T16:37:26+00:00",
+      "em": "2026-11-13T17:31:48+00:00",
       "tipo": "tool",
       "agente": "analista",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 357,
+      "doc_id": "42589e4b7ad3999b",
       "tool": "salvar_item_analise",
-      "ok": false
+      "ok": true,
+      "ms": 51
     },
     {
-      "em": "2026-11-13T16:37:26+00:00",
-      "tipo": "tool",
-      "agente": "analista",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 1160,
-      "tool": "salvar_item_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:26+00:00",
+      "em": "2026-11-13T17:31:48+00:00",
       "tipo": "especialista",
       "agente": "analista",
-      "doc_id": "5905cd3412e40fea",
+      "doc_id": "42589e4b7ad3999b",
       "estado": "concluido",
       "erro": null,
       "gravacoes": {
         "salvar_item_analise": 1
       },
-      "segundos": 26.2,
+      "segundos": 9.8,
       "modelo": "gpt-5.4-mini",
       "uso": {
-        "chamadas": 9,
-        "entrada": 59056,
-        "total": 59673,
-        "saida": 617,
-        "entrada_cache": 49152
+        "entrada": 40900,
+        "entrada_cache": 27648,
+        "saida": 425,
+        "total": 41325,
+        "chamadas": 4
       }
     },
     {
-      "em": "2026-11-13T16:37:30+00:00",
+      "em": "2026-11-13T17:32:01+00:00",
       "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "a87339d097478f1c",
-      "ms": 161,
-      "tool": "ler_alertas",
-      "ok": true
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "ler_respostas",
+      "ok": true,
+      "ms": 15
     },
     {
-      "em": "2026-11-13T16:37:30+00:00",
+      "em": "2026-11-13T17:32:01+00:00",
       "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "a87339d097478f1c",
-      "ms": 437,
-      "tool": "ler_extracao",
-      "ok": true
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "comparar_indicadores",
+      "ok": true,
+      "ms": 157
     },
     {
-      "em": "2026-11-13T16:37:30+00:00",
+      "em": "2026-11-13T17:32:01+00:00",
       "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "a87339d097478f1c",
-      "ms": 675,
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "salvar_resposta",
+      "ok": true,
+      "ms": 85
+    },
+    {
+      "em": "2026-11-13T17:32:01+00:00",
+      "tipo": "especialista",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "estado": "concluido",
+      "erro": null,
+      "gravacoes": {
+        "salvar_resposta": 1
+      },
+      "segundos": 5.8,
+      "modelo": "gpt-5.4-mini",
+      "uso": {
+        "entrada": 11069,
+        "entrada_cache": 7296,
+        "saida": 227,
+        "total": 11296,
+        "chamadas": 4
+      }
+    },
+    {
+      "em": "2026-11-13T17:32:03+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "ler_respostas",
+      "ok": true,
+      "ms": 31
+    },
+    {
+      "em": "2026-11-13T17:32:03+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "comparar_indicadores",
+      "ok": true,
+      "ms": 153
+    },
+    {
+      "em": "2026-11-13T17:32:03+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "salvar_resposta",
+      "ok": true,
+      "ms": 110
+    },
+    {
+      "em": "2026-11-13T17:32:03+00:00",
+      "tipo": "especialista",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "estado": "concluido",
+      "erro": null,
+      "gravacoes": {
+        "salvar_resposta": 1
+      },
+      "segundos": 7.3,
+      "modelo": "gpt-5.4-mini",
+      "uso": {
+        "entrada": 11001,
+        "entrada_cache": 9344,
+        "saida": 220,
+        "total": 11221,
+        "chamadas": 4
+      }
+    },
+    {
+      "em": "2026-11-13T17:32:05+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "ler_respostas",
+      "ok": true,
+      "ms": 38
+    },
+    {
+      "em": "2026-11-13T17:32:05+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "listar_documentos",
+      "ok": true,
+      "ms": 19
+    },
+    {
+      "em": "2026-11-13T17:32:05+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "ler_analise",
+      "ok": true,
+      "ms": 64
+    },
+    {
+      "em": "2026-11-13T17:32:05+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "ler_analise",
+      "ok": true,
+      "ms": 180
+    },
+    {
+      "em": "2026-11-13T17:32:05+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "ler_analise",
+      "ok": true,
+      "ms": 223
+    },
+    {
+      "em": "2026-11-13T17:32:05+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "salvar_resposta",
+      "ok": true,
+      "ms": 89
+    },
+    {
+      "em": "2026-11-13T17:32:05+00:00",
+      "tipo": "especialista",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "estado": "concluido",
+      "erro": null,
+      "gravacoes": {
+        "salvar_resposta": 1
+      },
+      "segundos": 9.4,
+      "modelo": "gpt-5.4-mini",
+      "uso": {
+        "entrada": 22100,
+        "entrada_cache": 16256,
+        "saida": 383,
+        "total": 22483,
+        "chamadas": 5
+      }
+    },
+    {
+      "em": "2026-11-13T17:32:08+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "ler_respostas",
+      "ok": true,
+      "ms": 15
+    },
+    {
+      "em": "2026-11-13T17:32:08+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "listar_documentos",
+      "ok": true,
+      "ms": 20
+    },
+    {
+      "em": "2026-11-13T17:32:08+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "ler_analise",
+      "ok": true,
+      "ms": 61
+    },
+    {
+      "em": "2026-11-13T17:32:08+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "ler_analise",
+      "ok": true,
+      "ms": 141
+    },
+    {
+      "em": "2026-11-13T17:32:08+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "ler_analise",
+      "ok": true,
+      "ms": 191
+    },
+    {
+      "em": "2026-11-13T17:32:08+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "salvar_resposta",
+      "ok": false,
+      "ms": 144
+    },
+    {
+      "em": "2026-11-13T17:32:08+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "salvar_resposta",
+      "ok": true,
+      "ms": 89
+    },
+    {
+      "em": "2026-11-13T17:32:08+00:00",
+      "tipo": "especialista",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "estado": "concluido",
+      "erro": null,
+      "gravacoes": {
+        "salvar_resposta": 1
+      },
+      "segundos": 13.2,
+      "modelo": "gpt-5.4-mini",
+      "uso": {
+        "entrada": 29776,
+        "entrada_cache": 23424,
+        "saida": 660,
+        "total": 30436,
+        "chamadas": 6
+      }
+    },
+    {
+      "em": "2026-11-13T17:32:10+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "ler_respostas",
+      "ok": true,
+      "ms": 27
+    },
+    {
+      "em": "2026-11-13T17:32:10+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "listar_documentos",
+      "ok": true,
+      "ms": 142
+    },
+    {
+      "em": "2026-11-13T17:32:10+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 325
     },
     {
-      "em": "2026-11-13T16:37:30+00:00",
+      "em": "2026-11-13T17:32:10+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "buscar_trechos",
+      "ok": true,
+      "ms": 744
+    },
+    {
+      "em": "2026-11-13T17:32:10+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "buscar_trechos",
+      "ok": true,
+      "ms": 1109
+    },
+    {
+      "em": "2026-11-13T17:32:10+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "ler_chunk",
+      "ok": true,
+      "ms": 32
+    },
+    {
+      "em": "2026-11-13T17:32:10+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "ler_chunk",
+      "ok": true,
+      "ms": 67
+    },
+    {
+      "em": "2026-11-13T17:32:10+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "ler_chunk",
+      "ok": true,
+      "ms": 139
+    },
+    {
+      "em": "2026-11-13T17:32:10+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "ler_chunk",
+      "ok": true,
+      "ms": 186
+    },
+    {
+      "em": "2026-11-13T17:32:10+00:00",
+      "tipo": "tool",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "tool": "salvar_resposta",
+      "ok": true,
+      "ms": 90
+    },
+    {
+      "em": "2026-11-13T17:32:10+00:00",
+      "tipo": "especialista",
+      "agente": "pesquisador",
+      "doc_id": null,
+      "estado": "concluido",
+      "erro": null,
+      "gravacoes": {
+        "salvar_resposta": 1
+      },
+      "segundos": 14.5,
+      "modelo": "gpt-5.4-mini",
+      "uso": {
+        "entrada": 33000,
+        "entrada_cache": 25344,
+        "saida": 634,
+        "total": 33634,
+        "chamadas": 6
+      }
+    },
+    {
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "a87339d097478f1c",
-      "ms": 113,
+      "doc_id": "5905cd3412e40fea",
+      "tool": "ler_alertas",
+      "ok": true,
+      "ms": 52
+    },
+    {
+      "em": "2026-11-13T17:32:20+00:00",
+      "tipo": "tool",
+      "agente": "validador",
+      "doc_id": "5905cd3412e40fea",
+      "tool": "ler_extracao",
+      "ok": true,
+      "ms": 85
+    },
+    {
+      "em": "2026-11-13T17:32:20+00:00",
+      "tipo": "tool",
+      "agente": "validador",
+      "doc_id": "5905cd3412e40fea",
+      "tool": "buscar_trechos",
+      "ok": true,
+      "ms": 414
+    },
+    {
+      "em": "2026-11-13T17:32:20+00:00",
+      "tipo": "tool",
+      "agente": "validador",
+      "doc_id": "5905cd3412e40fea",
+      "tool": "buscar_trechos",
+      "ok": true,
+      "ms": 807
+    },
+    {
+      "em": "2026-11-13T17:32:20+00:00",
+      "tipo": "tool",
+      "agente": "validador",
+      "doc_id": "5905cd3412e40fea",
+      "tool": "buscar_trechos",
+      "ok": true,
+      "ms": 1207
+    },
+    {
+      "em": "2026-11-13T17:32:20+00:00",
+      "tipo": "tool",
+      "agente": "validador",
+      "doc_id": "5905cd3412e40fea",
+      "tool": "buscar_trechos",
+      "ok": true,
+      "ms": 1612
+    },
+    {
+      "em": "2026-11-13T17:32:20+00:00",
+      "tipo": "tool",
+      "agente": "validador",
+      "doc_id": "5905cd3412e40fea",
+      "tool": "buscar_trechos",
+      "ok": true,
+      "ms": 2199
+    },
+    {
+      "em": "2026-11-13T17:32:20+00:00",
+      "tipo": "tool",
+      "agente": "validador",
+      "doc_id": "5905cd3412e40fea",
+      "tool": "buscar_trechos",
+      "ok": true,
+      "ms": 3077
+    },
+    {
+      "em": "2026-11-13T17:32:20+00:00",
+      "tipo": "tool",
+      "agente": "validador",
+      "doc_id": "5905cd3412e40fea",
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 45
     },
     {
-      "em": "2026-11-13T16:37:30+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "a87339d097478f1c",
-      "ms": 235,
+      "doc_id": "5905cd3412e40fea",
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 90
     },
     {
-      "em": "2026-11-13T16:37:30+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "a87339d097478f1c",
-      "ms": 830,
+      "doc_id": "5905cd3412e40fea",
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 121
     },
     {
-      "em": "2026-11-13T16:37:30+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "a87339d097478f1c",
-      "ms": 1200,
+      "doc_id": "5905cd3412e40fea",
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 155
     },
     {
-      "em": "2026-11-13T16:37:30+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "a87339d097478f1c",
-      "ms": 2008,
+      "doc_id": "5905cd3412e40fea",
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 196
     },
     {
-      "em": "2026-11-13T16:37:30+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "a87339d097478f1c",
-      "ms": 423,
+      "doc_id": "5905cd3412e40fea",
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 241
     },
     {
-      "em": "2026-11-13T16:37:30+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "a87339d097478f1c",
-      "ms": 604,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:30+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "a87339d097478f1c",
-      "ms": 1085,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:30+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "a87339d097478f1c",
-      "ms": 1418,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:30+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "a87339d097478f1c",
-      "ms": 1719,
+      "doc_id": "5905cd3412e40fea",
       "tool": "registrar_alerta",
-      "ok": true
+      "ok": true,
+      "ms": 57
     },
     {
-      "em": "2026-11-13T16:37:30+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "a87339d097478f1c",
-      "ms": 2336,
-      "tool": "registrar_alerta",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:30+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "a87339d097478f1c",
-      "ms": 2668,
-      "tool": "registrar_alerta",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:30+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "a87339d097478f1c",
-      "ms": 158,
+      "doc_id": "5905cd3412e40fea",
       "tool": "concluir_revisao",
-      "ok": true
+      "ok": true,
+      "ms": 55
     },
     {
-      "em": "2026-11-13T16:37:30+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "especialista",
       "agente": "validador",
-      "doc_id": "a87339d097478f1c",
+      "doc_id": "5905cd3412e40fea",
       "estado": "concluido",
       "erro": null,
       "gravacoes": {
         "concluir_revisao": 1,
-        "registrar_alerta": 3
+        "registrar_alerta": 1
       },
-      "segundos": 30.1,
+      "segundos": 24.7,
       "modelo": "gpt-5.4",
       "uso": {
-        "chamadas": 7,
-        "entrada": 127798,
-        "total": 129010,
-        "saida": 1212,
-        "entrada_cache": 99840
+        "entrada": 132502,
+        "entrada_cache": 98304,
+        "saida": 1000,
+        "total": 133502,
+        "chamadas": 6
       }
     },
     {
-      "em": "2026-11-13T16:37:37+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 188,
+      "doc_id": "a87339d097478f1c",
       "tool": "ler_alertas",
-      "ok": true
+      "ok": true,
+      "ms": 71
     },
     {
-      "em": "2026-11-13T16:37:37+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 443,
+      "doc_id": "a87339d097478f1c",
       "tool": "ler_extracao",
-      "ok": true
+      "ok": true,
+      "ms": 190
     },
     {
-      "em": "2026-11-13T16:37:37+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 754,
+      "doc_id": "a87339d097478f1c",
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 650
     },
     {
-      "em": "2026-11-13T16:37:37+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 1527,
-      "tool": "buscar_trechos",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:37+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 2433,
-      "tool": "buscar_trechos",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:37+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 3113,
-      "tool": "buscar_trechos",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:37+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 3700,
-      "tool": "buscar_trechos",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:37+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 4162,
-      "tool": "buscar_trechos",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:37+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 202,
+      "doc_id": "a87339d097478f1c",
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 63
     },
     {
-      "em": "2026-11-13T16:37:37+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 419,
+      "doc_id": "a87339d097478f1c",
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 91
     },
     {
-      "em": "2026-11-13T16:37:37+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 645,
+      "doc_id": "a87339d097478f1c",
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 126
     },
     {
-      "em": "2026-11-13T16:37:37+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 800,
+      "doc_id": "a87339d097478f1c",
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 165
     },
     {
-      "em": "2026-11-13T16:37:37+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 1120,
+      "doc_id": "a87339d097478f1c",
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 206
     },
     {
-      "em": "2026-11-13T16:37:37+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 1303,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:37+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 1906,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:37+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 2617,
-      "tool": "ler_pagina",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:37+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 795,
+      "doc_id": "a87339d097478f1c",
       "tool": "registrar_alerta",
-      "ok": true
+      "ok": true,
+      "ms": 67
     },
     {
-      "em": "2026-11-13T16:37:37+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 156,
+      "doc_id": "a87339d097478f1c",
       "tool": "registrar_alerta",
-      "ok": false
+      "ok": true,
+      "ms": 52
     },
     {
-      "em": "2026-11-13T16:37:37+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "tool",
       "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 159,
-      "tool": "registrar_alerta",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:37+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
-      "ms": 289,
+      "doc_id": "a87339d097478f1c",
       "tool": "concluir_revisao",
-      "ok": true
+      "ok": true,
+      "ms": 58
     },
     {
-      "em": "2026-11-13T16:37:37+00:00",
+      "em": "2026-11-13T17:32:20+00:00",
       "tipo": "especialista",
       "agente": "validador",
-      "doc_id": "5905cd3412e40fea",
+      "doc_id": "a87339d097478f1c",
       "estado": "concluido",
       "erro": null,
       "gravacoes": {
         "concluir_revisao": 1,
         "registrar_alerta": 2
       },
-      "segundos": 36.4,
+      "segundos": 24.8,
       "modelo": "gpt-5.4",
       "uso": {
-        "chamadas": 8,
-        "entrada": 209312,
-        "total": 210842,
-        "saida": 1530,
-        "entrada_cache": 173056
+        "entrada": 89772,
+        "entrada_cache": 69632,
+        "saida": 773,
+        "total": 90545,
+        "chamadas": 6
       }
     },
     {
-      "em": "2026-11-13T16:37:43+00:00",
+      "em": "2026-11-13T17:32:21+00:00",
       "tipo": "tool",
       "agente": "validador",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 119,
       "tool": "ler_alertas",
-      "ok": true
+      "ok": true,
+      "ms": 43
     },
     {
-      "em": "2026-11-13T16:37:43+00:00",
+      "em": "2026-11-13T17:32:21+00:00",
       "tipo": "tool",
       "agente": "validador",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 373,
       "tool": "ler_extracao",
-      "ok": true
+      "ok": true,
+      "ms": 73
     },
     {
-      "em": "2026-11-13T16:37:43+00:00",
+      "em": "2026-11-13T17:32:21+00:00",
       "tipo": "tool",
       "agente": "validador",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 559,
       "tool": "buscar_trechos",
-      "ok": true
+      "ok": true,
+      "ms": 385
     },
     {
-      "em": "2026-11-13T16:37:43+00:00",
+      "em": "2026-11-13T17:32:21+00:00",
       "tipo": "tool",
       "agente": "validador",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 1046,
-      "tool": "buscar_trechos",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:43+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 161,
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 42
     },
     {
-      "em": "2026-11-13T16:37:43+00:00",
+      "em": "2026-11-13T17:32:21+00:00",
       "tipo": "tool",
       "agente": "validador",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 437,
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 72
     },
     {
-      "em": "2026-11-13T16:37:43+00:00",
+      "em": "2026-11-13T17:32:21+00:00",
       "tipo": "tool",
       "agente": "validador",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 749,
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 114
     },
     {
-      "em": "2026-11-13T16:37:43+00:00",
+      "em": "2026-11-13T17:32:21+00:00",
       "tipo": "tool",
       "agente": "validador",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 961,
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 154
     },
     {
-      "em": "2026-11-13T16:37:43+00:00",
+      "em": "2026-11-13T17:32:21+00:00",
       "tipo": "tool",
       "agente": "validador",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 1187,
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 197
     },
     {
-      "em": "2026-11-13T16:37:43+00:00",
+      "em": "2026-11-13T17:32:21+00:00",
       "tipo": "tool",
       "agente": "validador",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 1541,
       "tool": "ler_pagina",
-      "ok": true
+      "ok": true,
+      "ms": 225
     },
     {
-      "em": "2026-11-13T16:37:43+00:00",
+      "em": "2026-11-13T17:32:21+00:00",
       "tipo": "tool",
       "agente": "validador",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 590,
       "tool": "registrar_alerta",
-      "ok": true
+      "ok": true,
+      "ms": 53
     },
     {
-      "em": "2026-11-13T16:37:43+00:00",
+      "em": "2026-11-13T17:32:21+00:00",
       "tipo": "tool",
       "agente": "validador",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 840,
       "tool": "registrar_alerta",
-      "ok": true
+      "ok": true,
+      "ms": 52
     },
     {
-      "em": "2026-11-13T16:37:43+00:00",
+      "em": "2026-11-13T17:32:21+00:00",
       "tipo": "tool",
       "agente": "validador",
       "doc_id": "42589e4b7ad3999b",
-      "ms": 258,
-      "tool": "registrar_alerta",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:43+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 275,
-      "tool": "registrar_alerta",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:37:43+00:00",
-      "tipo": "tool",
-      "agente": "validador",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 128,
       "tool": "concluir_revisao",
-      "ok": true
+      "ok": true,
+      "ms": 73
     },
     {
-      "em": "2026-11-13T16:37:43+00:00",
+      "em": "2026-11-13T17:32:21+00:00",
       "tipo": "especialista",
       "agente": "validador",
       "doc_id": "42589e4b7ad3999b",
@@ -2189,56 +2298,56 @@
       "erro": null,
       "gravacoes": {
         "concluir_revisao": 1,
-        "registrar_alerta": 4
+        "registrar_alerta": 2
       },
-      "segundos": 42.3,
+      "segundos": 25.7,
       "modelo": "gpt-5.4",
       "uso": {
-        "chamadas": 9,
-        "entrada": 161961,
-        "total": 163933,
-        "saida": 1972,
-        "entrada_cache": 135680
+        "entrada": 100407,
+        "entrada_cache": 79360,
+        "saida": 1250,
+        "total": 101657,
+        "chamadas": 7
       }
     },
     {
-      "em": "2026-11-13T16:37:59+00:00",
+      "em": "2026-11-13T17:32:32+00:00",
       "tipo": "tool",
       "agente": "redator",
       "doc_id": "5905cd3412e40fea",
-      "ms": 121,
       "tool": "ler_extracao",
-      "ok": true
+      "ok": true,
+      "ms": 45
     },
     {
-      "em": "2026-11-13T16:37:59+00:00",
+      "em": "2026-11-13T17:32:32+00:00",
       "tipo": "tool",
       "agente": "redator",
       "doc_id": "5905cd3412e40fea",
-      "ms": 201,
       "tool": "ler_analise",
-      "ok": true
+      "ok": true,
+      "ms": 74
     },
     {
-      "em": "2026-11-13T16:37:59+00:00",
+      "em": "2026-11-13T17:32:32+00:00",
       "tipo": "tool",
       "agente": "redator",
       "doc_id": "5905cd3412e40fea",
-      "ms": 274,
       "tool": "ler_alertas",
-      "ok": true
+      "ok": true,
+      "ms": 156
     },
     {
-      "em": "2026-11-13T16:37:59+00:00",
+      "em": "2026-11-13T17:32:32+00:00",
       "tipo": "tool",
       "agente": "redator",
       "doc_id": "5905cd3412e40fea",
-      "ms": 171,
       "tool": "salvar_resumo",
-      "ok": true
+      "ok": true,
+      "ms": 95
     },
     {
-      "em": "2026-11-13T16:37:59+00:00",
+      "em": "2026-11-13T17:32:32+00:00",
       "tipo": "especialista",
       "agente": "redator",
       "doc_id": "5905cd3412e40fea",
@@ -2247,332 +2356,63 @@
       "gravacoes": {
         "salvar_resumo": 1
       },
-      "segundos": 6.8,
+      "segundos": 6.4,
       "modelo": "gpt-5.4-mini",
       "uso": {
-        "chamadas": 3,
-        "entrada": 9740,
-        "total": 10068,
-        "saida": 328,
-        "entrada_cache": 5120
+        "entrada": 10095,
+        "entrada_cache": 5248,
+        "saida": 335,
+        "total": 10430,
+        "chamadas": 3
       }
     },
     {
-      "em": "2026-11-13T16:38:00+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 62,
-      "tool": "ler_respostas",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:00+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 99,
-      "tool": "listar_documentos",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:00+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 67,
-      "tool": "comparar_indicadores",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:00+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 87,
-      "tool": "salvar_resposta",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:00+00:00",
-      "tipo": "especialista",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "estado": "concluido",
-      "erro": null,
-      "gravacoes": {
-        "salvar_resposta": 1
-      },
-      "segundos": 8.2,
-      "modelo": "gpt-5.4-mini",
-      "uso": {
-        "chamadas": 5,
-        "entrada": 13913,
-        "total": 14190,
-        "saida": 277,
-        "entrada_cache": 9856
-      }
-    },
-    {
-      "em": "2026-11-13T16:38:00+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 60,
-      "tool": "ler_respostas",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:00+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 89,
-      "tool": "listar_documentos",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:00+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 85,
-      "tool": "ler_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:00+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 185,
-      "tool": "ler_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:00+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 220,
-      "tool": "ler_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:00+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 166,
-      "tool": "salvar_resposta",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:00+00:00",
-      "tipo": "especialista",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "estado": "concluido",
-      "erro": null,
-      "gravacoes": {
-        "salvar_resposta": 1
-      },
-      "segundos": 8.5,
-      "modelo": "gpt-5.4-mini",
-      "uso": {
-        "chamadas": 5,
-        "entrada": 21275,
-        "total": 21721,
-        "saida": 446,
-        "entrada_cache": 15488
-      }
-    },
-    {
-      "em": "2026-11-13T16:38:01+00:00",
+      "em": "2026-11-13T17:32:34+00:00",
       "tipo": "tool",
       "agente": "redator",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 98,
+      "doc_id": "a87339d097478f1c",
       "tool": "ler_extracao",
-      "ok": true
+      "ok": true,
+      "ms": 67
     },
     {
-      "em": "2026-11-13T16:38:01+00:00",
+      "em": "2026-11-13T17:32:34+00:00",
       "tipo": "tool",
       "agente": "redator",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 174,
+      "doc_id": "a87339d097478f1c",
       "tool": "ler_analise",
-      "ok": true
+      "ok": true,
+      "ms": 108
     },
     {
-      "em": "2026-11-13T16:38:01+00:00",
+      "em": "2026-11-13T17:32:34+00:00",
       "tipo": "tool",
       "agente": "redator",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 221,
+      "doc_id": "a87339d097478f1c",
       "tool": "ler_alertas",
-      "ok": true
+      "ok": true,
+      "ms": 152
     },
     {
-      "em": "2026-11-13T16:38:01+00:00",
+      "em": "2026-11-13T17:32:34+00:00",
       "tipo": "tool",
       "agente": "redator",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 65,
+      "doc_id": "a87339d097478f1c",
       "tool": "salvar_resumo",
-      "ok": false
+      "ok": false,
+      "ms": 118
     },
     {
-      "em": "2026-11-13T16:38:01+00:00",
+      "em": "2026-11-13T17:32:34+00:00",
       "tipo": "tool",
       "agente": "redator",
-      "doc_id": "42589e4b7ad3999b",
-      "ms": 119,
+      "doc_id": "a87339d097478f1c",
       "tool": "salvar_resumo",
-      "ok": true
+      "ok": true,
+      "ms": 103
     },
     {
-      "em": "2026-11-13T16:38:01+00:00",
-      "tipo": "especialista",
-      "agente": "redator",
-      "doc_id": "42589e4b7ad3999b",
-      "estado": "concluido",
-      "erro": null,
-      "gravacoes": {
-        "salvar_resumo": 1
-      },
-      "segundos": 9.2,
-      "modelo": "gpt-5.4-mini",
-      "uso": {
-        "chamadas": 4,
-        "entrada": 18287,
-        "total": 18853,
-        "saida": 566,
-        "entrada_cache": 11904
-      }
-    },
-    {
-      "em": "2026-11-13T16:38:01+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 79,
-      "tool": "ler_respostas",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:01+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 63,
-      "tool": "listar_documentos",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:01+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 101,
-      "tool": "ler_extracao",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:01+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 251,
-      "tool": "ler_extracao",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:01+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 324,
-      "tool": "ler_extracao",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:01+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 142,
-      "tool": "salvar_resposta",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:01+00:00",
-      "tipo": "especialista",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "estado": "concluido",
-      "erro": null,
-      "gravacoes": {
-        "salvar_resposta": 1
-      },
-      "segundos": 9,
-      "modelo": "gpt-5.4-mini",
-      "uso": {
-        "chamadas": 5,
-        "entrada": 15416,
-        "total": 15782,
-        "saida": 366,
-        "entrada_cache": 12544
-      }
-    },
-    {
-      "em": "2026-11-13T16:38:01+00:00",
-      "tipo": "tool",
-      "agente": "redator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 99,
-      "tool": "ler_extracao",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:01+00:00",
-      "tipo": "tool",
-      "agente": "redator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 200,
-      "tool": "ler_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:01+00:00",
-      "tipo": "tool",
-      "agente": "redator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 271,
-      "tool": "ler_alertas",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:01+00:00",
-      "tipo": "tool",
-      "agente": "redator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 171,
-      "tool": "salvar_resumo",
-      "ok": false
-    },
-    {
-      "em": "2026-11-13T16:38:01+00:00",
-      "tipo": "tool",
-      "agente": "redator",
-      "doc_id": "a87339d097478f1c",
-      "ms": 98,
-      "tool": "salvar_resumo",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:01+00:00",
+      "em": "2026-11-13T17:32:34+00:00",
       "tipo": "especialista",
       "agente": "redator",
       "doc_id": "a87339d097478f1c",
@@ -2581,175 +2421,92 @@
       "gravacoes": {
         "salvar_resumo": 1
       },
-      "segundos": 9.7,
+      "segundos": 8.4,
       "modelo": "gpt-5.4-mini",
       "uso": {
-        "chamadas": 4,
-        "entrada": 18440,
-        "total": 18943,
-        "saida": 503,
-        "entrada_cache": 12160
+        "entrada": 16688,
+        "entrada_cache": 10752,
+        "saida": 635,
+        "total": 17323,
+        "chamadas": 4
       }
     },
     {
-      "em": "2026-11-13T16:38:02+00:00",
+      "em": "2026-11-13T17:32:35+00:00",
       "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 62,
-      "tool": "ler_respostas",
-      "ok": true
+      "agente": "redator",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "ler_extracao",
+      "ok": true,
+      "ms": 47
     },
     {
-      "em": "2026-11-13T16:38:02+00:00",
+      "em": "2026-11-13T17:32:35+00:00",
       "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 82,
-      "tool": "listar_documentos",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:02+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 119,
+      "agente": "redator",
+      "doc_id": "42589e4b7ad3999b",
       "tool": "ler_analise",
-      "ok": true
+      "ok": true,
+      "ms": 78
     },
     {
-      "em": "2026-11-13T16:38:02+00:00",
+      "em": "2026-11-13T17:32:35+00:00",
       "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 157,
-      "tool": "ler_analise",
-      "ok": true
+      "agente": "redator",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "ler_alertas",
+      "ok": true,
+      "ms": 121
     },
     {
-      "em": "2026-11-13T16:38:02+00:00",
+      "em": "2026-11-13T17:32:35+00:00",
       "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 261,
-      "tool": "ler_analise",
-      "ok": true
+      "agente": "redator",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "salvar_resumo",
+      "ok": false,
+      "ms": 101
     },
     {
-      "em": "2026-11-13T16:38:02+00:00",
+      "em": "2026-11-13T17:32:35+00:00",
       "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 171,
-      "tool": "salvar_resposta",
-      "ok": true
+      "agente": "redator",
+      "doc_id": "42589e4b7ad3999b",
+      "tool": "salvar_resumo",
+      "ok": true,
+      "ms": 116
     },
     {
-      "em": "2026-11-13T16:38:02+00:00",
+      "em": "2026-11-13T17:32:35+00:00",
       "tipo": "especialista",
-      "agente": "pesquisador",
-      "doc_id": null,
+      "agente": "redator",
+      "doc_id": "42589e4b7ad3999b",
       "estado": "concluido",
       "erro": null,
       "gravacoes": {
-        "salvar_resposta": 1
+        "salvar_resumo": 1
       },
-      "segundos": 10.1,
+      "segundos": 9.1,
       "modelo": "gpt-5.4-mini",
       "uso": {
-        "chamadas": 5,
-        "entrada": 21250,
-        "total": 21662,
-        "saida": 412,
-        "entrada_cache": 15488
+        "entrada": 16040,
+        "entrada_cache": 10368,
+        "saida": 544,
+        "total": 16584,
+        "chamadas": 4
       }
     },
     {
-      "em": "2026-11-13T16:38:03+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 76,
-      "tool": "ler_respostas",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:03+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 65,
-      "tool": "listar_documentos",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:03+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 95,
-      "tool": "ler_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:03+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 53,
-      "tool": "ler_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:03+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 104,
-      "tool": "ler_analise",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:03+00:00",
-      "tipo": "tool",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "ms": 114,
-      "tool": "salvar_resposta",
-      "ok": true
-    },
-    {
-      "em": "2026-11-13T16:38:03+00:00",
-      "tipo": "especialista",
-      "agente": "pesquisador",
-      "doc_id": null,
-      "estado": "concluido",
-      "erro": null,
-      "gravacoes": {
-        "salvar_resposta": 1
-      },
-      "segundos": 11.8,
-      "modelo": "gpt-5.4-mini",
-      "uso": {
-        "chamadas": 6,
-        "entrada": 25148,
-        "total": 25519,
-        "saida": 371,
-        "entrada_cache": 19328
-      }
-    },
-    {
-      "em": "2026-11-13T16:38:12+00:00",
+      "em": "2026-11-13T17:32:42+00:00",
       "tipo": "tool",
       "agente": "redator",
       "doc_id": null,
-      "ms": 170,
       "tool": "montar_relatorio",
-      "ok": true
+      "ok": true,
+      "ms": 266
     },
     {
-      "em": "2026-11-13T16:38:12+00:00",
+      "em": "2026-11-13T17:32:42+00:00",
       "tipo": "especialista",
       "agente": "redator",
       "doc_id": null,
@@ -2758,85 +2515,93 @@
       "gravacoes": {
         "montar_relatorio": 1
       },
-      "segundos": 3.1,
+      "segundos": 2.6,
       "modelo": "gpt-5.4-mini",
       "uso": {
-        "chamadas": 2,
-        "entrada": 3074,
-        "total": 3104,
-        "saida": 30,
-        "entrada_cache": 1408
+        "entrada": 3082,
+        "entrada_cache": 1408,
+        "saida": 37,
+        "total": 3119,
+        "chamadas": 2
       }
     },
     {
-      "em": "2026-11-13T16:38:14+00:00",
+      "em": "2026-11-13T17:32:43+00:00",
       "tipo": "tool",
       "agente": "orquestrador",
       "tool": "listar_documentos",
       "ok": true,
-      "ms": 65
+      "ms": 36
     },
     {
-      "em": "2026-11-13T16:38:14+00:00",
+      "em": "2026-11-13T17:32:43+00:00",
       "tipo": "tool",
       "agente": "orquestrador",
       "tool": "pendencias",
       "ok": true,
-      "ms": 226
+      "ms": 235
     },
     {
-      "em": "2026-11-13T16:38:14+00:00",
+      "em": "2026-11-13T17:32:43+00:00",
       "tipo": "tool",
       "agente": "orquestrador",
       "tool": "pendencias",
       "ok": true,
-      "ms": 59
+      "ms": 78
     },
     {
-      "em": "2026-11-13T16:38:14+00:00",
+      "em": "2026-11-13T17:32:43+00:00",
       "tipo": "tool",
       "agente": "orquestrador",
       "tool": "pendencias",
       "ok": true,
-      "ms": 64
+      "ms": 57
     },
     {
-      "em": "2026-11-13T16:38:14+00:00",
+      "em": "2026-11-13T17:32:43+00:00",
+      "tipo": "tool",
+      "agente": "orquestrador",
+      "tool": "pendencias",
+      "ok": true,
+      "ms": 164
+    },
+    {
+      "em": "2026-11-13T17:32:43+00:00",
       "tipo": "orquestrador",
       "rodada": 1,
       "estado": "concluido",
       "erro": null,
-      "segundos": 162.0,
+      "segundos": 129.2,
       "modelo": "gpt-5.4-mini",
       "uso": {
-        "chamadas": 9,
-        "entrada": 42363,
-        "entrada_cache": 34432,
-        "saida": 1289,
-        "total": 43652
+        "chamadas": 11,
+        "entrada": 58073,
+        "entrada_cache": 49280,
+        "saida": 1367,
+        "total": 59440
       }
     },
     {
-      "em": "2026-11-13T16:38:14+00:00",
+      "em": "2026-11-13T17:32:44+00:00",
       "tipo": "conferencia",
       "rodada": 1,
       "completo": true,
       "pendencias": 0
     },
     {
-      "em": "2026-11-13T16:38:14+00:00",
+      "em": "2026-11-13T17:32:44+00:00",
       "tipo": "fim",
       "estado": "completa",
       "erro": null,
       "uso": {
         "uso": {
-          "chamadas": 147,
-          "entrada": 1917101,
-          "entrada_cache": 1629696,
-          "saida": 24068,
-          "total": 1941169
+          "chamadas": 163,
+          "entrada": 1987175,
+          "entrada_cache": 1718656,
+          "saida": 21042,
+          "total": 2008217
         },
-        "custo_usd": 0.7255
+        "custo_usd": 0.6319
       }
     }
   ]

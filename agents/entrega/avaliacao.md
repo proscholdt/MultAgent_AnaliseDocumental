@@ -1,19 +1,19 @@
 # Avaliação contra o gabarito
 
-Base lida em 2026-11-13T16:38:18+00:00. Gabarito: `avaliacao/gabarito.json`, conferido à mão nos PDFs.
+Base lida em 2026-11-13T17:32:51+00:00. Gabarito: `avaliacao/gabarito.json`, conferido à mão nos PDFs.
 
 | Medida | Resultado |
 |---|---|
 | Status certo (informado ou não encontrado) | 24 de 24 |
-| Valor informado certo | 12 de 13 |
-| Página certa | 12 de 13 |
+| Valor informado certo | 13 de 13 |
+| Página certa | 13 de 13 |
 | Valor do ano anterior certo | 9 de 9 |
 | Valor calculado certo | 10 de 10 |
 | Invenção (não informado gravado como informado) | 0 de 11 |
 | Alertas automáticos esperados que dispararam | 2 de 2 |
-| Inconsistências do texto da fonte registradas | 2 de 2 |
-| Perguntas com o conteúdo e a fonte esperados | 4 de 5 |
-| Citações que existem literalmente no trecho citado | 33 de 33 |
+| Inconsistências do texto da fonte registradas | 5 de 6 |
+| Perguntas com o conteúdo e a fonte esperados | 5 de 5 |
+| Citações que existem literalmente no trecho citado | 30 de 30 |
 
 | Documento | Indicador | Esperado | Obtido | Valor | Página | Ano anterior | Calculado |
 |---|---|---|---|---|---|---|---|
@@ -36,7 +36,7 @@ Base lida em 2026-11-13T16:38:18+00:00. Gabarito: `avaliacao/gabarito.json`, con
 | Light.pdf | receita_liquida | informado | informado (13.253.286 R$ mil) | sim | sim | sim | — |
 | Light.pdf | lucro_liquido | informado | informado ((5.672.203) R$ mil) | sim | sim | sim | — |
 | Light.pdf | fluxo_caixa_operacional | informado | informado (200.763 R$ mil) | sim | sim | sim | — |
-| Light.pdf | ebitda | informado | informado (1.817 R$ milhões) | **NÃO** | **NÃO** | — | — |
+| Light.pdf | ebitda | informado | informado (1.180 R$ milhões) | sim | sim | — | — |
 | Light.pdf | margem_ebitda | nao_encontrado | nao_encontrado | — | — | — | — |
 | Light.pdf | divida_liquida | informado | informado (9.032.236 R$ mil) | sim | sim | — | — |
 | Light.pdf | alavancagem | informado | informado (3,32x) | sim | sim | — | — |
@@ -45,7 +45,7 @@ Base lida em 2026-11-13T16:38:18+00:00. Gabarito: `avaliacao/gabarito.json`, con
 | Pergunta | Certa | O que faltou |
 |---|---|---|
 | p1 | sim | — |
-| p2 | **NÃO** | bandeira ou estorno ou CVA |
+| p2 | sim | — |
 | p3 | sim | — |
 | p4 | sim | — |
 | p5 | sim | — |

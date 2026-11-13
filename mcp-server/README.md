@@ -55,7 +55,7 @@ Fora do Docker:
 ```bash
 uv sync
 uv run uvicorn app.main:app_factory --factory --port 8100
-uv run pytest        # 90 testes, sem rede
+uv run pytest        # 92 testes, sem rede
 ```
 
 ## Governança: quem pode o quê
@@ -163,6 +163,7 @@ qual.
 | A linha ou a frase tem de mencionar o indicador (EBITDA, dívida líquida) | "Alavancagem" de 76% (dívida sobre capital) e de 0,08 (dívida sobre patrimônio) gravadas como dívida líquida / EBITDA |
 | Trecho que fala de uma parte do grupo (distribuidora, controlada) exige uma nota dizendo o que o valor é | O EBITDA da distribuidora da Light gravado como o da companhia |
 | Receita, lucro e caixa operacional vêm da demonstração do próprio campo (resultado, fluxo de caixa), não de outra tabela em que a linha se repete | O lucro tirado da demonstração do resultado abrangente com cabeçalho duplicado, ou das mutações do patrimônio, sem colunas por ano |
+| O lucro líquido é o total do exercício, não a linha de mesmo rótulo que vem depois da participação dos minoritários | O lucro da Millet veio da parte dos controladores (14.743 de 18.891) numa repetição da execução |
 | O campo capex é o total de investimentos que a empresa declara, não uma linha de aquisição | "Aquisições de bens do ativo imobilizado" (307.759) gravada como o capex da Light (1.470.292 com o intangível) |
 | Receita, lucro e caixa operacional vêm da tabela da demonstração, não de frase | O prejuízo da Light tirado de "-R$5.673 milhões" do texto, sem o sinal |
 | Uma célula não pode ser gravada em dois campos | A linha única "Imobilizado e intangível" da Brasal gravada duas vezes: capex dobrado |
@@ -199,6 +200,9 @@ há também precisa de prova:
   (resultado operacional, depreciação, empréstimos, caixa, aquisições), a chamada é recusada
   dizendo quais. Na 2ª execução o extrator escreveu "as linhas de apoio foram gravadas" sem ter
   gravado, e três indicadores saíram sem cálculo.
+- **Os operandos do EBITDA são exigidos mesmo quando a empresa o informa.** É com eles que o
+  servidor confere o informado. Numa execução o extrator gravou o EBITDA da Light e pulou os
+  operandos, e o alerta do sinal omitido no texto não disparou.
 - **Entre as frases de EBITDA, vale a que bate com a demonstração.** Relatório de grupo traz o
   EBITDA de cada controlada e o consolidado, em frases parecidas. Se o EBITDA gravado veio de
   texto e não bate com resultado operacional + depreciação, e outra frase do documento bate (em
@@ -364,7 +368,7 @@ mcp-server/
 │  ├─ report.py             marcadores e montagem do relatório
 │  ├─ store.py  models.py   SQLite
 │  └─ tools/                rag, extraction, analysis, answers, reporting
-└─ tests/                   90 testes: governança, portões, fórmulas, pendências, relatório
+└─ tests/                   92 testes: governança, portões, fórmulas, pendências, relatório
 ```
 
 ## Caminho para produção no Azure

@@ -7,12 +7,12 @@
       "codigo": "ebitda_divergente",
       "severidade": "atencao",
       "campo": "ebitda",
-      "mensagem": "O EBITDA informado (1.817 R$ milhões) não bate com o resultado antes do resultado financeiro mais depreciação e amortização (-1.179.644 R$ mil). Pode ser um EBITDA ajustado, o valor de uma controlada ou um sinal omitido no texto.",
+      "mensagem": "O EBITDA informado (1.180 R$ milhões) não bate com o resultado antes do resultado financeiro mais depreciação e amortização (-1.179.644 R$ mil). Pode ser um EBITDA ajustado, o valor de uma controlada ou um sinal omitido no texto.",
       "detalhes": {
-        "informado": "1.817 R$ milhões",
-        "pagina": 8,
+        "informado": "1.180 R$ milhões",
+        "pagina": 9,
         "calculado": "-1.179.644 R$ mil",
-        "trecho": "Em 2022, o EBITDA CVM1 da distribuidora foi de R$1.817 milhões, uma redução de R$2.996 milhões em relação aos R$1.179 milhões apurados em 2021."
+        "trecho": "Em 2022, o EBITDA CVM foi de R$1.180 milhões, apresentando uma redução R$3.001 milhões se comparado a 2021."
       },
       "registrado_por": "extrator"
     },
@@ -21,10 +21,10 @@
       "codigo": "alavancagem_divergente",
       "severidade": "atencao",
       "campo": "alavancagem",
-      "mensagem": "A alavancagem informada (3,32x) não bate com dívida líquida dividida pelo EBITDA informados (4,97x). Pode ser um EBITDA ajustado.",
+      "mensagem": "A alavancagem informada (3,32x) não bate com dívida líquida dividida pelo EBITDA informados (7,65x). Pode ser um EBITDA ajustado.",
       "detalhes": {
         "informada": "3,32x",
-        "calculada": "4,97x",
+        "calculada": "7,65x",
         "pagina": 10
       },
       "registrado_por": "extrator"
@@ -40,28 +40,6 @@
           "EBITDA",
           "Alavancagem (dívida líquida / EBITDA)"
         ]
-      },
-      "registrado_por": "extrator"
-    },
-    {
-      "tipo": "validacao",
-      "codigo": "unidade_herdada",
-      "severidade": "informacao",
-      "campo": "caixa_equivalentes",
-      "mensagem": "Caixa e equivalentes de caixa (2022): a unidade (R$ mil) vem de uma convenção declarada em página anterior, não da própria página.",
-      "detalhes": {
-        "pagina": 105
-      },
-      "registrado_por": "extrator"
-    },
-    {
-      "tipo": "validacao",
-      "codigo": "secao_inesperada",
-      "severidade": "informacao",
-      "campo": "caixa_equivalentes",
-      "mensagem": "Caixa e equivalentes de caixa (2022): o valor veio da seção '34. INSTRUMENTOS FINANCEIROS E GERENCIAMENTO DE RISCOS > 34.3 Gestão do capital', e não de uma demonstração de balanço.",
-      "detalhes": {
-        "pagina": 105
       },
       "registrado_por": "extrator"
     },
@@ -107,21 +85,7 @@
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "A redução citada não fecha com os dois valores da frase: se foi de R$2.996 milhões em relação aos R$1.179 milhões apurados em 2021, o valor de 2022 não pode ser R$1.817 milhões.",
-      "detalhes": {
-        "pagina": 8,
-        "chunk_index": 26,
-        "secao": "Desempenho Financeiro",
-        "citacao": "Em 2022, o EBITDA CVM1 da distribuidora foi de R$1.817 milhões, uma redução de R$2.996 milhões em relação aos R$1.179 milhões apurados em 2021. Essa retração foi devida, principalmente, a provisões de -R$2.513 milhões no período, sendo referentes, em especial, ao reconhecimento de provisão para devolução de créditos de PIS/COFINS aos consumidores, conforme Lei 14.385/22 (-R$1.081 milhões), revisão nas metodologias e estimativas de PECLD (-R$855 milhões) e de provisões para contingências JEC e Cível (- R$379 milhões)."
-      },
-      "registrado_por": "validador"
-    },
-    {
-      "tipo": "fonte",
-      "codigo": "inconsistencia_na_fonte",
-      "severidade": "atencao",
-      "campo": null,
-      "mensagem": "A frase traz anos incoerentes: diz que o indicador encerrou 2021 em 3,32x e compara com no 2021 (3,48x), repetindo o mesmo ano em vez de indicar o comparativo correto.",
+      "mensagem": "A frase compara 2021 com 2021, indicando ano trocado no próprio texto.",
       "detalhes": {
         "pagina": 10,
         "chunk_index": 37,
@@ -135,7 +99,7 @@
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "A redução citada não fecha com os valores do texto: se o EBITDA CVM foi de R$1.180 milhões e houve redução R$3.001 milhões, o valor comparativo implícito seria maior do que o texto sugere para 2021.",
+      "mensagem": "A redução citada não fecha com os dois valores da frase: se foi de R$3.001 milhões e o valor de 2022 foi de R$1.180 milhões, o comparativo implícito de 2021 não é compatível com a redução escrita.",
       "detalhes": {
         "pagina": 9,
         "chunk_index": 35,
@@ -149,9 +113,9 @@
       "codigo": "revisao_das_fontes_concluida",
       "severidade": "informacao",
       "campo": null,
-      "mensagem": "Fontes revisadas pelo agente validador. Relatório da Administração, páginas de desempenho financeiro, EBITDA, resultado, endividamento e tabelas de suporte lidos; três inconsistências registradas.",
+      "mensagem": "Fontes revisadas pelo agente validador. Relatório da administração, covenants e gestão do capital lidos; duas inconsistências registradas.",
       "detalhes": {
-        "inconsistencias_registradas": 3
+        "inconsistencias_registradas": 2
       },
       "registrado_por": "validador"
     }

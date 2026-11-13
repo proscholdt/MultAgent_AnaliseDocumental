@@ -2,71 +2,66 @@
   {
     "pergunta_id": "p1",
     "pergunta": "Qual empresa teve a maior margem EBITDA no período?",
-    "resposta": "A maior margem EBITDA no período foi da Brasal Brasília Holding S.A., com 16,74% (calculado: EBITDA / receita líquida × 100; valores de origem em Brasal.pdf, p. 8 e 11); o valor foi calculado pelo servidor a partir dos dados da extração. A Light S.A. ficou em segundo, com 13,71% (calculado: EBITDA / receita líquida × 100; valores de origem em Light.pdf, p. 8 e 20), e a Millet Participações S.A. em terceiro, com 9,42% (calculado: EBITDA / receita líquida × 100; valores de origem em Millet.pdf, p. 7 e 10). (Brasal.pdf, p. 1) (Light.pdf, p. 1) (Millet.pdf, p. 1)",
+    "resposta": "A maior margem EBITDA foi da Brasal Brasília Holding S.A., com 16,74% (calculado: EBITDA / receita líquida × 100; valores de origem em Brasal.pdf, p. 8 e 11). Em seguida vieram a Millet Participações S.A., com 9,42% (calculado: EBITDA / receita líquida × 100; valores de origem em Millet.pdf, p. 7 e 10), e a LIGHT S.A., com 8,90% (calculado: EBITDA / receita líquida × 100; valores de origem em Light.pdf, p. 9 e 20). Os três valores são calculados pelo servidor, não informados diretamente pelas empresas.",
     "fontes": [
-      "Brasal.pdf, p. 1",
-      "Light.pdf, p. 1",
-      "Millet.pdf, p. 1",
       "Brasal.pdf, p. 8",
       "Brasal.pdf, p. 11",
-      "Light.pdf, p. 8",
-      "Light.pdf, p. 20",
       "Millet.pdf, p. 7",
-      "Millet.pdf, p. 10"
+      "Millet.pdf, p. 10",
+      "Light.pdf, p. 9",
+      "Light.pdf, p. 20"
     ],
-    "gravada_em": "2026-11-13T16:37:58.700337"
+    "gravada_em": "2026-11-13T17:32:01.167497"
   },
   {
     "pergunta_id": "p2",
     "pergunta": "O que a administração de cada empresa apontou como principal motivo da variação da receita?",
-    "resposta": "Millet Participações S.A.: a análise disponível não traz uma explicação clara da variação da receita no relatório da administração; o trecho localizado só menciona desempenho de vendas, demanda mais fraca e repasse de custos, sem detalhar a receita como foco principal (Millet.pdf, p. 11).\nLIGHT S.A.: a administração atribuiu a variação ao melhora do cenário hidrológico em 2022, com aumento do GSF e queda do PLD, reduzindo os custos com compra de energia (Light.pdf, p. 9).\nBrasal Brasília Holding S.A.: a análise qualitativa não aponta um motivo explícito para a variação da receita; o documento é mais descritivo e destaca estimativas contábeis e riscos, sem um comentário direto sobre receita (Brasal.pdf, p. 13).\nComparando as três, apenas a Light traz um motivo direto e claro para a variação; nas outras duas, a base não registra uma explicação específica da administração sobre receita.",
+    "resposta": "Millet Participações S.A.: a administração atribuiu a variação da receita principalmente ao aumento no custo de matérias-primas, sobretudo derivados lácteos, com necessidade de repasse no preço de venda; apesar disso, não foi possível recuperar o nível de margem anterior à pandemia (Millet.pdf, p. 11).\nLIGHT S.A.: a redução da receita operacional líquida foi explicada pelos estornos de faturamento de regularizações, pelo não acionamento das bandeiras tarifárias e pela variação negativa na conta CVA (Light.pdf, p. 9).\nBrasal Brasília Holding S.A.: a base não traz uma explicação gerencial direta para a variação da receita; o documento apenas informa que a receita vem principalmente da venda de produtos e que é reconhecida na entrega ao cliente (Brasal.pdf, p. 15) (Brasal.pdf, p. 16).",
     "fontes": [
       "Millet.pdf, p. 11",
       "Light.pdf, p. 9",
-      "Brasal.pdf, p. 13"
+      "Brasal.pdf, p. 15",
+      "Brasal.pdf, p. 16"
     ],
-    "gravada_em": "2026-11-13T16:38:00.703901"
+    "gravada_em": "2026-11-13T17:32:07.916058"
   },
   {
     "pergunta_id": "p3",
     "pergunta": "Alguma das empresas está com alavancagem acima de 3x? Qual?",
-    "resposta": "Sim: a LIGHT S.A. está acima de 3x, com alavancagem 3,32x (Light.pdf, p. 10); esse indicador é informado pela empresa na extração e também aparece calculado na base. Millet Participações S.A. está em 0,31x (calculado: dívida líquida / EBITDA; valores de origem em Millet.pdf, p. 7, 10 e 42) e Brasal Brasília Holding S.A. em -0,42x (calculado: dívida líquida / EBITDA; valores de origem em Brasal.pdf, p. 6, 7, 8 e 11), ambos abaixo de 3x. Fontes da extração usadas: (Light.pdf, p. 1), (Millet.pdf, p. 1), (Brasal.pdf, p. 1).",
+    "resposta": "Sim: a LIGHT S.A. está acima de 3x, com 3,32x (Light.pdf, p. 10); esse valor é informado pela empresa. A Millet Participações S.A. está em 0,31x (calculado: dívida líquida / EBITDA; valores de origem em Millet.pdf, p. 7, 10 e 42), calculado pelo servidor, e a Brasal Brasília Holding S.A. em -0,42x (calculado: dívida líquida / EBITDA; valores de origem em Brasal.pdf, p. 7, 8, 11 e 48), também calculado pelo servidor; portanto, nenhuma delas supera 3x além da LIGHT S.A.",
     "fontes": [
-      "Light.pdf, p. 1",
-      "Millet.pdf, p. 1",
-      "Brasal.pdf, p. 1",
       "Light.pdf, p. 10",
       "Millet.pdf, p. 7",
       "Millet.pdf, p. 10",
       "Millet.pdf, p. 42",
-      "Brasal.pdf, p. 6",
       "Brasal.pdf, p. 7",
       "Brasal.pdf, p. 8",
-      "Brasal.pdf, p. 11"
+      "Brasal.pdf, p. 11",
+      "Brasal.pdf, p. 48"
     ],
-    "gravada_em": "2026-11-13T16:37:59.638879"
+    "gravada_em": "2026-11-13T17:32:00.678251"
   },
   {
     "pergunta_id": "p4",
     "pergunta": "Quais riscos são citados por mais de uma empresa?",
-    "resposta": "Os riscos citados por mais de uma empresa são: risco de crédito, risco de liquidez/financiamento e risco de mercado/condições de mercado. Na Millet, aparecem risco de crédito, liquidez e mercado (Millet.pdf, p. 40); na Light, risco de crédito e restrições de financiamento/continuidade operacional (Light.pdf, p. 28)(Light.pdf, p. 101); e na Brasal, risco de crédito, preço e juros (Brasal.pdf, p. 49). Em comum entre pelo menos duas empresas, o risco de crédito está nas três; liquidez/financiamento aparece na Millet e na Light; e exposição a condições de mercado aparece na Millet e na Brasal. As fontes da análise são as seções de risco de cada documento citadas acima.",
+    "resposta": "Os riscos citados por mais de uma empresa são: crédito, mercado/taxa de juros e continuidade operacional/incerteza de continuidade. A Millet menciona risco de crédito, liquidez e mercado (Millet.pdf, p. 40), enquanto a Brasal cita risco de crédito e risco de taxa de juros (Brasal.pdf, p. 49). A Light destaca risco de continuidade operacional (Light.pdf, p. 3), e também menciona estratégia/execução sob incerteza na administração (Light.pdf, p. 3), mas esse último não aparece nas outras duas de forma equivalente. Em comum entre mais de uma, crédito aparece na Millet e na Brasal; mercado aparece na Millet e, na prática, a Brasal detalha taxa de juros como componente de risco financeiro (Millet.pdf, p. 40) (Brasal.pdf, p. 49).",
     "fontes": [
       "Millet.pdf, p. 40",
-      "Light.pdf, p. 28",
-      "Light.pdf, p. 101",
-      "Brasal.pdf, p. 49"
+      "Brasal.pdf, p. 49",
+      "Light.pdf, p. 3"
     ],
-    "gravada_em": "2026-11-13T16:38:01.914276"
+    "gravada_em": "2026-11-13T17:32:03.710593"
   },
   {
     "pergunta_id": "p5",
     "pergunta": "Qual é o guidance de cada empresa para o próximo ano?",
-    "resposta": "Millet Participações S.A.: a análise registrada aponta apenas acompanhamento contínuo dos efeitos da crise, sem guidance quantitativo; a própria base indica que a companhia continuará monitorando os impactos nas operações e demonstrações financeiras (Millet.pdf, p. 11).\nLIGHT S.A.: a administração destaca renovação antecipada da concessão e concentração dos investimentos no estritamente necessário para a sustentabilidade do serviço e maximização do fluxo de caixa nos próximos 36 meses (Light.pdf, p. 2) (Light.pdf, p. 2).\nBrasal Brasília Holding S.A.: o guidance registrado é limitado e indireto, com projeções orçamentárias para o próximo exercício e expectativa de realização dos créditos fiscais até fevereiro de 2023 (Brasal.pdf, p. 28).\nComparando as três, a LIGHT é a que traz guidance mais claro e prospectivo; Millet e Brasal têm indicação mais genérica, sem metas operacionais explícitas. As fontes usadas são as análises de guidance de cada documento (Millet.pdf, p. 11) (Light.pdf, p. 2) (Brasal.pdf, p. 28).",
+    "resposta": "Millet Participações S.A.: a administração informa que continuará monitorando os efeitos da crise e seus impactos nas operações e nas demonstrações financeiras, sem uma meta operacional específica para o próximo ano (Millet.pdf, p. 11).\nLIGHT S.A.: o guidance é seguir executando as estratégias descritas nas demonstrações, mas a própria administração ressalta que não há garantia de êxito, porque parte relevante desses fatores não está sob seu controle (Light.pdf, p. 3).\nBrasal Brasília Holding S.A.: não há guidance claro de negócio para o próximo ano; o texto traz apenas uma expectativa de realização dos créditos tributários e manutenção do monitoramento dos processos (Brasal.pdf, p. 28)(Brasal.pdf, p. 51).\nEm resumo, as três companhias não apresentam um guidance quantitativo; a Millet e a Brasal mostram apenas acompanhamento/expectativas pontuais, e a Light indica execução estratégica sem garantia de sucesso.",
     "fontes": [
       "Millet.pdf, p. 11",
-      "Light.pdf, p. 2",
-      "Brasal.pdf, p. 28"
+      "Light.pdf, p. 3",
+      "Brasal.pdf, p. 28",
+      "Brasal.pdf, p. 51"
     ],
-    "gravada_em": "2026-11-13T16:37:59.148540"
+    "gravada_em": "2026-11-13T17:32:07.372113"
   }
 ]

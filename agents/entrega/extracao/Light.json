@@ -71,19 +71,20 @@
       "rotulo": "EBITDA",
       "informado": {
         "status": "encontrado",
-        "valor": "1.817",
-        "valor_numerico": 1817.0,
+        "valor": "1.180",
+        "valor_numerico": 1180.0,
         "unidade": "R$ milhões",
         "periodo": "2022",
         "escopo": null,
         "origem": {
           "tipo": "texto",
-          "pagina": 8,
-          "chunk_index": 26,
-          "secao": "Desempenho Financeiro",
-          "trecho": "Em 2022, o EBITDA CVM1 da distribuidora foi de R$1.817 milhões, uma redução de R$2.996 milhões em relação aos R$1.179 milhões apurados em 2021."
+          "pagina": 9,
+          "chunk_index": 35,
+          "secao": "EBITDA CVM",
+          "trecho": "Em 2022, o EBITDA CVM foi de R$1.180 milhões, apresentando uma redução R$3.001 milhões se comparado a 2021.",
+          "pagina_final": 10
         },
-        "nota_do_agente": "EBITDA de uma controlada (distribuidora), não o consolidado."
+        "nota_do_agente": "EBITDA consolidado informado em texto; valor em R$ milhões."
       },
       "comparavel": null,
       "variacao": null,
@@ -142,7 +143,7 @@
       "rotulo": "Margem EBITDA",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não informa margem EBITDA consolidada explicitamente; a busca por 'margem EBITDA' e 'EBITDA' não encontrou percentual no relatório. Apenas valores-base e demonstrações principais aparecem.",
+        "motivo": "O documento não traz margem EBITDA consolidada em percentual; encontrei apenas o EBITDA em texto e não há linha/tabela com a margem do exercício.",
         "evidencia": {
           "termos_procurados": [
             "margem ebitda",
@@ -156,8 +157,8 @@
       "comparavel": null,
       "variacao": null,
       "calculado": {
-        "valor": "13,71%",
-        "valor_numerico": 13.71,
+        "valor": "8,90%",
+        "valor_numerico": 8.9,
         "unidade": "%",
         "periodo": "2022",
         "formula": "EBITDA / receita líquida × 100",
@@ -165,9 +166,9 @@
           {
             "campo": "ebitda",
             "periodo": "2022",
-            "valor": "1.817",
+            "valor": "1.180",
             "unidade": "R$ milhões",
-            "pagina": 8,
+            "pagina": 9,
             "escopo": null,
             "base": "informado"
           },
@@ -321,13 +322,13 @@
           "secao": "Endividamento",
           "trecho": "O indicador de covenants Dívida Líquida/EBITDA ajustado para fins de covenants encerrou 2021 em 3,32x, menor do que no 2021 (3,48x)."
         },
-        "nota_do_agente": "Valor citado para 2021 no texto; não corresponde ao exercício de 2022."
+        "nota_do_agente": "A frase do relatório usa o múltiplo de covenants e menciona 2021; gravado como alavancagem por ser o valor informado no documento."
       },
       "comparavel": null,
       "variacao": null,
       "calculado": {
-        "valor": "4,97x",
-        "valor_numerico": 4.97,
+        "valor": "7,65x",
+        "valor_numerico": 7.65,
         "unidade": "x",
         "periodo": "2022",
         "formula": "dívida líquida / EBITDA",
@@ -344,9 +345,9 @@
           {
             "campo": "ebitda",
             "periodo": "2022",
-            "valor": "1.817",
+            "valor": "1.180",
             "unidade": "R$ milhões",
-            "pagina": 8,
+            "pagina": 9,
             "escopo": null,
             "base": "informado"
           }
@@ -431,7 +432,7 @@
       "rotulo": "Capex",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O termo 'Capex' aparece apenas em nota de empréstimos e financiamentos ('BNDES - Capex'), não como total de investimentos da empresa. O fluxo de caixa foi gravado pelas linhas de aquisição e não há linha explícita de capex total.",
+        "motivo": "A página 66 traz apenas uma linha de composição de custos/fees de empréstimos chamada 'BNDES - Capex', que não é um total de investimentos capex do exercício. O fluxo de caixa traz as linhas de aquisição de imobilizado e intangível, já registradas como apoio; não há capex total informado.",
         "evidencia": {
           "termos_procurados": [
             "capex",
@@ -506,43 +507,6 @@
     }
   },
   "valores_de_apoio": {
-    "resultado_antes_financeiro": {
-      "rotulo": "Resultado antes do resultado financeiro",
-      "2022": {
-        "status": "encontrado",
-        "valor": "(1.910.411)",
-        "valor_numerico": -1910411.0,
-        "unidade": "R$ mil",
-        "periodo": "2022",
-        "escopo": "consolidado",
-        "origem": {
-          "tipo": "tabela",
-          "pagina": 20,
-          "chunk_index": 59,
-          "secao": "DEMONSTRAÇÕES DE RESULTADOS",
-          "trecho": "| Demonstrações de Resultados | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| LUCRO (PREJUÍZO) ANTES DO RESULTADO FINANCEIRO E IMPOSTOS |  | (5.681.153) | 397.043 | (1.910.411) | 1.143.301 |",
-          "linha": "LUCRO (PREJUÍZO) ANTES DO RESULTADO FINANCEIRO E IMPOSTOS",
-          "coluna": "Consolidado - 2022"
-        }
-      },
-      "2021": {
-        "status": "encontrado",
-        "valor": "1.143.301",
-        "valor_numerico": 1143301.0,
-        "unidade": "R$ mil",
-        "periodo": "2021",
-        "escopo": "consolidado",
-        "origem": {
-          "tipo": "tabela",
-          "pagina": 20,
-          "chunk_index": 59,
-          "secao": "DEMONSTRAÇÕES DE RESULTADOS",
-          "trecho": "| Demonstrações de Resultados | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| LUCRO (PREJUÍZO) ANTES DO RESULTADO FINANCEIRO E IMPOSTOS |  | (5.681.153) | 397.043 | (1.910.411) | 1.143.301 |",
-          "linha": "LUCRO (PREJUÍZO) ANTES DO RESULTADO FINANCEIRO E IMPOSTOS",
-          "coluna": "Consolidado - 2021"
-        }
-      }
-    },
     "depreciacao_amortizacao": {
       "rotulo": "Depreciação e amortização",
       "2022": {
@@ -580,114 +544,77 @@
         }
       }
     },
-    "emprestimos_circulante": {
-      "rotulo": "Empréstimos e financiamentos (circulante)",
-      "2022": {
-        "status": "encontrado",
-        "valor": "308.946",
-        "valor_numerico": 308946.0,
-        "unidade": "R$ mil",
-        "periodo": "2022",
-        "escopo": "consolidado",
-        "origem": {
-          "tipo": "tabela",
-          "pagina": 19,
-          "chunk_index": 58,
-          "secao": "BALANÇOS PATRIMONIAIS",
-          "trecho": "| PASSIVO | Notas | Controladora - 31.12.2022 | Controladora - 31.12.2021 | Consolidado - 31.12.2022 | Consolidado - 31.12.2021 |\n| Empréstimos e financiamentos | 20 | - | - | 308.946 | 403.230 |",
-          "linha": "Empréstimos e financiamentos",
-          "coluna": "Consolidado - 31.12.2022"
-        }
-      },
-      "2021": {
-        "status": "encontrado",
-        "valor": "403.230",
-        "valor_numerico": 403230.0,
-        "unidade": "R$ mil",
-        "periodo": "2021",
-        "escopo": "consolidado",
-        "origem": {
-          "tipo": "tabela",
-          "pagina": 19,
-          "chunk_index": 58,
-          "secao": "BALANÇOS PATRIMONIAIS",
-          "trecho": "| PASSIVO | Notas | Controladora - 31.12.2022 | Controladora - 31.12.2021 | Consolidado - 31.12.2022 | Consolidado - 31.12.2021 |\n| Empréstimos e financiamentos | 20 | - | - | 308.946 | 403.230 |",
-          "linha": "Empréstimos e financiamentos",
-          "coluna": "Consolidado - 31.12.2021"
-        }
-      }
-    },
-    "emprestimos_nao_circulante": {
-      "rotulo": "Empréstimos e financiamentos (não circulante)",
-      "2022": {
-        "status": "encontrado",
-        "valor": "3.464.352",
-        "valor_numerico": 3464352.0,
-        "unidade": "R$ mil",
-        "periodo": "2022",
-        "escopo": "consolidado",
-        "origem": {
-          "tipo": "tabela",
-          "pagina": 19,
-          "chunk_index": 58,
-          "secao": "BALANÇOS PATRIMONIAIS",
-          "trecho": "| PASSIVO | Notas | Controladora - 31.12.2022 | Controladora - 31.12.2021 | Consolidado - 31.12.2022 | Consolidado - 31.12.2021 |\n| Empréstimos e financiamentos | 20 | - | - | 3.464.352 | 4.005.790 |",
-          "linha": "Empréstimos e financiamentos",
-          "coluna": "Consolidado - 31.12.2022"
-        }
-      },
-      "2021": {
-        "status": "encontrado",
-        "valor": "4.005.790",
-        "valor_numerico": 4005790.0,
-        "unidade": "R$ mil",
-        "periodo": "2021",
-        "escopo": "consolidado",
-        "origem": {
-          "tipo": "tabela",
-          "pagina": 19,
-          "chunk_index": 58,
-          "secao": "BALANÇOS PATRIMONIAIS",
-          "trecho": "| PASSIVO | Notas | Controladora - 31.12.2022 | Controladora - 31.12.2021 | Consolidado - 31.12.2022 | Consolidado - 31.12.2021 |\n| Empréstimos e financiamentos | 20 | - | - | 3.464.352 | 4.005.790 |",
-          "linha": "Empréstimos e financiamentos",
-          "coluna": "Consolidado - 31.12.2021"
-        }
-      }
-    },
     "caixa_equivalentes": {
       "rotulo": "Caixa e equivalentes de caixa",
       "2022": {
         "status": "encontrado",
-        "valor": "2.083.551",
-        "valor_numerico": 2083551.0,
+        "valor": "43.886",
+        "valor_numerico": 43886.0,
         "unidade": "R$ mil",
         "periodo": "2022",
-        "escopo": null,
+        "escopo": "consolidado",
         "origem": {
           "tipo": "tabela",
-          "pagina": 105,
-          "chunk_index": 332,
-          "secao": "34. INSTRUMENTOS FINANCEIROS E GERENCIAMENTO DE RISCOS > 34.3 Gestão do capital",
-          "trecho": "| Consolidado | 31.12.2022 | 31.12.2021 |\n| (-) Caixa e equivalentes de caixa e TVM | 2.083.551 | 3.604.973 |",
-          "linha": "(-) Caixa e equivalentes de caixa e TVM",
-          "coluna": "31.12.2022"
+          "pagina": 18,
+          "chunk_index": 57,
+          "secao": "BALANÇOS PATRIMONIAIS",
+          "trecho": "| ATIVO | Notas | Controladora - 31.12.2022 | Controladora - 31.12.2021 | Consolidado - 31.12.2022 | Consolidado - 31.12.2021 |\n| Caixa e equivalentes de caixa | 6 | 2.693 | 9 | 43.886 | 396.777 |",
+          "linha": "Caixa e equivalentes de caixa",
+          "coluna": "Consolidado - 31.12.2022"
         }
       },
       "2021": {
         "status": "encontrado",
-        "valor": "3.604.973",
-        "valor_numerico": 3604973.0,
+        "valor": "396.777",
+        "valor_numerico": 396777.0,
         "unidade": "R$ mil",
         "periodo": "2021",
-        "escopo": null,
+        "escopo": "consolidado",
         "origem": {
           "tipo": "tabela",
-          "pagina": 105,
-          "chunk_index": 332,
-          "secao": "34. INSTRUMENTOS FINANCEIROS E GERENCIAMENTO DE RISCOS > 34.3 Gestão do capital",
-          "trecho": "| Consolidado | 31.12.2022 | 31.12.2021 |\n| (-) Caixa e equivalentes de caixa e TVM | 2.083.551 | 3.604.973 |",
-          "linha": "(-) Caixa e equivalentes de caixa e TVM",
-          "coluna": "31.12.2021"
+          "pagina": 18,
+          "chunk_index": 57,
+          "secao": "BALANÇOS PATRIMONIAIS",
+          "trecho": "| ATIVO | Notas | Controladora - 31.12.2022 | Controladora - 31.12.2021 | Consolidado - 31.12.2022 | Consolidado - 31.12.2021 |\n| Caixa e equivalentes de caixa | 6 | 2.693 | 9 | 43.886 | 396.777 |",
+          "linha": "Caixa e equivalentes de caixa",
+          "coluna": "Consolidado - 31.12.2021"
+        }
+      }
+    },
+    "resultado_antes_financeiro": {
+      "rotulo": "Resultado antes do resultado financeiro",
+      "2022": {
+        "status": "encontrado",
+        "valor": "(1.910.411)",
+        "valor_numerico": -1910411.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 20,
+          "chunk_index": 59,
+          "secao": "DEMONSTRAÇÕES DE RESULTADOS",
+          "trecho": "| Demonstrações de Resultados | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| LUCRO (PREJUÍZO) ANTES DO RESULTADO FINANCEIRO E IMPOSTOS |  | (5.681.153) | 397.043 | (1.910.411) | 1.143.301 |",
+          "linha": "LUCRO (PREJUÍZO) ANTES DO RESULTADO FINANCEIRO E IMPOSTOS",
+          "coluna": "Consolidado - 2022"
+        }
+      },
+      "2021": {
+        "status": "encontrado",
+        "valor": "1.143.301",
+        "valor_numerico": 1143301.0,
+        "unidade": "R$ mil",
+        "periodo": "2021",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 20,
+          "chunk_index": 59,
+          "secao": "DEMONSTRAÇÕES DE RESULTADOS",
+          "trecho": "| Demonstrações de Resultados | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| LUCRO (PREJUÍZO) ANTES DO RESULTADO FINANCEIRO E IMPOSTOS |  | (5.681.153) | 397.043 | (1.910.411) | 1.143.301 |",
+          "linha": "LUCRO (PREJUÍZO) ANTES DO RESULTADO FINANCEIRO E IMPOSTOS",
+          "coluna": "Consolidado - 2021"
         }
       }
     },
@@ -771,22 +698,22 @@
       "codigo": "ebitda_divergente",
       "severidade": "atencao",
       "campo": "ebitda",
-      "mensagem": "O EBITDA informado (1.817 R$ milhões) não bate com o resultado antes do resultado financeiro mais depreciação e amortização (-1.179.644 R$ mil). Pode ser um EBITDA ajustado, o valor de uma controlada ou um sinal omitido no texto.",
+      "mensagem": "O EBITDA informado (1.180 R$ milhões) não bate com o resultado antes do resultado financeiro mais depreciação e amortização (-1.179.644 R$ mil). Pode ser um EBITDA ajustado, o valor de uma controlada ou um sinal omitido no texto.",
       "detalhes": {
-        "informado": "1.817 R$ milhões",
-        "pagina": 8,
+        "informado": "1.180 R$ milhões",
+        "pagina": 9,
         "calculado": "-1.179.644 R$ mil",
-        "trecho": "Em 2022, o EBITDA CVM1 da distribuidora foi de R$1.817 milhões, uma redução de R$2.996 milhões em relação aos R$1.179 milhões apurados em 2021."
+        "trecho": "Em 2022, o EBITDA CVM foi de R$1.180 milhões, apresentando uma redução R$3.001 milhões se comparado a 2021."
       }
     },
     {
       "codigo": "alavancagem_divergente",
       "severidade": "atencao",
       "campo": "alavancagem",
-      "mensagem": "A alavancagem informada (3,32x) não bate com dívida líquida dividida pelo EBITDA informados (4,97x). Pode ser um EBITDA ajustado.",
+      "mensagem": "A alavancagem informada (3,32x) não bate com dívida líquida dividida pelo EBITDA informados (7,65x). Pode ser um EBITDA ajustado.",
       "detalhes": {
         "informada": "3,32x",
-        "calculada": "4,97x",
+        "calculada": "7,65x",
         "pagina": 10
       }
     },
@@ -800,24 +727,6 @@
           "EBITDA",
           "Alavancagem (dívida líquida / EBITDA)"
         ]
-      }
-    },
-    {
-      "codigo": "unidade_herdada",
-      "severidade": "informacao",
-      "campo": "caixa_equivalentes",
-      "mensagem": "Caixa e equivalentes de caixa (2022): a unidade (R$ mil) vem de uma convenção declarada em página anterior, não da própria página.",
-      "detalhes": {
-        "pagina": 105
-      }
-    },
-    {
-      "codigo": "secao_inesperada",
-      "severidade": "informacao",
-      "campo": "caixa_equivalentes",
-      "mensagem": "Caixa e equivalentes de caixa (2022): o valor veio da seção '34. INSTRUMENTOS FINANCEIROS E GERENCIAMENTO DE RISCOS > 34.3 Gestão do capital', e não de uma demonstração de balanço.",
-      "detalhes": {
-        "pagina": 105
       }
     },
     {

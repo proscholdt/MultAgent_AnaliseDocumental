@@ -33,7 +33,7 @@ Os 8 do relatório, para o exercício de referência do documento:
 | `divida_liquida`, `alavancagem` | relatório da administração ou nota de gestão de capital; muitas empresas não informam |
 | `capex` | quase nunca informado como total: veja abaixo |
 
-Valores de apoio, que o servidor usa para calcular o que a empresa não informa. Salve todos: eles estão nas três demonstrações principais (resultado, balanço, fluxo de caixa), e sem eles a extração não fecha. Aponte a linha com o nome do próprio valor; num quadro de composição de uma nota, a linha do TOTAL, nunca a de um componente ("Caixa e bancos" não é o caixa e equivalentes).
+Valores de apoio, que o servidor usa para calcular o que a empresa não informa e para conferir o que ela informa (o resultado antes do financeiro e a depreciação são exigidos mesmo quando a empresa informa o EBITDA). Salve todos: eles estão nas três demonstrações principais (resultado, balanço, fluxo de caixa), e sem eles a extração não fecha. Aponte a linha com o nome do próprio valor; num quadro de composição de uma nota, a linha do TOTAL, nunca a de um componente ("Caixa e bancos" não é o caixa e equivalentes).
 
 | campo | onde está |
 |---|---|

@@ -443,7 +443,7 @@ async def test_what_the_company_does_not_inform_must_be_computable_or_explained(
             "motivo": "O documento não traz este indicador como um valor único."})
 
     refused = await rejected(governance, "fechar_extracao", {"doc_id": DOC_ANA})
-    assert "faltam valores de apoio" in refused["erro"]
+    assert "Faltam valores de apoio" in refused["erro"]
     # O EBITDA tem os dois operandos e a dívida líquida é informada: não aparecem. O capex, sim.
     assert refused["problemas"] == [
         "capex: faltam capex_imobilizado e capex_intangivel (ou capex_imobilizado_e_intangivel, se for uma linha só)"]
@@ -535,7 +535,7 @@ async def test_statement_field_cannot_be_declared_missing_when_the_statement_is_
     assert needs_reason.is_error and len(payload(needs_reason)["problemas"]) == 3
     closed = payload(await call(governance, "fechar_extracao", {
         "doc_id": DOC_BRUNO, "apoio_ausente": "O documento não traz balanço, resultado nem fluxo de caixa."}, **other))
-    alert = next(a for a in closed["alertas"] if "não calculado" in a)
+    alert = next(a for a in closed["alertas"] if "Sem valores de apoio" in a)
     assert "EBITDA, Dívida líquida, Capex" in alert and "não traz balanço" in alert
 
 
@@ -608,6 +608,42 @@ async def test_among_ebitda_sentences_the_one_that_matches_the_statements_wins(g
     # ajustado, por exemplo) entra com o alerta, sem recusa: é o caso do teste das validações.
 
 
+async def test_informed_ebitda_still_needs_the_values_that_check_it(governance, indexer):
+    """Numa execução real o extrator gravou o EBITDA informado da Light e pulou o resultado
+    operacional e a depreciação. Sem eles a conferência não roda, e o alerta do sinal omitido no
+    texto (R$1.180 milhões escrito, −1.179.644 mil na demonstração) não disparou."""
+    add_performance_details(indexer)
+    for arguments in [
+        cell("receita_liquida", "Receita operacional líquida", "Consolidado - 2022"),
+        cell("lucro_liquido", "Lucro líquido do exercício", "Consolidado - 2022"),
+        cell("fluxo_caixa_operacional", "Caixa líquido gerado pelas atividades operacionais", "Consolidado - 2022", chunk=DFC),
+        cell("capex_imobilizado", "Aquisição de imobilizado", "Consolidado - 2022", chunk=DFC),
+        cell("capex_intangivel", "Aquisição de intangível", "Consolidado - 2022", chunk=DFC),
+        text("divida_liquida", "A dívida líquida da Companhia em 31 de dezembro de 2022 totalizou R$9.032 milhões", "9.032"),
+        text("alavancagem", "O indicador Dívida Líquida/EBITDA encerrou em 3,32x", "3,32x"),
+        text("ebitda", "O EBITDA de 2022 somou R$ 485.156 mil", "485.156", chunk=EXTRA),
+        text("margem_ebitda", "A margem EBITDA foi de 10,0% no ano", "10,0%", chunk=EXTRA),
+    ]:
+        await save(governance, arguments)
+    await call(governance, "salvar_nao_encontrado", {
+        "doc_id": DOC_ANA, "campo": "capex", "paginas_descartadas": [11],
+        "motivo": "As linhas de aquisição foram gravadas como apoio; não há um total de capex."})
+
+    refused = await rejected(governance, "fechar_extracao", {"doc_id": DOC_ANA})
+    assert "nem confere o EBITDA que ela informa" in refused["erro"]
+    assert refused["problemas"] == ["ebitda: faltam resultado_antes_financeiro e depreciacao_amortizacao"]
+    # E a saída "o documento não traz" não vale: as duas linhas estão nas demonstrações.
+    easy = await rejected(governance, "fechar_extracao", {
+        "doc_id": DOC_ANA, "apoio_ausente": "A empresa já informa o EBITDA; os operandos não são necessários."})
+    assert easy["problemas"][0].startswith("resultado_antes_financeiro: há linha que serve na p. 8")
+
+    await save(governance, cell("resultado_antes_financeiro", "Lucro operacional antes das receitas e despesas financeiras",
+                                "Consolidado - 2022"))
+    await save(governance, cell("depreciacao_amortizacao", "Depreciações e amortizações", "Consolidado - 2022", chunk=DFC))
+    closed = payload(await call(governance, "fechar_extracao", {"doc_id": DOC_ANA}))
+    assert any("O EBITDA informado (485.156 R$ mil) não bate" in alert for alert in closed["alertas"])
+
+
 async def test_a_loan_called_capex_is_not_the_capex(governance, indexer):
     """Na 7ª execução real a extração da Light não fechou: a nota de empréstimos tem a linha "BNDES -
     Capex", a regra do "traz com valor" a tomou por capex informado, e o campo ficou sem saída."""
@@ -625,6 +661,34 @@ async def test_a_loan_called_capex_is_not_the_capex(governance, indexer):
         "doc_id": DOC_ANA, "campo": "capex", "paginas_descartadas": [11, 36],
         "motivo": "A p. 36 traz 'Capex' só como nome de um financiamento do BNDES; não há total de capex."})
     assert not accepted.is_error, payload(accepted)
+
+
+async def test_net_income_is_the_total_not_the_part_of_the_controlling_shareholders(governance, indexer):
+    """A demonstração consolidada da Millet tem duas linhas "Lucro líquido do exercício": o total
+    (18.891) e, depois da participação dos minoritários, a parte dos controladores (14.743). Numa
+    repetição da execução final entrou a segunda."""
+    doc = indexer.documents[next(k for k in indexer.documents if k[1] == DOC_ANA)]
+    statement = len(doc["chunks"])
+    doc["chunks"].append({**doc["chunks"][DRE], "chunk_index": statement, "page_start": 7, "page_end": 7, "text": (
+        "|  | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n|---|---|---|---|---|\n"
+        "| Resultado antes do imposto de renda | 14.743 | 5.371 | 22.961 | 3.736 |\n"
+        "| Lucro líquido do exercício | 14.743 | 5.371 | 18.891 | 6.470 |\n"
+        "| Participação acionistas de minoritários | - | - | (4.148) | (1.099) |\n"
+        "| Lucro líquido do exercício | 14.743 | 5.371 | 14.743 | 5.371 |")})
+    doc["meta"]["chunk_count"] = len(doc["chunks"])
+
+    second = await rejected(governance, "salvar_indicador", cell(
+        "lucro_liquido", "Lucro líquido do exercício", "Consolidado - 2022", chunk=statement, ocorrencia_linha=2))
+    assert "é a 2ª com o rótulo" in second["erro"] and "parte do lucro atribuída aos controladores" in second["erro"]
+    assert "ocorrencia_linha=1" in second["erro"]
+    total = await save(governance, cell(
+        "lucro_liquido", "Lucro líquido do exercício", "Consolidado - 2022", chunk=statement, ocorrencia_linha=1))
+    assert total["salvo"]["valor"] == "18.891" and total["ano_anterior_gravado_pelo_servidor"]["valor"] == "6.470"
+    # Rótulo repetido sem linha de minoritários no meio (o balanço, com empréstimos de curto e de
+    # longo prazo) continua valendo pela ocorrência, como antes.
+    long_term = await save(governance, cell("emprestimos_nao_circulante", "Empréstimos e financiamentos",
+                                            "Consolidado - 31/12/2022", chunk=BALANCE, ocorrencia_linha=2))
+    assert long_term["salvo"]["valor"] == "4.100"
 
 
 async def test_statement_value_comes_from_its_own_statement(governance, indexer):

@@ -279,8 +279,8 @@ O detalhe de cada conferência, com o erro que ela barra, está no
 - **Gabarito** (`avaliacao/gabarito.json`): os 8 indicadores dos 3 documentos (24 campos), com
   status esperado, valor, página e valor do ano anterior, lidos à mão na camada de texto dos PDFs,
   sem passar pelo índice nem pelos agentes. Traz também os valores que as fórmulas devem dar, os
-  alertas automáticos que devem disparar, as duas inconsistências que existem no texto da Light e
-  os termos e fontes esperados nas cinco perguntas.
+  alertas automáticos que devem disparar, as seis inconsistências do texto dos documentos
+  conferidas no PDF e os termos e fontes esperados nas cinco perguntas.
 - **Avaliação** (`scripts/avaliar.py`): lê a base pelo servidor MCP e compara. Mede status,
   valor, página, ano anterior, valor calculado, **invenção** (o que a empresa não informa e o
   sistema gravou como informado), alertas, inconsistências da fonte, perguntas e, direto no
@@ -290,35 +290,32 @@ O detalhe de cada conferência, com o erro que ela barra, está no
 uv run python scripts/avaliar.py --usuario <usuário> --senha <senha>
 ```
 
-### Resultado (8ª execução, a que está em `entrega/`)
+### Resultado (12ª execução, a que está em `entrega/`)
 
 | Medida | Resultado |
 |---|---|
 | Status certo (informado ou não encontrado) | 24 de 24 |
-| Valor informado certo | 12 de 13 |
-| Página certa | 12 de 13 |
+| Valor informado certo | 13 de 13 |
+| Página certa | 13 de 13 |
 | Valor do ano anterior certo | 9 de 9 |
 | Valor calculado certo | 10 de 10 |
 | Invenção (não informado gravado como informado) | 0 de 11 |
 | Alertas automáticos esperados que dispararam | 2 de 2 |
-| Inconsistências do texto da fonte registradas | 2 de 2 |
-| Perguntas com o conteúdo e a fonte esperados | 4 de 5 |
-| Citações que existem literalmente no trecho citado | 33 de 33 |
-
-Os dois erros desta execução, que estão no relatório entregue:
-
-- **EBITDA da Light:** entrou o da distribuidora (R$ 1.817 milhões, p. 8), com uma nota dizendo
-  isso, em vez do consolidado (R$ 1.180 milhões, p. 9). O relatório mostra o alerta de que o valor
-  não bate com a demonstração, mas a margem e a alavancagem calculadas da Light saem dele.
-- **Pergunta 2:** para a Light, a resposta cita a explicação da geradora (cenário hidrológico), e
-  não a da queda da receita (estornos de faturamento, bandeiras tarifárias e CVA, p. 9).
+| Inconsistências conhecidas do texto da fonte registradas | 5 de 6 |
+| Perguntas com o conteúdo e a fonte esperados | 5 de 5 |
+| Citações que existem literalmente no trecho citado | 30 de 30 |
 
 A tabela campo a campo está em [`entrega/avaliacao.md`](entrega/avaliacao.md).
 
-> **O que não foi reexecutado.** Depois da 8ª execução entraram um portão (entre as frases de
-> EBITDA, vale a que bate com a demonstração, o que barra o primeiro erro) e ajustes nos prompts do
-> analista e do pesquisador (para o segundo). Estão cobertos por testes, mas não por uma nova
-> execução real: o crédito da conta da OpenAI acabou na 9ª. A entrega é a da 8ª, sem retoque.
+O que ficou abaixo do máximo: das seis inconsistências conhecidas no texto dos documentos, o
+validador registrou cinco. Faltou a frase do EBITDA da distribuidora da Light (p. 8); a frase
+análoga do EBITDA consolidado (p. 9) foi registrada, e o alerta automático do EBITDA cobre o mesmo
+problema.
+
+Sobre essa medida: a lista de inconsistências do gabarito é o que foi conferido no PDF, não tudo o
+que existe. Duas saíram da minha leitura; as outras quatro foram apontadas pelo validador em alguma
+execução e só entraram no gabarito depois de conferidas no PDF (um ano trocado numa nota da Brasal,
+duas datas erradas em quadros da Millet, a frase do EBITDA consolidado da Light).
 
 ### Como a qualidade foi construída: o histórico das execuções
 
@@ -335,7 +332,13 @@ prompt. Todas as linhas abaixo usam o gabarito final.
 | 5 | 206 s | US$ 0,67 | 24/24 | 13/13 | 10/10 | 0/11 | 0/5 | Extração sem erro. O orquestrador delegou as perguntas sem o enunciado, e as respostas eram a outras perguntas → enunciado oficial exigido pelo servidor; pendências do agente como contexto; gabarito das perguntas mais exigente |
 | 6 | 147 s | US$ 0,63 | 24/24 | 13/14 | 9/9 | 0/10 | 5/5 | Linha de tabela citada como "texto": capex da Light só com o imobilizado → texto não vale em chunk de tabela; o capex informado é um total; valor de demonstração vem da própria demonstração |
 | 7 | 501 s | US$ 1,05 | — | — | — | — | — | **Incompleta.** Um portão novo tomou o financiamento "BNDES - Capex" por capex informado, e a extração da Light não fechou → regra restrita aos quatro indicadores para os quais foi pensada |
-| 8 | 163 s | US$ 0,73 | 24/24 | 12/13 | 10/10 | 0/11 | 4/5 | EBITDA da distribuidora, com nota; motivo da receita de uma controlada → vale o EBITDA que bate com a demonstração; prompts (não reexecutado) |
+| 8 | 163 s | US$ 0,73 | 24/24 | 12/13 | 10/10 | 0/11 | 4/5 | EBITDA da distribuidora da Light, com uma nota; motivo da receita de uma controlada → entre as frases de EBITDA, vale a que bate com a demonstração; prompts do analista e do pesquisador |
+| 9 | 116 s | US$ 0,64 | 24/24 | 13/13 | 10/10 | 0/11 | 5/5 | Sem erro nos indicadores nem nas perguntas |
+| 10 | 156 s | US$ 0,69 | 24/24 | 12/13 | 10/10 | 0/11 | 5/5 | Repetição da anterior: o lucro da Millet veio da linha dos controladores (14.743 de 18.891) → o lucro é o total, antes da participação dos minoritários |
+| 11 | 297 s | US$ 0,86 | 24/24 | 13/13 | 10/10 | 0/11 | 5/5 | Só ficou completa na 3ª rodada da conferência final. Os operandos do EBITDA da Light não foram gravados, e o alerta do sinal omitido não disparou → operandos exigidos mesmo com o EBITDA informado |
+| 12 | 130 s | US$ 0,63 | 24/24 | 13/13 | 10/10 | 0/11 | 5/5 | **A entregue.** Sem erro nos indicadores, nos alertas automáticos nem nas perguntas |
+
+As execuções 1 a 8 rodaram com os serviços fora do Docker; da 9 em diante, pelos contêineres.
 
 O que o histórico mostra:
 
@@ -346,29 +349,40 @@ O que o histórico mostra:
   Por isso as regras estão no servidor, e não no prompt.
 - **Um portão pode errar** (execução 7). O sistema respondeu do jeito certo: não entregou
   relatório, terminou como `incompleta` e a auditoria mostrou onde travou.
+- **A conferência final faz diferença** (execução 11): o orquestrador disse que tinha terminado
+  duas vezes com pendências na base; o código devolveu a lista, e a terceira rodada fechou.
 - **A avaliação também precisou ser corrigida.** A conferência das perguntas por nome de empresa
-  e fonte contou como certas respostas a outras perguntas (execução 5).
+  e fonte contou como certas respostas a outras perguntas (execução 5), e o gabarito das
+  inconsistências da fonte estava incompleto (o validador achou quatro que eu não tinha visto).
 
 ### Estabilidade entre execuções
 
-Comparando duas execuções completas, indicador a indicador (mesmo status, mesma origem e mesmo
-valor): 22 de 24 iguais entre a 5ª e a 6ª, 21 de 24 entre a 5ª e a 8ª. Brasal e Millet saíram
-iguais nas três. As diferenças estão todas na Light, o documento com relatório da administração:
-é onde há mais de um lugar plausível para o mesmo indicador (a dívida líquida está na p. 10, em
-milhões, e na p. 105, em milhares: as duas origens estão certas e contam como diferença).
+Nas quatro últimas execuções (9 a 12), comparando indicador a indicador (mesmo status, mesma
+origem e mesmo valor):
+
+| Comparação | Indicadores iguais | O que mudou |
+|---|---|---|
+| 9 e 10 | 23 de 24 | lucro da Millet (a linha dos controladores) |
+| 11 e 12 | 23 de 24 | EBITDA calculado da Light (operandos não gravados na 11) |
+| 9 e 12 | 24 de 24 | nada |
+
+Os dois campos que variaram viraram portão. O status dos 24 campos e as cinco perguntas foram
+iguais nas quatro. O que mais varia é a leitura do validador: ele registrou de 3 a 5 das 6
+inconsistências conhecidas, e não as mesmas a cada vez. Tempo e custo também variam: de 116 a
+297 s e de US$ 0,63 a US$ 0,86.
 
 ## Custo e desempenho
 
-Medido na 8ª execução: relatório completo dos três documentos, com a base zerada, num Core
-i5-10400 sem GPU. Os especialistas rodam em paralelo.
+Medido na 12ª execução (a entregue): relatório completo dos três documentos, com a base zerada,
+pelos contêineres, num Core i5-10400 sem GPU. Os especialistas rodam em paralelo.
 
 | | |
 |---|---|
-| Tempo total, do pedido ao relatório montado | **163 s** |
-| Chamadas ao modelo | 147 |
-| Tokens | 1,94 milhão (84% de entrada em cache) |
-| Custo | **US$ 0,73** |
-| Chamadas de tool no servidor MCP | 253, das quais 32 recusadas por um portão e refeitas |
+| Tempo total, do pedido ao relatório montado | **130 s** |
+| Chamadas ao modelo | 163 |
+| Tokens | 2,01 milhões (86% da entrada em cache) |
+| Custo | **US$ 0,63** |
+| Chamadas de tool no servidor MCP | 227, das quais 18 recusadas por um portão e refeitas |
 | Delegações do orquestrador (A2A) | 19 |
 
 Por documento (extração, revisão, análise e resumo; os tempos somam o trabalho dos quatro
@@ -376,9 +390,9 @@ especialistas, que em parte roda em paralelo):
 
 | Documento | Páginas | Tempo dos especialistas | Tokens | Custo |
 |---|---|---|---|---|
-| Brasal | 51 | 133 s | 694 mil | US$ 0,25 |
-| Millet | 43 | 174 s | 726 mil | US$ 0,24 |
-| Light | 124 | 131 s | 376 mil | US$ 0,19 |
+| Brasal | 51 | 111 s | 579 mil | US$ 0,20 |
+| Millet | 43 | 98 s | 635 mil | US$ 0,20 |
+| Light | 124 | 105 s | 623 mil | US$ 0,18 |
 
 As cinco perguntas, a montagem do relatório e o orquestrador somam os US$ 0,05 restantes.
 
@@ -386,14 +400,14 @@ Por agente:
 
 | Agente | Modelo | Chamadas | Tokens | Custo |
 |---|---|---|---|---|
-| extrator | gpt-5.4-mini | 47 | 897 mil | US$ 0,15 |
-| validador | gpt-5.4 | 24 | 504 mil | US$ 0,40 |
-| analista | gpt-5.4-mini | 28 | 347 mil | US$ 0,10 |
-| pesquisador | gpt-5.4-mini | 26 | 99 mil | US$ 0,03 |
-| redator | gpt-5.4-mini | 13 | 51 mil | US$ 0,02 |
-| orquestrador | gpt-5.4-mini | 9 | 44 mil | US$ 0,01 |
+| extrator | gpt-5.4-mini | 60 | 1,01 milhão | US$ 0,15 |
+| validador | gpt-5.4 | 19 | 326 mil | US$ 0,30 |
+| analista | gpt-5.4-mini | 35 | 460 mil | US$ 0,11 |
+| pesquisador | gpt-5.4-mini | 25 | 109 mil | US$ 0,03 |
+| redator | gpt-5.4-mini | 13 | 47 mil | US$ 0,02 |
+| orquestrador | gpt-5.4-mini | 11 | 59 mil | US$ 0,02 |
 
-- O **validador** é mais da metade do custo: é o único no modelo forte, e lê páginas inteiras.
+- O **validador** é perto de metade do custo: é o único no modelo forte, e lê páginas inteiras.
 - O **extrator** é quem mais gasta tokens, quase todos em cache: cada tabela lida fica no
   histórico e é reenviada a cada passo.
 - Preços usados (por milhão de tokens, da página de cada modelo em 13/11/2026): gpt-5.4-mini a
@@ -404,8 +418,8 @@ Por agente:
   Document Intelligence (cerca de US$ 2,18 pelas 218 páginas, a preço de tabela) ou 26 min com o
   Docling, sem custo por página; mais US$ 0,03 de embeddings e de leitura de gráficos.
 
-Somando: perto de **US$ 1 por lote de três documentos** (US$ 0,3 por documento) com o Docling, ou
-US$ 3 com a leitura pela Azure, e cerca de **3 minutos** de agentes.
+Somando: cerca de **US$ 0,7 por lote de três documentos** (pouco mais de US$ 0,2 por documento) com
+o Docling, ou US$ 2,9 com a leitura pela Azure, e de **2 a 5 minutos** de agentes.
 
 ## Decisões e trade-offs
 
@@ -416,7 +430,7 @@ US$ 3 com a leitura pela Azure, e cerca de **3 minutos** de agentes.
 | **Orquestrador decide, código confere** | Pedido em texto livre e agentes novos sem mudar código. A ordem e a completude, que não podem falhar, ficaram no servidor e na conferência final | O orquestrador gasta tokens para fazer o que um roteiro fixo faria de graça no caso do relatório |
 | **A2A entre orquestrador e especialistas** | Fronteira de serviço e de identidade entre os agentes | Uma chamada de rede por delegação; dois serviços |
 | **MCP como porta única** | Um lugar só para política, auditoria e portões; os dados extraídos ficam disponíveis para outros agentes | Mais um serviço no caminho de toda chamada |
-| **Modelo pequeno para quase tudo, forte só no validador** | Com os portões, o modelo pequeno basta para apontar e redigir. Conferir contas no texto pede mais: o pequeno achou 1 de 2 inconsistências e registrou falsos positivos | O validador responde por mais da metade do custo da execução |
+| **Modelo pequeno para quase tudo, forte só no validador** | Com os portões, o modelo pequeno basta para apontar e redigir. Conferir contas no texto pede mais: o pequeno achou 2 das 6 inconsistências conhecidas e registrou falsos positivos | O validador responde por perto de metade do custo da execução |
 | **SDK de agentes da OpenAI** | Laço de tools, MCP e limites de turno prontos; pouca coisa para manter | Acopla ao formato de tools da OpenAI. O modelo é configurável; trocar de provedor pede adaptar `app/runner.py` |
 | **Sem framework de RAG** | A busca é do indexador; aqui só há chamadas de tool | — |
 
@@ -448,7 +462,8 @@ US$ 3 com a leitura pela Azure, e cerca de **3 minutos** de agentes.
 - **A análise qualitativa não tem gabarito automático.** As citações são conferidas (existem no
   trecho citado); se a afirmação é a melhor leitura do trecho, só um analista diz.
 - **O validador pode errar para os dois lados**: deixar passar uma frase incoerente ou apontar
-  uma que está certa. Todo alerta dele sai com a citação, para o analista julgar.
+  uma que está certa. Ele não acha as mesmas inconsistências a cada execução (de 3 a 5 das 6
+  conhecidas). Todo alerta dele sai com a citação, para o analista julgar.
 - **Um portão novo pode travar um campo.** Aconteceu na 7ª execução (ver o histórico). O
   sistema não entrega relatório nesse caso: termina como `incompleta` e diz o que faltou.
 - **O orquestrador gasta chamadas à toa.** Ele ainda delega itens que a lista marca como não

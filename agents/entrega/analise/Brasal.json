@@ -4,19 +4,19 @@
   "analise": {
     "motivo_resultado": [
       {
-        "afirmacao": "A companhia destaca que as estimativas contábeis são um fator central na preparação das demonstrações e afetam itens como impostos diferidos, depreciação, provisões de crédito e contingências.",
-        "citacao": "As principais estimativas são relacionadas com a determinação de ativos fiscais diferidos, taxas de depreciação do ativo imobilizado, provisão para créditos de liquidação duvidosa, provisão para perdas na realização dos estoques, provisão para o valor recuperável de seus investimentos e provisões para desembolsos originados de processos administrativos e judiciais.",
-        "pagina": 13,
-        "chunk_index": 20,
-        "secao": "2. Apresentação e base de elaboração das demonstrações financeiras individuais e consolidadas > c) Uso de estimativas",
+        "afirmacao": "A variação de parte dos resultados é explicada pela equivalência patrimonial do investimento na controlada, que reconhece no resultado a parcela do lucro ou prejuízo da investida.",
+        "citacao": "De acordo com esse método, a participação da Companhia, no aumento ou diminuição do patrimônio líquido da controlada, em decorrência da apuração de lucro líquido ou prejuízo no exercício, é reconhecido como receita (ou despesa) operacional.",
+        "pagina": 18,
+        "chunk_index": 31,
+        "secao": "3. Sumário das principais práticas contábeis > 3.1 Políticas contábeis > j) Investimentos",
         "fonte": "nota explicativa",
         "tom": null
       }
     ],
     "risco": [
       {
-        "afirmacao": "A administração informa exposição a risco de crédito, de preço e de juros, com políticas de mitigação e análise de sensibilidade em cenários adversos.",
-        "citacao": "A Companhia está exposta a riscos de mercado decorrentes de suas atividades. Esses riscos envolvem, principalmente, a possibilidade da realização de contas a receber de clientes, de oscilações dos preços dos produtos e de taxas de juros, que podem impactar os resultados operacionais e a condição financeira, sendo os principais os seguintes:",
+        "afirmacao": "A companhia destaca risco de crédito nas vendas a clientes, mitigado por análise de perfil e monitoramento de saldos a receber.",
+        "citacao": "O principal fator de risco de mercado que afeta o negócio é a concessão de crédito aos clientes. Para reduzir as possíveis perdas com inadimplência, é adotada uma política de gestão na concessão de crédito, que consiste em análises do perfil dos clientes, bem como em monitoramento dos saldos a receber.",
         "pagina": 49,
         "chunk_index": 125,
         "secao": "26. Gestão de riscos",
@@ -24,19 +24,28 @@
         "tom": null
       },
       {
-        "afirmacao": "Há contingências judiciais relevantes classificadas como risco possível, incluindo 52 ações trabalhistas e 9 ações cíveis, além de ações fiscais sem provisão.",
-        "citacao": "Existem atualmente 52 (Cinquenta e Dois) ações judiciais e referem-se a pedidos, tais como: indenizações, horas extras, verbas rescisórias e outros, classificadas como possíveis. Ações cíveis Existem 9 (Nove) ações e referem-se principalmente a pedidos de reparação de danos a pessoa física.",
-        "pagina": 41,
-        "chunk_index": 104,
-        "secao": "19. Provisões para demandas judiciais e administrativas > d) Resumo das ações classificadas como \"risco possível\"",
+        "afirmacao": "Há risco de variação de preços ligado à compra de matéria-prima, com monitoramento permanente para antecipar movimentos de preço.",
+        "citacao": "Os produtos comercializados pela Companhia estão sujeitos a oscilações em razão da compra de matéria-prima. Para mitigar os riscos, a Companhia monitora permanentemente os preços buscando antecipar-se a movimentos de preços.",
+        "pagina": 49,
+        "chunk_index": 125,
+        "secao": "26. Gestão de riscos",
+        "fonte": "nota explicativa",
+        "tom": null
+      },
+      {
+        "afirmacao": "A administração também aponta risco de taxa de juros sobre ativos e passivos financeiros, buscando diversificar aplicações e captações.",
+        "citacao": "Decorre da possibilidade de a Companhia sofrer ganhos ou perdas decorrentes de oscilações de taxas de juros incidentes sobre seus ativos e passivos financeiros. Visando à mitigação deste tipo de risco, a Companhia busca diversificar as aplicações e as captações de recursos em termos de taxas pré-fixadas ou pós-fixadas.",
+        "pagina": 49,
+        "chunk_index": 125,
+        "secao": "26. Gestão de riscos",
         "fonte": "nota explicativa",
         "tom": null
       }
     ],
     "guidance": [
       {
-        "afirmacao": "A companhia divulga expectativas de realização de créditos fiscais e menciona projeções orçamentárias para o próximo exercício, indicando perspectiva operacional de curto prazo.",
-        "citacao": "A Controlada realizou um estudo com base nos últimos recolhimentos de PIS e COFINS, além de considerar também as projeções orçamentárias para o próximo exercício, a expectativa de realização dos saldos dos valores relativos aos créditos fiscais, oriundos da exclusão do ICMS da base de cálculo do PIS e da COFINS e demais créditos de PIS e COFINS, é de que ocorrerá no exercício de 2022 aproximadamente 68,6%, sendo que o restante de 31,4% acontecerá até fevereiro de 2023.",
+        "afirmacao": "A nota sobre tributos a recuperar traz expectativa de realização dos créditos em 2022 e 2023, com percentuais estimados pela administração.",
+        "citacao": "Plano de compensação dos tributos a recuperar: A Controlada realizou um estudo com base nos últimos recolhimentos de PIS e COFINS, além de considerar também as projeções orçamentárias para o próximo exercício, a expectativa de realização dos saldos dos valores relativos aos créditos fiscais, oriundos da exclusão do ICMS da base de cálculo do PIS e da COFINS e demais créditos de PIS e COFINS, é de que ocorrerá no exercício de 2022 aproximadamente 68,6%, sendo que o restante de 31,4% acontecerá até fevereiro de 2023.",
         "pagina": 28,
         "chunk_index": 59,
         "secao": "8. Tributos a recuperar > a) Circulante",
@@ -46,10 +55,19 @@
     ],
     "evento_relevante": [
       {
-        "afirmacao": "A companhia reporta um evento subsequente ligado à decisão do STF sobre a perda de efeitos da coisa julgada em tributos recolhidos de forma continuada.",
+        "afirmacao": "A companhia divulga um evento subsequente relacionado à decisão do STF sobre a perda dos efeitos de coisa julgada em tributos de trato continuado.",
         "citacao": "Em decisão tomada no dia 08 de fevereiro 2023, por unanimidade, o Plenário do Supremo Tribunal Federal (STF) considerou que uma decisão definitiva, a chamada \"coisa julgada\", sobre tributos recolhidos de forma continuada, perde seus efeitos caso a corte se pronuncie em sentido contrário.",
         "pagina": 51,
         "chunk_index": 134,
+        "secao": "28. Eventos subsequentes - Perda de efeitos da \"coisa julgada\" sobre tributos recolhidos de forma continuada",
+        "fonte": "nota explicativa",
+        "tom": null
+      },
+      {
+        "afirmacao": "A administração informou que, apesar da decisão, não identificou impactos para estas demonstrações financeiras e seguirá monitorando os processos.",
+        "citacao": "A Administração em conjunto com os assessores jurídicos da Companhia não identificou impactos para estas demonstrações financeiras. No entanto manterá o monitoramento permanente de todos os seus processos, considerando a referida decisão.",
+        "pagina": 51,
+        "chunk_index": 135,
         "secao": "28. Eventos subsequentes - Perda de efeitos da \"coisa julgada\" sobre tributos recolhidos de forma continuada",
         "fonte": "nota explicativa",
         "tom": null
@@ -57,7 +75,7 @@
     ],
     "tom": [
       {
-        "afirmacao": "O tom geral é neutro, pois o relatório é majoritariamente descritivo e o auditor emitiu opinião sem ressalvas, sem uma narrativa de desempenho ou metas da administração.",
+        "afirmacao": "O tom da administração é neutro, pois o documento é predominantemente factual e a opinião do auditor afirma que as demonstrações apresentam adequadamente a posição financeira e o desempenho.",
         "citacao": "Em nossa opinião, as demonstrações financeiras acima referidas apresentam adequadamente, em todos os aspectos relevantes, a posição patrimonial e financeira, individual e consolidada, da Companhia em 31 de dezembro de 2022, o desempenho individual e consolidado de suas operações e os seus respectivos fluxos de caixa individuais e consolidados para o exercício findo nessa data, de acordo com as práticas contábeis adotadas no Brasil.",
         "pagina": 3,
         "chunk_index": 2,

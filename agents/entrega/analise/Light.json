@@ -4,59 +4,50 @@
   "analise": {
     "motivo_resultado": [
       {
-        "afirmacao": "A administração atribui o desempenho da Light Energia em 2022 à melhora do cenário hidrológico, que elevou o GSF e reduziu o PLD, com impacto positivo na compra de energia.",
+        "afirmacao": "A queda da receita operacional líquida da holding em 2022 foi atribuída a estornos de faturamento de regularizações, ao não acionamento das bandeiras tarifárias e à variação negativa na CVA.",
+        "citacao": "A receita operacional líquida, desconsiderando a receita de construção, totalizou em 2022 R$12.107 milhões, 13% abaixo da registrada em 2021. Essa redução foi influenciada pelos estornos de faturamento de regularizações, pelo não acionamento das bandeiras tarifárias e pela variação negativa na conta CVA, que é uma compensação para cobertura dos custos com a Parcela A.",
+        "pagina": 9,
+        "chunk_index": 33,
+        "secao": "Holding (Light S.A.) · Desempenho Financeiro · Receita Operacional Líquida",
+        "fonte": "relatório",
+        "tom": null
+      },
+      {
+        "afirmacao": "Na geração, o resultado líquido melhorou com o cenário hidrológico mais favorável, que elevou o GSF e reduziu o PLD, diminuindo os custos de compra de energia.",
         "citacao": "Essa variação pode ser explicada pela melhora do cenário hidrológico ao longo do ano de 2022, que levou ao aumento do GSF e à queda do PLD, reduzindo os custos com compra de energia.",
         "pagina": 9,
         "chunk_index": 30,
         "secao": "Desempenho Financeiro",
         "fonte": "relatório",
         "tom": null
+      },
+      {
+        "afirmacao": "No consolidado, o prejuízo foi pressionado principalmente pelo segmento de distribuição, com provisão para devolução de créditos de PIS/COFINS, atualização financeira desses valores e impairment de IR/CS diferidos.",
+        "citacao": "Essa retração ocorreu, principalmente, no segmento de Distribuição, em função do reconhecimento de provisão de -R$1.081 milhões para devolução de créditos de PIS/COFINS aos consumidores, da atualização financeira desses valores, que totalizaram -R$1.584 milhões, e do impairment da recuperabilidade de IR/CS diferidos, no valor de -R$1.634 milhões.",
+        "pagina": 10,
+        "chunk_index": 36,
+        "secao": "Resultado Líquido",
+        "fonte": "relatório",
+        "tom": null
       }
     ],
     "risco": [
       {
-        "afirmacao": "Há risco relevante de continuidade operacional, pois a própria administração menciona incerteza significativa sobre o êxito das estratégias e dúvidas quanto à continuidade das operações.",
-        "citacao": "A Administração da Companhia perseguirá e envidará os melhores esforços nas diversas estratégias mencionadas acima. Porem, não há garantia de que a Companhia terá exito nas estratégias, visto que parte relevante dos elementos das estratégias não está sob o controle da Administração da Companhia, existindo, portanto, uma incerteza sobre seu sucesso.",
-        "pagina": 28,
-        "chunk_index": 76,
-        "secao": "1. CONTEXTO OPERACIONAL > 1.1 Continuidade operacional",
-        "fonte": "nota explicativa",
-        "tom": null
-      },
-      {
-        "afirmacao": "O grupo aponta restrições de financiamento e possibilidade de custos adicionais ou vencimento antecipado ao buscar extensão de prazos com fornecedores e credores.",
-        "citacao": "(iv) obtenção de extensão de prazos de pagamento junto a fornecedores e credores, cuja extensão não está sob o controle da Administração do Grupo Light e pode implicar em custos financeiros adicionais em decorrência de multas, custos para obtenção de waivers, novos encargos financeiros ou na declaração de vencimentos antecipados,",
-        "pagina": 28,
-        "chunk_index": 75,
-        "secao": "1. CONTEXTO OPERACIONAL > 1.1 Continuidade operacional",
-        "fonte": "nota explicativa",
-        "tom": null
-      },
-      {
-        "afirmacao": "A companhia expõe risco de crédito ligado à inadimplência de consumidores e instituições financeiras, com ferramentas de cobrança e análise de perdas esperadas.",
-        "citacao": "Decorre da possibilidade da Companhia sofrer perdas decorrentes de inadimplência dos seus consumidores ou de instituições financeiras depositárias de recursos ou de investimentos financeiros.",
-        "pagina": 101,
-        "chunk_index": 322,
-        "secao": "34. INSTRUMENTOS FINANCEIROS E GERENCIAMENTO DE RISCOS > 34.2 Gerenciamento de riscos e objetivos alcançados > 34.2.4 Risco de crédito",
-        "fonte": "nota explicativa",
+        "afirmacao": "A companhia destaca risco de continuidade operacional, afirmando que há incerteza significativa que pode levantar dúvida significativa quanto à capacidade de continuidade da Light e da Light SESA.",
+        "citacao": "existindo, portanto, uma incerteza sobre seu sucesso. Os eventos e condições, anteriormente mencionados, individual ou coletivamente, indicam, no julgamento da Administração da Companhia, a existência de incerteza significativa que pode levantar dúvida significativa quanto à capacidade de continuidade operacional da Light e da Light SESA, controlada da Companhia.",
+        "pagina": 3,
+        "chunk_index": 5,
+        "secao": "Mensagem da Administração",
+        "fonte": "relatório",
         "tom": null
       }
     ],
     "guidance": [
       {
-        "afirmacao": "A administração indica foco em renovação antecipada da concessão e em negociações com ANEEL e MME para garantir sustentabilidade do negócio.",
-        "citacao": "Nós iniciamos discussões com a Aneel e o Ministério de Minas e Energia em busca da renovação antecipada em bases que garantam a sustentabilidade da concessão e do nosso negócio.",
-        "pagina": 2,
-        "chunk_index": 2,
-        "secao": "Mensagem da Administração",
-        "fonte": "relatório",
-        "tom": null
-      },
-      {
-        "afirmacao": "A companhia também diz que concentrará investimentos no estritamente necessário para a sustentabilidade do serviço e maximização do fluxo de caixa nos próximos 36 meses.",
-        "citacao": "Concentramos nossos investimentos naqueles estritamente necessários para a sustentabilidade do nosso serviço até a renovação da concessão, de forma a maximizar o fluxo de caixa nos próximos 36 meses, período que será crucial para o Grupo.",
-        "pagina": 2,
-        "chunk_index": 3,
+        "afirmacao": "A administração afirma que buscará executar as estratégias mencionadas nas demonstrações, mas admite que não há garantia de êxito e que parte relevante dos fatores está fora de seu controle.",
+        "citacao": "Adicionalmente, a Administração da Companhia perseguirá e envidará os melhores esforços nas diversas estratégias mencionadas na seção 1.1 das DFs de 2022. Porém, não há garantia de que a Companhia terá êxito nas estratégias, visto que parte relevante dos elementos das estratégias não está sob o controle da Administração da Companhia",
+        "pagina": 3,
+        "chunk_index": 5,
         "secao": "Mensagem da Administração",
         "fonte": "relatório",
         "tom": null
@@ -64,30 +55,21 @@
     ],
     "evento_relevante": [
       {
-        "afirmacao": "A Light firmou contrato para adquirir 49% da controlada em conjunto Axxiom, passando a deter 100% da empresa, com expectativa de conclusão no segundo trimestre de 2023.",
-        "citacao": "Em 21 de dezembro de 2022, a Light S.A. assinou um Contrato de Compra e Venda de Ações e Outras Avenças para aquisição de 49% das ações da controlada em conjunto Axxiom Soluções pertencentes a Companhia Energética de Minas Gerais (\"CEMIG\"). A operação foi realizada por R$1,00 (um real) onde o Grupo Light S.A. terá 100% das ações da Axxiom.",
+        "afirmacao": "A Light assinou acordo para adquirir 49% da Axxiom, passando a deter 100% da controlada em conjunto, com expectativa de conclusão no segundo trimestre de 2023.",
+        "citacao": "Em 21 de dezembro de 2022, a Light S.A. assinou um Contrato de Compra e Venda de Ações e Outras Avenças para aquisição de 49% das ações da controlada em conjunto Axxiom Soluções pertencentes a Companhia Energética de Minas Gerais (\"CEMIG\"). A operação foi realizada por R$1,00 (um real) onde o Grupo Light S.A. terá 100% das ações da Axxiom. Em 25 de janeiro de 2023, o Conselho de Administrativo de Defesa Econômica (\"CADE\") aprovou a operação. Para que essa operação seja finalizada, existem algumas condições precedentes a serem cumpridas e a Companhia tem expectativa para conclusão da operação no segundo trimestre de 2023.",
         "pagina": 107,
         "chunk_index": 341,
         "secao": "38. EVENTOS SUBSEQUENTES > 38.2 Contrato de Compra e Venda de Ações da controlada em conjunto AXXIOM",
-        "fonte": "nota explicativa",
-        "tom": null
-      },
-      {
-        "afirmacao": "A companhia revisou a metodologia de provisões para contingências cíveis massivas e TOI no quarto trimestre de 2022, para refletir mudança de comportamento do judiciário e do tempo médio dos processos.",
-        "citacao": "No quarto trimestre de 2022, a Administração da Companhia concluiu a revisão metodológica do processo de reconhecimento de provisões para contingências do cível massivo e de processos relacionados a termo de ocorrência de irregularidade (\"TOI\") de modo a trazer uma representação mais acurada, frente a uma mudança de comportamento do judiciário relacionados aos processos e o tempo médio de processamento dos mesmos.",
-        "pagina": 72,
-        "chunk_index": 226,
-        "secao": "22. PROVISÕES PARA CONTINGÊNCIAS > 22.1 Provisões para contingências > 22.1.2 Provisões cíveis",
         "fonte": "nota explicativa",
         "tom": null
       }
     ],
     "tom": [
       {
-        "afirmacao": "O tom é negativo, porque o documento enfatiza dificuldades estruturais, desequilíbrio de capital, incerteza significativa e necessidade de reestruturação.",
-        "citacao": "o desequilíbrio que já existia na estrutura de capital da Light SESA se agravou ainda mais. A Companhia vem trabalhando na busca de alternativas que garantam a sustentabilidade dos nossos negócios no longo prazo.",
+        "afirmacao": "O tom da administração é negativo, porque o texto ressalta desafios estruturais, necessidade de readequação de capital e incerteza relevante sobre a continuidade operacional.",
+        "citacao": "Minha chegada ocorreu nesse momento especialmente desafiador, em que as dificuldades estruturais históricas da área de concessão da Light SESA, por conta das particularidades do Rio de Janeiro, foram agravadas por questões macroeconômicas, tendo sido constatada a necessidade de buscar uma readequação da estrutura de capital da companhia.",
         "pagina": 2,
-        "chunk_index": 2,
+        "chunk_index": 1,
         "secao": "Mensagem da Administração",
         "fonte": "relatório",
         "tom": "negativo"

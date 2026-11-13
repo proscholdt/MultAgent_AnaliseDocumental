@@ -34,7 +34,7 @@ from app.numbers import (
     unit_in_text,
     unit_of_number,
 )
-from app.tables import parse_table, read_cell, scope_of, sibling_column
+from app.tables import normalize, parse_table, read_cell, scope_of, sibling_column
 from app.text import check_script, plain, squash
 
 _YEAR = re.compile(r"(?:19|20)\d{2}")
@@ -43,6 +43,8 @@ _EXCERPT = 90  # caracteres de contexto em volta de um termo achado
 # Palavras que indicam o valor de uma parte do grupo, e não o da companhia (sem acento).
 _PARTS = ("distribuidora", "geradora", "comercializadora", "controlada", "subsidiaria", "segmento",
           "unidade de negocio")
+# Linhas que repartem o lucro entre os controladores e os demais acionistas.
+_MINORITY = re.compile(r"minoritari|nao controlador|atribui")
 # Linha de total ou de classificação: num quadro de composição (nota de caixa, nota de
 # empréstimos), o rótulo dela não repete o assunto, que está no título da seção.
 _SUBTOTAL = re.compile(r"^(total|circulante|nao circulante)\b")
@@ -278,6 +280,17 @@ def _check_source(args: SalvarIndicador, info: Any, found: dict[str, Any], chunk
             f"não é a deste valor. O rótulo tem de mencionar "
             f"{' ou '.join(repr(term.replace('+', ' e ')) for term in info.mention)}: aponte a linha do total da "
             "demonstração, com o nome do próprio valor.")
+    if args.campo == "lucro_liquido" and table:
+        # A demonstração do resultado consolidada repete o rótulo: o lucro do exercício e, depois da
+        # participação dos minoritários, a parte dos controladores. O indicador é o total. Numa
+        # repetição da execução final, o lucro da Millet veio da segunda linha (14.743 de 18.891).
+        rows, index = found["table"].rows, found["row_index"]
+        earlier = [i for i in range(index) if normalize(rows[i][0]) == normalize(rows[index][0])]
+        if earlier and any(_MINORITY.search(plain(rows[i][0])) for i in range(earlier[-1] + 1, index)):
+            raise ToolRejected(
+                f"A linha apontada é a {len(earlier) + 1}ª com o rótulo '{found['linha']}' e vem depois da participação "
+                "dos minoritários (não controladores): é a parte do lucro atribuída aos controladores. O lucro "
+                "líquido do exercício é o total, que vem antes: aponte a 1ª ocorrência (ocorrencia_linha=1).")
     if args.campo == "capex" and table and not _CAPEX_ROW.match(source):
         raise ToolRejected(
             f"Capex: a linha apontada ('{found['linha']}') não é um total de investimentos da empresa. O capex "
@@ -556,7 +569,8 @@ def _status_line(block: dict[str, Any]) -> str:
     calcula o que os valores guardados permitem (variação contra o ano anterior, margem, EBITDA,
     dívida líquida, alavancagem, capex), roda as validações automáticas e publica o JSON. Se faltar
     campo, o erro lista quais. Indicador que a empresa não informa precisa dos valores de apoio para
-    o servidor calcular: se faltarem, o erro diz quais gravar.""")
+    o servidor calcular, e o EBITDA precisa deles mesmo quando é informado, para ser conferido: se
+    faltarem, o erro diz quais gravar.""")
 async def fechar_extracao(call: Call, args: FecharExtracao) -> dict[str, Any]:
     document = await call.deps.documents.get(call.caller, args.doc_id)
     extraction, _ = await build_extraction(call, document)
@@ -575,14 +589,17 @@ async def fechar_extracao(call: Call, args: FecharExtracao) -> dict[str, Any]:
             "feche de novo.", problemas=[better])
     # Indicador não informado e sem os valores de apoio: o relatório sairia sem o número, e a
     # falta passaria por "a empresa não informa". O agente grava o apoio, ou diz por que não há.
+    # O EBITDA entra na lista mesmo quando a empresa o informa: é com os operandos que o servidor
+    # confere o informado. Numa execução real o extrator gravou o EBITDA da Light e pulou os
+    # operandos, e o alerta do sinal omitido no texto não disparou.
     uncomputable = [campo for campo in _SUPPORT
-                    if extraction.found(campo, extraction.reference) is None
-                    and extraction.calculated(campo, extraction.reference) is None]
+                    if extraction.calculated(campo, extraction.reference) is None
+                    and (campo == "ebitda" or extraction.found(campo, extraction.reference) is None)]
     if uncomputable and not args.apoio_ausente:
         raise ToolRejected(
-            "Há indicador não informado pela empresa e que o servidor não consegue calcular, porque faltam valores "
-            "de apoio. Grave-os com salvar_indicador e feche de novo. Se o documento não os traz, feche de novo "
-            "explicando em 'apoio_ausente'.",
+            "Faltam valores de apoio. Sem eles o servidor não calcula o que a empresa não informa nem confere o "
+            "EBITDA que ela informa. Grave-os com salvar_indicador e feche de novo. Se o documento não os traz, "
+            "feche de novo explicando em 'apoio_ausente'.",
             problemas=[f"{campo}: faltam {_SUPPORT[campo]}" for campo in uncomputable])
     if uncomputable:
         # "O documento não traz" também precisa de prova: se há linha de apoio nas demonstrações, ela
@@ -606,8 +623,8 @@ async def fechar_extracao(call: Call, args: FecharExtracao) -> dict[str, Any]:
         check_script(args.apoio_ausente, "A explicação")
         extraction.alerts.append(AlertDraft(
             "calculo_impossivel", "atencao",
-            mensagem=f"Não informado pela empresa e não calculado ({', '.join(FIELDS[c].label for c in uncomputable)}): "
-                     f"faltam valores de apoio no documento. {_squash(args.apoio_ausente)}",
+            mensagem=f"Sem valores de apoio no documento para calcular ou conferir "
+                     f"{', '.join(FIELDS[c].label for c in uncomputable)}. {_squash(args.apoio_ausente)}",
             detalhes={"campos": uncomputable}))
     alerts = list({(a.codigo, a.campo, a.mensagem): a for a in extraction.alerts}.values())
     new_alerts = await call.deps.store.add_alerts(call.caller, args.doc_id, document.fingerprint, "validacao", alerts)

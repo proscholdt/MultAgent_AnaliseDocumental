@@ -4,17 +4,8 @@
   "analise": {
     "motivo_resultado": [
       {
-        "afirmacao": "A companhia não apresentou um relatório da administração com explicação do desempenho; o documento traz apenas notas e o relatório dos auditores, sem comentário sobre a variação de receita ou resultado.",
-        "citacao": "Examinamos as demonstrações financeiras individuais e consolidadas da Millet Participações S/A (\"Companhia\"), identificadas como controladora e consolidado, respectivamente, que compreendem os balanços patrimoniais em 31 de dezembro de 2022, e as respectivas demonstrações do resultado",
-        "pagina": 3,
-        "chunk_index": 1,
-        "secao": "Relatório dos auditores independentes sobre as demonstrações financeiras individuais e consolidadas",
-        "fonte": "parecer do auditor",
-        "tom": null
-      },
-      {
-        "afirmacao": "A administração explica parte do desempenho pela performance das vendas, que atendeu às projeções e expectativas, embora com demanda mais fraca e pressão de custos de matérias-primas que exigiu repasse de preços.",
-        "citacao": "A performance das vendas atendeu às projeções e expectativas, mesmo com uma demanda mais fraca do que era previsto para o ano. Como ponto residual e contínuo de 2020, verificou-se a continuidade de aumento no custo de matérias primas principalmente dos derivados lácteos, com necessidade de repasse no preço de venda.",
+        "afirmacao": "A companhia atribui o desempenho de 2022 à melhora operacional da Alibra, com lucro líquido do exercício e reflexo positivo da equivalência patrimonial; também destacou que as vendas ficaram dentro do esperado, apesar de demanda mais fraca e custos maiores de insumos.",
+        "citacao": "No ano de 2022 não fomos impactados por nenhum efeito direto decorrente da pandemia do COVID. A performance das vendas atendeu às projeções e expectativas, mesmo com uma demanda mais fraca do que era previsto para o ano. Como ponto residual e contínuo de 2020, verificou-se a continuidade de aumento no custo de matérias primas principalmente dos derivados lácteos, com necessidade de repasse no preço de venda.",
         "pagina": 11,
         "chunk_index": 14,
         "secao": "1. Contexto operacional > 1.1. COVID-19",
@@ -24,8 +15,8 @@
     ],
     "risco": [
       {
-        "afirmacao": "A companhia informa exposição a risco de crédito, liquidez e mercado, com políticas para identificar, limitar e monitorar esses riscos.",
-        "citacao": "A companhia está exposta aos seguintes riscos: · Risco de Crédito; · Risco de Liquidez; e · Risco de Mercado",
+        "afirmacao": "A companhia explicita exposição a risco de crédito, liquidez e mercado, e informa que revisa frequentemente suas políticas e sistemas de gerenciamento de riscos.",
+        "citacao": "A companhia está exposta aos seguintes riscos: · Risco de Crédito; · Risco de Liquidez; e · Risco de Mercado Essa nota apresenta informações sobre a exposição da Companhia sobre cada um dos riscos acima.",
         "pagina": 40,
         "chunk_index": 109,
         "secao": "22. Gestão de risco > 22.1. Fatores de risco financeiro",
@@ -33,27 +24,36 @@
         "tom": null
       },
       {
-        "afirmacao": "Há risco de liquidez, descrito como dificuldade para cumprir obrigações financeiras à vista ou com outro ativo financeiro.",
-        "citacao": "Risco de liquidez é o risco em que a Companhia irá encontrar dificuldades em cumprir com as obrigações associadas com seus passivos financeiros que são liquidados com pagamentos à vista ou com outro ativo financeiro.",
-        "pagina": 41,
-        "chunk_index": 111,
-        "secao": "22. Gestão de risco > 22.1. Fatores de risco financeiro > b) Risco de liquidez",
+        "afirmacao": "No crédito, a nota mostra exposição relevante em caixa, equivalentes e contas a receber no consolidado, indicando foco na cobrança e no risco de inadimplência.",
+        "citacao": "Caixa e equivalentes de caixa | 355 | 871 | 10.656 | 8.194 | | Contas a receber de clientes | - | - | 98.663 | 69.645 | | Outros créditos | 2 | - | 1.033 | 916 | | Total | 357 | 871 | 110.352 | 78.755 |",
+        "pagina": 40,
+        "chunk_index": 110,
+        "secao": "22. Gestão de risco > 22.1. Fatores de risco financeiro > a) Riscos de Crédito",
         "fonte": "nota explicativa",
         "tom": null
       },
       {
-        "afirmacao": "Há risco de crédito, inclusive com reconhecimento de perdas esperadas e redução ao valor recuperável para ativos financeiros.",
-        "citacao": "A Companhia reconhece as perdas de crédito esperadas para todos os instrumentos de dívida não detidos pelo valor justo por meio do resultado.",
-        "pagina": 20,
-        "chunk_index": 44,
-        "secao": "2. Sumario de políticas contábeis > 2.20. Instrumentos financeiros > Notas explicativas às demonstrações financeiras",
+        "afirmacao": "A administração monitora o risco de mercado por meio do acompanhamento das tendências de mercado e revisões periódicas dos ativos e do endividamento.",
+        "citacao": "A Administração da Companhia monitora os fatores de risco mediante acompanhamento das tendências de mercado e revisões periódicas dos ativos e de seu endividamento.",
+        "pagina": 41,
+        "chunk_index": 114,
+        "secao": "22. Gestão de risco > 22.1. Fatores de risco financeiro > c) Risco de mercado",
+        "fonte": "nota explicativa",
+        "tom": null
+      },
+      {
+        "afirmacao": "Há risco operacional coberto por seguro, incluindo perdas por interrupção de produção e danos materiais a ativos da companhia.",
+        "citacao": "Riscos operacionais: cobertura de danos materiais ocasionados a prédios, máquinas e equipamentos, móveis e utensílios decorrentes de incêndio, raio e explosão, desentulho, alagamentos, quebra de maquinário e danos elétricos, bem como perda de receita bruta causada pela interrupção de produção consequente de danos materiais.",
+        "pagina": 43,
+        "chunk_index": 119,
+        "secao": "23. Seguros",
         "fonte": "nota explicativa",
         "tom": null
       }
     ],
     "guidance": [
       {
-        "afirmacao": "A administração indica acompanhamento contínuo dos efeitos da crise e monitora as operações e demonstrações financeiras, sinalizando preocupação prospectiva.",
+        "afirmacao": "A administração indica que continuará monitorando a crise e seus impactos nas operações e nas demonstrações financeiras, sinalizando acompanhamento dos efeitos futuros sem uma meta operacional específica.",
         "citacao": "A Companhia continuará monitorando os efeitos da crise e os impactos nas suas operações e nas demonstrações financeiras.",
         "pagina": 11,
         "chunk_index": 14,
@@ -64,28 +64,37 @@
     ],
     "evento_relevante": [
       {
-        "afirmacao": "A nota de investimentos também descreve o laudo de avaliação e a combinação de negócios ligada à aquisição da Alibra, reforçando o caráter estruturante do evento.",
-        "citacao": "Em junho de 2022, foi emitido pela KPMG o Relatório de avaliação de certos ativos adquiridos e passivos assumidos relacionado à aquisição da Alibra Ingredientes LTDA, para fins contábeis e fiscais, à luz do CPC 15 (R1) - Combinação de Negócios",
-        "pagina": 27,
-        "chunk_index": 72,
+        "afirmacao": "O principal evento relevante foi a aquisição de 85% da Alibra Ingredientes S.A., que passou a integrar a companhia em junho de 2021.",
+        "citacao": "Permaneceu em processo pré-operacional realizando avaliações e negociações de investimentos até junho de 2021 quando a Companhia adquiriu 85% de participação na Alibra Ingredientes S.A. (\"Alibra\").",
+        "pagina": 11,
+        "chunk_index": 12,
+        "secao": "1. Contexto operacional",
+        "fonte": "nota explicativa",
+        "tom": null
+      },
+      {
+        "afirmacao": "Em 2022 houve alocação do preço de aquisição, com reclassificação de valores para good-will e mais-valia após a mensuração a valor justo.",
+        "citacao": "Após emissão do relatório citado acima, os valores de Good-Will e Mais-Valia foram alocados, conforme mensuração do valor justo. O Good-Will refere-se ao valor pago a mais sobre o valor justo do Patrimônio Líquido da entidade adquirida, devido a uma expectativa de lucros futuros.",
+        "pagina": 28,
+        "chunk_index": 76,
         "secao": "7. Investimentos",
         "fonte": "nota explicativa",
         "tom": null
       },
       {
-        "afirmacao": "A aquisição de 85% da Alibra em junho de 2021 é o principal evento relevante divulgado.",
-        "citacao": "Em junho de 2021 a Millet Participações S/A adquiriu 85% de participação na Alibra Ingredientes S.A (\"Alibra\"), localizada na cidade de Campinas no Estado de São Paulo e possui filial na cidade e município de Marechal Cândido Rondon no estado do Paraná.",
-        "pagina": 27,
-        "chunk_index": 71,
-        "secao": "7. Investimentos",
+        "afirmacao": "A nota de eventos subsequentes informa que não houve eventos após 31 de dezembro de 2022 que exigissem divulgação.",
+        "citacao": "Após 31 de dezembro de 2022, até a data da aprovação das demonstrações financeiras pela Administração da Companhia, não ocorreram eventos que necessitam de divulgação nas demonstrações financeiras.",
+        "pagina": 43,
+        "chunk_index": 120,
+        "secao": "24. Eventos subsequentes",
         "fonte": "nota explicativa",
         "tom": null
       }
     ],
     "tom": [
       {
-        "afirmacao": "Tom neutro, com viés factual: o documento traz opinião sem ressalvas do auditor, notas técnicas e uma comunicação operacional sem linguagem de otimismo ou alerta material.",
-        "citacao": "Em nossa opinião, as demonstrações financeiras acima referidas apresentam adequadamente, em todos os aspectos relevantes, a posição patrimonial e financeira individual e consolidada da Companhia",
+        "afirmacao": "Tom neutro, porque o documento é predominantemente técnico e factual, sem mensagem gerencial explicitamente otimista ou pessimista.",
+        "citacao": "Em nossa opinião, as demonstrações financeiras acima referidas apresentam adequadamente, em todos os aspectos relevantes, a posição patrimonial e financeira individual e consolidada da Companhia em 31 de dezembro de 2022, o desempenho individual e consolidado de suas operações",
         "pagina": 3,
         "chunk_index": 1,
         "secao": "Relatório dos auditores independentes sobre as demonstrações financeiras individuais e consolidadas",
