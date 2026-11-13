@@ -729,20 +729,21 @@ async def test_arguments_outside_the_enumerations_are_refused_naming_the_field(g
     assert any(item.startswith(f"{problem}:") for item in error["problemas"])
 
 
-async def test_compact_view_has_only_the_fields_the_test_asks_each_with_its_origin(governance):
-    """O formato enxuto: os campos do item 2 do teste, cada um com valor, unidade, variação e origem
-    (página e trecho), ou "não encontrado". O calculado fica à parte, nunca no lugar do informado."""
+async def test_compact_view_has_only_what_the_documents_state(governance):
+    """O formato enxuto: os campos do item 2 do teste, só com o que está escrito nos documentos,
+    cada valor com a origem (página e trecho), ou "não encontrado". Nada calculado: nem valor por
+    fórmula, nem variação calculada; nem alertas ou notas do agente."""
     await fill(governance)
+    await save(governance, text("receita_liquida", "Em 2022, a receita líquida cresceu 30% em relação a 2021", "30%",
+                                chunk=PERFORMANCE, medida="variacao_informada"))
     assert not (await call(governance, "fechar_extracao", {"doc_id": DOC_ANA})).is_error
     body = payload(await call(governance, "ler_extracao", {"doc_id": DOC_ANA, "detalhe": "enxuto"}))
     view = body["documentos"][0]["extracao"]
 
-    assert list(view)[:4] == ["empresa", "documento", "periodo_referencia", "periodo_comparavel"]
+    assert list(view) == ["empresa", "documento", "periodo_referencia", "periodo_comparavel", "receita_liquida",
+                          "ebitda", "margem_ebitda", "lucro_liquido", "divida_liquida", "alavancagem",
+                          "fluxo_caixa_operacional", "capex"]
     assert (view["empresa"], view["documento"], view["periodo_referencia"]) == ("Empresa Exemplo S.A.", "Exemplo.pdf", "2022")
-    assert [key for key in view if key not in ("empresa", "documento", "periodo_referencia", "periodo_comparavel",
-                                               "alertas")] == [
-        "receita_liquida", "ebitda", "margem_ebitda", "lucro_liquido", "divida_liquida", "alavancagem",
-        "fluxo_caixa_operacional", "capex"]
 
     revenue = view["receita_liquida"]
     assert (revenue["status"], revenue["valor"], revenue["valor_como_escrito"], revenue["unidade"]) == (
@@ -751,29 +752,27 @@ async def test_compact_view_has_only_the_fields_the_test_asks_each_with_its_orig
     assert revenue["origem"] == {"pagina": 8, "tipo": "tabela", "linha": "Receita operacional líquida",
                                  "coluna": "Consolidado - 2022",
                                  "trecho": "| Receita operacional líquida | 21 | - | - | 1.325.059 | 1.061.410 |"}
-    variation = revenue["variacao"]
-    assert (variation["valor"], variation["texto"], variation["contra"]) == (24.84, "+24,84%", "2021")
-    assert variation["valor_comparavel"]["valor"] == 1061410 and variation["valor_comparavel"]["origem"]["pagina"] == 8
+    # O ano anterior como está no documento, e a variação só como a empresa a escreve.
+    assert revenue["periodo_comparavel"]["valor"] == 1061410
+    assert revenue["periodo_comparavel"]["origem"]["coluna"] == "Consolidado - 2021 - (não auditado)"
+    assert revenue["variacao_informada"] == {"valor": "30%", "origem": {
+        "pagina": 9, "tipo": "texto", "trecho": "Em 2022, a receita líquida cresceu 30% em relação a 2021"}}
 
-    # Não encontrado: explícito, sem valor, com o motivo e a busca; o calculado vai à parte, com as páginas.
+    # Não encontrado: explícito, sem valor, com o motivo e a busca. Nenhum valor calculado.
     ebitda = view["ebitda"]
-    assert (ebitda["status"], ebitda["valor"]) == ("não encontrado", None)
+    assert ebitda == {"status": "não encontrado", "valor": None, "motivo": ebitda["motivo"], "busca": ebitda["busca"]}
     assert ebitda["busca"]["paginas_descartadas"] == [9, 10] and ebitda["motivo"]
-    assert ebitda["calculado_pelo_sistema"]["valor"] == 221854
-    assert ebitda["calculado_pelo_sistema"]["origem"] == {"documento": "Exemplo.pdf", "paginas": [8, 11]}
-    assert "não é informado pela empresa" in ebitda["calculado_pelo_sistema"]["observacao"]
-    assert view["margem_ebitda"]["calculado_pelo_sistema"]["valor_como_escrito"] == "16,74%"
+    assert view["capex"]["status"] == "não encontrado" and view["margem_ebitda"]["valor"] is None
 
-    # Valor de texto: o trecho é a frase citada; sem o ano anterior, não há variação.
+    # Valor de texto: o trecho é a frase citada. Sem o ano anterior no documento, fica null.
     debt = view["divida_liquida"]
-    assert (debt["valor"], debt["unidade"], debt["variacao"]) == (9032, "R$ milhões", None)
+    assert (debt["valor"], debt["unidade"], debt["periodo_comparavel"], debt["variacao_informada"]) == (
+        9032, "R$ milhões", None, None)
     assert debt["origem"] == {"pagina": 10, "tipo": "texto", "trecho":
                               "A dívida líquida da Companhia em 31 de dezembro de 2022 totalizou R$9.032 milhões"}
-    leverage = view["alavancagem"]
-    assert (leverage["valor"], leverage["unidade"]) == (3.32, "x")
-    assert leverage["calculado_pelo_sistema"]["valor_como_escrito"] == "40,71x"  # a conferência, à parte
-    # O alerta do campo vai no próprio campo: a frase do múltiplo não escreve o ano.
-    assert any("não escreve o período 2022" in alert for alert in leverage["alertas"])
-    assert view["capex"]["status"] == "não encontrado" and view["capex"]["calculado_pelo_sistema"]["valor"] == 17732
-    # Nada do JSON completo vaza para o enxuto: nem valores de apoio, nem a impressão do índice.
-    assert "valores_de_apoio" not in view and "impressao_do_indice" not in view
+    assert (view["alavancagem"]["valor"], view["alavancagem"]["unidade"]) == (3.32, "x")
+
+    # Nada que não esteja nos documentos: nem cálculo, nem alerta, nem nota, nem fórmula.
+    text_of_view = str(view)
+    for absent in ("calculado", "formula", "alertas", "nota", "valores_de_apoio", "221.854", "24,84"):
+        assert absent not in text_of_view, absent

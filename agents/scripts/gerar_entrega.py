@@ -9,8 +9,9 @@ custo por agente e por documento) vai junto.
 O que sai em entrega/:
 
     relatorio.md                  o relatório consolidado, como o servidor o montou
-    extracao_enxuta/<documento>.json  só os campos do item 2 do teste: valor, unidade, variação e
-                                  origem (página e trecho) de cada um, ou "não encontrado"
+    extracao_enxuta/<documento>.json  só os campos do item 2 do teste e só o que está escrito no
+                                  documento (valor, unidade, ano anterior, variação quando a empresa
+                                  a escreve, página e trecho), ou "não encontrado". Nada calculado
     extracao/<documento>.json     o JSON completo: também os valores de apoio, os cálculos e as validações
     analise/<documento>.json      a análise qualitativa, cada item com a citação e a página
     alertas/<documento>.json      inconsistências e informações não encontradas

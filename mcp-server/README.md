@@ -125,7 +125,7 @@ arquivo).
 | Extração | `salvar_indicador` | Grava um indicador, depois dos portões |
 | | `salvar_nao_encontrado` | Registra que o documento não informa, com a evidência da busca |
 | | `fechar_extracao` | Calcula, valida e publica o JSON do documento |
-| | `ler_extracao` | A extração publicada: resumo de uma linha por campo, JSON enxuto (só os campos do teste, com a origem) ou JSON completo |
+| | `ler_extracao` | A extração publicada: resumo de uma linha por campo, JSON enxuto (só os campos do teste e só o que está escrito no documento, com a origem; nada calculado) ou JSON completo |
 | Validação | `registrar_alerta` | Inconsistência no texto da fonte, com a citação conferida |
 | | `concluir_revisao`, `ler_alertas` | Marca a revisão como feita; lê os alertas |
 | Análise | `salvar_item_analise` | Um achado qualitativo, com a citação literal |

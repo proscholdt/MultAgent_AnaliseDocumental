@@ -1,6 +1,6 @@
 # Avaliação contra o gabarito
 
-Base lida em 2026-11-13T19:26:18+00:00. Gabarito: `avaliacao/gabarito.json`, conferido à mão nos PDFs.
+Base lida em 2026-11-13T19:31:34+00:00. Gabarito: `avaliacao/gabarito.json`, conferido à mão nos PDFs.
 
 | Medida | Resultado |
 |---|---|
