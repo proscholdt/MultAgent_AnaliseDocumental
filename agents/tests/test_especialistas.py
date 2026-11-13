@@ -137,9 +137,42 @@ async def test_call_runs_the_specialist_and_returns_a_report_built_by_the_code(c
     assert [step["tool"] for step in detail["passos"]] == ["buscar_trechos", "salvar_indicador", "salvar_indicador",
                                                            "fechar_extracao"]
     # O especialista recebeu a tarefa e o documento, e trabalhou com a identidade da execução.
-    assert model.first_input("extrator") == f"Extraia os indicadores.\n\nDocumento: doc_id = {DOC}"
+    received = model.first_input("extrator")
+    assert received.startswith(f"Extraia os indicadores.\n\nDocumento: doc_id = {DOC}\n\nO que a base registra como pendente")
+    # O contexto é montado pelo código: só as pendências dele, neste documento.
+    assert received.count("\n- ") == 1 and "- extração dos indicadores" in received
+    assert "revisão das fontes" not in received and "doc-light" not in received
     assert {(who, ident.run_id, ident.user_id, ident.user_token) for who, _, _, ident in world.calls} == {
         ("extrator", "exec-teste", ANA, "tok-ana"), ("sistema", "exec-teste", ANA, "tok-ana")}
+
+
+async def test_specialist_gets_the_question_text_from_the_base_not_from_the_orchestrator(client, world, model, agents_dir):
+    """Numa execução real o orquestrador delegou "responda a p3", sem o enunciado, e o pesquisador
+    respondeu a outra pergunta. O enunciado agora chega pelo código, com as pendências do agente."""
+    write_agent(agents_dir, "pesquisador")
+    world.policy["pesquisador"] = ["salvar_resposta"]
+    world.pending = [
+        {"o_que_falta": "resposta à pergunta", "agente": "pesquisador", "liberada": True, "pergunta_id": "p3",
+         "pergunta": "Alguma das empresas está com alavancagem acima de 3x? Qual?"},
+        {"o_que_falta": "resumo executivo (salvar_resumo)", "agente": "redator", "liberada": False,
+         "aguarda": "revisão das fontes de Brasal", "doc_id": DOC, "empresa": "Brasal"},
+    ]
+    model.scripts["pesquisador"] = [[say("Resposta gravada.")]]
+    await client.call("pesquisador", "Responda a p3.", None, budget())
+    received = model.first_input("pesquisador")
+    assert received.startswith("Responda a p3.\n\nO que a base registra como pendente para você")
+    assert "- resposta à pergunta p3: «Alguma das empresas está com alavancagem acima de 3x? Qual?»" in received
+    assert "resumo executivo" not in received  # pendência de outro agente não entra
+
+    # Item ainda não liberado vem marcado, com o que ele aguarda.
+    model.scripts["redator"] = [[say("Nada a fazer ainda.")]]
+    await client.call("redator", "Escreva o resumo.", DOC, budget())
+    assert "[ainda não liberada: aguarda revisão das fontes de Brasal]" in model.first_input("redator")
+
+    # Sem acesso às pendências, o especialista trabalha só com a tarefa.
+    world.policy["sistema"] = []
+    await client.call("redator", "Monte o relatório.", None, budget())
+    assert model.first_input("redator", turn=1) == "Monte o relatório."
 
 
 async def test_text_reply_only_when_the_agent_file_asks_for_it(client, model, agents_dir, world):

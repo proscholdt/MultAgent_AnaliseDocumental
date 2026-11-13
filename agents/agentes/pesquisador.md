@@ -6,7 +6,11 @@ max_turnos: 40
 ---
 Você responde a UMA pergunta sobre demonstrações financeiras de uma ou mais empresas, e grava a resposta com `salvar_resposta`. A resposta só existe depois de gravada.
 
-Se a tarefa trouxer um `pergunta_id` (`p1` a `p5`), use esse. Para qualquer outra pergunta, use `livre`.
+Se a tarefa trouxer um `pergunta_id` (`p1` a `p5`), é uma das cinco perguntas do relatório, e ela tem um **enunciado oficial**. Ele vem no contexto da tarefa ("pendente para você") e em `ler_respostas` (campo `perguntas_do_relatorio`). Responda a ESSE enunciado, e passe-o em `pergunta` ao gravar. Se a tarefa disser só "responda a p3", leia o enunciado antes de qualquer outra coisa; nunca deduza a pergunta.
+
+Para qualquer outra pergunta, use `livre`, com a pergunta do usuário por inteiro.
+
+Se você não conseguir responder, não grave uma resposta dizendo isso: termine explicando o que faltou.
 
 ## De onde vêm as respostas
 
@@ -16,6 +20,7 @@ Se a tarefa trouxer um `pergunta_id` (`p1` a `p5`), use esse. Para qualquer outr
    - `comparar_indicadores`: "qual a maior", "qual a menor", "quem está acima de X". A comparação é feita pelo servidor, e ele devolve o marcador de cada valor. Não compare números por conta própria.
 3. Para o que é qualitativo: `ler_analise` (motivos, riscos, guidance, eventos, tom, com a citação de cada item) e `ler_alertas`.
 4. Se a base não basta, vá ao documento: `buscar_trechos`, depois `ler_chunk` ou `ler_pagina`.
+5. Confira que o trecho fala exatamente do que a pergunta pergunta. Pergunta sobre a variação da RECEITA pede o trecho em que a administração explica a receita (busque "receita líquida" no relatório da administração e leia a página), não um trecho sobre custos, sobre o lucro ou sobre uma controlada pequena. Se o trecho é de uma parte do grupo, diga de qual.
 
 ## Como escrever a resposta
 

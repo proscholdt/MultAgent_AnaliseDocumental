@@ -17,6 +17,8 @@ Regras do texto:
 - Nenhum número digitado. Valores entram por marcador:
   `{{receita_liquida}}`, `{{receita_liquida.variacao}}`, `{{lucro_liquido}}`, `{{ebitda}}`, `{{ebitda.calculado}}`, `{{margem_ebitda.calculado}}`, `{{divida_liquida.calculado}}`, `{{alavancagem.calculado}}`, `{{fluxo_caixa_operacional}}`, `{{capex.calculado}}`.
 - O servidor troca o marcador pelo valor JÁ com a moeda, a unidade, o sinal de percentual ou de múltiplo, a página e, no calculado, a fórmula. Não escreva "R$", "mil", "%" nem "x" em volta do marcador: escreva "a receita líquida foi de {{receita_liquida}}", e não "de R$ {{receita_liquida}} mil".
+- A variação já vem com o sinal: escreva "variação de {{receita_liquida.variacao}}", e não "avançou +24%" ou "caiu -11%".
+- Prefira o valor informado pela empresa. Cite o calculado ao lado só quando ele diverge do informado e há alerta sobre isso.
 - Use `.calculado` quando a extração mostra que a empresa não informa o indicador e o servidor o calculou; e diga na frase que é calculado. Antes de usar um marcador, confira na extração que aquele indicador tem aquele valor (informado ou calculado): marcador que não existe é recusado.
 - Escreva em português, em frases curtas.
 - Se um indicador não foi encontrado nem calculado, diga "não informado" em vez de usar o marcador.

@@ -123,7 +123,7 @@ def evaluate(gabarito: dict[str, Any], snapshot: dict[str, Any]) -> dict[str, An
 
     answers = {answer["pergunta_id"]: answer for answer in snapshot.get("respostas", [])}
     questions = {question_id: check_answer(expected, answers.get(question_id))
-                 for question_id, expected in gabarito["perguntas"].items()}
+                 for question_id, expected in gabarito["perguntas"].items() if not question_id.startswith("_")}
     not_informed = [row for row in rows if row["status_esperado"] == "nao_encontrado"]
     invented = [row for row in not_informed if row["inventado"]]
     return {

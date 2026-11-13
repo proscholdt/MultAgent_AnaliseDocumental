@@ -81,6 +81,30 @@ def read_request(context: RequestContext) -> dict[str, Any]:
             "orcamento": data.get("orcamento") or {}}
 
 
+def task_input(tarefa: str, doc_id: str | None, pending: list[dict[str, Any]]) -> str:
+    """O que o especialista recebe: a tarefa do orquestrador, o documento e, montado pelo código,
+    o que a base registra como pendente para ele. Assim ele não depende de o orquestrador
+    repassar os detalhes: numa execução real o orquestrador delegou "responda a p3" sem o
+    enunciado, e o pesquisador respondeu a outra pergunta."""
+    lines = [tarefa]
+    if doc_id:
+        lines += ["", f"Documento: doc_id = {doc_id}"]
+    if pending:
+        lines += ["", "O que a base registra como pendente para você (contexto do sistema; faça só o que a tarefa pede):"]
+        for item in pending[:12]:
+            detail = item["o_que_falta"]
+            if item.get("pergunta_id"):
+                detail += f" {item['pergunta_id']}: «{item['pergunta']}»"
+            if item.get("categorias"):
+                detail += f" ({', '.join(item['categorias'])})"
+            if item.get("empresa"):
+                detail += f" — {item['empresa']} (doc_id {item['doc_id']})"
+            if not item.get("liberada", True):
+                detail += f" [ainda não liberada: aguarda {item.get('aguarda')}]"
+            lines.append(f"- {detail}")
+    return "\n".join(lines)
+
+
 class _ClaimsContext(DefaultServerCallContextBuilder):
     """Leva para o executor quem chamou (as claims já conferidas pelo portão)."""
 
@@ -129,7 +153,11 @@ class Specialists:
         budget = Budget(
             tokens=min(self.settings.execucao_max_tokens, int(request["orcamento"].get("tokens") or 10**12)),
             seconds=min(self.settings.execucao_max_segundos, float(request["orcamento"].get("segundos") or 10**9)))
-        entrada = request["tarefa"] + (f"\n\nDocumento: doc_id = {request['doc_id']}" if request["doc_id"] else "")
+        try:
+            context = await self.own_pending(identity, spec.nome, request["doc_id"])
+        except Exception:  # noqa: BLE001 - sem o contexto o especialista trabalha só com a tarefa
+            context = []
+        entrada = task_input(request["tarefa"], request["doc_id"], context)
         run = await run_agent(spec, entrada, identity=identity, engine=self.engine, budget=budget)
         return await self.report(spec, run, request["doc_id"], identity)
 
@@ -144,9 +172,7 @@ class Specialists:
         if run.erro:
             report["erro"] = run.erro
         try:
-            pending = await self.pending(identity)
-            report["pendencias"] = [item for item in pending if item.get("agente") == spec.nome
-                                    and (doc_id is None or item.get("doc_id") in (None, doc_id))]
+            report["pendencias"] = await self.own_pending(identity, spec.nome, doc_id)
         except Exception as error:  # noqa: BLE001 - o trabalho foi feito; só o relato fica sem esta parte
             report["pendencias_indisponiveis"] = f"{type(error).__name__}: {error}"[:200]
         if spec.resposta == "texto":
@@ -155,9 +181,12 @@ class Specialists:
         report["execucao"] = {"modelo": run.modelo, "segundos": run.segundos, "uso": run.uso, "passos": run.passos}
         return report
 
-    async def pending(self, identity: Identity) -> list[dict[str, Any]]:
+    async def own_pending(self, identity: Identity, nome: str, doc_id: str | None) -> list[dict[str, Any]]:
+        """O que a base registra como pendente para este agente (e este documento, se houver)."""
         async with self.engine.connect(mcp.SYSTEM, identity) as server:
-            return (await mcp.call(server, "pendencias"))["pendencias"]
+            pending = (await mcp.call(server, "pendencias"))["pendencias"]
+        return [item for item in pending if item.get("agente") == nome
+                and (doc_id is None or item.get("doc_id") in (None, doc_id))]
 
     async def catalog(self, identity: Identity) -> dict[str, Any]:
         """Os especialistas no ar e as tools que a política do servidor MCP dá a cada um."""

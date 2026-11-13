@@ -136,7 +136,7 @@ def test_the_shipped_answer_key_is_complete_and_consistent():
                 assert {"valor", "unidade", "paginas"} <= set(expected), (file_name, campo)
             else:
                 assert "valor" not in expected, (file_name, campo)
-    assert set(key["perguntas"]) == {"p1", "p2", "p3", "p4", "p5"}
+    assert {q for q in key["perguntas"] if not q.startswith("_")} == {"p1", "p2", "p3", "p4", "p5"}
     # As contas do gabarito fecham com os valores que ele mesmo cita.
     brasal = key["documentos"]["Brasal.pdf"]["indicadores"]
     assert brasal["ebitda"]["calculado"] == 192840 + 29014 and brasal["divida_liquida"]["calculado"] == 1849 + 1568 - 96453

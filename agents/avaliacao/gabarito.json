@@ -5,79 +5,306 @@
       "empresa": "Brasal",
       "periodo": "2022",
       "indicadores": {
-        "receita_liquida": {"status": "informado", "valor": 1325059, "unidade": "R$ mil", "paginas": [8], "comparavel": 1061410},
-        "lucro_liquido": {"status": "informado", "valor": 174602, "unidade": "R$ mil", "paginas": [8, 9], "comparavel": 275560},
-        "fluxo_caixa_operacional": {"status": "informado", "valor": 258248, "unidade": "R$ mil", "paginas": [11], "comparavel": 121462},
-        "ebitda": {"status": "nao_encontrado", "calculado": 221854, "unidade": "R$ mil",
-                   "nota": "192.840 (lucro operacional antes do financeiro, p. 8) + 29.014 (depreciações e amortizações, fluxo de caixa, p. 11)"},
-        "margem_ebitda": {"status": "nao_encontrado", "calculado": 16.74, "unidade": "%"},
-        "divida_liquida": {"status": "nao_encontrado", "calculado": -93036, "unidade": "R$ mil",
-                           "nota": "1.849 + 1.568 (empréstimos, p. 7) − 96.453 (caixa, p. 6): a empresa tem caixa líquido"},
-        "alavancagem": {"status": "nao_encontrado", "calculado": -0.42, "unidade": "x"},
-        "capex": {"status": "nao_encontrado", "calculado": 45761, "unidade": "R$ mil",
-                  "nota": "linha única 'Imobilizado e intangível' do fluxo de caixa (p. 11)"}
+        "receita_liquida": {
+          "status": "informado",
+          "valor": 1325059,
+          "unidade": "R$ mil",
+          "paginas": [
+            8
+          ],
+          "comparavel": 1061410
+        },
+        "lucro_liquido": {
+          "status": "informado",
+          "valor": 174602,
+          "unidade": "R$ mil",
+          "paginas": [
+            8,
+            9
+          ],
+          "comparavel": 275560
+        },
+        "fluxo_caixa_operacional": {
+          "status": "informado",
+          "valor": 258248,
+          "unidade": "R$ mil",
+          "paginas": [
+            11
+          ],
+          "comparavel": 121462
+        },
+        "ebitda": {
+          "status": "nao_encontrado",
+          "calculado": 221854,
+          "unidade": "R$ mil",
+          "nota": "192.840 (lucro operacional antes do financeiro, p. 8) + 29.014 (depreciações e amortizações, fluxo de caixa, p. 11)"
+        },
+        "margem_ebitda": {
+          "status": "nao_encontrado",
+          "calculado": 16.74,
+          "unidade": "%"
+        },
+        "divida_liquida": {
+          "status": "nao_encontrado",
+          "calculado": -93036,
+          "unidade": "R$ mil",
+          "nota": "1.849 + 1.568 (empréstimos, p. 7) − 96.453 (caixa, p. 6): a empresa tem caixa líquido"
+        },
+        "alavancagem": {
+          "status": "nao_encontrado",
+          "calculado": -0.42,
+          "unidade": "x"
+        },
+        "capex": {
+          "status": "nao_encontrado",
+          "calculado": 45761,
+          "unidade": "R$ mil",
+          "nota": "linha única 'Imobilizado e intangível' do fluxo de caixa (p. 11)"
+        }
       }
     },
     "Millet.pdf": {
       "empresa": "Millet",
       "periodo": "2022",
       "indicadores": {
-        "receita_liquida": {"status": "informado", "valor": 462127, "unidade": "R$ mil", "paginas": [7], "comparavel": 199259},
-        "lucro_liquido": {"status": "informado", "valor": 18891, "unidade": "R$ mil", "paginas": [7, 8], "comparavel": 6470,
-                          "nota": "lucro líquido consolidado do exercício; 14.743 é só a parte dos controladores"},
-        "fluxo_caixa_operacional": {"status": "informado", "valor": 24799, "unidade": "R$ mil", "paginas": [10], "comparavel": -14293},
-        "ebitda": {"status": "nao_encontrado", "calculado": 43546, "unidade": "R$ mil",
-                   "nota": "25.298 (resultado antes do financeiro, p. 7) + 18.248 (depreciação e amortização, p. 10)"},
-        "margem_ebitda": {"status": "nao_encontrado", "calculado": 9.42, "unidade": "%"},
-        "divida_liquida": {"status": "informado", "valor": 13520, "unidade": "R$ mil", "paginas": [42],
-                           "nota": "nota de gestão de capital: '(=) Dívida líquida (a)'"},
-        "alavancagem": {"status": "nao_encontrado", "calculado": 0.31, "unidade": "x",
-                        "nota": "a empresa informa 0,08, mas é dívida líquida sobre capital ajustado (p. 42), não sobre EBITDA"},
-        "capex": {"status": "nao_encontrado", "calculado": 17732, "unidade": "R$ mil",
-                  "nota": "6.263 (imobilizado) + 11.469 (intangível), fluxo de caixa (p. 10)"}
+        "receita_liquida": {
+          "status": "informado",
+          "valor": 462127,
+          "unidade": "R$ mil",
+          "paginas": [
+            7
+          ],
+          "comparavel": 199259
+        },
+        "lucro_liquido": {
+          "status": "informado",
+          "valor": 18891,
+          "unidade": "R$ mil",
+          "paginas": [
+            7,
+            8
+          ],
+          "comparavel": 6470,
+          "nota": "lucro líquido consolidado do exercício; 14.743 é só a parte dos controladores"
+        },
+        "fluxo_caixa_operacional": {
+          "status": "informado",
+          "valor": 24799,
+          "unidade": "R$ mil",
+          "paginas": [
+            10
+          ],
+          "comparavel": -14293
+        },
+        "ebitda": {
+          "status": "nao_encontrado",
+          "calculado": 43546,
+          "unidade": "R$ mil",
+          "nota": "25.298 (resultado antes do financeiro, p. 7) + 18.248 (depreciação e amortização, p. 10)"
+        },
+        "margem_ebitda": {
+          "status": "nao_encontrado",
+          "calculado": 9.42,
+          "unidade": "%"
+        },
+        "divida_liquida": {
+          "status": "informado",
+          "valor": 13520,
+          "unidade": "R$ mil",
+          "paginas": [
+            42
+          ],
+          "nota": "nota de gestão de capital: '(=) Dívida líquida (a)'"
+        },
+        "alavancagem": {
+          "status": "nao_encontrado",
+          "calculado": 0.31,
+          "unidade": "x",
+          "nota": "a empresa informa 0,08, mas é dívida líquida sobre capital ajustado (p. 42), não sobre EBITDA"
+        },
+        "capex": {
+          "status": "nao_encontrado",
+          "calculado": 17732,
+          "unidade": "R$ mil",
+          "nota": "6.263 (imobilizado) + 11.469 (intangível), fluxo de caixa (p. 10)"
+        }
       }
     },
     "Light.pdf": {
       "empresa": "Light",
       "periodo": "2022",
       "indicadores": {
-        "receita_liquida": {"status": "informado", "valor": 13253286, "unidade": "R$ mil", "paginas": [20], "comparavel": 14897920},
-        "lucro_liquido": {"status": "informado", "valor": -5672203, "unidade": "R$ mil", "paginas": [20, 21, 22], "comparavel": 397945},
-        "fluxo_caixa_operacional": {"status": "informado", "valor": 200763, "unidade": "R$ mil", "paginas": [23], "comparavel": -42045},
-        "ebitda": {"status": "informado", "valor": 1180, "unidade": "R$ milhões", "paginas": [9],
-                   "nota": "EBITDA CVM consolidado, como o texto escreve. O texto omite o sinal: pela demonstração o valor é negativo (−1.910.411 + 730.767 = −1.179.644 mil). O valor da p. 8 (1.817) é só o da distribuidora."},
-        "margem_ebitda": {"status": "nao_encontrado"},
-        "divida_liquida": {"status": "informado", "valor": 9032236, "unidade": "R$ mil", "paginas": [10, 105],
-                           "nota": "R$ 9.032 milhões no relatório da administração (p. 10) e 9.032.236 na nota de gestão do capital (p. 105)"},
-        "alavancagem": {"status": "informado", "valor": 3.32, "unidade": "x", "paginas": [10],
-                        "nota": "indicador de covenants Dívida Líquida/EBITDA. A frase escreve o ano errado ('encerrou 2021')."},
-        "capex": {"status": "nao_encontrado", "calculado": 1470292, "unidade": "R$ mil",
-                  "nota": "307.759 (imobilizado) + 1.162.533 (intangível e ativo de contrato), fluxo de caixa (p. 23)",
-                  "tambem_aceito": {"status": "informado", "valor": 1506, "unidade": "R$ milhões", "paginas": [10],
-                                    "nota": "'valor total de investimentos no ano de 2022' do relatório da administração"}}
+        "receita_liquida": {
+          "status": "informado",
+          "valor": 13253286,
+          "unidade": "R$ mil",
+          "paginas": [
+            20
+          ],
+          "comparavel": 14897920
+        },
+        "lucro_liquido": {
+          "status": "informado",
+          "valor": -5672203,
+          "unidade": "R$ mil",
+          "paginas": [
+            20,
+            21,
+            22
+          ],
+          "comparavel": 397945
+        },
+        "fluxo_caixa_operacional": {
+          "status": "informado",
+          "valor": 200763,
+          "unidade": "R$ mil",
+          "paginas": [
+            23
+          ],
+          "comparavel": -42045
+        },
+        "ebitda": {
+          "status": "informado",
+          "valor": 1180,
+          "unidade": "R$ milhões",
+          "paginas": [
+            9
+          ],
+          "nota": "EBITDA CVM consolidado, como o texto escreve. O texto omite o sinal: pela demonstração o valor é negativo (−1.910.411 + 730.767 = −1.179.644 mil). O valor da p. 8 (1.817) é só o da distribuidora."
+        },
+        "margem_ebitda": {
+          "status": "nao_encontrado"
+        },
+        "divida_liquida": {
+          "status": "informado",
+          "valor": 9032236,
+          "unidade": "R$ mil",
+          "paginas": [
+            10,
+            105
+          ],
+          "nota": "R$ 9.032 milhões no relatório da administração (p. 10) e 9.032.236 na nota de gestão do capital (p. 105)"
+        },
+        "alavancagem": {
+          "status": "informado",
+          "valor": 3.32,
+          "unidade": "x",
+          "paginas": [
+            10
+          ],
+          "nota": "indicador de covenants Dívida Líquida/EBITDA. A frase escreve o ano errado ('encerrou 2021')."
+        },
+        "capex": {
+          "status": "nao_encontrado",
+          "calculado": 1470292,
+          "unidade": "R$ mil",
+          "nota": "307.759 (imobilizado) + 1.162.533 (intangível e ativo de contrato), fluxo de caixa (p. 23)",
+          "tambem_aceito": {
+            "status": "informado",
+            "valor": 1506,
+            "unidade": "R$ milhões",
+            "paginas": [
+              10
+            ],
+            "nota": "'valor total de investimentos no ano de 2022' do relatório da administração"
+          }
+        }
       },
       "alertas_automaticos_esperados": [
-        {"codigo": "ebitda_divergente", "por_que": "o EBITDA do texto vem sem sinal e não bate com a demonstração"},
-        {"codigo": "periodo_nao_confirmado", "campo": "alavancagem", "por_que": "a frase da alavancagem fala em 2021, não em 2022"}
+        {
+          "codigo": "ebitda_divergente",
+          "por_que": "o EBITDA do texto vem sem sinal e não bate com a demonstração"
+        },
+        {
+          "codigo": "periodo_nao_confirmado",
+          "campo": "alavancagem",
+          "por_que": "a frase da alavancagem fala em 2021, não em 2022"
+        }
       ],
       "inconsistencias_na_fonte_esperadas": [
-        {"pagina": 8, "contem": "2.996",
-         "por_que": "EBITDA da distribuidora: 'foi de R$1.817 milhões, uma redução de R$2.996 milhões em relação aos R$1.179 milhões apurados em 2021'. Os três números não fecham."},
-        {"pagina": 10, "contem": "3,32x",
-         "por_que": "'encerrou 2021 em 3,32x, menor do que no 2021 (3,48x)': o ano está trocado."}
+        {
+          "pagina": 8,
+          "contem": "2.996",
+          "por_que": "EBITDA da distribuidora: 'foi de R$1.817 milhões, uma redução de R$2.996 milhões em relação aos R$1.179 milhões apurados em 2021'. Os três números não fecham."
+        },
+        {
+          "pagina": 10,
+          "contem": "3,32x",
+          "por_que": "'encerrou 2021 em 3,32x, menor do que no 2021 (3,48x)': o ano está trocado."
+        }
       ]
     }
   },
   "perguntas": {
-    "p1": {"deve_conter": ["Brasal", "16,74%"], "fontes_de": ["Brasal.pdf"],
-           "por_que": "a maior margem é a da Brasal, calculada (a empresa não informa EBITDA)"},
-    "p2": {"deve_conter": ["Brasal", "Light", "Millet"], "fontes_de": ["Light.pdf"],
-           "por_que": "só a Light tem relatório da administração explicando a receita; Brasal e Millet não comentam"},
-    "p3": {"deve_conter": ["Light", "3,32x"], "fontes_de": ["Light.pdf"],
-           "por_que": "só a Light: 3,32x informado (p. 10)"},
-    "p4": {"deve_conter_um_de": ["crédito", "liquidez"], "fontes_de": ["Brasal.pdf", "Light.pdf", "Millet.pdf"],
-           "por_que": "risco de crédito e de liquidez aparecem nas três"},
-    "p5": {"deve_conter": ["Brasal", "Light", "Millet"], "fontes_de": ["Light.pdf"],
-           "por_que": "a Light fala em renovação da concessão e foco em caixa; Brasal e Millet não trazem guidance"}
+    "_como_e_conferido": "Por termos que a resposta certa tem de trazer e pelos documentos que ela tem de citar. É uma conferência parcial: pega resposta a outra pergunta, empresa errada e falta de fonte, mas não substitui a leitura da resposta por um analista.",
+    "p1": {
+      "deve_conter": [
+        "Brasal",
+        "margem",
+        "16,74%"
+      ],
+      "fontes_de": [
+        "Brasal.pdf"
+      ],
+      "por_que": "a maior margem EBITDA é a da Brasal, 16,74%, calculada (a empresa não informa EBITDA)"
+    },
+    "p2": {
+      "deve_conter": [
+        "Brasal",
+        "Light",
+        "Millet"
+      ],
+      "deve_conter_um_de": [
+        "bandeira",
+        "estorno",
+        "CVA"
+      ],
+      "fontes_de": [
+        "Light.pdf"
+      ],
+      "por_que": "só a Light explica a receita (estornos de faturamento, bandeiras tarifárias, CVA; p. 9); Brasal e Millet não têm comentário da administração"
+    },
+    "p3": {
+      "deve_conter": [
+        "Light",
+        "3,32x"
+      ],
+      "fontes_de": [
+        "Light.pdf"
+      ],
+      "por_que": "só a Light: 3,32x informado (p. 10)"
+    },
+    "p4": {
+      "deve_conter": [
+        "risco"
+      ],
+      "deve_conter_um_de": [
+        "crédito",
+        "liquidez"
+      ],
+      "fontes_de": [
+        "Brasal.pdf",
+        "Light.pdf",
+        "Millet.pdf"
+      ],
+      "por_que": "risco de crédito e de liquidez aparecem nas três"
+    },
+    "p5": {
+      "deve_conter": [
+        "Brasal",
+        "Light",
+        "Millet"
+      ],
+      "deve_conter_um_de": [
+        "concessão",
+        "renovação",
+        "reestruturação",
+        "estratégia"
+      ],
+      "fontes_de": [
+        "Light.pdf"
+      ],
+      "por_que": "a Light fala em antecipar a renovação da concessão, concentrar investimentos e perseguir as estratégias de reestruturação (p. 2, 3 e 28); Brasal e Millet não trazem guidance da administração"
+    }
   }
 }
