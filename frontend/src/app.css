@@ -1,0 +1,145 @@
+/* Tokens: tudo o que tem cor sai daqui. Claro por padrão, escuro pelo sistema operacional. */
+:root {
+	--bg: #f4f6f5;
+	--surface: #ffffff;
+	--surface-2: #eef2f0;
+	--ink: #16201d;
+	--muted: #5b6a65;
+	--line: #dbe2df;
+	--accent: #0f5f55;
+	--accent-ink: #ffffff;
+	--accent-soft: #e1efeb;
+	--warn: #8a5300;
+	--warn-soft: #fbf0dc;
+	--danger: #a3302b;
+	--danger-soft: #fbe8e6;
+	--ok: #2c7a4b;
+	--ok-soft: #e3f3e8;
+	--shadow: 0 1px 2px rgb(16 32 28 / 6%), 0 4px 16px rgb(16 32 28 / 5%);
+	--radius: 10px;
+	--font: 'Inter', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+	--mono: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
+	color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg: #0e1312;
+		--surface: #151c1a;
+		--surface-2: #1b2422;
+		--ink: #e3ebe8;
+		--muted: #93a49e;
+		--line: #26312e;
+		--accent: #4db3a2;
+		--accent-ink: #06201b;
+		--accent-soft: #15302b;
+		--warn: #e2a84e;
+		--warn-soft: #2d2415;
+		--danger: #ef7c73;
+		--danger-soft: #341b19;
+		--ok: #6cc690;
+		--ok-soft: #16301f;
+		--shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 4px 16px rgb(0 0 0 / 25%);
+		color-scheme: dark;
+	}
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	height: 100%;
+}
+
+body {
+	background: var(--bg);
+	color: var(--ink);
+	font: 15px/1.55 var(--font);
+	-webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea {
+	font: inherit;
+	color: inherit;
+}
+
+button {
+	cursor: pointer;
+}
+
+button:disabled {
+	cursor: not-allowed;
+}
+
+h1,
+h2,
+h3 {
+	line-height: 1.25;
+	text-wrap: balance;
+	margin: 0;
+}
+
+.botao {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	border: 1px solid transparent;
+	border-radius: 8px;
+	padding: 8px 14px;
+	background: var(--accent);
+	color: var(--accent-ink);
+	font-weight: 600;
+	transition: filter 0.15s;
+}
+
+.botao:hover:not(:disabled) {
+	filter: brightness(1.08);
+}
+
+.botao:disabled {
+	opacity: 0.55;
+}
+
+.botao.secundario {
+	background: transparent;
+	color: var(--ink);
+	border-color: var(--line);
+}
+
+.botao.secundario:hover:not(:disabled) {
+	background: var(--surface-2);
+	filter: none;
+}
+
+.botao.perigo {
+	background: var(--danger);
+	color: #fff;
+}
+
+.rotulo {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--muted);
+}
+
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}

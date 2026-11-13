@@ -1,0 +1,31 @@
+name: frontend
+
+# Frontend (porta 3000). Depende do indexador (sistema 1) e dos agentes (sistema 3) já no ar.
+#   docker compose up --build -d
+#
+# Fala com os dois pela rede Docker do indexador, pelo nome do serviço (api, orquestrador),
+# sem passar pela máquina hospedeira. Se a rede tiver outro nome, defina INDEXER_NETWORK no .env.
+
+services:
+  web:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      INDEXER_URL: ${INDEXER_URL_DOCKER:-http://api:8000}
+      AGENTS_URL: ${AGENTS_URL_DOCKER:-http://orquestrador:8200}
+      # O endereço que o navegador usa. O SvelteKit confere a origem dos formulários (login) com ele.
+      ORIGIN: ${ORIGIN:-http://localhost:3000}
+      # PDFs de até 50 MB passam pelo proxy (o padrão do adapter-node é 512 KB).
+      BODY_SIZE_LIMIT: ${BODY_SIZE_LIMIT:-60M}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    ports:
+      - "3000:3000"
+    networks:
+      - indexer
+
+networks:
+  indexer:
+    name: ${INDEXER_NETWORK:-indexer_default}
+    external: true

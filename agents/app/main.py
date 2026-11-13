@@ -160,8 +160,13 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
 
     @app.get("/api/conversas", tags=["Conversas"], summary="Conversas do usuário, da mais nova para a mais antiga")
     async def list_conversations(user: Caller) -> list[dict[str, Any]]:
-        return [{"conversa_id": c.id, "criada_em": c.criada_em, "turnos": len(deps.runs.of_conversation(c.id))}
-                for c in conversations.of(user[0])]
+        listed = []
+        for conversation in conversations.of(user[0]):
+            turns = deps.runs.of_conversation(conversation.id)
+            listed.append({"conversa_id": conversation.id, "criada_em": conversation.criada_em, "turnos": len(turns),
+                           # o primeiro pedido serve de título na lista
+                           "titulo": turns[0].pedido if turns else None})
+        return listed
 
     @app.get("/api/conversas/{conversa_id}", tags=["Conversas"], summary="Os turnos de uma conversa")
     async def get_conversation(conversa_id: str, user: Caller) -> dict[str, Any]:

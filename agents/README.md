@@ -14,7 +14,8 @@ analisar, responder, redigir).
 Os agentes são feitos com **PydanticAI**, e a orquestração é um grafo **LangGraph**. O usuário
 conversa: um pedido pode continuar o anterior, e os agentes lembram o que foi feito na conversa.
 
-Não há frontend. Tudo é testável pelo Swagger em `http://localhost:8200/docs`.
+A tela fica no [frontend](../frontend/README.md) (sistema 4). Tudo também é testável pelo Swagger em
+`http://localhost:8200/docs`.
 
 ```mermaid
 flowchart TD
@@ -88,7 +89,7 @@ Fora do Docker (dois processos):
 uv sync
 uv run uvicorn app.especialistas:app_factory --factory --port 8201
 uv run uvicorn app.main:app_factory --factory --port 8200
-uv run pytest        # 63 testes, sem rede
+uv run pytest        # 67 testes, sem rede
 ```
 
 ## O que dá para pedir
@@ -99,8 +100,9 @@ uv run pytest        # 63 testes, sem rede
 | `POST /api/perguntas` | Uma pergunta em linguagem natural; devolve a resposta com as fontes |
 | `POST /api/execucoes` | Pedido em texto livre: o orquestrador decide o que fazer |
 | `POST /api/conversas` | Abre uma conversa |
-| `POST /api/conversas/{id}/mensagens` | Um turno da conversa: uma pergunta, respondida com fontes, lembrando os turnos anteriores |
-| `GET /api/conversas/{id}` | Os turnos de uma conversa, com as respostas |
+| `POST /api/conversas/{id}/mensagens` | Um turno da conversa, em texto livre: pergunta, relatório ou outro pedido (o orquestrador classifica), lembrando os turnos anteriores |
+| `GET /api/conversas` | As conversas do usuário, com o primeiro pedido como título |
+| `GET /api/conversas/{id}` | Os turnos de uma conversa, com as respostas (e o relatório, no turno de relatório) |
 | `GET /api/execucoes/{id}` | Estado, resultado, passos (quem chamou o quê, e o raciocínio do modelo), tokens e custo |
 | `GET /api/execucoes/{id}/mensagens` | As mensagens completas de cada agente: pedido, raciocínio, tools com argumentos e resultados |
 | `GET /api/execucoes` | Execuções do usuário |
@@ -246,11 +248,17 @@ MCP que diz o que está liberado e recusa o que chega antes da hora.
 | **As mensagens completas de cada agente** (pedido, raciocínio, tools, resposta) | `data/execucoes/<id>/` | quem depura: `GET /api/execucoes/{id}/mensagens` |
 | **O trace** (cada passo, com o raciocínio) | `data/execucoes/<id>.jsonl` | `GET /api/execucoes/{id}` |
 
-**Pergunta de seguimento.** Um turno de conversa é uma pergunta. O orquestrador recebe os turnos
-anteriores ("A conversa até aqui") e delega ao pesquisador a pergunta já resolvida: "E a menor?"
-vira "qual empresa teve a MENOR margem EBITDA?". A conferência final só fecha o turno com uma
-resposta gravada pelo pesquisador, com fontes. Na primeira versão o turno era um pedido livre, e
-o orquestrador respondia sozinho, na mensagem, sem fonte: virou regra de código.
+**O que a mensagem pede.** No chat o usuário só escreve. Na primeira decisão, o orquestrador
+diz o que a mensagem é (`intencao`: pergunta, relatório ou outro), e o tipo da execução passa a
+ser esse. O tipo diz o que a conferência final cobra: uma pergunta só fecha com uma resposta
+gravada pelo pesquisador, com fontes; um relatório, com o relatório montado; outro pedido, com o
+orquestrador dizendo que terminou. Na primeira versão o turno era um pedido livre sem cobrança, e
+o orquestrador respondia perguntas sozinho, na mensagem, sem fonte: por isso a cobrança é do
+código. A classificação fica no trace (passo `intencao`).
+
+**Pergunta de seguimento.** O orquestrador recebe os turnos anteriores ("A conversa até aqui") e
+delega ao pesquisador a pergunta já resolvida: "E a menor?" vira "qual empresa teve a MENOR
+margem EBITDA?".
 
 **Memória do especialista.** Chamado de novo na mesma conversa, para o mesmo documento, o
 especialista recebe a própria conversa das vezes anteriores e não recomeça do zero. Como ela dura
@@ -558,8 +566,9 @@ e o Docling, ou de US$ 2,8 a 3,2 com a leitura pela Azure, e de **2 a 6 minutos*
   cresce com a conversa. O teto é por chamada, não por conversa.
 - **O raciocínio registrado é um resumo.** É o que a OpenAI devolve, não a cadeia completa do
   modelo. Explica a escolha na maior parte das vezes; não é uma prova dela.
-- **Um turno de conversa é uma pergunta.** Pedir o relatório continua sendo pela rota de
-  relatório (que também aceita `conversa_id`).
+- **A classificação da mensagem é do modelo.** Uma pergunta classificada como "outro" escapa
+  da exigência de resposta com fonte. O prompt diz que, na dúvida, é pergunta, e o trace mostra a
+  classificação de cada turno.
 
 ## Caminho para produção no Azure
 
@@ -612,6 +621,6 @@ agents/
 ├─ avaliacao/gabarito.json  valores conferidos à mão nos PDFs
 ├─ scripts/                 avaliar.py, gerar_entrega.py
 ├─ entrega/                 relatório, JSON por documento (enxuto e completo), respostas e avaliação
-└─ tests/                   63 testes sem rede: modelo com roteiro, servidor MCP em memória,
+└─ tests/                   67 testes sem rede: modelo com roteiro, servidor MCP em memória,
                             A2A de verdade por ASGI e grafo com checkpoint em memória
 ```

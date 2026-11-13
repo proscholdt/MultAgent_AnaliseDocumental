@@ -215,7 +215,8 @@ async def test_follow_up_question_knows_the_previous_turn(http, world, model, ag
         ("Qual empresa teve a maior margem EBITDA?", "completa"), ("E a menor?", "completa")]
     assert turns[0]["respostas"][0]["fontes"] == ["Light.pdf, p. 15"]
     listed = (await http.get("/api/conversas", headers=auth())).json()
-    assert [(c["conversa_id"], c["turnos"]) for c in listed] == [(conversation, 2)]
+    assert [(c["conversa_id"], c["turnos"], c["titulo"]) for c in listed] == [
+        (conversation, 2, "Qual empresa teve a maior margem EBITDA?")]
 
     # Um pedido sem conversa abre uma nova, e não vê os turnos desta.
     model.scripts["orquestrador"] = [[decide(terminado=True)]]

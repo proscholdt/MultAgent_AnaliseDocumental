@@ -1,0 +1,32 @@
+{
+	"name": "frontend",
+	"private": true,
+	"version": "1.0.0",
+	"type": "module",
+	"description": "Tela para enviar os documentos ao indexador e conversar com os agentes.",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"start": "node build",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"test": "vitest run"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-node": "~5.5.8",
+		"@sveltejs/kit": "~2.70.3",
+		"@sveltejs/vite-plugin-svelte": "^6.2.0",
+		"svelte": "^5.40.0",
+		"svelte-check": "^4.3.0",
+		"typescript": "~5.9.3",
+		"vite": "^7.1.0",
+		"vitest": "^3.2.4"
+	},
+	"dependencies": {
+		"dompurify": "^3.2.6",
+		"marked": "^16.0.0"
+	},
+	"engines": {
+		"node": ">=22"
+	}
+}

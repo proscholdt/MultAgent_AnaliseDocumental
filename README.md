@@ -4,11 +4,14 @@ Solução do teste prático de Engenharia de IA: ler três PDFs de demonstraçõ
 (Brasal, Millet e Light), extrair os indicadores com a origem de cada valor, analisar o texto,
 responder perguntas com citação, sinalizar inconsistências e gerar um relatório consolidado.
 
-Este arquivo é só um índice. A solução está em três sistemas, cada um completo na sua pasta, com
+Este arquivo é só um índice. A solução está em quatro sistemas, cada um completo na sua pasta, com
 README, `.env.example`, Docker e testes.
 
 ```mermaid
 flowchart LR
+    U[usuário] --> FE[4. frontend<br/>SvelteKit]
+    FE -->|envio dos PDFs| IDX
+    FE -->|chat| AG
     PDF[3 PDFs] --> IDX
     subgraph IDX[1. indexer]
         I[lê o PDF, corta em trechos<br/>com página e seção,<br/>busca híbrida]
@@ -28,6 +31,7 @@ flowchart LR
 | 1. `indexer/` | Recebe os PDFs, lê com Docling ou Azure Document Intelligence, gera trechos com página, seção, tipo e unidade, e responde busca híbrida (semântica + palavras) | [indexer/README.md](indexer/README.md) |
 | 2. `mcp-server/` | Servidor MCP com governança: decide o que cada agente pode chamar, confere tudo o que eles gravam, calcula, valida e monta o relatório | [mcp-server/README.md](mcp-server/README.md) |
 | 3. `agents/` | Orquestrador e especialistas, feitos com PydanticAI; a orquestração é um grafo LangGraph. O orquestrador chama os especialistas por A2A; todos usam as ferramentas pelo servidor MCP. O usuário conversa: os agentes lembram os turnos anteriores, e o raciocínio do modelo fica registrado | [agents/README.md](agents/README.md) |
+| 4. `frontend/` | A tela: envio dos PDFs com o progresso da indexação, e o chat com os agentes (perguntas, relatório, qualquer pedido), bloqueado até a resposta e mostrando o que o sistema está fazendo. O token fica num cookie httpOnly, no servidor da tela | [frontend/README.md](frontend/README.md) |
 
 ## A entrega
 
@@ -64,9 +68,13 @@ docker compose up --build -d
 
 # Relatório completo + pasta de entrega
 uv run python scripts/gerar_entrega.py --usuario <usuário> --senha <senha> --rodar
+
+# 4. Tela
+cd ../frontend && docker compose up --build -d   # http://localhost:3000
 ```
 
-Swagger: indexador em `http://localhost:8000/docs`, agentes em `http://localhost:8200/docs`.
+A tela fica em `http://localhost:3000`. Swagger: indexador em `http://localhost:8000/docs`, agentes
+em `http://localhost:8200/docs`.
 Os detalhes (usuário, parser, variáveis) estão no README de cada sistema.
 
 ## Onde está cada ponto pedido no enunciado
@@ -94,7 +102,8 @@ Os detalhes (usuário, parser, variáveis) estão no README de cada sistema.
   omitido). Eles aparecem como alertas, com a citação. Nada é corrigido.
 - **"Alavancagem" é dívida líquida / EBITDA.** Índices com o mesmo nome e outra conta (dívida
   sobre patrimônio ou sobre capital) não entram nesse campo.
-- **Sem frontend.** As três APIs têm Swagger, e a entrega sai por script.
+- **A tela é para uso e demonstração.** A entrega oficial (relatório, JSON, avaliação) sai por
+  script, e as APIs têm Swagger.
 
 ## O que ficou de fora
 
