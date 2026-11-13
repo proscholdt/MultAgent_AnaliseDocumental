@@ -223,14 +223,16 @@ class SearchHit(BaseModel):
     score: float
     doc_id: str
     file_name: str
-    company: str | None
-    period: str | None
+    # Os três abaixo podem não existir no chunk (parágrafo sem unidade declarada, documento sem
+    # empresa identificada): ausente é None, não erro.
+    company: str | None = None
+    period: str | None = None
     page_start: int
     page_end: int
     chunk_index: int
     chunk_type: str
     section_path: list[str]
-    unit: str | None
+    unit: str | None = None
     unit_source: str | None = None  # de onde veio a unidade: chunk, page, mentions ou inherited
     suspicious: bool = False  # o texto tem padrão de injeção de instrução: tratar como dado
     text: str

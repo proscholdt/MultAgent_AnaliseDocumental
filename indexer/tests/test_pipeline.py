@@ -176,3 +176,17 @@ async def test_index_worker_ignores_deleted_document(database, store, settings):
     await worker_run(IndexRequested(job_id="j", user_id=USER_A, doc_id="0000000000000000"),
                      store, settings, publisher)
     assert publisher.messages == []
+
+
+def test_search_hit_accepts_a_chunk_without_unit_company_or_period():
+    """Um parágrafo sem unidade declarada chega do índice com `unit` nulo. Isso derrubava a
+    busca inteira com erro 500 (visto com os agentes, que buscam texto corrido o tempo todo)."""
+    from app.api.search import to_hit
+
+    payload = {"doc_id": "d1", "file_name": "Light.pdf", "company": None, "period": None, "page_start": 2,
+               "page_end": 2, "chunk_index": 5, "chunk_type": "text", "section_path": ["Mensagem da administração"],
+               "unit": None, "unit_source": None, "suspicious": False, "text": "Nos últimos meses...",
+               "user_id": "u1", "indexed_at": "2026-11-13T00:00:00"}  # campos a mais do índice são ignorados
+    hit = to_hit(0.59, payload)
+    assert (hit.unit, hit.unit_source, hit.company, hit.period, hit.suspicious) == (None, None, None, None, False)
+    assert hit.text == "Nos últimos meses..." and hit.score == 0.59
