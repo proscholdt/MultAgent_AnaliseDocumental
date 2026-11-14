@@ -83,6 +83,10 @@ use `OTEL_INCLUIR_CONTEUDO=true` no `.env` dos agentes.
 
 Retenção: 3 dias de traces, 7 de logs, 15 de métricas.
 
+Para acompanhar uma execução enquanto ela acontece, há a [sala dos agentes](../sala/README.md):
+os agentes desenhados trabalhando, a partir dos passos do orquestrador e da auditoria do servidor
+MCP, e uma aba com os logs do Loki.
+
 ## Estrutura
 
 ```

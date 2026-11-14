@@ -3,7 +3,8 @@
 PDFs de demonstrações financeiras viram indicadores com a origem de cada valor, análise
 qualitativa com citação, respostas a perguntas e um relatório consolidado. O sistema é dividido
 em quatro serviços independentes, cada um com Docker, testes e README próprios, mais uma pilha de
-observabilidade que junta traces, métricas e logs de todos.
+observabilidade que junta traces, métricas e logs de todos e uma sala que mostra os agentes
+trabalhando em tempo real.
 
 ```mermaid
 flowchart LR
@@ -23,6 +24,7 @@ flowchart LR
 | [`agents/`](agents/README.md) | Orquestrador em grafo e cinco especialistas ligados por A2A; conversa com memória e raciocínio registrado |
 | [`frontend/`](frontend/README.md) | Envio dos PDFs e chat; sessão em cookie httpOnly e proxy para as APIs |
 | [`observability/`](observability/README.md) | Tempo, Prometheus, Loki e Grafana, com o Alloy como coletor: um trace atravessa os quatro serviços, e os painéis mostram custo, tokens e portões dos agentes |
+| [`sala/`](sala/README.md) | Sala dos agentes: a execução em tempo real como um escritório em pixel art (quem trabalha, com qual tool, o que o portão barrou) e uma aba de logs |
 
 ## Princípios
 
@@ -41,6 +43,7 @@ cd mcp-server && cp .env.example .env && docker compose up -d --build   # :8100
 cd agents     && cp .env.example .env && docker compose up -d --build   # :8200, :8201
 cd frontend   && docker compose up -d --build                           # :3000
 cd observability && docker compose up -d                                # Grafana :3001
+cd sala       && cp .env.example .env && docker compose up -d           # :3300
 ```
 
 Os serviços se falam pela rede Docker do indexador (`indexer_default`). Indexador e agentes
@@ -69,4 +72,4 @@ Páginas HTML com os fluxos desenhados (abrem direto no navegador, sem internet)
   fluxo do relatório (quem faz o quê e em que ordem), identidade
 - [Indexador](indexer/docs/fluxos.html) · [Servidor MCP](mcp-server/docs/fluxos.html) ·
   [Agentes](agents/docs/fluxos.html) · [Frontend](frontend/docs/fluxos.html) ·
-  [Observabilidade](observability/docs/fluxos.html)
+  [Observabilidade](observability/docs/fluxos.html) · [Sala dos agentes](sala/docs/fluxos.html)

@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sala dos Agentes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d1117; --painel:#111a24; --borda:#2b3b4d; --tinta:#d7e3ef; --fraco:#7f93a8; --verde:#3ddc84; --ambar:#f4b740; --vermelho:#ff6b6b; --azul:#58a6ff; --roxo:#b392f0; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--tinta); font:14px/1.45 'JetBrains Mono', Consolas, monospace; }
+  header { display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px; padding:10px 16px; border-bottom:2px solid var(--borda); background:#0a0f15; }
+  h1 { font:12px 'Press Start 2P', monospace; margin:0; color:var(--verde); letter-spacing:1px; }
+  .abas { display:flex; gap:4px; }
+  .abas button, .ctl button, select, input[type=text], .login input { background:var(--painel); color:var(--tinta); border:1px solid var(--borda); border-radius:4px; padding:6px 10px; font:inherit; }
+  .abas button.ativa { background:var(--verde); color:#06210f; border-color:var(--verde); font-weight:600; }
+  .ctl { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-left:auto; font-size:13px; }
+  select { max-width:420px; }
+  main { padding:12px 16px 24px; }
+  .palco { position:relative; max-width:1240px; margin:0 auto; }
+  canvas { width:100%; height:auto; display:block; image-rendering:pixelated; border:2px solid var(--borda); border-radius:6px; background:#1b2430; }
+  .janela { position:absolute; background:rgba(9,14,20,.92); border:2px solid var(--borda); border-radius:4px; font-size:12px; }
+  .janela .titulo { font:9px 'Press Start 2P', monospace; color:var(--azul); padding:6px 8px; border-bottom:1px solid var(--borda); display:flex; justify-content:space-between; }
+  #conversa { left:12px; bottom:12px; width:min(430px, 40%); }
+  #conversa .linhas { padding:6px 8px; height:150px; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end; }
+  #conversa .l { margin:2px 0; }
+  #conversa .l b { color:var(--verde); font-weight:600; }
+  #painel { right:12px; bottom:12px; width:min(300px, 34%); }
+  #painel .linhas { padding:8px 10px; font:9px/2 'Press Start 2P', monospace; }
+  #painel .linhas div { display:flex; justify-content:space-between; gap:8px; }
+  #painel .v { color:var(--verde); }
+  .logs { display:grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap:12px; max-width:1500px; margin:0 auto; }
+  @media (max-width: 1000px) { .logs { grid-template-columns: 1fr; } }
+  .caixa { background:var(--painel); border:1px solid var(--borda); border-radius:6px; min-width:0; display:flex; flex-direction:column; height:calc(100vh - 110px); }
+  .caixa h2 { font:10px 'Press Start 2P', monospace; color:var(--azul); margin:0; padding:10px 12px; border-bottom:1px solid var(--borda); display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .caixa h2 .esp { margin-left:auto; display:flex; gap:6px; }
+  .rolo { overflow:auto; flex:1; font-size:12px; }
+  table { width:100%; border-collapse:collapse; }
+  td { padding:3px 8px; border-bottom:1px solid #1c2733; vertical-align:top; }
+  td.t { color:var(--fraco); white-space:nowrap; }
+  td.q { white-space:nowrap; font-weight:600; }
+  .tg { font-size:10px; padding:1px 6px; border-radius:3px; background:#1e2a38; white-space:nowrap; }
+  .ok { color:var(--verde); } .ruim { color:var(--vermelho); } .pensa { color:var(--roxo); } .amb { color:var(--ambar); }
+  pre.loki { margin:0; padding:8px 10px; white-space:pre-wrap; word-break:break-word; font-size:11.5px; }
+  pre.loki .s { color:var(--azul); }
+  .login { position:fixed; inset:0; display:grid; place-items:center; background:rgba(5,8,12,.88); z-index:9; }
+  .login form { background:var(--painel); border:2px solid var(--verde); padding:22px; border-radius:6px; display:grid; gap:10px; width:300px; }
+  .login h2 { font:11px 'Press Start 2P', monospace; color:var(--verde); margin:0 0 6px; }
+  .login button { background:var(--verde); color:#06210f; border:0; padding:8px; font-weight:700; border-radius:4px; cursor:pointer; }
+  .erro { color:var(--vermelho); font-size:12px; min-height:16px; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>▮ SALA DOS AGENTES</h1>
+  <div class="abas"><button id="aba-sala" class="ativa">Sala</button><button id="aba-logs">Logs</button></div>
+  <div class="ctl">
+    <select id="execucoes" title="Execução"></select>
+    <label><input type="checkbox" id="seguir" checked> seguir a mais nova</label>
+    <button id="repetir" title="Repete a execução do começo, no ritmo em que aconteceu (1×) ou acelerada">↻ Repetir</button>
+    <select id="vel" title="Velocidade da repetição (1× = tempo real)"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option><option value="8">8×</option></select>
+  </div>
+</header>
+
+<main>
+  <section id="sala" class="palco">
+    <canvas id="tela" width="1120" height="770"></canvas>
+    <div class="janela" id="conversa"><div class="titulo"><span>CONVERSA</span><span>_ □ ×</span></div><div class="linhas"></div></div>
+    <div class="janela" id="painel"><div class="titulo"><span>PAINEL DE CONTROLE</span></div><div class="linhas"></div></div>
+  </section>
+
+  <section id="logs" class="logs" hidden>
+    <div class="caixa">
+      <h2>EVENTOS DA EXECUÇÃO <span class="esp"><input type="text" id="filtro" placeholder="filtrar…"></span></h2>
+      <div class="rolo"><table><tbody id="eventos"></tbody></table></div>
+    </div>
+    <div class="caixa">
+      <h2>CONTÊINERES (LOKI)
+        <span class="esp">
+          <select id="consulta">
+            <option value='{projeto=~"agents|mcp-server"} |~ "passo=|tool=" != "passo=raciocinio"'>passos e tools</option>
+            <option value='{projeto=~"agents|mcp-server"} != "/auditoria" != "/api/execucoes" != "/auth/me"'>agentes + MCP (sem ruído)</option>
+            <option value='{projeto="agents"} |= "passo="'>passos dos agentes</option>
+            <option value='{projeto="mcp-server"} |= "tool="'>tools no MCP</option>
+            <option value='{projeto=~".+", nivel=~"ERROR|CRITICAL|WARNING"}'>avisos e erros</option>
+            <option value='{projeto=~".+"}'>todos os serviços</option>
+          </select>
+        </span>
+      </h2>
+      <div class="rolo"><pre class="loki" id="loki">carregando…</pre></div>
+    </div>
+  </section>
+</main>
+
+<div class="login" id="login" hidden>
+  <form id="form-login">
+    <h2>ENTRAR</h2>
+    <input id="u" placeholder="usuário" autocomplete="username">
+    <input id="s" type="password" placeholder="senha" autocomplete="current-password">
+    <button>Entrar na sala</button>
+    <div class="erro" id="erro-login"></div>
+  </form>
+</div>
+
+<script>
+// ============================================================================================
+// Cenário
+// ============================================================================================
+const tela = document.getElementById('tela');
+const ctx = tela.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+const W = tela.width, H = tela.height, CORREDOR = 340;
+
+const XS = [130, 345, 560, 775, 990];
+const ESPECIALISTAS = ['extrator', 'validador', 'analista', 'pesquisador', 'redator'];
+const LUGARES = {
+  usuario: { sentado: { x: 135, y: 150 }, visita: { x: 205, y: 272 }, faixa: 282 },
+  orquestrador: { sentado: { x: 545, y: 150 }, visita: { x: 545, y: 232 }, faixa: 650 },
+  mcp: { visita: { x: 830, y: 262 }, faixa: 830 },
+};
+ESPECIALISTAS.forEach((nome, i) => {
+  LUGARES[nome] = { sentado: { x: XS[i], y: 452 }, visita: { x: XS[i], y: 540 }, faixa: XS[i] - 98 };
+});
+const RACK = { x: 790, y: 135 }, ARQUIVO = { x: 1030, y: 150 };
+
+const VISUAL = {
+  usuario:      { nome: 'VOCÊ',         camisa: '#2f4f86', cabelo: '#3b2a1a', pele: '#f1c27d', calca: '#1f2a3a' },
+  orquestrador: { nome: 'ORQUESTRADOR', camisa: '#1f2937', cabelo: '#111111', pele: '#e0ac69', calca: '#111827', gravata: '#c0392b' },
+  extrator:     { nome: 'EXTRATOR',     camisa: '#0f766e', cabelo: '#5b3a1e', pele: '#f1c27d', calca: '#243142' },
+  validador:    { nome: 'VALIDADOR',    camisa: '#b42318', cabelo: '#8d5524', pele: '#c68642', calca: '#243142' },
+  analista:     { nome: 'ANALISTA',     camisa: '#7c3aed', cabelo: '#e6be8a', pele: '#ffdbac', calca: '#243142' },
+  pesquisador:  { nome: 'PESQUISADOR',  camisa: '#b7791f', cabelo: '#2d1b0e', pele: '#8d5524', calca: '#243142' },
+  redator:      { nome: 'REDATOR',      camisa: '#2563eb', cabelo: '#a0522d', pele: '#f1c27d', calca: '#243142' },
+};
+const STATUS_COR = { LIVRE: '#5c6b7a', TRABALHANDO: '#2fbf71', ESPERANDO: '#d29922', REUNIÃO: '#4c8ff0', ANDANDO: '#7d8590', PENSANDO: '#a371f7', 'NO PORTÃO': '#e5534b' };
+
+// ============================================================================================
+// Pessoas e ações
+// ============================================================================================
+let velocidadeBase = 1;
+class Pessoa {
+  constructor(id) {
+    this.id = id; this.v = VISUAL[id]; this.lugar = id;
+    const s = LUGARES[id].sentado; this.x = s.x; this.y = s.y;
+    this.sentado = true; this.fila = []; this.atual = null; this.status = 'LIVRE';
+    this.bolha = null; this.passo = 0; this.digitando = 0; this.ferramenta = null; this.ferramentaAte = 0;
+  }
+  fazer(acao) { this.fila.push(acao); }
+  get vel() { return Math.min(8, velocidadeBase * (1 + this.fila.length / 4)); }
+  limpar() { this.fila = []; this.atual = null; this.bolha = null; }
+}
+const pessoas = {};
+['usuario', 'orquestrador', ...ESPECIALISTAS].forEach((id) => (pessoas[id] = new Pessoa(id)));
+const pacotes = [];
+let piscaRack = 0;
+
+function caminho(p, lugarAlvo, alvo) {
+  const de = LUGARES[p.lugar], para = LUGARES[lugarAlvo];
+  return [{ x: de.faixa, y: p.y }, { x: de.faixa, y: CORREDOR }, { x: para.faixa, y: CORREDOR }, { x: para.faixa, y: alvo.y }, alvo];
+}
+
+function iniciar(p, a) {
+  a.t = 0;
+  if (a.tipo === 'andar') {
+    p.sentado = false; p.status = a.status || 'ANDANDO';
+    a.pts = caminho(p, a.lugar, a.alvo);
+  } else if (a.tipo === 'sentar') {
+    const s = LUGARES[p.id].sentado;
+    a.pts = caminho(p, p.id, s); p.sentado = false; p.status = 'ANDANDO';
+  } else if (a.tipo === 'falar' || a.tipo === 'pensar' || a.tipo === 'alerta') {
+    p.bolha = { tipo: a.tipo, texto: a.texto };
+    if (a.tipo === 'pensar') p.statusAntes = p.status;
+    if (a.tipo === 'falar') registrarFala(p, a.para, a.texto);
+  } else if (a.tipo === 'status') {
+    p.status = a.valor;
+  } else if (a.tipo === 'acao') {
+    a.fn();
+  } else if (a.tipo === 'voltar') {
+    if (p.fila.some((x) => x.tipo === 'andar')) return true; // vai a outro lugar: não volta à mesa
+    p.fila.unshift({ tipo: 'sentar' });
+  }
+  return ['status', 'acao', 'voltar'].includes(a.tipo);
+}
+
+function atualizar(p, dt) {
+  if (!p.atual) {
+    while (p.fila.length) {
+      const a = p.fila.shift();
+      if (iniciar(p, a)) continue;
+      p.atual = a; break;
+    }
+    if (!p.atual) return;
+  }
+  const a = p.atual, v = p.vel;
+  if (a.tipo === 'andar' || a.tipo === 'sentar') {
+    let restante = 150 * v * dt;
+    while (restante > 0 && a.pts.length) {
+      const alvo = a.pts[0], dx = alvo.x - p.x, dy = alvo.y - p.y, d = Math.hypot(dx, dy);
+      if (d <= restante) { p.x = alvo.x; p.y = alvo.y; restante -= d; a.pts.shift(); }
+      else { p.x += (dx / d) * restante; p.y += (dy / d) * restante; restante = 0; p.dir = dy < -0.5 ? 'cima' : 'baixo'; }
+    }
+    p.passo += dt * 10 * v;
+    if (!a.pts.length) {
+      p.atual = null;
+      if (a.tipo === 'sentar') { p.sentado = true; p.lugar = p.id; p.dir = 'baixo'; if (p.status === 'ANDANDO') p.status = p.statusDepois || 'LIVRE'; }
+      else { p.lugar = a.lugar; p.dir = 'cima'; p.status = a.statusChegada || 'REUNIÃO'; }
+    }
+  } else {
+    a.t += dt * 1000 * v;
+    const dur = a.ms || 1800;
+    if (a.tipo === 'trabalhar') p.digitando = 0.4;
+    if (a.t >= dur) {
+      p.atual = null;
+      if (['falar', 'pensar', 'alerta'].includes(a.tipo)) p.bolha = null;
+    }
+  }
+}
+
+// ============================================================================================
+// Desenho
+// ============================================================================================
+function chao() {
+  for (let y = 40; y < H; y += 20) for (let x = 0; x < W; x += 20) {
+    ctx.fillStyle = ((x + y) / 20) % 2 ? '#c9c2b4' : '#c2bbac'; ctx.fillRect(x, y, 20, 20);
+  }
+  ctx.fillStyle = '#3a4656'; ctx.fillRect(0, 0, W, 40);           // parede do fundo
+  ctx.fillStyle = '#4b5a6c'; for (let x = 10; x < W; x += 140) ctx.fillRect(x, 8, 90, 22); // janelas
+  ctx.fillStyle = '#9db3c9'; for (let x = 14; x < W; x += 140) ctx.fillRect(x, 12, 82, 14);
+  ctx.fillStyle = '#7f8c9a'; ctx.fillRect(0, CORREDOR - 22, W, 44); // corredor
+  ctx.fillStyle = '#8d9aa8'; for (let x = 0; x < W; x += 40) ctx.fillRect(x, CORREDOR - 1, 22, 2);
+  // sala do usuário
+  ctx.fillStyle = '#41538a'; ctx.fillRect(20, 52, 236, 248);
+  ctx.fillStyle = '#4a5f9c'; for (let y = 60; y < 300; y += 16) ctx.fillRect(28, y, 220, 2);
+  ctx.fillStyle = '#5c4636'; ctx.fillRect(16, 48, 244, 6); ctx.fillRect(16, 48, 6, 256); ctx.fillRect(254, 48, 6, 196);
+  rotulo('SALA DO USUÁRIO', 34, 292, '#cfd8ff');
+  // sala do MCP e arquivo
+  ctx.fillStyle = '#2d3743'; ctx.fillRect(720, 52, 384, 196);
+  ctx.fillStyle = '#36424f'; for (let x = 724; x < 1100; x += 24) ctx.fillRect(x, 52, 2, 196);
+  rotulo('SERVIDOR MCP · PORTÕES', 736, 72, '#9ef0c5');
+  rotulo('ARQUIVO · INDEXADOR', 960, 72, '#ffd59a');
+  // copa (faixa de baixo): piso de madeira, tapete, plantas, cafeteira
+  ctx.fillStyle = '#8a6a4a'; ctx.fillRect(0, 590, W, H - 590);
+  ctx.fillStyle = '#7b5d40'; for (let y = 596; y < H; y += 14) ctx.fillRect(0, y, W, 2);
+  ctx.fillStyle = '#5c4636'; ctx.fillRect(0, 586, W, 6);
+  ctx.fillStyle = '#3d6b5a'; ctx.fillRect(470, 640, 180, 90); ctx.fillStyle = '#4f8a74'; ctx.fillRect(480, 650, 160, 70);
+  ctx.fillStyle = '#2b2f36'; ctx.fillRect(530, 600, 60, 34); ctx.fillStyle = '#c0392b'; ctx.fillRect(540, 606, 10, 6);
+  ctx.fillStyle = '#e8e2d6'; ctx.fillRect(556, 620, 10, 10);
+  rotulo('COPA', 538, 662, '#e8f5ee');
+  [[455, 612], [668, 612]].forEach(([x, y]) => { ctx.fillStyle = '#6b4226'; ctx.fillRect(x, y + 18, 18, 16); ctx.fillStyle = '#2e8b57'; ctx.fillRect(x - 6, y, 30, 20); ctx.fillStyle = '#3cb371'; ctx.fillRect(x - 2, y - 6, 22, 10); });
+}
+
+function rotulo(t, x, y, cor) { ctx.font = "8px 'Press Start 2P', monospace"; ctx.fillStyle = cor; ctx.fillText(t, x, y); }
+
+function racks(tempo) {
+  for (let i = 0; i < 3; i++) {
+    const x = 750 + i * 52, y = 84;
+    ctx.fillStyle = '#11161c'; ctx.fillRect(x, y, 40, 128);
+    ctx.fillStyle = '#1e2731'; ctx.fillRect(x + 3, y + 3, 34, 122);
+    for (let r = 0; r < 10; r++) {
+      ctx.fillStyle = '#28323e'; ctx.fillRect(x + 6, y + 8 + r * 12, 28, 8);
+      const on = (Math.sin(tempo / 120 + r * 1.7 + i * 3) > (piscaRack > 0 ? -0.6 : 0.4));
+      ctx.fillStyle = on ? (r % 3 ? '#3ddc84' : '#58a6ff') : '#0f2a1a';
+      ctx.fillRect(x + 28, y + 10 + r * 12, 3, 3);
+    }
+  }
+  // estantes do arquivo
+  for (let i = 0; i < 2; i++) {
+    const x = 965 + i * 64, y = 86;
+    ctx.fillStyle = '#5a3d24'; ctx.fillRect(x, y, 56, 124);
+    for (let r = 0; r < 4; r++) {
+      ctx.fillStyle = '#3e2a19'; ctx.fillRect(x + 3, y + 6 + r * 30, 50, 24);
+      for (let b = 0; b < 7; b++) { ctx.fillStyle = ['#c0392b', '#2980b9', '#27ae60', '#f39c12', '#8e44ad'][(b + r + i) % 5]; ctx.fillRect(x + 5 + b * 7, y + 10 + r * 30, 5, 20); }
+    }
+  }
+}
+
+function mesa(p) {
+  const s = LUGARES[p.id].sentado, x = s.x - 76, y = s.y - 12;
+  ctx.fillStyle = '#7a5434'; ctx.fillRect(x, y + 34, 152, 10);       // frente
+  ctx.fillStyle = '#b8875a'; ctx.fillRect(x, y, 152, 36);            // tampo
+  ctx.fillStyle = '#a17447'; ctx.fillRect(x, y + 30, 152, 4);
+  // monitor
+  const mx = x + 10, my = y - 22;
+  ctx.fillStyle = '#20262e'; ctx.fillRect(mx, my, 40, 28); ctx.fillRect(mx + 16, my + 28, 8, 6);
+  const tela = p.digitando > 0 ? '#1f6f50' : '#183a5a';
+  ctx.fillStyle = tela; ctx.fillRect(mx + 3, my + 3, 34, 20);
+  ctx.fillStyle = '#7ee2b8';
+  for (let l = 0; l < 4; l++) ctx.fillRect(mx + 6, my + 6 + l * 4, ((l * 7 + Math.floor(performance.now() / (p.digitando > 0 ? 90 : 900))) % 20) + 6, 2);
+  // papéis e caneca
+  ctx.fillStyle = '#eef1f4'; ctx.fillRect(x + 104, y + 8, 20, 14); ctx.fillStyle = '#c9ced4'; ctx.fillRect(x + 107, y + 11, 14, 2);
+  ctx.fillStyle = '#d35400'; ctx.fillRect(x + 132, y + 10, 8, 9);
+  if (p.ferramenta && performance.now() < p.ferramentaAte) {
+    ctx.font = '10px "JetBrains Mono", monospace';
+    const t = p.ferramenta.texto, w = ctx.measureText(t).width + 10;
+    ctx.fillStyle = p.ferramenta.ok ? 'rgba(18,60,38,.92)' : 'rgba(110,25,25,.92)';
+    ctx.fillRect(x + 76 - w / 2, y + 48, w, 15);
+    ctx.fillStyle = p.ferramenta.ok ? '#9ef0c5' : '#ffd0d0'; ctx.fillText(t, x + 81 - w / 2, y + 59);
+  }
+}
+
+function boneco(p) {
+  const P = 3, x0 = Math.round(p.x) - 15, y0 = Math.round(p.y) - 48, v = p.v;
+  const px = (cx, cy, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x0 + cx * P, y0 + cy * P, w * P, h * P); };
+  ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(p.x, p.y + 1, 14, 4, 0, 0, Math.PI * 2); ctx.fill();
+  const costas = p.dir === 'cima' && !p.sentado;
+  // pernas
+  if (!p.sentado) {
+    const f = Math.floor(p.passo) % 2, andando = p.atual && (p.atual.tipo === 'andar' || p.atual.tipo === 'sentar');
+    px(2, 11, 2, andando && f ? 3 : 4, v.calca); px(6, 11, 2, andando && !f ? 3 : 4, v.calca);
+    px(2, andando && f ? 14 : 15, 2, 1, '#111'); px(6, andando && !f ? 14 : 15, 2, 1, '#111');
+  }
+  // corpo e braços
+  px(1, 6, 8, 5, v.camisa); px(1, 6, 8, 1, shade(v.camisa));
+  const dig = p.digitando > 0 && Math.floor(performance.now() / 120) % 2;
+  px(0, 6, 1, 4, v.camisa); px(9, 6, 1, 4, v.camisa);
+  px(0, dig ? 9 : 10, 1, 1, v.pele); px(9, dig ? 10 : 9, 1, 1, v.pele);
+  if (v.gravata && !costas) px(4, 6, 2, 4, v.gravata);
+  // cabeça
+  px(2, 2, 6, 4, v.pele);
+  px(2, 0, 6, 2, v.cabelo); px(1, 1, 1, 3, v.cabelo); px(8, 1, 1, 3, v.cabelo);
+  if (costas) px(2, 2, 6, 3, v.cabelo);
+  else { px(3, 3, 1, 1, '#1b1b1b'); px(6, 3, 1, 1, '#1b1b1b'); px(4, 5, 2, 1, shade(v.pele)); }
+}
+
+function shade(hex) {
+  const n = parseInt(hex.slice(1), 16), r = (n >> 16) * 0.75, g = ((n >> 8) & 255) * 0.75, b = (n & 255) * 0.75;
+  return `rgb(${r | 0},${g | 0},${b | 0})`;
+}
+
+function etiquetas(p) {
+  const y = p.y - 58;
+  ctx.font = "7px 'Press Start 2P', monospace";
+  const nome = p.v.nome, wn = ctx.measureText(nome).width + 8;
+  ctx.fillStyle = 'rgba(10,14,20,.85)'; ctx.fillRect(p.x - wn / 2, y - 10, wn, 12);
+  ctx.fillStyle = '#e6edf3'; ctx.fillText(nome, p.x - wn / 2 + 4, y - 1);
+  const st = p.status, ws = ctx.measureText(st).width + 8, cor = STATUS_COR[st] || '#5c6b7a';
+  ctx.fillStyle = cor; ctx.fillRect(p.x - ws / 2, y - 24, ws, 12);
+  ctx.fillStyle = '#0b0f14'; ctx.fillText(st, p.x - ws / 2 + 4, y - 15);
+}
+
+function quebrar(texto, max) {
+  const palavras = String(texto).split(/\s+/), linhas = [];
+  let l = '';
+  for (const w of palavras) { if ((l + ' ' + w).trim().length > max) { if (l) linhas.push(l); l = w; } else l = (l + ' ' + w).trim(); }
+  if (l) linhas.push(l);
+  if (linhas.length > 4) { linhas.length = 4; linhas[3] = linhas[3].slice(0, max - 1) + '…'; }
+  return linhas;
+}
+
+function bolha(p) {
+  if (!p.bolha) return;
+  const linhas = quebrar(p.bolha.texto, 30);
+  ctx.font = '11px "JetBrains Mono", monospace';
+  const w = Math.max(...linhas.map((l) => ctx.measureText(l).width)) + 16, h = linhas.length * 14 + 10;
+  let x = Math.min(Math.max(p.x - w / 2, 4), W - w - 4), y = p.y - 92 - h;
+  if (y < 44) y = 44;
+  const pensa = p.bolha.tipo === 'pensar', alerta = p.bolha.tipo === 'alerta';
+  ctx.fillStyle = alerta ? '#fff1f0' : pensa ? '#f3eeff' : '#ffffff';
+  ctx.strokeStyle = alerta ? '#e5534b' : pensa ? '#8957e5' : '#1b2430'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, 6); ctx.fill(); ctx.stroke();
+  if (pensa) { [[0, 8, 4], [-6, 16, 3]].forEach(([dx, dy, r]) => { ctx.beginPath(); ctx.arc(p.x + dx, y + h + dy - 2, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }); }
+  else { ctx.beginPath(); ctx.moveTo(p.x - 6, y + h - 1); ctx.lineTo(p.x, y + h + 9); ctx.lineTo(p.x + 6, y + h - 1); ctx.fill(); ctx.beginPath(); ctx.moveTo(p.x - 6, y + h); ctx.lineTo(p.x, y + h + 9); ctx.lineTo(p.x + 6, y + h); ctx.stroke(); }
+  ctx.fillStyle = alerta ? '#a40e26' : '#141a22';
+  linhas.forEach((l, i) => ctx.fillText(l, x + 8, y + 17 + i * 14));
+}
+
+function desenharPacotes(agora) {
+  for (let i = pacotes.length - 1; i >= 0; i--) {
+    const k = pacotes[i], t = Math.min(1, (agora - k.t0) / k.ms);
+    const x = k.x0 + (k.x1 - k.x0) * t, y = k.y0 + (k.y1 - k.y0) * t - Math.sin(t * Math.PI) * 40;
+    ctx.fillStyle = k.cor; ctx.fillRect(x - 6, y - 4, 12, 8);
+    ctx.strokeStyle = '#0b0f14'; ctx.lineWidth = 1; ctx.strokeRect(x - 6, y - 4, 12, 8);
+    ctx.beginPath(); ctx.moveTo(x - 6, y - 4); ctx.lineTo(x, y + 1); ctx.lineTo(x + 6, y - 4); ctx.stroke();
+    if (t >= 1) { pacotes.splice(i, 1); piscaRack = 400; if (k.depois) pacote(k.depois); }
+  }
+}
+
+function pacote(k) { pacotes.push({ ...k, t0: performance.now(), ms: (k.ms || 700) / Math.min(4, velocidadeBase) }); }
+
+let ultimo = performance.now();
+function quadro(agora) {
+  const dt = Math.min(0.1, (agora - ultimo) / 1000); ultimo = agora;
+  piscaRack = Math.max(0, piscaRack - dt * 1000);
+  Object.values(pessoas).forEach((p) => { atualizar(p, dt); p.digitando = Math.max(0, p.digitando - dt); });
+  chao(); racks(agora);
+  // mesas e pessoas, de cima para baixo
+  const cena = [];
+  Object.values(pessoas).forEach((p) => {
+    const s = LUGARES[p.id].sentado;
+    cena.push({ y: s.y + 20, f: () => mesa(p) });
+    cena.push({ y: p.sentado ? s.y + 10 : p.y + 30, f: () => boneco(p) });
+  });
+  cena.sort((a, b) => a.y - b.y).forEach((c) => c.f());
+  Object.values(pessoas).forEach(etiquetas);
+  desenharPacotes(agora);
+  Object.values(pessoas).forEach(bolha);
+  requestAnimationFrame(quadro);
+}
+requestAnimationFrame(quadro);
+
+// ============================================================================================
+// Conversa e painel
+// ============================================================================================
+const falas = [];
+function registrarFala(p, para, texto) {
+  falas.push({ de: p.v.nome, para: para ? VISUAL[para].nome : '', texto });
+  if (falas.length > 6) falas.shift();
+  document.querySelector('#conversa .linhas').innerHTML = falas.map((f) =>
+    `<div class="l"><b>${f.de}${f.para ? ' → ' + f.para : ''}:</b> ${esc(f.texto)}</div>`).join('');
+}
+function esc(s) { return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+let execInfo = null, chamadas = 0, barradas = 0;
+function painel() {
+  const ativos = ESPECIALISTAS.filter((n) => pessoas[n].status === 'TRABALHANDO').length;
+  const ex = execInfo || {};
+  const inicio = ex.iniciada_em ? Date.parse(ex.iniciada_em) : null;
+  const fim = ex.terminada_em ? Date.parse(ex.terminada_em) : Date.now();
+  const seg = inicio ? Math.max(0, Math.round((fim - inicio) / 1000)) : 0;
+  const custo = ex.uso?.total?.custo_usd;
+  const linhas = [
+    ['AGENTES ATIVOS', ativos], ['EXECUÇÃO', (ex.tipo || '-').toUpperCase()], ['ESTADO', (ex.estado || '-').toUpperCase()],
+    ['TEMPO', seg ? `${Math.floor(seg / 60)}:${String(seg % 60).padStart(2, '0')}` : '-'],
+    ['CHAMADAS DE TOOL', chamadas], ['BARRADAS NO PORTÃO', barradas], ['CUSTO', custo != null ? 'US$ ' + custo.toFixed(3) : '-'],
+  ];
+  document.querySelector('#painel .linhas').innerHTML = linhas.map(([k, v]) => `<div><span>${k}</span><span class="v">${esc(v)}</span></div>`).join('');
+}
+setInterval(painel, 500);
+
+// ============================================================================================
+// Eventos → ações
+// ============================================================================================
+const GRAVA = { salvar_indicador: 'indicadores', salvar_nao_encontrado: 'ausências', fechar_extracao: 'extração fechada',
+  registrar_alerta: 'alertas', concluir_revisao: 'revisão concluída', salvar_item_analise: 'achados', registrar_ausencia_analise: 'ausências',
+  salvar_resposta: 'resposta', salvar_resumo: 'resumo', montar_relatorio: 'relatório montado' };
+const RAG = new Set(['buscar_trechos', 'ler_chunk', 'ler_pagina', 'listar_documentos']);
+let nomesDocs = {}, pensamentos = {};
+
+function curto(t, n = 70) { t = String(t ?? ''); return t.length > n ? t.slice(0, n - 1) + '…' : t; }
+function nomeDoc(id) { return id ? (nomesDocs[id] || 'documento ' + id.slice(0, 6)) : ''; }
+function relato(passo) {
+  if (passo.estado !== 'concluido') return `Parei: ${passo.estado}${passo.erro ? ' (' + curto(passo.erro, 40) + ')' : ''}.`;
+  const g = Object.entries(passo.gravacoes || {}).map(([k, n]) => (n > 1 ? `${n} ` : '') + (GRAVA[k] || k));
+  return g.length ? `Pronto: ${g.join(', ')}.` : 'Pronto!';
+}
+
+function evento(passo) {
+  const O = pessoas.orquestrador, U = pessoas.usuario;
+  const ag = passo.agente && pessoas[passo.agente];
+  switch (passo.tipo) {
+    case 'inicio':
+      U.fazer({ tipo: 'status', valor: 'ESPERANDO' });
+      O.fazer({ tipo: 'andar', lugar: 'usuario', alvo: LUGARES.usuario.visita });
+      O.fazer({ tipo: 'acao', fn: () => U.fazer({ tipo: 'falar', texto: curto(passo.pedido, 110), ms: 2600, para: 'orquestrador' }) });
+      O.fazer({ tipo: 'esperar', ms: 2600 });
+      O.fazer({ tipo: 'falar', texto: 'Pode deixar, vou organizar a equipe.', ms: 1600, para: 'usuario' });
+      O.fazer({ tipo: 'voltar' });
+      break;
+    case 'conversa':
+      O.fazer({ tipo: 'pensar', texto: `Lembrando ${passo.turnos_anteriores} turno(s) anteriores…`, ms: 1400 });
+      break;
+    case 'intencao': {
+      const r = { pergunta: 'uma pergunta', relatorio: 'um relatório', fora_do_escopo: 'fora do escopo' }[passo.intencao] || passo.intencao;
+      O.fazer({ tipo: 'pensar', texto: `Isso é ${r}.`, ms: 1400 });
+      break;
+    }
+    case 'orquestrador': {
+      const d = passo.decisao;
+      if (d && d.delegacoes && d.delegacoes.length) O.fazer({ tipo: 'falar', texto: `Onda ${passo.onda}: ${d.delegacoes.length} tarefa(s).`, ms: 1300 });
+      else if (d && d.terminado) O.fazer({ tipo: 'falar', texto: 'Acho que terminamos. Vou conferir.', ms: 1300 });
+      break;
+    }
+    case 'delegando':
+      if (!ag) break;
+      O.fazer({ tipo: 'andar', lugar: passo.agente, alvo: LUGARES[passo.agente].visita, statusChegada: 'REUNIÃO' });
+      O.fazer({ tipo: 'falar', texto: (passo.doc_id ? nomeDoc(passo.doc_id) + ': ' : '') + curto(passo.tarefa, 90), ms: 2200, para: passo.agente });
+      O.fazer({ tipo: 'acao', fn: () => { ag.fazer({ tipo: 'falar', texto: 'Ok, comigo!', ms: 900, para: 'orquestrador' }); ag.fazer({ tipo: 'status', valor: 'TRABALHANDO' }); } });
+      O.fazer({ tipo: 'voltar' });
+      pensamentos[passo.agente] = 0;
+      break;
+    case 'raciocinio':
+      if (!ag) break;
+      if (passo.agente !== 'orquestrador' && (pensamentos[passo.agente] = (pensamentos[passo.agente] || 0) + 1) > 2) break;
+      ag.fazer({ tipo: 'pensar', texto: curto(String(passo.texto).replace(/\*\*/g, '').replace(/\s+/g, ' '), 110), ms: 1800 });
+      break;
+    case 'especialista':
+      if (!ag) break;
+      ag.fazer({ tipo: 'status', valor: 'ESPERANDO' });
+      ag.fazer({ tipo: 'andar', lugar: 'orquestrador', alvo: { x: LUGARES.orquestrador.visita.x + 30 * (ESPECIALISTAS.indexOf(passo.agente) - 2), y: LUGARES.orquestrador.visita.y }, statusChegada: 'REUNIÃO' });
+      ag.fazer({ tipo: 'falar', texto: relato(passo), ms: 2000, para: 'orquestrador' });
+      ag.statusDepois = 'LIVRE';
+      ag.fazer({ tipo: 'voltar' });
+      break;
+    case 'conferencia':
+      O.fazer({ tipo: 'andar', lugar: 'mcp', alvo: LUGARES.mcp.visita, statusChegada: 'REUNIÃO' });
+      O.fazer({ tipo: 'falar', texto: 'Servidor, o que ainda falta?', ms: 1300 });
+      O.fazer({ tipo: 'falar', texto: passo.completo ? 'Nada pendente. Tudo pronto!' : `Faltam ${passo.pendencias} item(ns). Mais uma rodada.`, ms: 1700 });
+      O.fazer({ tipo: 'voltar' });
+      break;
+    case 'fim':
+      O.fazer({ tipo: 'andar', lugar: 'usuario', alvo: LUGARES.usuario.visita });
+      O.fazer({ tipo: 'falar', texto: passo.estado === 'completa' ? 'Pronto! O resultado está no chat.' : `Terminou como ${passo.estado}.`, ms: 2000, para: 'usuario' });
+      O.fazer({ tipo: 'acao', fn: () => { U.fazer({ tipo: 'falar', texto: passo.estado === 'completa' ? 'Valeu, equipe!' : 'Hmm, vou olhar.', ms: 1400, para: 'orquestrador' }); U.fazer({ tipo: 'status', valor: 'LIVRE' }); } });
+      O.fazer({ tipo: 'status', valor: 'LIVRE' });
+      O.statusDepois = 'LIVRE';
+      O.fazer({ tipo: 'voltar' });
+      break;
+  }
+}
+
+function chamada(linha) {
+  chamadas++;
+  const ok = linha.resultado === 'ok';
+  if (!ok) barradas++;
+  const quem = ['orquestrador', 'sistema'].includes(linha.agente) ? pessoas.orquestrador : pessoas[linha.agente];
+  if (!quem) return;
+  const s = LUGARES[quem.id].sentado;
+  quem.ferramenta = { texto: linha.tool, ok }; quem.ferramentaAte = performance.now() + 1500 / velocidadeBase;
+  quem.digitando = 0.8;
+  if (quem.id !== 'orquestrador' && quem.status !== 'TRABALHANDO' && quem.sentado) quem.status = 'TRABALHANDO';
+  const daMesa = { x0: s.x - 50, y0: s.y - 30, x1: RACK.x + Math.random() * 80, y1: RACK.y, cor: ok ? '#3ddc84' : '#ff6b6b' };
+  if (RAG.has(linha.tool) && ok) daMesa.depois = { x0: RACK.x + 60, y0: RACK.y, x1: ARQUIVO.x, y1: ARQUIVO.y, cor: '#f4b740', ms: 500 };
+  pacote(daMesa);
+  if (!ok && linha.resultado === 'rejeitada') quem.fazer({ tipo: 'alerta', texto: 'Portão: ' + curto(linha.detalhe, 80), ms: 1600 });
+}
+
+// ============================================================================================
+// Dados
+// ============================================================================================
+let execucaoId = null, vistos = 0, auditVistos = new Set(), seguir = true, emCurso = false, todos = [];
+
+async function api(caminho, init) {
+  const r = await fetch(caminho, init);
+  if (r.status === 401) { document.getElementById('login').hidden = false; throw new Error('401'); }
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+function chaveAudit(l) { return `${l.quando}|${l.agente}|${l.tool}|${l.resultado}`; }
+
+function resetarCena() {
+  Object.values(pessoas).forEach((p) => {
+    p.limpar(); const s = LUGARES[p.id].sentado; p.x = s.x; p.y = s.y; p.sentado = true; p.lugar = p.id; p.status = 'LIVRE'; p.dir = 'baixo';
+  });
+  pacotes.length = 0; falas.length = 0; chamadas = 0; barradas = 0; pensamentos = {};
+  document.querySelector('#conversa .linhas').innerHTML = '';
+  document.getElementById('eventos').innerHTML = '';
+}
+
+function linhaLog(t, quem, tipo, detalhe, cls = '') {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td class="t">${esc((t || '').slice(11, 19))}</td><td class="q">${esc(quem)}</td><td><span class="tg ${cls}">${esc(tipo)}</span></td><td>${esc(detalhe)}</td>`;
+  const tb = document.getElementById('eventos'); tb.prepend(tr);
+  while (tb.children.length > 1500) tb.lastChild.remove();
+  aplicarFiltro(tr);
+}
+function logPasso(p) {
+  if (p.tipo === 'tool') return; // as chamadas vêm da auditoria do MCP, na hora
+  const d = { delegando: `${nomeDoc(p.doc_id)} ${p.tarefa || ''}`, especialista: `${p.estado} ${JSON.stringify(p.gravacoes || {})} ${p.segundos ?? ''}s`,
+    raciocinio: p.texto, orquestrador: p.decisao ? `onda ${p.onda}: ${(p.decisao.delegacoes || []).map((x) => x.agente).join(', ') || (p.decisao.terminado ? 'terminado' : '-')}` : (p.erro || ''),
+    inicio: p.pedido, intencao: `${p.intencao} → ${p.tipo_execucao}`, conferencia: `completo=${p.completo} pendencias=${p.pendencias}`, fim: `${p.estado} ${p.erro || ''}` }[p.tipo] ?? JSON.stringify(p);
+  linhaLog(p.em, p.agente || (['inicio', 'fim', 'conferencia', 'intencao', 'orquestrador', 'conversa'].includes(p.tipo) ? 'orquestrador' : 'sistema'),
+    p.tipo, d, p.tipo === 'raciocinio' ? 'pensa' : p.tipo === 'fim' ? 'ok' : '');
+}
+function logAudit(l) {
+  linhaLog(l.quando, l.agente, 'tool ' + l.tool, `${l.resultado}${l.detalhe ? ' · ' + l.detalhe : ''} (${l.duracao_ms} ms)`, l.resultado === 'ok' ? 'ok' : 'ruim');
+}
+function aplicarFiltro(tr) {
+  const f = document.getElementById('filtro').value.toLowerCase();
+  const linhas = tr ? [tr] : document.querySelectorAll('#eventos tr');
+  linhas.forEach((x) => (x.hidden = f && !x.textContent.toLowerCase().includes(f)));
+}
+document.getElementById('filtro').oninput = () => aplicarFiltro();
+
+async function carregarDocs() {
+  try { nomesDocs = await api('/api/documentos'); } catch { /* fica o id curto */ }
+}
+
+// A auditoria do MCP vem sem fuso (é UTC); o trace vem com "+00:00".
+function instante(s) { return Date.parse(/[zZ]$|[+-]\d\d:\d\d$/.test(s) ? s : s + 'Z'); }
+
+// Repetição em andamento: os eventos agendados, para cancelar se outra execução for aberta.
+let repeticao = { timers: [] };
+function cancelarRepeticao() { repeticao.timers.forEach(clearTimeout); repeticao = { timers: [] }; }
+
+// Abre uma execução. animar=false: só mostra o estado atual (sem refazer o que já passou).
+// animar='repetir': refaz do começo no ritmo em que aconteceu, dividido pela velocidade (1× = tempo real).
+async function abrir(id, animar) {
+  cancelarRepeticao();
+  execucaoId = id; vistos = 0; auditVistos = new Set();
+  resetarCena();
+  const dados = await api(`/api/estado?execucao=${id}&desde=0`);
+  execInfo = dados.execucao;
+  const vel = animar === 'repetir' ? Number(document.getElementById('vel').value) : 1;
+  velocidadeBase = vel;
+  const passos = dados.passos;
+  // trace e auditoria juntos, na ordem do tempo
+  const tudo = [...passos.map((p) => ({ em: p.em, p })), ...dados.auditoria.map((l) => ({ em: l.quando, l }))]
+    .sort((a, b) => instante(a.em) - instante(b.em));
+  const rodar = (item) => {
+    if (item.p) { logPasso(item.p); if (animar) evento(item.p); }
+    else { logAudit(item.l); if (animar) chamada(item.l); }
+  };
+  tudo.forEach((item) => item.l && auditVistos.add(chaveAudit(item.l)));
+  vistos = dados.total_passos;
+  if (animar === 'repetir' && tudo.length) {
+    const inicio = instante(tudo[0].em), r = repeticao;
+    for (const item of tudo) {
+      r.timers.push(setTimeout(() => { if (r === repeticao) rodar(item); }, (instante(item.em) - inicio) / vel));
+    }
+    return;
+  }
+  tudo.forEach(rodar);
+  if (!animar) estadoEstatico(passos, dados.auditoria);
+}
+
+function estadoEstatico(passos, auditoria) {
+  chamadas = auditoria.length; barradas = auditoria.filter((l) => l.resultado !== 'ok').length;
+  const abertos = {};
+  passos.forEach((p) => { if (p.tipo === 'delegando') abertos[p.agente] = (abertos[p.agente] || 0) + 1; if (p.tipo === 'especialista') abertos[p.agente] = (abertos[p.agente] || 1) - 1; });
+  Object.entries(abertos).forEach(([a, n]) => { if (n > 0 && pessoas[a]) pessoas[a].status = 'TRABALHANDO'; });
+  const fim = passos.find((p) => p.tipo === 'fim');
+  if (!fim && passos.length) { pessoas.orquestrador.status = 'TRABALHANDO'; pessoas.usuario.status = 'ESPERANDO'; }
+}
+
+async function acompanhar() {
+  if (!execucaoId) return;
+  try {
+    const dados = await api(`/api/estado?execucao=${execucaoId}&desde=${vistos}`);
+    execInfo = dados.execucao;
+    const novos = [...dados.passos.map((p) => ({ em: p.em, p })),
+      ...dados.auditoria.filter((l) => !auditVistos.has(chaveAudit(l))).map((l) => ({ em: l.quando, l }))]
+      .sort((a, b) => instante(a.em) - instante(b.em));
+    for (const item of novos) {
+      if (item.p) { logPasso(item.p); evento(item.p); }
+      else { auditVistos.add(chaveAudit(item.l)); logAudit(item.l); chamada(item.l); }
+    }
+    vistos = dados.total_passos;
+  } catch (e) { /* tenta de novo no próximo ciclo */ }
+}
+
+async function listar() {
+  try {
+    todos = await api('/api/execucoes');
+  } catch { return; }
+  const sel = document.getElementById('execucoes'), atual = sel.value;
+  sel.innerHTML = todos.map((r) => `<option value="${r.execucao_id}">${r.criada_em.slice(5, 16).replace('T', ' ')} · ${r.tipo} · ${r.estado} · ${esc(curto(r.pedido, 46))}</option>`).join('');
+  if (execucaoId) sel.value = execucaoId; else if (atual) sel.value = atual;
+  if (seguir && todos.length) {
+    const nova = todos[0];
+    if (nova.execucao_id !== execucaoId) {
+      const viva = ['na_fila', 'em_andamento'].includes(nova.estado);
+      await abrir(nova.execucao_id, viva); // execução nova, rodando: anima desde o começo
+      sel.value = nova.execucao_id;
+    }
+  }
+}
+
+document.getElementById('execucoes').onchange = (e) => { document.getElementById('seguir').checked = seguir = false; abrir(e.target.value, false); };
+document.getElementById('seguir').onchange = (e) => { seguir = e.target.checked; if (seguir) { execucaoId = null; listar(); } };
+document.getElementById('repetir').onclick = () => { if (execucaoId) abrir(execucaoId, 'repetir'); };
+
+// abas
+const abaSala = document.getElementById('aba-sala'), abaLogs = document.getElementById('aba-logs');
+abaSala.onclick = () => { abaSala.classList.add('ativa'); abaLogs.classList.remove('ativa'); document.getElementById('sala').hidden = false; document.getElementById('logs').hidden = true; };
+abaLogs.onclick = () => { abaLogs.classList.add('ativa'); abaSala.classList.remove('ativa'); document.getElementById('sala').hidden = true; document.getElementById('logs').hidden = false; carregarLoki(); };
+
+async function carregarLoki() {
+  if (document.getElementById('logs').hidden) return;
+  try {
+    const q = document.getElementById('consulta').value;
+    const linhas = await api(`/api/loki?consulta=${encodeURIComponent(q)}&minutos=60&limite=400`);
+    document.getElementById('loki').innerHTML = linhas.length
+      ? linhas.map((l) => `<span class="s">[${esc(l.servico)}]</span> ${esc(l.linha)}`).join('\n')
+      : 'nenhuma linha na última hora para esta consulta.';
+  } catch (e) { document.getElementById('loki').textContent = 'Loki indisponível: ' + e.message; }
+}
+document.getElementById('consulta').onchange = carregarLoki;
+setInterval(carregarLoki, 5000);
+
+// login
+document.getElementById('form-login').onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    await api('/api/entrar', { method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ usuario: document.getElementById('u').value, senha: document.getElementById('s').value }) });
+    document.getElementById('login').hidden = true; comecar();
+  } catch { document.getElementById('erro-login').textContent = 'Não entrou. Confira usuário e senha.'; }
+};
+
+let iniciado = false;
+async function comecar() {
+  if (iniciado) return; iniciado = true;
+  await carregarDocs();
+  await listar();
+  setInterval(acompanhar, 1000);
+  setInterval(listar, 4000);
+}
+api('/api/sessao').then(comecar).catch(() => {});
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+name: sala
+
+# Sala dos agentes (porta 3300): o escritório em pixel art que acompanha os agentes em tempo
+# real, e a aba de logs. Depende do indexador, do servidor MCP, dos agentes e da pilha de
+# observabilidade (para os logs do Loki) já no ar.
+#   docker compose up -d
+#
+# Sem build: a imagem do uv roda o servidor com as dependências fixadas abaixo, e a pasta é
+# montada, então editar a página ou o servidor vale ao recarregar.
+services:
+  sala:
+    image: ghcr.io/astral-sh/uv:0.9.30-python3.13-bookworm-slim
+    working_dir: /app
+    command: ["uv", "run", "--no-project", "--with", "fastapi==0.163.0", "--with", "uvicorn==0.54.0",
+              "--with", "httpx==0.28.1", "uvicorn", "servidor:app", "--host", "0.0.0.0", "--port", "3300"]
+    volumes:
+      - ./:/app:ro
+    env_file:
+      - path: .env # ADMIN_KEY: a mesma do servidor MCP, para ler a auditoria chamada a chamada
+        required: false
+    environment:
+      INDEXER_URL: http://api:8000
+      AGENTS_URL: http://orquestrador:8200
+      MCP_URL: http://mcp-server:8100
+      LOKI_URL: http://loki:3100
+      UV_CACHE_DIR: /tmp/uv
+    ports:
+      - "3300:3300"
+    networks: [indexer, observability]
+
+networks:
+  indexer:
+    name: ${INDEXER_NETWORK:-indexer_default}
+    external: true
+  observability:
+    name: observability_default
+    external: true
