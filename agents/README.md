@@ -22,8 +22,9 @@ flowchart LR
 - **Conferência**: o código pergunta ao MCP o que falta (`pendencias`). "Terminei" dito pelo
   modelo não encerra; até 2 rodadas extras, depois a execução fica `incompleta`.
 - **Intenção**: no chat, a primeira decisão classifica a mensagem. `pergunta` exige resposta
-  gravada com fonte; `relatorio` exige o relatório montado; `fora_do_escopo` não executa nada e
-  devolve um texto fixo com as opções.
+  gravada com fonte; `relatorio` exige o relatório consolidado montado; `relatorio_empresa` traz
+  o `doc_id` da empresa e exige o relatório dela (só as pendências daquela empresa);
+  `fora_do_escopo` não executa nada e devolve um texto fixo com as opções.
 - **A2A**: o orquestrador assina um token por chamada (destino, execução, usuário); só ele entra
   no serviço dos especialistas. Cada especialista chega ao MCP com um token de agente próprio.
 

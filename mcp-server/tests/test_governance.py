@@ -110,7 +110,8 @@ def test_shipped_policy_is_valid_and_keeps_one_owner_per_writing_tool():
     owners = {"salvar_indicador": "extrator", "salvar_nao_encontrado": "extrator", "fechar_extracao": "extrator",
               "registrar_alerta": "validador", "concluir_revisao": "validador",
               "salvar_item_analise": "analista", "registrar_ausencia_analise": "analista",
-              "salvar_resposta": "pesquisador", "salvar_resumo": "redator", "montar_relatorio": "redator"}
+              "salvar_resposta": "pesquisador", "salvar_resumo": "redator", "montar_relatorio": "redator",
+              "montar_relatorio_empresa": "redator"}
     for tool_name, owner in owners.items():
         assert [agent for agent in policy.agents if policy.allows(agent, tool_name)] == [owner], tool_name
     # Toda tool do catálogo que grava tem dono declarado aqui, e toda tool está liberada para alguém.

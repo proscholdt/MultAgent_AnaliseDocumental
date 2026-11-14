@@ -20,6 +20,7 @@ from typing import Any
 
 from app.catalog import Call
 from app.documents import IndexedDocument
+from app.errors import ToolRejected
 from app.fields import CATEGORIES, QUESTIONS
 from app.tools.analysis import alert_view, analysis_view
 
@@ -110,10 +111,13 @@ def summary_blockers(state: DocState) -> list[str]:
     return blockers
 
 
-async def pending(call: Call, *, include_report: bool = True) -> list[dict[str, Any]]:
+async def pending(call: Call, *, include_report: bool = True, doc_id: str | None = None) -> list[dict[str, Any]]:
     """O que falta, em ordem de execução. Cada item diz qual agente costuma resolver e se já
-    pode ser feito."""
+    pode ser feito. Com `doc_id`, é o que falta para o relatório daquela empresa: a extração, a
+    revisão, a análise e o resumo dela, sem as perguntas comparativas."""
     states = await gather(call)
+    if doc_id is not None:
+        states = [state for state in states if state.document.doc_id == doc_id] or _unknown(doc_id, states)
     items: list[dict[str, Any]] = []
 
     def add(what: str, agent: str, state: DocState | None = None, waits: list[str] | None = None,
@@ -139,7 +143,7 @@ async def pending(call: Call, *, include_report: bool = True) -> list[dict[str, 
     answers = {answer.pergunta_id: answer for answer in await call.deps.store.answers(call.caller.user_id)}
     blockers = question_blockers(states)
     base_changed = _latest(*(moment for state in states for moment in (state.extraction_at, state.analysis_at)))
-    for question_id, question in QUESTIONS.items():
+    for question_id, question in QUESTIONS.items() if doc_id is None else ():
         answer = answers.get(question_id)
         if answer is None:
             add("resposta à pergunta", "pesquisador", waits=blockers, pergunta_id=question_id, pergunta=question)
@@ -154,7 +158,15 @@ async def pending(call: Call, *, include_report: bool = True) -> list[dict[str, 
             add("refazer o resumo executivo: a base da empresa mudou depois dele (salvar_resumo)", "redator", state,
                 summary_blockers(state))
 
-    if include_report and not items:
+    if include_report and not items and doc_id is not None:
+        state = states[0]
+        report = await call.deps.store.company_report(call.caller.user_id, doc_id)
+        if report is None or report.fingerprint != state.document.fingerprint:
+            add("montagem do relatório da empresa (montar_relatorio_empresa)", "redator", state)
+        elif state.newest is not None and report.at < state.newest:
+            add("remontar o relatório da empresa: há dados mais novos que ele (montar_relatorio_empresa)", "redator",
+                state)
+    elif include_report and not items:
         report = await call.deps.store.report(call.caller.user_id)
         # Só as cinco perguntas entram no relatório: uma pergunta livre do usuário respondida depois
         # não o deixa desatualizado (antes, cada pergunta de conversa fazia remontar o relatório).
@@ -165,3 +177,8 @@ async def pending(call: Call, *, include_report: bool = True) -> list[dict[str, 
         elif newest is not None and report.at < newest:
             add("remontar o relatório: há dados mais novos que ele (montar_relatorio)", "redator")
     return items
+
+
+def _unknown(doc_id: str, states: list[DocState]) -> list[DocState]:
+    raise ToolRejected(f"Não existe o documento '{doc_id}' indexado para este usuário.",
+                       opcoes=[f"{state.document.doc_id} ({state.name})" for state in states])

@@ -23,6 +23,7 @@
 
 	const SUGESTOES = [
 		'Gere o relatório consolidado completo',
+		'Gere o relatório da Brasal',
 		'Qual empresa teve a maior margem EBITDA?',
 		'Compare o lucro líquido das empresas',
 		'Quais riscos as empresas destacam?'
@@ -219,7 +220,7 @@
 			<div class="boas-vindas">
 				<h1>O que você quer saber dos documentos?</h1>
 				<p>
-					Pergunte, compare ou peça o relatório consolidado. As respostas vêm dos documentos indexados, com a página de
+					Pergunte, compare ou peça um relatório: o consolidado ou o de uma empresa. As respostas vêm dos documentos indexados, com a página de
 					origem, e o que não estiver neles aparece como não encontrado.
 				</p>
 			</div>

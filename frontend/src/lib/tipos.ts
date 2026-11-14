@@ -47,7 +47,7 @@ export interface Opcao {
 export interface Turno {
 	execucao_id: string;
 	pedido: string;
-	tipo: 'pergunta' | 'relatorio' | 'fora_do_escopo' | 'livre' | 'auto';
+	tipo: 'pergunta' | 'relatorio' | 'relatorio_empresa' | 'fora_do_escopo' | 'livre' | 'auto';
 	estado: EstadoExecucao;
 	mensagem: string;
 	erro: string | null;

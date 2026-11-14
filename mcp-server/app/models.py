@@ -172,6 +172,23 @@ class Report(Base):
     __table_args__ = (Index("ix_relatorios_user", "user_id"),)
 
 
+class CompanyReport(Base):
+    """Relatório de uma empresa só, montado pelo código. Vale para a impressão do documento em que
+    foi montado: se o documento for reindexado, ele deixa de valer."""
+
+    __tablename__ = "relatorios_empresa"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(64))
+    doc_id: Mapped[str] = mapped_column(String(32))
+    fingerprint: Mapped[str] = mapped_column(String(80))
+    run_id: Mapped[str] = mapped_column(String(64))
+    markdown: Mapped[str] = mapped_column(Text)
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+    __table_args__ = (Index("ix_relatorios_empresa_doc", "user_id", "doc_id"),)
+
+
 class AuditRow(Base):
     """Uma linha por listagem ou chamada de tool. Só é acrescentada, nunca alterada."""
 

@@ -44,6 +44,11 @@ todos os documentos) e resumos → relatório. As tools de gravação recusam o 
 hora, e o que ficou mais antigo que sua base volta como desatualizado. `montar_relatorio` gera o
 Markdown a partir da base.
 
+Com `doc_id`, `pendencias` lista só o que falta para o relatório daquela empresa (extração,
+revisão, análise e resumo dela, sem as perguntas comparativas), e `montar_relatorio_empresa`
+monta o relatório dela: resumo, indicadores, análise e alertas. Ele vale para a impressão do
+documento em que foi montado.
+
 ## Rodar
 
 ```bash

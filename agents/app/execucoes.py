@@ -19,7 +19,7 @@ from typing import Any
 log = logging.getLogger("agentes.trace")
 _LOG_CHARS = 300
 
-KINDS = ("livre", "pergunta", "relatorio", "auto", "fora_do_escopo")  # auto: mensagem de conversa, até o orquestrador dizer o que é
+KINDS = ("livre", "pergunta", "relatorio", "relatorio_empresa", "auto", "fora_do_escopo")  # auto: mensagem de conversa, até o orquestrador dizer o que é
 RUNNING = ("na_fila", "em_andamento")
 
 
@@ -37,8 +37,9 @@ def now() -> str:
 class Run:
     id: str
     user_id: str
-    tipo: str  # livre | pergunta | relatorio | auto (vira pergunta, relatorio ou fora_do_escopo na primeira decisão)
+    tipo: str  # livre | pergunta | relatorio | relatorio_empresa | auto (vira um dos outros na primeira decisão)
     pedido: str
+    doc_id: str | None = None  # no relatório de uma empresa: o documento dela
     conversa_id: str = ""  # a conversa do usuário a que este pedido pertence
     estado: str = "na_fila"  # na_fila | em_andamento | completa | incompleta | falhou | interrompida
     criada_em: str = field(default_factory=now)

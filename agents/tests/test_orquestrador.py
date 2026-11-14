@@ -270,7 +270,7 @@ async def test_anything_else_in_the_chat_is_out_of_scope_and_runs_nothing(http, 
     assert [o["exemplo"] for o in run["resultado"]["opcoes"]][-1] == "Gere o relatório consolidado completo"
     assert len(model.inputs["orquestrador"]) == 1  # uma decisão só: nenhuma onda depois dela
     turn = (await http.get(f"/api/conversas/{conversation}", headers=auth())).json()["turnos"][0]
-    assert turn["tipo"] == "fora_do_escopo" and len(turn["opcoes"]) == 4
+    assert turn["tipo"] == "fora_do_escopo" and len(turn["opcoes"]) == 5
 
 
 async def test_conversation_belongs_to_its_user(http, model):
@@ -445,3 +445,62 @@ def test_runs_survive_a_restart_and_one_caught_in_the_middle_is_marked(tmp_path)
     assert reloaded.get(done.id, BRUNO) is None
     assert [step["tipo"] for step in reloaded.trace(done.id).read()] == ["inicio"]
     assert "user_token" not in (tmp_path / "execucoes" / f"{done.id}.json").read_text(encoding="utf-8")
+
+
+def company_team(world, model) -> dict[str, str]:
+    """O relatório de uma empresa: as pendências DELA e o redator que monta só o dela."""
+    world.policy["sistema"].append("ler_relatorio_empresa")
+    world.policy["redator"].append("montar_relatorio_empresa")
+    company = [{"o_que_falta": "montagem do relatório da empresa (montar_relatorio_empresa)", "agente": "redator",
+                "doc_id": DOC, "empresa": "Brasal"}]
+    reports: dict[str, str] = {}
+
+    def pending(arguments):
+        items = list(company) if arguments.get("doc_id") == DOC else [EXTRACTION, ASSEMBLY]
+        return {"completo": not items, "pendencias": items}
+
+    def assemble(arguments):
+        company.clear()
+        reports[arguments["doc_id"]] = "# Relatório de análise: Brasal\n\n..."
+        return {"montado": True}
+
+    world.on("pendencias", pending)
+    world.on("montar_relatorio_empresa", assemble)
+    world.on("ler_relatorio_empresa", lambda arguments: {"relatorio": reports.get(arguments["doc_id"]),
+                                                         "gerado_em": "2026-11-14T12:00:00+00:00"})
+    model.scripts["redator"] = [[call("montar_relatorio_empresa", doc_id=DOC)], [say("Relatório da Brasal montado.")]]
+    return reports
+
+
+async def test_a_chat_message_asking_for_one_company_gets_that_company_report(http, world, model):
+    """"Análise completa da Brasal" trazia o relatório consolidado de novo: o tipo era um só."""
+    company_team(world, model)
+    model.scripts["orquestrador"] = [
+        [decide(delegation("redator", "Monte o relatório da empresa.", DOC), intencao="relatorio_empresa", empresa=DOC)],
+        [decide(terminado=True, mensagem="Relatório da Brasal pronto.", intencao="relatorio_empresa", empresa=DOC)],
+    ]
+    conversation = (await http.post("/api/conversas", headers=auth())).json()["conversa_id"]
+    run = (await http.post(f"/api/conversas/{conversation}/mensagens",
+                           json={"texto": "faça uma análise completa da Brasal e gere um relatório"},
+                           headers=auth())).json()
+    assert (run["estado"], run["tipo"]) == ("completa", "relatorio_empresa"), run["erro"]
+    assert run["resultado"]["relatorio"] == "# Relatório de análise: Brasal\n\n..."
+    system = [(tool, arguments) for who, tool, arguments, _ in world.calls if who == "sistema"]
+    assert system[-2:] == [("pendencias", {"doc_id": DOC}), ("ler_relatorio_empresa", {"doc_id": DOC})]
+    assert "ler_relatorio" not in world.called("sistema")  # o consolidado nem é lido
+    turn = (await http.get(f"/api/conversas/{conversation}", headers=auth())).json()["turnos"][0]
+    assert (turn["tipo"], turn["relatorio"]) == ("relatorio_empresa", "# Relatório de análise: Brasal\n\n...")
+
+
+async def test_a_company_report_without_the_company_goes_back_to_the_orchestrator(http, world, model):
+    company_team(world, model)
+    model.scripts["orquestrador"] = [
+        [decide(terminado=True, intencao="relatorio_empresa")],  # esqueceu de dizer qual empresa
+        [decide(delegation("redator", "Monte o relatório da empresa.", DOC), intencao="relatorio_empresa", empresa=DOC)],
+        [decide(terminado=True, intencao="relatorio_empresa", empresa=DOC)],
+    ]
+    conversation = (await http.post("/api/conversas", headers=auth())).json()["conversa_id"]
+    run = (await http.post(f"/api/conversas/{conversation}/mensagens", json={"texto": "relatório da Brasal"},
+                           headers=auth())).json()
+    assert (run["estado"], run["tipo"]) == ("completa", "relatorio_empresa"), run["erro"]
+    assert "o doc_id em `empresa`" in model.first_input("orquestrador", 1)

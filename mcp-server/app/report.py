@@ -187,15 +187,86 @@ def _not_found(block: dict[str, Any]) -> str | None:
     return f"**{block['rotulo']}: não encontrado.** {informed.get('motivo') or ''} (Procurado: {searched}.{where})"
 
 
+_HOW_TO_READ = ("Todo número deste relatório foi lido do documento pelo código (célula de tabela ou trecho "
+                "conferido) ou calculado por fórmula fixa a partir desses valores. O que a empresa não informa "
+                "aparece como \"não informado\", e o que foi calculado vem marcado como calculado.")
+
+
+def _name(doc: dict[str, Any]) -> str:
+    return doc["extracao"]["documento"]["empresa"] or doc["extracao"]["documento"]["arquivo"]
+
+
+def _formulas(documents: list[dict[str, Any]]) -> list[str]:
+    formulas = {computed["formula"] for doc in documents for block in doc["extracao"]["indicadores"].values()
+                if (computed := block["calculado"])}
+    return ["Fórmulas dos valores calculados:", ""] + [f"- {formula}" for formula in sorted(formulas)] + [""] \
+        if formulas else []
+
+
+def _analysis_lines(doc: dict[str, Any]) -> list[str]:
+    """A análise qualitativa de uma empresa, categoria por categoria, com as citações."""
+    out: list[str] = []
+    for categoria, (label, _) in CATEGORIES.items():
+        out += [f"**{label}**", ""]
+        items = doc["analise"].get(categoria) or []
+        if not items:
+            out += ["- _Não analisado._", ""]
+            continue
+        for item in items:
+            if item.get("status") == "nao_encontrado":
+                out.append(f"- Não encontrado no documento. {item['motivo']}")
+            else:
+                tone = f" **Tom: {item['tom']}.**" if item.get("tom") else ""
+                out.append(f"-{tone} {item['afirmacao']}  \n  > \"{item['citacao']}\" (p. {item['pagina']}, "
+                           f"{item['fonte']})")
+        out.append("")
+    return out
+
+
+def _alert_lines(doc: dict[str, Any]) -> list[str]:
+    """O que a empresa não informa e os alertas, os de atenção primeiro."""
+    missing = [line for block in doc["extracao"]["indicadores"].values() if (line := _not_found(block))]
+    out = [f"- {line}" for line in missing] or ["- Todos os indicadores foram informados pela empresa."]
+    out.append("")
+    alerts = doc["alertas"]
+    if not alerts:
+        return out + ["- Nenhum alerta.", ""]
+    for alert in sorted(alerts, key=lambda a: a["severidade"] != "atencao"):
+        details = alert.get("detalhes") or {}
+        page = f" (p. {details['pagina']})" if details.get("pagina") else ""
+        quote = f"  \n  > \"{details['citacao']}\"" if details.get("citacao") else ""
+        out.append(f"- [{_SEVERITY.get(alert['severidade'], alert['severidade'])}] {alert['mensagem']}{page}{quote}")
+    return out + [""]
+
+
+def build_company_report(doc: dict[str, Any], generated_at: datetime) -> str:
+    """O relatório de uma empresa só: resumo, indicadores, análise e alertas. As perguntas
+    comparativas não entram (comparam as empresas: são do relatório consolidado)."""
+    name, meta = _name(doc), doc["extracao"]["documento"]
+    heading = (f"Gerado em {generated_at:%d/%m/%Y %H:%M} UTC. Documento: {meta['arquivo']}. Período "
+               f"{meta['periodo_referencia']}, comparado com {meta['periodo_comparavel']}.")
+    out = [f"# Relatório de análise: {name}", "", heading, "", _HOW_TO_READ, ""]
+    out += ["## 1. Resumo executivo", "", doc["resumo"] or "_Resumo não gerado._", ""]
+    out += ["## 2. Indicadores", "", "| Indicador | Valor |", "|---|---|"]
+    for campo in MAIN_FIELDS:
+        out.append(f"| {FIELDS[campo].label} | {_cell(doc['extracao']['indicadores'][campo])} |")
+    legend = (f"Valores de {meta['periodo_referencia']}; \"var.\" é a variação contra {meta['periodo_comparavel']}, "
+              "calculada pelo código. A página é a do PDF.")
+    if any(" ¹" in line for line in out):
+        legend += " ¹ O sinal mudou de um período para o outro: o percentual não tem leitura direta."
+    out += ["", legend, ""] + _formulas([doc])
+    out += ["## 3. Análise qualitativa", ""] + _analysis_lines(doc)
+    out += ["## 4. Alertas e informações não encontradas", ""] + _alert_lines(doc)
+    return "\n".join(out).rstrip() + "\n"
+
+
 def build_report(documents: list[dict[str, Any]], answers: list[dict[str, Any]], generated_at: datetime) -> str:
     """O relatório consolidado, em Markdown. `documents` traz, por documento: o JSON da
     extração, a análise por categoria, os alertas e o resumo já renderizado."""
-    names = [doc["extracao"]["documento"]["empresa"] or doc["extracao"]["documento"]["arquivo"] for doc in documents]
-    how_to_read = ("Todo número deste relatório foi lido do documento pelo código (célula de tabela ou trecho "
-                   "conferido) ou calculado por fórmula fixa a partir desses valores. O que a empresa não informa "
-                   "aparece como \"não informado\", e o que foi calculado vem marcado como calculado.")
+    names = [_name(doc) for doc in documents]
     out = ["# Relatório de análise das demonstrações financeiras", "",
-           f"Gerado em {generated_at:%d/%m/%Y %H:%M} UTC. Empresas: {'; '.join(names)}.".replace("..", "."), "", how_to_read, ""]
+           f"Gerado em {generated_at:%d/%m/%Y %H:%M} UTC. Empresas: {'; '.join(names)}.".replace("..", "."), "",
+           _HOW_TO_READ, ""]
 
     out += ["## 1. Resumo executivo", ""]
     for name, doc in zip(names, documents, strict=True):
@@ -214,30 +285,11 @@ def build_report(documents: list[dict[str, Any]], answers: list[dict[str, Any]],
               "calculada pelo código. A página é a do PDF.")
     if any(" ¹" in line for line in out):
         legend += " ¹ O sinal mudou de um período para o outro: o percentual não tem leitura direta."
-    out += ["", legend, ""]
-    formulas = {computed["formula"] for doc in documents for block in doc["extracao"]["indicadores"].values()
-                if (computed := block["calculado"])}
-    if formulas:
-        out += ["Fórmulas dos valores calculados:", ""] + [f"- {formula}" for formula in sorted(formulas)] + [""]
+    out += ["", legend, ""] + _formulas(documents)
 
     out += ["## 3. Análise qualitativa", ""]
     for name, doc in zip(names, documents, strict=True):
-        out += [f"### {name}", ""]
-        for categoria, (label, _) in CATEGORIES.items():
-            out.append(f"**{label}**")
-            out.append("")
-            items = doc["analise"].get(categoria) or []
-            if not items:
-                out += ["- _Não analisado._", ""]
-                continue
-            for item in items:
-                if item.get("status") == "nao_encontrado":
-                    out.append(f"- Não encontrado no documento. {item['motivo']}")
-                else:
-                    tone = f" **Tom: {item['tom']}.**" if item.get("tom") else ""
-                    out.append(f"-{tone} {item['afirmacao']}  \n  > \"{item['citacao']}\" (p. {item['pagina']}, "
-                               f"{item['fonte']})")
-            out.append("")
+        out += [f"### {name}", ""] + _analysis_lines(doc)
 
     out += ["## 4. Perguntas e respostas", ""]
     by_id = {answer["pergunta_id"]: answer for answer in answers}
@@ -251,18 +303,5 @@ def build_report(documents: list[dict[str, Any]], answers: list[dict[str, Any]],
 
     out += ["## 5. Alertas e informações não encontradas", ""]
     for name, doc in zip(names, documents, strict=True):
-        out += [f"### {name}", ""]
-        missing = [line for block in doc["extracao"]["indicadores"].values() if (line := _not_found(block))]
-        out += [f"- {line}" for line in missing] or ["- Todos os indicadores foram informados pela empresa."]
-        out.append("")
-        alerts = doc["alertas"]
-        if not alerts:
-            out += ["- Nenhum alerta.", ""]
-            continue
-        for alert in sorted(alerts, key=lambda a: a["severidade"] != "atencao"):
-            details = alert.get("detalhes") or {}
-            page = f" (p. {details['pagina']})" if details.get("pagina") else ""
-            quote = f"  \n  > \"{details['citacao']}\"" if details.get("citacao") else ""
-            out.append(f"- [{_SEVERITY.get(alert['severidade'], alert['severidade'])}] {alert['mensagem']}{page}{quote}")
-        out.append("")
+        out += [f"### {name}", ""] + _alert_lines(doc)
     return "\n".join(out).rstrip() + "\n"

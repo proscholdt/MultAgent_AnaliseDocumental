@@ -56,7 +56,7 @@ def zerar_metricas(agentes: list[str], modelos: list[str]) -> None:
     """Cria as séries dos contadores em zero, na subida. Um contador do OpenTelemetry só passa a
     existir no primeiro incremento, e o Prometheus nunca vê o zero de antes: increase() perde o
     primeiro evento. Com as séries conhecidas já em zero, a conta fecha."""
-    for tipo in ("pergunta", "relatorio", "livre", "fora_do_escopo"):
+    for tipo in ("pergunta", "relatorio", "relatorio_empresa", "livre", "fora_do_escopo"):
         for estado in ("completa", "incompleta", "falhou"):
             _EXECUCOES.add(0, {"tipo": tipo, "estado": estado})
     for agente in agentes:
@@ -88,24 +88,31 @@ class Decisao(BaseModel):
     terminado: bool = Field(description="true quando o pedido está atendido (ou não há mais o que fazer).")
     mensagem: str = Field(description="Para o usuário, em duas ou três frases: o que foi feito e o que ficou pendente. "
                           "Sem valores dos documentos.")
-    intencao: Literal["pergunta", "relatorio", "fora_do_escopo"] = Field(
+    intencao: Literal["pergunta", "relatorio", "relatorio_empresa", "fora_do_escopo"] = Field(
         description="O que o pedido atual do usuário é: 'pergunta' (quer saber algo do conteúdo dos documentos), "
-                    "'relatorio' (quer o relatório consolidado) ou 'fora_do_escopo' (qualquer outra coisa).")
+                    "'relatorio' (quer o relatório consolidado, de todas as empresas), 'relatorio_empresa' (quer o "
+                    "relatório ou a análise completa de UMA empresa) ou 'fora_do_escopo' (qualquer outra coisa).")
+    empresa: str | None = Field(
+        description="Só em 'relatorio_empresa': o doc_id da empresa pedida, como vem em listar_documentos. "
+                    "null nas outras intenções.")
 
 
 # A intenção que o orquestrador dá a uma mensagem de conversa vira o tipo da execução, e o tipo
 # diz o que a conferência final cobra: pergunta exige resposta gravada com fonte; relatório exige
 # o relatório montado. O resto está fora do escopo: o código não executa nada e responde com um
 # texto fixo e as opções. Nenhum texto livre do orquestrador chega ao usuário como resposta.
-INTENT_TYPE = {"pergunta": "pergunta", "relatorio": "relatorio", "fora_do_escopo": "fora_do_escopo"}
+INTENT_TYPE = {"pergunta": "pergunta", "relatorio": "relatorio", "relatorio_empresa": "relatorio_empresa",
+               "fora_do_escopo": "fora_do_escopo"}
+REPORT_TYPES = ("relatorio", "relatorio_empresa")
 
 OUT_OF_SCOPE = ("Isso está fora do escopo deste sistema. Ele responde perguntas sobre as demonstrações financeiras "
-                "enviadas, sempre com a página de origem, e gera o relatório consolidado. Escolha uma das opções ou "
-                "escreva a sua pergunta.")
+                "enviadas, sempre com a página de origem, e gera relatórios: o consolidado ou o de uma empresa. "
+                "Escolha uma das opções ou escreva a sua pergunta.")
 OPTIONS = [
     {"titulo": "Perguntar sobre um indicador", "exemplo": "Qual empresa teve a maior margem EBITDA?"},
     {"titulo": "Comparar as empresas", "exemplo": "Compare o lucro líquido das empresas"},
     {"titulo": "Entender o resultado", "exemplo": "Quais riscos as empresas destacam?"},
+    {"titulo": "Gerar o relatório de uma empresa", "exemplo": "Gere o relatório da Brasal"},
     {"titulo": "Gerar o relatório consolidado", "exemplo": "Gere o relatório consolidado completo"},
 ]
 
@@ -178,6 +185,9 @@ def first_input(run: Run, turns: list[dict] | None = None) -> str:
     if run.tipo == "relatorio":
         text = ("Produza o relatório consolidado completo dos documentos do usuário: extração, revisão das "
                 "fontes, análise qualitativa, as cinco perguntas, os resumos e a montagem do relatório.")
+    elif run.tipo == "relatorio_empresa":
+        text = (f"Produza o relatório de UMA empresa, como o usuário pediu: «{run.pedido}». Empresa: "
+                f"{run.doc_id or 'diga em `empresa` o doc_id dela'}. Use `pendencias` com esse doc_id.")
     elif run.tipo == "pergunta":
         text = f"Responda à pergunta do usuário, com as fontes. Pergunta: «{run.pedido}»"
     elif run.tipo == "auto":
@@ -223,6 +233,8 @@ async def check(run: Run, identity: Identity, deps: Deps, finished: bool) -> tup
     o pedido está completo, o que falta e o resultado para o usuário."""
     if run.tipo == "fora_do_escopo":
         return True, [], {"fora_do_escopo": True, "opcoes": OPTIONS}
+    if run.tipo == "relatorio_empresa":
+        return await check_company_report(run, identity, deps)
     async with deps.engine.connect(mcp.SYSTEM, identity) as session:
         pending = (await session.call("pendencias"))["pendencias"]
         if run.tipo == "relatorio":
@@ -239,6 +251,22 @@ async def check(run: Run, identity: Identity, deps: Deps, finished: bool) -> tup
     return finished, pending, {"respostas": new} if new else {}
 
 
+async def check_company_report(run: Run, identity: Identity, deps: Deps) -> tuple[bool, list[dict[str, Any]], dict]:
+    """O relatório de uma empresa: as pendências DELA vazias e o relatório dela montado."""
+    if not run.doc_id:
+        return False, [{"o_que_falta": "dizer de qual empresa é o relatório: o doc_id em `empresa`, de "
+                                       "listar_documentos", "agente": ORCHESTRATOR}], {}
+    async with deps.engine.connect(mcp.SYSTEM, identity) as session:
+        try:
+            pending = (await session.call("pendencias", {"doc_id": run.doc_id}))["pendencias"]
+        except mcp.McpError as error:  # doc_id que não existe: o orquestrador escolhe de novo
+            run.doc_id = None
+            return False, [{"o_que_falta": f"escolher a empresa de novo: {error}", "agente": ORCHESTRATOR}], {}
+        report = await session.call("ler_relatorio_empresa", {"doc_id": run.doc_id}) if not pending else {}
+    return not pending, pending, {"relatorio": report.get("relatorio"), "gerado_em": report.get("gerado_em"),
+                                  "doc_id": run.doc_id}
+
+
 def turn_answer(run: Run, state: Estado) -> str:
     """O que este turno respondeu, para os turnos seguintes da conversa lembrarem."""
     answers = (state.get("resultado") or {}).get("respostas") or []
@@ -246,6 +274,8 @@ def turn_answer(run: Run, state: Estado) -> str:
         return " ".join(answer["resposta"] for answer in answers)
     if run.tipo == "relatorio" and state.get("completo"):
         return "Relatório consolidado montado."
+    if run.tipo == "relatorio_empresa" and state.get("completo"):
+        return f"Relatório da empresa {run.doc_id} montado."
     return state.get("mensagem") or ""
 
 
@@ -301,11 +331,17 @@ class Execution:
         decision: Decisao = outcome.saida
         if self.run.tipo == "auto":  # mensagem de conversa: a primeira decisão diz o que ela é
             self.run.tipo = INTENT_TYPE[decision.intencao]
-            self.trace.add("intencao", intencao=decision.intencao, tipo_execucao=self.run.tipo)
+            if self.run.tipo == "relatorio_empresa":
+                self.run.doc_id = decision.empresa
+            self.trace.add("intencao", intencao=decision.intencao, tipo_execucao=self.run.tipo, doc_id=self.run.doc_id)
             self.deps.runs.save(self.run)
             if self.run.tipo == "fora_do_escopo":
                 # Nada é delegado, e a mensagem do orquestrador não vai ao usuário: o texto é fixo.
                 return {**update, "mensagem": OUT_OF_SCOPE, "decisao": {"delegacoes": [], "terminado": True}}
+        elif self.run.tipo == "relatorio_empresa" and not self.run.doc_id and decision.empresa:
+            self.run.doc_id = decision.empresa  # a conferência pediu a empresa de novo
+            self.trace.add("intencao", intencao=decision.intencao, tipo_execucao=self.run.tipo, doc_id=self.run.doc_id)
+            self.deps.runs.save(self.run)
         # Delegação a quem não existe vira relato de erro, que o orquestrador recebe na onda seguinte.
         unknown = [{"agente": item.agente, "estado": "erro", "doc_id": item.doc_id,
                     "erro": f"não há especialista '{item.agente}'"} for item in decision.delegacoes

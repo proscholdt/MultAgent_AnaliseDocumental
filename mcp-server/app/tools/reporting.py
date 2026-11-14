@@ -9,7 +9,7 @@ from app.errors import ToolRejected
 from app.formulas import AlertDraft
 from app.models import Summary
 from app.pending import REVIEW_DONE, gather, pending, summary_blockers
-from app.report import MARKER, build_report
+from app.report import MARKER, build_company_report, build_report
 from app.text import check_script, squash, unbacked_numbers
 from app.tools.answers import markers_for
 
@@ -86,7 +86,8 @@ async def concluir_revisao(call: Call, args: ConcluirRevisao) -> dict[str, Any]:
 
 
 class Pendencias(Args):
-    pass
+    doc_id: str | None = Field(None, description="Só para o relatório de UMA empresa: o documento dela. Sem "
+                               "doc_id, a lista é a do relatório consolidado.")
 
 
 @tool("pendencias", "controle", """
@@ -94,11 +95,43 @@ class Pendencias(Args):
     análise qualitativa, respostas às cinco perguntas, resumos e a montagem do relatório. Cada item
     indica o documento, o agente que costuma resolver e se já pode ser feito: 'liberada' true, ou
     false com o que ele 'aguarda' (as perguntas esperam a extração e a análise de todos os
-    documentos; o resumo espera a extração, a revisão e a análise da empresa). Lista vazia = está
+    documentos; o resumo espera a extração, a revisão e a análise da empresa). Com doc_id, é o que
+    falta para o relatório só daquela empresa (sem as perguntas comparativas). Lista vazia = está
     completo.""")
 async def pendencias(call: Call, args: Pendencias) -> dict[str, Any]:
-    items = await pending(call)
+    items = await pending(call, doc_id=args.doc_id)
     return {"completo": not items, "pendencias": items}
+
+
+class RelatorioEmpresa(Args):
+    doc_id: str = Field(description="Documento (uma empresa).")
+
+
+@tool("montar_relatorio_empresa", "relatorio", """
+    Monta o relatório de UMA empresa em Markdown a partir da base: resumo executivo, indicadores
+    com a página, análise qualitativa com as citações e alertas. Precisa da extração, da revisão
+    das fontes, da análise e do resumo da empresa; se faltar algo, a chamada é recusada com a
+    lista. As perguntas comparativas não entram: são do relatório consolidado.""")
+async def montar_relatorio_empresa(call: Call, args: RelatorioEmpresa) -> dict[str, Any]:
+    missing = await pending(call, include_report=False, doc_id=args.doc_id)
+    if missing:
+        raise ToolRejected("O relatório da empresa não pode ser montado: ainda há pendências.",
+                           problemas=[item["o_que_falta"] for item in missing])
+    state = next(state for state in await gather(call) if state.document.doc_id == args.doc_id)
+    markdown = build_company_report(
+        {"extracao": state.extraction, "analise": state.analysis, "resumo": state.summary,
+         "alertas": [alert for alert in state.alerts if alert["codigo"] != REVIEW_DONE]}, datetime.now(UTC))
+    await call.deps.store.save_company_report(call.caller, args.doc_id, state.document.fingerprint, markdown)
+    return {"montado": True, "empresa": state.name, "caracteres": len(markdown)}
+
+
+@tool("ler_relatorio_empresa", "relatorio", """
+    Devolve o relatório mais recente de uma empresa, em Markdown.""")
+async def ler_relatorio_empresa(call: Call, args: RelatorioEmpresa) -> dict[str, Any]:
+    report = await call.deps.store.company_report(call.caller.user_id, args.doc_id)
+    if report is None:
+        return {"relatorio": None}
+    return {"relatorio": report.markdown, "gerado_em": report.at.isoformat(), "doc_id": args.doc_id}
 
 
 class MontarRelatorio(Args):

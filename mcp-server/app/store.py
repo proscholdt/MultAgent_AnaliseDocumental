@@ -9,7 +9,7 @@ from sqlalchemy import select, update
 from app.auth import Caller
 from app.db import Database
 from app.formulas import AlertDraft
-from app.models import Alert, AnalysisItem, Answer, Extraction, Report, StoredValue, Summary
+from app.models import Alert, AnalysisItem, Answer, CompanyReport, Extraction, Report, StoredValue, Summary
 
 
 class Store:
@@ -137,4 +137,15 @@ class Store:
     async def report(self, user_id: str) -> Report | None:
         async with self._db.session() as session:
             query = select(Report).where(Report.user_id == user_id).order_by(Report.id.desc()).limit(1)
+            return (await session.execute(query)).scalar_one_or_none()
+
+    async def save_company_report(self, caller: Caller, doc_id: str, fingerprint: str, markdown: str) -> None:
+        async with self._db.session() as session:
+            session.add(CompanyReport(user_id=caller.user_id, doc_id=doc_id, fingerprint=fingerprint,
+                                      run_id=caller.run_id, markdown=markdown))
+
+    async def company_report(self, user_id: str, doc_id: str) -> CompanyReport | None:
+        async with self._db.session() as session:
+            query = (select(CompanyReport).where(CompanyReport.user_id == user_id, CompanyReport.doc_id == doc_id)
+                     .order_by(CompanyReport.id.desc()).limit(1))
             return (await session.execute(query)).scalar_one_or_none()

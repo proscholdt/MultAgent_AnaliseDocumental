@@ -339,3 +339,58 @@ async def test_a_free_question_answered_later_does_not_make_the_report_stale(gov
         "livre", f"A receita foi de {{{{{DOC_ANA}.receita_liquida}}}}.", "Qual foi a receita?"))
     assert not free.is_error, payload(free)
     assert payload(await call(governance, "orquestrador", "pendencias")) == {"completo": True, "pendencias": []}
+
+
+# --- relatório de uma empresa ------------------------------------------------------------------
+
+
+async def test_company_pending_list_has_only_that_company_and_no_comparative_questions(governance, indexer):
+    add_second_document(indexer)
+    first = payload(await call(governance, "orquestrador", "pendencias", {"doc_id": DOC_ANA}))["pendencias"]
+    assert {p.get("doc_id") for p in first} == {DOC_ANA}
+    assert not any(p["agente"] == "pesquisador" for p in first)
+    assert [p["agente"] for p in first] == ["extrator", "validador", "analista", "redator"]
+
+    unknown = await call(governance, "orquestrador", "pendencias", {"doc_id": "nao-existe"})
+    assert unknown.is_error and any(DOC_ANA in option for option in payload(unknown)["opcoes"])
+
+    refused = await call(governance, "redator", "montar_relatorio_empresa", {"doc_id": DOC_ANA})
+    assert refused.is_error and len(payload(refused)["problemas"]) == 4
+
+
+async def test_company_report_is_built_by_code_without_the_other_companies(governance, indexer):
+    add_second_document(indexer)
+    await extract(governance)
+    await review(governance)
+    await analyse(governance)
+    await summarize(governance)
+    # As perguntas comparativas não foram respondidas e o segundo documento nem foi extraído:
+    # o relatório consolidado não sai, o da empresa sai.
+    pending = payload(await call(governance, "orquestrador", "pendencias", {"doc_id": DOC_ANA}))["pendencias"]
+    assert [p["o_que_falta"] for p in pending] == ["montagem do relatório da empresa (montar_relatorio_empresa)"]
+    assert (await call(governance, "redator", "montar_relatorio")).is_error
+
+    built = payload(await call(governance, "redator", "montar_relatorio_empresa", {"doc_id": DOC_ANA}))
+    assert built["montado"] and built["empresa"] == "Empresa Exemplo S.A."
+    assert payload(await call(governance, "orquestrador", "pendencias", {"doc_id": DOC_ANA})) == {
+        "completo": True, "pendencias": []}
+
+    report = payload(await call(governance, "orquestrador", "ler_relatorio_empresa", {"doc_id": DOC_ANA}))["relatorio"]
+    for expected in [
+        "# Relatório de análise: Empresa Exemplo S.A.", "Período 2022, comparado com 2021.",
+        "## 1. Resumo executivo", "Receita de R$ 1.325.059 mil (Exemplo.pdf, p. 8)",
+        "## 2. Indicadores", "| Receita líquida | R$ 1.325.059 mil (p. 8)<br>var.: +24,84% |",
+        "## 3. Análise qualitativa", f'> "{LIQUIDITY}" (p. 35, nota explicativa)',
+        "## 4. Alertas e informações não encontradas", "- [atenção] O texto fala em aumento de 23% da dívida",
+    ]:
+        assert expected in report, expected
+    assert "Perguntas e respostas" not in report and "revisao_das_fontes_concluida" not in report
+    assert payload(await call(governance, "orquestrador", "ler_relatorio_empresa", {"doc_id": DOC_ANA_2})) == {
+        "relatorio": None}
+
+    # Dado novo da empresa depois do relatório: ele volta para a lista.
+    await save(governance, cell("lucro_liquido", "Lucro líquido do exercício", "Controladora - 2022"))
+    await call(governance, "extrator", "fechar_extracao", {"doc_id": DOC_ANA})
+    await summarize(governance)
+    pending = payload(await call(governance, "orquestrador", "pendencias", {"doc_id": DOC_ANA}))["pendencias"]
+    assert [p["o_que_falta"].split(":")[0] for p in pending] == ["remontar o relatório da empresa"]

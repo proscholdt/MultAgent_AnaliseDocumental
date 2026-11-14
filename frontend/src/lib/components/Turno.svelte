@@ -22,6 +22,7 @@
 	const TIPO: Record<Turno['tipo'], string> = {
 		pergunta: 'Pergunta',
 		relatorio: 'Relatório',
+		relatorio_empresa: 'Relatório da empresa',
 		fora_do_escopo: 'Fora do escopo',
 		livre: 'Pedido',
 		auto: ''
@@ -87,7 +88,7 @@
 			{#if turno.relatorio}
 				<div class="relatorio">
 					<div class="barra">
-						<span class="rotulo">Relatório consolidado</span>
+						<span class="rotulo">{turno.tipo === 'relatorio_empresa' ? 'Relatório da empresa' : 'Relatório consolidado'}</span>
 						<div class="acoes">
 							<button class="botao secundario" type="button" onclick={() => copiar(turno.relatorio ?? '')}>
 								{copiado ? 'Copiado' : 'Copiar Markdown'}

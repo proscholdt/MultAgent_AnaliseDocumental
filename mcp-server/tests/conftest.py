@@ -253,9 +253,10 @@ agentes:
   pesquisador:
     tools: [buscar_trechos, ler_chunk, ler_extracao, ler_analise, comparar_indicadores, salvar_resposta, ler_respostas]
   redator:
-    tools: [ler_extracao, ler_analise, ler_alertas, ler_respostas, salvar_resumo, montar_relatorio, ler_relatorio]
+    tools: [ler_extracao, ler_analise, ler_alertas, ler_respostas, salvar_resumo, montar_relatorio, ler_relatorio,
+            montar_relatorio_empresa, ler_relatorio_empresa, pendencias]
   orquestrador:
-    tools: [listar_documentos, pendencias, ler_extracao, ler_relatorio]
+    tools: [listar_documentos, pendencias, ler_extracao, ler_relatorio, ler_relatorio_empresa]
 """
 
 
