@@ -109,7 +109,7 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
         lifespan=lifespan)
     app.state.deps = deps
     if telemetria.configurar("agents-orquestrador"):
-        instrumentar_agentes()
+        instrumentar_agentes(settings)
         agentes = deps.registry.current().agents
         zerar_metricas(sorted(agentes), sorted({spec.modelo for spec in agentes.values()}))
     telemetria.instrumentar(app)

@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     # a OpenAI devolve ("detailed", "auto"). O resumo entra no trace e nas mensagens de cada agente.
     esforco_raciocinio: str = "low"
     resumo_raciocinio: str = "detailed"
+    # O texto das mensagens (prompts, respostas, resultado das tools) nos traces do Tempo, como no
+    # LangSmith. Leva trechos dos documentos para a observabilidade.
+    traces_com_conteudo: bool = False
 
     # Servidor MCP: a única porta dos agentes para tools e RAG. O segredo é o mesmo do servidor.
     mcp_url: str = "http://localhost:8100/mcp"
@@ -154,6 +157,7 @@ class Ajustes(_Bloco):
     precos: dict[str, _Preco] | None = None
     execucao: _Execucao | None = None
     memoria_max_tokens: int | None = None
+    traces_com_conteudo: bool | None = None
     tempo_limite: _Tempos | None = None
     min_minutos_token: int | None = None
 
@@ -174,7 +178,7 @@ class Ajustes(_Bloco):
             for key, name in fields.items():
                 if block is not None and getattr(block, key) is not None:
                     out[name] = getattr(block, key)
-        for name in ("memoria_max_tokens", "min_minutos_token"):
+        for name in ("memoria_max_tokens", "min_minutos_token", "traces_com_conteudo"):
             if getattr(self, name) is not None:
                 out[name] = getattr(self, name)
         return out

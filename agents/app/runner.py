@@ -157,15 +157,25 @@ class Engine:
     model: Callable[[AgentFile], Model]
 
 
-def instrumentar_agentes() -> None:
-    """Liga os spans do PydanticAI (execução do agente, cada chamada ao modelo com os tokens, cada
-    tool). O conteúdo das mensagens (texto dos documentos) só vai junto com OTEL_INCLUIR_CONTEUDO=true."""
-    import os
+_instrumentacao: dict[str, bool | None] = {"ligada": False, "conteudo": None}
 
+
+def instrumentar_agentes(settings: Settings) -> None:
+    """Liga os spans do PydanticAI (execução do agente, cada chamada ao modelo com os tokens, cada
+    tool). O texto das mensagens vai junto com `traces_com_conteudo: true` no ajustes.yaml."""
+    _instrumentacao["ligada"] = True
+    atualizar_instrumentacao(settings)
+
+
+def atualizar_instrumentacao(settings: Settings) -> None:
+    """Acompanha o ajustes.yaml: o agente é criado a cada chamada, então a troca vale na próxima."""
+    if not _instrumentacao["ligada"] or _instrumentacao["conteudo"] == settings.traces_com_conteudo:
+        return
     from pydantic_ai.models.instrumented import InstrumentationSettings
 
-    incluir = os.getenv("OTEL_INCLUIR_CONTEUDO", "false").lower() == "true"
-    Agent.instrument_all(InstrumentationSettings(include_content=incluir, include_binary_content=False))
+    Agent.instrument_all(InstrumentationSettings(include_content=settings.traces_com_conteudo,
+                                                 include_binary_content=False))
+    _instrumentacao["conteudo"] = settings.traces_com_conteudo
 
 
 GROQ = "groq:"

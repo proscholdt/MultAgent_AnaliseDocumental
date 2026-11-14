@@ -22,6 +22,8 @@ flowchart LR
 - **Envelopes**: verde quando a tool passou, vermelho quando o portão barrou, com o motivo num balão.
 - **Repetir** em 1×, 2×, 4× ou 8×: refaz uma execução no ritmo em que aconteceu.
 - **Seguir a mais nova**: abre sozinha a execução que acabou de começar.
+- **Conversa**: a execução inteira, com o texto completo das falas, dos pensamentos e das recusas
+  dos portões; minimizar, maximizar, filtro por texto ou agente, filtro por tipo e rolagem.
 
 Limites: uma sessão por vez (o login fica no servidor da sala); o raciocínio dos especialistas chega
 quando cada um termina; as mesas são as dos cinco especialistas atuais.

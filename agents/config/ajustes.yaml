@@ -29,6 +29,10 @@ execucao:
   rodadas_pendencias: 2   # vezes que o orquestrador roda de novo quando a conferência acha pendência
   max_ondas: 20           # decisões do orquestrador por rodada
 
+# O texto das mensagens nos traces do Tempo (prompts, respostas, resultado das tools), como no
+# LangSmith. Leva trechos dos documentos para a observabilidade. Vale na próxima chamada.
+traces_com_conteudo: true
+
 # Teto, em tokens estimados, do histórico de um especialista numa conversa.
 memoria_max_tokens: 40000
 

@@ -78,8 +78,10 @@ normalmente; os erros de exportação são silenciados.
 | 3200 | Tempo |
 | 12345 | interface do Alloy |
 
-O conteúdo das mensagens dos modelos (texto dos documentos) não vai para os traces. Para incluir,
-use `OTEL_INCLUIR_CONTEUDO=true` no `.env` dos agentes.
+O texto das mensagens dos modelos (prompts, respostas e o que as tools devolveram) entra nos traces
+com `traces_com_conteudo: true` em `agents/config/ajustes.yaml`, ligado neste repositório: abrindo
+uma chamada `chat` no trace, aparecem as mensagens, como no LangSmith. Vale na próxima chamada, sem
+reiniciar. Leva trechos dos documentos para o Tempo; desligue se isso não puder sair da aplicação.
 
 Retenção: 3 dias de traces, 7 de logs, 15 de métricas.
 

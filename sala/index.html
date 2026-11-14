@@ -22,10 +22,23 @@
   canvas { width:100%; height:auto; display:block; image-rendering:pixelated; border:2px solid var(--borda); border-radius:6px; background:#1b2430; }
   .janela { position:absolute; background:rgba(9,14,20,.92); border:2px solid var(--borda); border-radius:4px; font-size:12px; }
   .janela .titulo { font:9px 'Press Start 2P', monospace; color:var(--azul); padding:6px 8px; border-bottom:1px solid var(--borda); display:flex; justify-content:space-between; }
-  #conversa { left:12px; bottom:12px; width:min(430px, 40%); }
-  #conversa .linhas { padding:6px 8px; height:150px; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end; }
-  #conversa .l { margin:2px 0; }
+  #conversa { left:12px; bottom:12px; width:min(430px, 40%); display:flex; flex-direction:column; z-index:2; }
+  #conversa .titulo button { background:none; border:1px solid var(--borda); color:var(--tinta); font:9px 'Press Start 2P', monospace; padding:2px 5px; margin-left:4px; cursor:pointer; border-radius:3px; }
+  #conversa .titulo button:hover, #conversa .titulo button:focus-visible { border-color:var(--azul); color:var(--azul); outline:none; }
+  #conversa .filtros { display:flex; gap:6px; padding:5px 8px; border-bottom:1px solid var(--borda); }
+  #conversa .filtros input, #conversa .filtros select { background:var(--painel); color:var(--tinta); border:1px solid var(--borda); border-radius:3px; padding:3px 6px; font:11px 'JetBrains Mono', monospace; }
+  #conversa .filtros input { flex:1; min-width:0; }
+  #conversa .linhas { padding:6px 8px; height:150px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:var(--borda) transparent; }
+  #conversa .l { margin:3px 0; white-space:pre-wrap; overflow-wrap:anywhere; }
   #conversa .l b { color:var(--verde); font-weight:600; }
+  #conversa .l.pensa { color:var(--roxo); font-style:italic; }
+  #conversa .l.pensa b { color:var(--roxo); }
+  #conversa .l.portao { color:var(--vermelho); }
+  #conversa .l.portao b { color:var(--vermelho); }
+  #conversa .l .h { color:var(--fraco); margin-right:6px; }
+  #conversa.min .filtros, #conversa.min .linhas { display:none; }
+  #conversa.max { left:12px; right:12px; top:12px; bottom:12px; width:auto; background:var(--bg); }
+  #conversa.max .linhas { height:auto; flex:1; font-size:13px; }
   #painel { right:12px; bottom:12px; width:min(300px, 34%); }
   #painel .linhas { padding:8px 10px; font:9px/2 'Press Start 2P', monospace; }
   #painel .linhas div { display:flex; justify-content:space-between; gap:8px; }
@@ -67,7 +80,11 @@
 <main>
   <section id="sala" class="palco">
     <canvas id="tela" width="1120" height="770"></canvas>
-    <div class="janela" id="conversa"><div class="titulo"><span>CONVERSA</span><span>_ □ ×</span></div><div class="linhas"></div></div>
+    <div class="janela" id="conversa">
+      <div class="titulo"><span>CONVERSA <span id="conversa-n"></span></span><span><button id="conversa-min" type="button" title="Minimizar" aria-label="Minimizar a conversa">_</button><button id="conversa-max" type="button" title="Maximizar" aria-label="Maximizar a conversa">□</button></span></div>
+      <div class="filtros"><input id="conversa-filtro" type="text" placeholder="filtrar (agente ou texto)…" aria-label="Filtrar a conversa"><select id="conversa-tipo" aria-label="O que mostrar"><option value="">tudo</option><option value="fala">falas</option><option value="pensa">pensamentos</option><option value="portao">portões</option></select></div>
+      <div class="linhas" aria-live="polite"></div>
+    </div>
     <div class="janela" id="painel"><div class="titulo"><span>PAINEL DE CONTROLE</span></div><div class="linhas"></div></div>
   </section>
 
@@ -172,7 +189,8 @@ function iniciar(p, a) {
   } else if (a.tipo === 'falar' || a.tipo === 'pensar' || a.tipo === 'alerta') {
     p.bolha = { tipo: a.tipo, texto: a.texto };
     if (a.tipo === 'pensar') p.statusAntes = p.status;
-    if (a.tipo === 'falar') registrarFala(p, a.para, a.texto);
+    // Na conversa vai o texto inteiro; o balão mostra só o começo.
+    registrarFala(p, a.para, a.completo ?? a.texto, { falar: 'fala', pensar: 'pensa', alerta: 'portao' }[a.tipo]);
   } else if (a.tipo === 'status') {
     p.status = a.valor;
   } else if (a.tipo === 'acao') {
@@ -403,12 +421,62 @@ requestAnimationFrame(quadro);
 // ============================================================================================
 // Conversa e painel
 // ============================================================================================
+// A conversa inteira da execução: falas, pensamentos e recusas dos portões, com o texto completo.
 const falas = [];
-function registrarFala(p, para, texto) {
-  falas.push({ de: p.v.nome, para: para ? VISUAL[para].nome : '', texto });
-  if (falas.length > 6) falas.shift();
-  document.querySelector('#conversa .linhas').innerHTML = falas.map((f) =>
-    `<div class="l"><b>${f.de}${f.para ? ' → ' + f.para : ''}:</b> ${esc(f.texto)}</div>`).join('');
+const MAX_FALAS = 3000;
+const caixaFalas = document.querySelector('#conversa .linhas');
+function hora() { return new Date().toTimeString().slice(0, 8); }
+function passaFiltro(f) {
+  const texto = document.getElementById('conversa-filtro').value.trim().toLowerCase();
+  const tipo = document.getElementById('conversa-tipo').value;
+  return (!tipo || f.tipo === tipo) && (!texto || `${f.de} ${f.para} ${f.texto}`.toLowerCase().includes(texto));
+}
+function linhaFala(f) {
+  const div = document.createElement('div');
+  div.className = `l ${f.tipo}`;
+  const seta = f.tipo === 'pensa' ? ' (pensando)' : f.para ? ' → ' + f.para : '';
+  div.innerHTML = `<span class="h">${f.h}</span><b>${esc(f.de)}${esc(seta)}:</b> ${esc(f.texto)}`;
+  div.hidden = !passaFiltro(f);
+  f.el = div;
+  return div;
+}
+function contarFalas() {
+  const visiveis = falas.filter((f) => !f.el.hidden).length;
+  document.getElementById('conversa-n').textContent = visiveis === falas.length ? `(${falas.length})` : `(${visiveis}/${falas.length})`;
+}
+function registrarFala(p, para, texto, tipo = 'fala') {
+  const noFim = caixaFalas.scrollHeight - caixaFalas.scrollTop - caixaFalas.clientHeight < 30;
+  const f = { de: p.v.nome, para: para ? VISUAL[para].nome : '', texto: String(texto ?? ''), tipo, h: hora() };
+  falas.push(f);
+  caixaFalas.appendChild(linhaFala(f));
+  if (falas.length > MAX_FALAS) falas.shift().el.remove();
+  if (noFim) caixaFalas.scrollTop = caixaFalas.scrollHeight; // quem rolou para cima não é puxado de volta
+  contarFalas();
+}
+function aplicarFiltroFalas() {
+  falas.forEach((f) => (f.el.hidden = !passaFiltro(f)));
+  contarFalas();
+  caixaFalas.scrollTop = caixaFalas.scrollHeight;
+}
+document.getElementById('conversa-filtro').oninput = aplicarFiltroFalas;
+document.getElementById('conversa-tipo').onchange = aplicarFiltroFalas;
+const janelaConversa = document.getElementById('conversa');
+document.getElementById('conversa-min').onclick = () => {
+  janelaConversa.classList.toggle('min');
+  if (janelaConversa.classList.contains('min')) janelaConversa.classList.remove('max');
+  atualizarBotoesConversa();
+};
+document.getElementById('conversa-max').onclick = () => {
+  janelaConversa.classList.toggle('max');
+  janelaConversa.classList.remove('min');
+  atualizarBotoesConversa();
+  caixaFalas.scrollTop = caixaFalas.scrollHeight;
+};
+function atualizarBotoesConversa() {
+  const max = janelaConversa.classList.contains('max'), min = janelaConversa.classList.contains('min');
+  const bMax = document.getElementById('conversa-max'), bMin = document.getElementById('conversa-min');
+  bMax.textContent = max ? '❐' : '□'; bMax.title = max ? 'Restaurar' : 'Maximizar';
+  bMin.textContent = min ? '▴' : '_'; bMin.title = min ? 'Abrir' : 'Minimizar';
 }
 function esc(s) { return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
@@ -441,7 +509,7 @@ let nomesDocs = {}, pensamentos = {};
 function curto(t, n = 70) { t = String(t ?? ''); return t.length > n ? t.slice(0, n - 1) + '…' : t; }
 function nomeDoc(id) { return id ? (nomesDocs[id] || 'documento ' + id.slice(0, 6)) : ''; }
 function relato(passo) {
-  if (passo.estado !== 'concluido') return `Parei: ${passo.estado}${passo.erro ? ' (' + curto(passo.erro, 40) + ')' : ''}.`;
+  if (passo.estado !== 'concluido') return `Parei: ${passo.estado}${passo.erro ? ' (' + passo.erro + ')' : ''}.`;
   const g = Object.entries(passo.gravacoes || {}).map(([k, n]) => (n > 1 ? `${n} ` : '') + (GRAVA[k] || k));
   return g.length ? `Pronto: ${g.join(', ')}.` : 'Pronto!';
 }
@@ -453,7 +521,7 @@ function evento(passo) {
     case 'inicio':
       U.fazer({ tipo: 'status', valor: 'ESPERANDO' });
       O.fazer({ tipo: 'andar', lugar: 'usuario', alvo: LUGARES.usuario.visita });
-      O.fazer({ tipo: 'acao', fn: () => U.fazer({ tipo: 'falar', texto: curto(passo.pedido, 110), ms: 2600, para: 'orquestrador' }) });
+      O.fazer({ tipo: 'acao', fn: () => U.fazer({ tipo: 'falar', texto: curto(passo.pedido, 110), completo: passo.pedido, ms: 2600, para: 'orquestrador' }) });
       O.fazer({ tipo: 'esperar', ms: 2600 });
       O.fazer({ tipo: 'falar', texto: 'Pode deixar, vou organizar a equipe.', ms: 1600, para: 'usuario' });
       O.fazer({ tipo: 'voltar' });
@@ -475,7 +543,8 @@ function evento(passo) {
     case 'delegando':
       if (!ag) break;
       O.fazer({ tipo: 'andar', lugar: passo.agente, alvo: LUGARES[passo.agente].visita, statusChegada: 'REUNIÃO' });
-      O.fazer({ tipo: 'falar', texto: (passo.doc_id ? nomeDoc(passo.doc_id) + ': ' : '') + curto(passo.tarefa, 90), ms: 2200, para: passo.agente });
+      O.fazer({ tipo: 'falar', texto: (passo.doc_id ? nomeDoc(passo.doc_id) + ': ' : '') + curto(passo.tarefa, 90),
+                completo: (passo.doc_id ? nomeDoc(passo.doc_id) + ': ' : '') + passo.tarefa, ms: 2200, para: passo.agente });
       O.fazer({ tipo: 'acao', fn: () => { ag.fazer({ tipo: 'falar', texto: 'Ok, comigo!', ms: 900, para: 'orquestrador' }); ag.fazer({ tipo: 'status', valor: 'TRABALHANDO' }); } });
       O.fazer({ tipo: 'voltar' });
       pensamentos[passo.agente] = 0;
@@ -483,7 +552,8 @@ function evento(passo) {
     case 'raciocinio':
       if (!ag) break;
       if (passo.agente !== 'orquestrador' && (pensamentos[passo.agente] = (pensamentos[passo.agente] || 0) + 1) > 2) break;
-      ag.fazer({ tipo: 'pensar', texto: curto(String(passo.texto).replace(/\*\*/g, '').replace(/\s+/g, ' '), 110), ms: 1800 });
+      ag.fazer({ tipo: 'pensar', texto: curto(String(passo.texto).replace(/\*\*/g, '').replace(/\s+/g, ' '), 110),
+                 completo: String(passo.texto).replace(/\*\*/g, '').trim(), ms: 1800 });
       break;
     case 'especialista':
       if (!ag) break;
@@ -523,7 +593,8 @@ function chamada(linha) {
   const daMesa = { x0: s.x - 50, y0: s.y - 30, x1: RACK.x + Math.random() * 80, y1: RACK.y, cor: ok ? '#3ddc84' : '#ff6b6b' };
   if (RAG.has(linha.tool) && ok) daMesa.depois = { x0: RACK.x + 60, y0: RACK.y, x1: ARQUIVO.x, y1: ARQUIVO.y, cor: '#f4b740', ms: 500 };
   pacote(daMesa);
-  if (!ok && linha.resultado === 'rejeitada') quem.fazer({ tipo: 'alerta', texto: 'Portão: ' + curto(linha.detalhe, 80), ms: 1600 });
+  if (!ok && linha.resultado === 'rejeitada') quem.fazer({ tipo: 'alerta', texto: 'Portão: ' + curto(linha.detalhe, 80),
+                completo: `Portão (${linha.tool}): ${linha.detalhe}`, ms: 1600 });
 }
 
 // ============================================================================================
@@ -545,7 +616,7 @@ function resetarCena() {
     p.limpar(); const s = LUGARES[p.id].sentado; p.x = s.x; p.y = s.y; p.sentado = true; p.lugar = p.id; p.status = 'LIVRE'; p.dir = 'baixo';
   });
   pacotes.length = 0; falas.length = 0; chamadas = 0; barradas = 0; pensamentos = {};
-  document.querySelector('#conversa .linhas').innerHTML = '';
+  caixaFalas.innerHTML = ''; contarFalas();
   document.getElementById('eventos').innerHTML = '';
 }
 
