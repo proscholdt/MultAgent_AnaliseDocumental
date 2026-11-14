@@ -130,10 +130,11 @@ async def test_agent_without_policy_entry_does_not_run(settings, engine, world, 
     assert "extrator" not in model.inputs  # o modelo nem foi chamado
 
 
-async def test_unknown_model_alias_is_an_error_that_names_the_alias(settings, engine, agents_dir, identity):
+async def test_the_model_comes_from_the_agent_file(settings, engine, agents_dir, identity):
+    """Cada agente diz o seu modelo; o motor recebe o arquivo do agente e usa o que está nele."""
     write_agent(agents_dir, "extrator", modelo="gigante")
     run = await run_agent(spec_of(settings), "Extraia.", identity=identity, engine=engine, budget=budget())
-    assert run.estado == "erro" and "'gigante' não está em MODELOS" in run.erro
+    assert run.estado == "erro" and "gigante" in run.erro
 
 
 def test_mcp_token_says_which_agent_is_calling_and_the_user_token_travels_beside_it(settings, identity):

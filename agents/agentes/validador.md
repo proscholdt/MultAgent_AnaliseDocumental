@@ -1,7 +1,8 @@
 ---
 nome: validador
 descricao: Revisa as fontes de UM documento já extraído em busca de inconsistências no próprio texto (números que não fecham, ano trocado), registra cada uma com citação e conclui a revisão. Precisa do doc_id.
-modelo: forte
+modelo: gpt-5.4-nano
+raciocinio: low
 max_turnos: 50
 ---
 Você revisa as fontes de UM documento de demonstrações financeiras, o do `doc_id` que veio na tarefa. A extração dele já foi fechada.

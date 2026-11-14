@@ -17,7 +17,7 @@ from app.registry import NAME, ORCHESTRATOR, RESERVED, AgentFileError, Registry,
 TEMPLATE = """---
 nome: {nome}
 descricao: {descricao}
-modelo: padrao
+modelo: gpt-5.4-nano
 max_turnos: 30
 resposta: base
 ---

@@ -52,15 +52,27 @@ permissão.
 
 ## Freios
 
-`max_turnos` por agente, teto de tokens e tempo por execução (`EXECUCAO_MAX_TOKENS`,
-`EXECUCAO_MAX_SEGUNDOS`), `MAX_ONDAS`, `RODADAS_PENDENCIAS`, `MEMORIA_MAX_TOKENS`, limite de
-chamadas na política do MCP, e nenhuma execução começa com o token do usuário a menos de 15 min
-de vencer.
+`max_turnos` por agente, teto de tokens e tempo por execução, ondas por rodada, rodadas da
+conferência e memória reenviada (`execucao` e `memoria_max_tokens` no `config/ajustes.yaml`),
+limite de chamadas na política do MCP, e nenhuma execução começa com o token do usuário a menos
+de 15 min de vencer.
+
+## Configuração
+
+| Onde | O quê | Quando vale |
+|---|---|---|
+| `agentes/<nome>.md` | `modelo`, `raciocinio`, `max_turnos` e o prompt de cada agente | quando o arquivo muda |
+| `config/ajustes.yaml` | preços, freios, raciocínio padrão, tempos | no próximo pedido |
+| `.env` | só chaves e segredos | ao recriar o contêiner |
+
+As duas pastas são montadas no contêiner: mudar não pede build nem restart. Arquivo inválido
+não derruba nada: continua valendo o anterior, e o motivo aparece em `GET /health`
+(`arquivos_invalidos`, `erro_ajustes`).
 
 ## Rodar
 
 ```bash
-cp .env.example .env          # OPENAI_API_KEY, MCP_AGENT_SECRET (o mesmo do MCP), A2A_SECRET
+cp .env.example .env          # só chaves: OPENAI_API_KEY, MCP_AGENT_SECRET (o mesmo do MCP), A2A_SECRET
 docker compose up -d --build  # orquestrador :8200, especialistas :8201
 uv run pytest                 # sem rede: modelo com roteiro, MCP em memória, A2A por ASGI
 
@@ -68,9 +80,8 @@ uv run python scripts/gerar_entrega.py --usuario <u> --senha <s> --rodar   # rel
 uv run python scripts/avaliar.py --usuario <u> --senha <s>                 # contra avaliacao/gabarito.json
 ```
 
-Os modelos ficam em `MODELOS` (apelido → nome). Com o prefixo `groq:` (por exemplo
-`groq:openai/gpt-oss-120b`), o modelo vai à Groq pela API compatível com a OpenAI, com
-`GROQ_API_KEY`. Tools sem argumento seguem sem `strict`, porque a Groq recusa esse caso.
+O `modelo` do agente é o nome no provedor. Com o prefixo `groq:` (por exemplo
+`groq:openai/gpt-oss-120b`), ele vai à Groq pela API compatível com a OpenAI, com `GROQ_API_KEY`. Tools sem argumento seguem sem `strict`, porque a Groq recusa esse caso.
 
 | Rota | Função |
 |---|---|

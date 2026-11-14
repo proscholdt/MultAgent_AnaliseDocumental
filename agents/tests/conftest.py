@@ -198,7 +198,7 @@ class FakeMcp:
 
 def write_agent(folder: Path, nome: str, **header: Any) -> Path:
     fields = {"nome": nome, "descricao": f"Agente de teste que faz o papel de {nome} nos testes.",
-              "modelo": "padrao", "max_turnos": 6, **header}
+              "modelo": MODEL_NAME, "max_turnos": 6, **header}
     head = "\n".join(f"{key}: {value}" for key, value in fields.items())
     path = folder / f"{nome}.md"
     path.write_text(f"---\n{head}\n---\nVocê é o agente de teste {nome}. Siga o roteiro do teste, passo a passo.\n",
@@ -221,7 +221,7 @@ def agents_dir(tmp_path) -> Path:
 @pytest.fixture
 def settings(tmp_path, agents_dir) -> Settings:
     return Settings(_env_file=None, openai_api_key="sk-teste", mcp_agent_secret=SECRET_MCP, a2a_secret=SECRET_A2A,
-                    agentes_dir=agents_dir, data_dir=tmp_path / "data", modelos={"padrao": MODEL_NAME},
+                    agentes_dir=agents_dir, data_dir=tmp_path / "data", config_path=tmp_path / "ajustes.yaml",
                     precos={MODEL_NAME: {"entrada": 2.0, "entrada_cache": 1.0, "saida": 10.0}},
                     especialistas_url="http://especialistas.teste", indexer_url="http://indexador.teste")
 
@@ -241,9 +241,8 @@ def model() -> ScriptedModel:
 
 @pytest.fixture
 def engine(settings, world, model) -> Engine:
-    def resolve(alias: str) -> FunctionModel:
-        if alias not in settings.modelos:
-            raise KeyError(f"o apelido de modelo '{alias}' não está em MODELOS")
+    def resolve(spec) -> FunctionModel:
+        assert spec.modelo == MODEL_NAME, spec.modelo
         return model.model
 
     return Engine(settings, lambda agent, identity: FakeMcp(world, agent, identity), resolve)

@@ -3,7 +3,8 @@
     ---
     nome: extrator
     descricao: Extrai os indicadores financeiros de um documento.
-    modelo: padrao
+    modelo: gpt-5.4-nano      # o nome do modelo; "groq:..." vai à Groq
+    raciocinio: low           # nenhum | minimal | low | medium | high; sem a chave, o padrão do ajustes.yaml
     max_turnos: 40
     ---
     Você extrai indicadores...
@@ -28,7 +29,8 @@ ORCHESTRATOR = "orquestrador"
 RESERVED = {"sistema"}
 REPLIES = ("base", "texto")
 _HEADER = re.compile(r"\A---\s*\n(.*?)\n---\s*\n(.*)\Z", re.DOTALL)
-_KEYS = {"nome", "descricao", "modelo", "max_turnos", "resposta"}
+_KEYS = {"nome", "descricao", "modelo", "raciocinio", "max_turnos", "resposta"}
+EFFORTS = ("nenhum", "minimal", "low", "medium", "high")
 
 
 class AgentFileError(ValueError):
@@ -39,7 +41,7 @@ class AgentFileError(ValueError):
 class AgentFile:
     nome: str
     descricao: str  # o que o orquestrador lê para decidir quando chamar
-    modelo: str  # apelido; o modelo real está em MODELOS, no .env
+    modelo: str  # o nome do modelo no provedor (com "groq:" na frente, na Groq)
     max_turnos: int
     # O que volta para o orquestrador quando o agente termina. "base": só o relato montado pelo
     # código (o que foi gravado e o que ainda falta). "texto": também a mensagem final do agente,
@@ -47,6 +49,8 @@ class AgentFile:
     resposta: str
     prompt: str
     digest: str
+    # Esforço de raciocínio deste agente: None = o padrão do ajustes.yaml; "" = sem raciocínio.
+    raciocinio: str | None = None
 
 
 def parse_agent(text: str, file_name: str) -> AgentFile:
@@ -76,15 +80,23 @@ def parse_agent(text: str, file_name: str) -> AgentFile:
     max_turnos = header.get("max_turnos", 30)
     if isinstance(max_turnos, bool) or not isinstance(max_turnos, int) or not 1 <= max_turnos <= 200:
         raise AgentFileError("'max_turnos' tem de ser um inteiro de 1 a 200")
+    modelo = header.get("modelo")
+    if not isinstance(modelo, str) or len(modelo.strip()) < 3:
+        raise AgentFileError("'modelo' é obrigatório: o nome do modelo, como 'gpt-5.4-nano' ou "
+                             "'groq:openai/gpt-oss-120b'")
+    raciocinio = header.get("raciocinio")
+    if raciocinio is not None and raciocinio not in EFFORTS:
+        raise AgentFileError(f"'raciocinio' tem de ser um destes: {', '.join(EFFORTS)}")
     resposta = str(header.get("resposta", "base"))
     if resposta not in REPLIES:
         raise AgentFileError("'resposta' tem de ser 'base' ou 'texto'")
     prompt = match.group(2).strip()
     if len(prompt) < 40:
         raise AgentFileError("o corpo do arquivo (o prompt do agente) está vazio ou curto demais")
-    return AgentFile(nome=nome, descricao=" ".join(descricao.split()), modelo=str(header.get("modelo", "padrao")),
+    return AgentFile(nome=nome, descricao=" ".join(descricao.split()), modelo=modelo.strip(),
                      max_turnos=max_turnos, resposta=resposta, prompt=prompt,
-                     digest=hashlib.sha256(text.encode()).hexdigest()[:12])
+                     digest=hashlib.sha256(text.encode()).hexdigest()[:12],
+                     raciocinio=None if raciocinio is None else ("" if raciocinio == "nenhum" else raciocinio))
 
 
 @dataclass(frozen=True)

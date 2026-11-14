@@ -14,5 +14,6 @@ COPY app ./app
 # Os agentes vão na imagem como padrão; o compose monta a pasta por cima, para que criar ou
 # editar um agente valha na hora, sem reconstruir.
 COPY agentes ./agentes
+COPY config ./config
 EXPOSE 8200 8201
 CMD ["uvicorn", "app.main:app_factory", "--factory", "--host", "0.0.0.0", "--port", "8200"]

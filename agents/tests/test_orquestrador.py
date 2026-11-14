@@ -428,7 +428,7 @@ async def test_api_requires_a_valid_indexer_token_with_time_left(http, model):
 
     health = (await http.get("/health")).json()
     assert health["status"] == "ok" and health["agentes"] == ["extrator", "orquestrador", "redator"]
-    assert health["modelos"] == {"padrao": MODEL_NAME}
+    assert set(health["modelos"].values()) == {MODEL_NAME} and health["erro_ajustes"] is None
 
 
 def test_runs_survive_a_restart_and_one_caught_in_the_middle_is_marked(tmp_path):

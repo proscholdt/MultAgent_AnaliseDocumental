@@ -11,7 +11,8 @@ from tests.conftest import write_agent
 GOOD = """---
 nome: extrator
 descricao: Extrai os indicadores financeiros de um documento.
-modelo: forte
+modelo: gpt-5.4-nano
+raciocinio: medium
 max_turnos: 40
 ---
 Você extrai indicadores de demonstrações financeiras, com a origem de cada valor.
@@ -20,7 +21,8 @@ Você extrai indicadores de demonstrações financeiras, com a origem de cada va
 
 def test_agent_file_is_a_header_plus_the_prompt():
     agent = parse_agent(GOOD, "extrator.md")
-    assert (agent.nome, agent.modelo, agent.max_turnos, agent.resposta) == ("extrator", "forte", 40, "base")
+    assert (agent.nome, agent.modelo, agent.raciocinio, agent.max_turnos, agent.resposta) == (
+        "extrator", "gpt-5.4-nano", "medium", 40, "base")
     assert agent.descricao == "Extrai os indicadores financeiros de um documento."
     assert agent.prompt.startswith("Você extrai indicadores") and "---" not in agent.prompt
     # O que muda o arquivo muda a impressão dele (é o que as execuções guardam).
@@ -38,7 +40,9 @@ def test_agent_file_is_a_header_plus_the_prompt():
     (lambda text: text.replace("max_turnos: 40", "max_turnos: 40\ntools: [apagar_tudo]"), "chave desconhecida"),
     (lambda text: text.replace("max_turnos: 40", "max_turnos: 40\nresposta: livre"), "'base' ou 'texto'"),
     (lambda text: text.split("---\n")[0] + "---\n" + text.split("---\n")[1] + "---\nCurto.\n", "vazio ou curto"),
-    (lambda text: text.replace("modelo: forte", "modelo: [forte"), "YAML inválido"),
+    (lambda text: text.replace("modelo: gpt-5.4-nano", "modelo: [gpt"), "YAML inválido"),
+    (lambda text: text.replace("modelo: gpt-5.4-nano\n", ""), "'modelo' é obrigatório"),
+    (lambda text: text.replace("raciocinio: medium", "raciocinio: muito"), "'raciocinio' tem de ser"),
 ])
 def test_invalid_agent_file_says_what_is_wrong(change, reason):
     with pytest.raises(AgentFileError, match=reason):
@@ -48,7 +52,7 @@ def test_invalid_agent_file_says_what_is_wrong(change, reason):
 def test_the_file_cannot_grant_itself_tools():
     """Permissão é do servidor MCP. Uma chave 'tools' no arquivo é erro, não é ignorada em silêncio."""
     with pytest.raises(AgentFileError, match="chave desconhecida no cabeçalho: tools"):
-        parse_agent(GOOD.replace("modelo: forte", "tools: [salvar_indicador]"), "extrator.md")
+        parse_agent(GOOD.replace("raciocinio: medium", "tools: [salvar_indicador]"), "extrator.md")
 
 
 def bump(path) -> None:

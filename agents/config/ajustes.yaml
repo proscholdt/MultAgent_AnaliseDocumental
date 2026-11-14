@@ -1,0 +1,40 @@
+# Ajustes que valem para todos os agentes. Relido a cada pedido: mudou aqui, vale no próximo
+# pedido, sem build e sem reiniciar. Arquivo inválido não derruba nada: continua valendo a
+# versão anterior, e o erro aparece em GET /health ("erro_ajustes").
+#
+# O que é de cada agente (modelo, raciocínio, turnos) fica no arquivo dele, em agentes/<nome>.md.
+# Chaves e segredos ficam no .env.
+
+# Esforço de raciocínio de quem não diz o seu no arquivo do agente:
+# nenhum | minimal | low | medium | high
+raciocinio_padrao: low
+# Resumo do raciocínio que a OpenAI devolve (vai para o trace): detailed | auto | concise | nenhum
+resumo_raciocinio: detailed
+
+# US$ por milhão de tokens, para o custo. Modelo sem preço aparece com os tokens e sem custo.
+# Valores das páginas da OpenAI e da Groq em 14/11/2026; confira antes de confiar no custo.
+precos:
+  gpt-5.4-nano:             {entrada: 0.20,  entrada_cache: 0.02,  saida: 1.25}
+  gpt-5.4-mini:             {entrada: 0.75,  entrada_cache: 0.075, saida: 4.50}
+  gpt-5.4:                  {entrada: 2.50,  entrada_cache: 0.25,  saida: 15.00}
+  gpt-5-nano:               {entrada: 0.05,  entrada_cache: 0.005, saida: 0.40}
+  gpt-5-mini:               {entrada: 0.25,  entrada_cache: 0.025, saida: 2.00}
+  groq:openai/gpt-oss-20b:  {entrada: 0.075, entrada_cache: 0.037, saida: 0.30}
+  groq:openai/gpt-oss-120b: {entrada: 0.15,  entrada_cache: 0.075, saida: 0.60}
+
+# Freios de uma execução inteira (orquestrador + especialistas).
+execucao:
+  max_segundos: 2400
+  max_tokens: 5000000
+  rodadas_pendencias: 2   # vezes que o orquestrador roda de novo quando a conferência acha pendência
+  max_ondas: 20           # decisões do orquestrador por rodada
+
+# Teto, em tokens estimados, do histórico de um especialista numa conversa.
+memoria_max_tokens: 40000
+
+tempo_limite:
+  mcp_segundos: 120
+  especialista_segundos: 900
+
+# Uma execução não começa se o login do usuário vence antes disto.
+min_minutos_token: 15

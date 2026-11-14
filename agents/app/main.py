@@ -110,7 +110,8 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
     app.state.deps = deps
     if telemetria.configurar("agents-orquestrador"):
         instrumentar_agentes()
-        zerar_metricas(sorted(deps.registry.current().agents), sorted(set(settings.modelos.values())))
+        agentes = deps.registry.current().agents
+        zerar_metricas(sorted(agentes), sorted({spec.modelo for spec in agentes.values()}))
     telemetria.instrumentar(app)
 
     async def caller(credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)]) -> tuple[str, str]:
@@ -152,9 +153,11 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
     @app.get("/health", tags=["Serviço"], summary="Estado do serviço")
     async def health() -> dict[str, Any]:
         snapshot = deps.registry.current()
+        settings.reload()
         return {"status": "ok" if not settings.problem else "configuração incompleta", "problema": settings.problem,
                 "agentes": sorted(snapshot.agents), "arquivos_invalidos": snapshot.errors,
-                "modelos": settings.modelos, "em_andamento": len(running)}
+                "modelos": {nome: spec.modelo for nome, spec in sorted(snapshot.agents.items())},
+                "erro_ajustes": settings.config_error, "em_andamento": len(running)}
 
     # --- conversas ----------------------------------------------------------------------------
 
@@ -251,7 +254,7 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
                             "max_turnos": spec.max_turnos, "tools": tools,
                             "chama": [entry["nome"] for entry in catalog["agentes"]]}
         return {"orquestrador": orchestrator, "especialistas": catalog["agentes"],
-                "arquivos_invalidos": {**snapshot.errors, **catalog["arquivos_invalidos"]}, "modelos": settings.modelos}
+                "arquivos_invalidos": {**snapshot.errors, **catalog["arquivos_invalidos"]}}
 
     return app
 

@@ -284,6 +284,7 @@ class Execution:
 
     def __init__(self, run: Run, user_token: str, deps: Deps) -> None:
         self.run, self.deps, self.settings = run, deps, deps.settings
+        self.settings.reload()  # o config/ajustes.yaml de agora vale para esta execução inteira
         self.identity = Identity(run.id, run.user_id, user_token)
         self.budget = Budget(self.settings.execucao_max_tokens, self.settings.execucao_max_segundos)
         self.ledger = Ledger(self.settings.precos)

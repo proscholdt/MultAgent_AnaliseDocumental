@@ -154,7 +154,7 @@ class Engine:
 
     settings: Settings
     connect: Callable[[str, Identity], mcp.McpSession]
-    model: Callable[[str], Model]
+    model: Callable[[AgentFile], Model]
 
 
 def instrumentar_agentes() -> None:
@@ -178,17 +178,17 @@ def default_engine(settings: Settings) -> Engine:
     provider = OpenAIProvider(api_key=settings.openai_api_key or "sem-chave")
     groq = OpenAIProvider(base_url=settings.groq_base_url, api_key=settings.groq_api_key or "sem-chave")
 
-    def model(alias: str) -> Model:
-        if alias not in settings.modelos:
-            raise KeyError(f"o apelido de modelo '{alias}' não está em MODELOS ({', '.join(sorted(settings.modelos))})")
-        name = settings.modelos[alias]
+    def model(spec: AgentFile) -> Model:
+        """O modelo do arquivo do agente, com o esforço dele (ou o padrão do ajustes.yaml)."""
+        name = spec.modelo
+        effort = settings.esforco_raciocinio if spec.raciocinio is None else spec.raciocinio
         if name.startswith(GROQ):
             # Chat Completions: o esforço de raciocínio vai como reasoning_effort (os gpt-oss aceitam).
-            effort = {"openai_reasoning_effort": settings.esforco_raciocinio} if settings.esforco_raciocinio else None
-            return OpenAIChatModel(name.removeprefix(GROQ), provider=groq, settings=effort)
+            return OpenAIChatModel(name.removeprefix(GROQ), provider=groq,
+                                   settings={"openai_reasoning_effort": effort} if effort else None)
         model_settings = None
-        if settings.esforco_raciocinio:  # sem esforço, o modelo não raciocina e não há resumo
-            model_settings = {"thinking": settings.esforco_raciocinio}
+        if effort:  # sem esforço, o modelo não raciocina e não há resumo
+            model_settings = {"thinking": effort}
             if settings.resumo_raciocinio:
                 model_settings["openai_reasoning_summary"] = settings.resumo_raciocinio
         return OpenAIResponsesModel(name, provider=provider, settings=model_settings)
@@ -221,8 +221,8 @@ async def run_agent(spec: AgentFile, entrada: str, *, identity: Identity, engine
     try:
         if not budget.tokens_left:
             raise BudgetExceeded("teto de tokens da execução atingido")
-        model = engine.model(spec.modelo)
-        run.modelo = engine.settings.modelos.get(spec.modelo, spec.modelo)  # o nome real, para o custo
+        model = engine.model(spec)
+        run.modelo = spec.modelo  # para o custo
         async with asyncio.timeout(budget.seconds_left), engine.connect(spec.nome, identity) as session:
             # Agente sem tool nenhuma é agente sem entrada na política do servidor MCP: não roda, e
             # o erro diz o que fazer.

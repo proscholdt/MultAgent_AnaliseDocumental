@@ -149,6 +149,7 @@ class Specialists:
 
     async def work(self, nome: str, request: dict[str, Any], identity: Identity) -> dict[str, Any]:
         spec = self.registry.current().agents[nome]  # a versão do arquivo na hora da chamada
+        self.settings.reload()
         if not request["tarefa"]:
             raise ValueError("pedido sem tarefa")
         budget = Budget(
