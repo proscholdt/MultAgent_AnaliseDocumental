@@ -22,6 +22,7 @@ sabe qual foi a anterior. O token do usuário e os objetos da execução não en
 import dataclasses
 import json
 import operator
+import time
 import unicodedata
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -33,14 +34,41 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
 from pydantic import BaseModel, Field
 
-from app import mcp
+from app import mcp, telemetria
 from app.a2a import SpecialistClient, delegate, for_the_model
 from app.config import Settings
-from app.costs import Ledger
+from app.costs import Ledger, cost_usd
 from app.execucoes import Run, Runs, Trace, now
 from app.registry import ORCHESTRATOR, AgentFile, Registry
 from app.runner import AgentRun, Budget, Engine, run_agent
 from app.tokens import Identity
+
+_medidor = telemetria.medidor()
+_TOKENS = _medidor.create_counter("agentes.tokens", description="Tokens por agente, modelo e tipo")
+_CUSTO = _medidor.create_counter("agentes.custo_usd", description="Custo em US$ por agente e modelo")
+_DELEGACOES = _medidor.create_counter("agentes.delegacoes", description="Delegações por especialista e estado")
+_ESPECIALISTA_S = _medidor.create_histogram("agentes.especialista.duracao", unit="s",
+                                            description="Duração de cada chamada a um especialista")
+_EXECUCOES = _medidor.create_counter("agentes.execucoes", description="Execuções por tipo e estado")
+_EXECUCAO_S = _medidor.create_histogram("agentes.execucao.duracao", unit="s", description="Duração das execuções")
+
+def zerar_metricas(agentes: list[str], modelos: list[str]) -> None:
+    """Cria as séries dos contadores em zero, na subida. Um contador do OpenTelemetry só passa a
+    existir no primeiro incremento, e o Prometheus nunca vê o zero de antes: increase() perde o
+    primeiro evento. Com as séries conhecidas já em zero, a conta fecha."""
+    for tipo in ("pergunta", "relatorio", "livre", "fora_do_escopo"):
+        for estado in ("completa", "incompleta", "falhou"):
+            _EXECUCOES.add(0, {"tipo": tipo, "estado": estado})
+    for agente in agentes:
+        for modelo in modelos:
+            _CUSTO.add(0, {"agente": agente, "modelo": modelo})
+            for tipo in ("entrada", "cache", "saida"):
+                _TOKENS.add(0, {"agente": agente, "modelo": modelo, "tipo": tipo})
+        if agente != ORCHESTRATOR:
+            for estado in ("concluido", "limite_de_turnos", "orcamento_esgotado", "tempo_esgotado", "sem_permissao",
+                           "erro"):
+                _DELEGACOES.add(0, {"agente": agente, "estado": estado})
+
 
 _STOPPED = ("limite_de_turnos", "orcamento_esgotado", "tempo_esgotado")
 _TURNS_IN_PROMPT = 6
@@ -239,6 +267,12 @@ class Execution:
     def record(self, agente: str, doc_id: str | None, modelo: str, uso: dict, passos: list[dict],
                mensagens: list[dict]) -> None:
         self.ledger.add(agente, modelo, uso, doc_id)
+        for tipo, chave in (("entrada", "entrada"), ("cache", "entrada_cache"), ("saida", "saida")):
+            if uso.get(chave):
+                _TOKENS.add(int(uso[chave]), {"agente": agente, "modelo": modelo or "?", "tipo": tipo})
+        custo = cost_usd(modelo, uso, self.ledger.prices) if modelo else None
+        if custo:
+            _CUSTO.add(custo, {"agente": agente, "modelo": modelo})
         for step in passos:
             if "raciocinio" in step:
                 self.trace.add("raciocinio", agente=agente, doc_id=doc_id, texto=step["raciocinio"])
@@ -303,6 +337,9 @@ class Execution:
         self.budget.spend(int(usage.get("total", 0)))  # o gasto do especialista conta no teto da execução
         self.record(report["agente"], item.get("doc_id"), detail.get("modelo", ""), usage, detail.get("passos") or [],
                     detail.get("mensagens") or [])
+        _DELEGACOES.add(1, {"agente": report["agente"], "estado": report["estado"]})
+        if detail.get("segundos") is not None:
+            _ESPECIALISTA_S.record(float(detail["segundos"]), {"agente": report["agente"]})
         self.trace.add("especialista", agente=report["agente"], doc_id=item.get("doc_id"), tarefa=item["tarefa"],
                        estado=report["estado"], erro=report.get("erro"), gravacoes=report.get("gravacoes"),
                        segundos=detail.get("segundos"), modelo=detail.get("modelo"), uso=usage,
@@ -332,12 +369,25 @@ class Execution:
         return {"turnos": [{"execucao_id": self.run.id, "pedido": self.run.pedido, "tipo": self.run.tipo,
                             "estado": estado, "resposta": turn_answer(self.run, state), "em": now()}]}
 
+    def _no(self, nome: str, funcao: Callable[[Any], Any]) -> Callable[[Any], Any]:
+        """Um nó do grafo dentro de um span: no Tempo, a execução aparece onda a onda."""
+
+        async def executar(entrada: Any) -> Any:
+            atributos = {"execucao.id": self.run.id}
+            if nome == "delegar":
+                atributos |= {"agente": entrada["agente"], "doc_id": entrada.get("doc_id") or ""}
+            titulo = f"grafo.{nome}" + (f" {entrada['agente']}" if nome == "delegar" else "")
+            with telemetria.tracer().start_as_current_span(titulo, attributes=atributos):
+                return await funcao(entrada)
+
+        return executar
+
     def graph(self):
         graph = StateGraph(Estado)
-        graph.add_node("orquestrador", self.orquestrador)
-        graph.add_node("delegar", self.delegar)
-        graph.add_node("conferencia", self.conferencia)
-        graph.add_node("fim", self.fim)
+        graph.add_node("orquestrador", self._no("orquestrador", self.orquestrador))
+        graph.add_node("delegar", self._no("delegar", self.delegar))
+        graph.add_node("conferencia", self._no("conferencia", self.conferencia))
+        graph.add_node("fim", self._no("fim", self.fim))
         graph.add_edge(START, "orquestrador")
         graph.add_conditional_edges("orquestrador", self.after_orchestrator,
                                     ["delegar", "orquestrador", "conferencia", "fim"])
@@ -348,6 +398,19 @@ class Execution:
 
 
 async def execute(run: Run, user_token: str, deps: Deps) -> Run:
+    with telemetria.tracer().start_as_current_span(
+            "execucao", attributes={"execucao.id": run.id, "conversa.id": run.conversa_id or ""}) as span:
+        inicio = time.monotonic()
+        try:
+            return await _execute(run, user_token, deps)
+        finally:
+            span.set_attributes({"execucao.tipo": run.tipo, "execucao.estado": run.estado})
+            span.update_name(f"execucao {run.tipo}")
+            _EXECUCOES.add(1, {"tipo": run.tipo, "estado": run.estado})
+            _EXECUCAO_S.record(time.monotonic() - inicio, {"tipo": run.tipo})
+
+
+async def _execute(run: Run, user_token: str, deps: Deps) -> Run:
     execution = Execution(run, user_token, deps)
     trace, settings = execution.trace, deps.settings
     run.estado, run.iniciada_em = "em_andamento", now()

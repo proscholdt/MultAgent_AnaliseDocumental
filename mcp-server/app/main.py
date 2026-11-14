@@ -11,6 +11,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import BaseModel
 
+from app import telemetria
 from app.audit import Audit
 from app.auth import UserResolver, check_request
 from app.catalog import Deps, load_tools
@@ -20,7 +21,7 @@ from app.documents import Documents
 from app.errors import AuthError
 from app.indexer_client import IndexerClient
 from app.policy import PolicyStore
-from app.server import Governance, build_server
+from app.server import Governance, build_server, zerar_metricas
 from app.store import Store
 
 MCP_PATH = "/mcp"
@@ -110,6 +111,9 @@ def create_app(settings: Settings | None = None, *,
                     f"`{MCP_PATH}` (Streamable HTTP). As rotas abaixo são de apoio.",
         version="0.1.0", lifespan=lifespan)
     app.state.deps = deps
+    if telemetria.configurar("mcp-server"):
+        zerar_metricas(deps.policies.current())
+    telemetria.instrumentar(app)
 
     def admin(x_admin_key: Annotated[str | None, Header()] = None) -> None:
         if not settings.admin_key or x_admin_key != settings.admin_key:

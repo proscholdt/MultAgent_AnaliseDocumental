@@ -23,6 +23,11 @@
 		"vitest": "^3.2.4"
 	},
 	"dependencies": {
+		"@opentelemetry/api": "^1.10.0",
+		"@opentelemetry/exporter-trace-otlp-proto": "^0.301.2",
+		"@opentelemetry/instrumentation-undici": "^0.35.1",
+		"@opentelemetry/resources": "^3.1.1",
+		"@opentelemetry/sdk-node": "^0.301.2",
 		"dompurify": "^3.2.6",
 		"marked": "^16.0.0"
 	},

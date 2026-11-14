@@ -1,0 +1,116 @@
+// Coletor único (Grafana Alloy).
+//   traces  OTLP dos serviços → Tempo
+//   métricas OTLP dos serviços → Prometheus (remote write); Qdrant e a própria pilha por scrape
+//   logs    saída dos contêineres dos quatro serviços, lida pelo Docker → Loki
+
+logging {
+  level = "warn"
+}
+
+// --- traces e métricas dos serviços (OpenTelemetry) -------------------------------------------
+
+otelcol.receiver.otlp "servicos" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+  output {
+    traces  = [otelcol.processor.batch.lote.input]
+    metrics = [otelcol.processor.batch.lote.input]
+  }
+}
+
+otelcol.processor.batch "lote" {
+  output {
+    traces  = [otelcol.exporter.otlp.tempo.input]
+    metrics = [otelcol.exporter.prometheus.prometheus.input]
+  }
+}
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+    tls {
+      insecure = true
+    }
+  }
+}
+
+otelcol.exporter.prometheus "prometheus" {
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+}
+
+prometheus.remote_write "prometheus" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+  }
+}
+
+// --- métricas que os componentes já expõem ------------------------------------------------------
+
+prometheus.scrape "infra" {
+  targets = [
+    {"__address__" = "qdrant:6333", "job" = "qdrant"},
+    {"__address__" = "tempo:3200", "job" = "tempo"},
+    {"__address__" = "loki:3100", "job" = "loki"},
+    {"__address__" = "localhost:12345", "job" = "alloy"},
+  ]
+  scrape_interval = "15s"
+  forward_to      = [prometheus.remote_write.prometheus.receiver]
+}
+
+// --- logs dos contêineres ---------------------------------------------------------------------
+
+discovery.docker "conteineres" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "conteineres" {
+  targets = discovery.docker.conteineres.targets
+
+  // Só os quatro serviços: projeto = nome do compose, servico = serviço dentro dele.
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    regex         = "indexer|mcp-server|agents|frontend"
+    action        = "keep"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "projeto"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "servico"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "conteiner"
+  }
+}
+
+loki.source.docker "conteineres" {
+  host          = "unix:///var/run/docker.sock"
+  targets       = discovery.relabel.conteineres.output
+  relabel_rules = discovery.relabel.conteineres.rules
+  forward_to    = [loki.process.conteineres.receiver]
+}
+
+loki.process "conteineres" {
+  // Nível do log como rótulo, para filtrar erros sem varrer o texto.
+  stage.regex {
+    expression = "level=(?P<nivel>[A-Z]+)"
+  }
+  stage.labels {
+    values = { nivel = "" }
+  }
+  forward_to = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

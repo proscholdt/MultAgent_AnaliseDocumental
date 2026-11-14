@@ -9,14 +9,24 @@ O trace é local de propósito. Ele traz argumentos de tools, que contêm texto 
 mandar isso a um painel de fora é uma decisão de quem opera, não o padrão.
 """
 import json
+import logging
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+log = logging.getLogger("agentes.trace")
+_LOG_CHARS = 300
+
 KINDS = ("livre", "pergunta", "relatorio", "auto", "fora_do_escopo")  # auto: mensagem de conversa, até o orquestrador dizer o que é
 RUNNING = ("na_fila", "em_andamento")
+
+
+def _curto(value: Any) -> str:
+    text = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)
+    text = text if len(text) <= _LOG_CHARS else text[:_LOG_CHARS] + "…"
+    return json.dumps(text, ensure_ascii=False) if (" " in text or not text) else text
 
 
 def now() -> str:
@@ -51,6 +61,10 @@ class Trace:
         line = json.dumps({"em": now(), "tipo": tipo, **fields}, ensure_ascii=False)
         with self.path.open("a", encoding="utf-8") as file:
             file.write(line + "\n")
+        # O mesmo passo, numa linha de log chave=valor: no Grafana, os passos de uma execução
+        # aparecem no Loki ao lado do trace dela.
+        detalhes = " ".join(f"{key}={_curto(value)}" for key, value in fields.items() if value not in (None, "", [], {}))
+        log.info("passo=%s execucao=%s %s", tipo, self.path.stem, detalhes)
 
     def read(self) -> list[dict[str, Any]]:
         if not self.path.exists():

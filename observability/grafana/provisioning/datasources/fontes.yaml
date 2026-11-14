@@ -1,0 +1,59 @@
+# As três fontes, ligadas entre si:
+#   log → trace   (o trace_id da linha abre o trace no Tempo)
+#   trace → logs  (as linhas do Loki daquele trace)
+#   métrica → trace (exemplares)
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    jsonData:
+      timeInterval: 15s
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo
+
+  - name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    jsonData:
+      derivedFields:
+        - name: Trace
+          matcherRegex: "trace_id=([0-9a-f]{32})"
+          url: "$${__value.raw}"
+          datasourceUid: tempo
+          urlDisplayLabel: Abrir o trace
+
+  - name: Tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: "-2m"
+        spanEndTimeShift: "2m"
+        filterByTraceID: true
+        customQuery: true
+        query: '{projeto=~".+"} |= "$${__trace.traceId}"'
+      tracesToMetrics:
+        datasourceUid: prometheus
+      serviceMap:
+        datasourceUid: prometheus
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false
+      lokiSearch:
+        datasourceUid: loki
+      traceQuery:
+        timeShiftEnabled: true
+        spanStartTimeShift: "-1h"
+        spanEndTimeShift: "1h"

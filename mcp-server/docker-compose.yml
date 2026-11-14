@@ -21,6 +21,7 @@ services:
       INDEXER_URL: ${INDEXER_URL:-http://api:8000}
       DATABASE_URL: sqlite+aiosqlite:////data/mcp.db
       POLICY_PATH: /app/policy.yaml
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT-http://alloy:4318} # observabilidade; vazio desliga
     networks:
       - default
       - indexer

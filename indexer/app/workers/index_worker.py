@@ -6,10 +6,10 @@ import asyncio
 import logging
 from datetime import UTC, datetime
 
-from app import db, repo, storage
+from app import db, repo, storage, telemetria
 from app.config import Settings, get_settings
 from app.db import session_scope
-from app.messaging import KafkaPublisher, Publisher, run_consumer, wait_for_kafka
+from app.messaging import KafkaPublisher, Publisher, run_consumer, wait_for_kafka, zerar_metricas
 from app.models import utcnow
 from app.pipeline.embedder import (
     DenseEmbedder,
@@ -24,6 +24,8 @@ from app.schemas import DocumentEvent, IndexRequested, ParseRequested
 from app.workers.common import make_callbacks, setup_logging
 
 log = logging.getLogger("index-worker")
+_CHUNKS = telemetria.medidor().create_counter("indexador.chunks", description="Chunks gravados no Qdrant")
+_CUSTO = telemetria.medidor().create_counter("indexador.custo_usd", description="Custo estimado de LLM e embeddings")
 
 
 async def handle_index(message: IndexRequested, *, store: VectorStore, dense: DenseEmbedder,
@@ -87,11 +89,18 @@ async def handle_index(message: IndexRequested, *, store: VectorStore, dense: De
         DocumentEvent(type="document.indexed", job_id=message.job_id, user_id=message.user_id,
                       doc_id=message.doc_id, chunk_count=result.chunk_count, occurred_at=datetime.now(UTC)),
     )
+    _CHUNKS.add(result.chunk_count, {"parser": parser or "?"})
+    _CUSTO.add(float(result.usage.get("cost_usd") or 0), {"parser": parser or "?"})
     log.info("Documento %s indexado (%s): %d chunks, custo estimado US$ %.4f",
              message.doc_id, parser, result.chunk_count, result.usage["cost_usd"])
 
 
 async def main() -> None:
+    if telemetria.configurar("indexer-index-worker"):  # antes do log: as linhas ganham o trace_id
+        zerar_metricas("index")
+        for nome in ("docling", "azure"):
+            _CHUNKS.add(0, {"parser": nome})
+            _CUSTO.add(0, {"parser": nome})
     setup_logging()
     settings = get_settings()
     await db.init_db()

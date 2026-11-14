@@ -10,10 +10,17 @@ import shutil
 import time
 from pathlib import Path
 
-from app import db, repo, storage
+from app import db, repo, storage, telemetria
 from app.config import Settings, get_settings
 from app.db import session_scope
-from app.messaging import KafkaPublisher, PermanentError, Publisher, run_consumer, wait_for_kafka
+from app.messaging import (
+    KafkaPublisher,
+    PermanentError,
+    Publisher,
+    run_consumer,
+    wait_for_kafka,
+    zerar_metricas,
+)
 from app.pipeline.indexing import load_parsed
 from app.pipeline.parsing import (
     DocumentParser,
@@ -25,6 +32,7 @@ from app.schemas import IndexRequested, ParsedDocument, ParseRequested
 from app.workers.common import make_callbacks, setup_logging
 
 log = logging.getLogger("parse-worker")
+_PAGINAS = telemetria.medidor().create_counter("indexador.paginas", description="Páginas parseadas")
 
 
 async def _set_progress(job_id: str, done: int, total: int) -> None:
@@ -110,10 +118,16 @@ async def handle_parse(message: ParseRequested, *, parser: DocumentParser, publi
         IndexRequested(job_id=message.job_id, user_id=message.user_id, doc_id=message.doc_id,
                        parser=parser.name),
     )
+    _PAGINAS.add(parsed.page_count, {"parser": parser.name, "cache": str(cached).lower()})
     log.info("Parse de %s (%s) concluído em %.1fs (cache=%s)", message.doc_id, parser.name, elapsed, cached)
 
 
 async def main() -> None:
+    if telemetria.configurar("indexer-parse-worker"):  # antes do log: as linhas ganham o trace_id
+        zerar_metricas("parse")
+        for nome in ("docling", "azure"):
+            for cache in ("true", "false"):
+                _PAGINAS.add(0, {"parser": nome, "cache": cache})
     setup_logging()
     settings = get_settings()
     # Antes de abrir qualquer conexão: se faltar configuração do parser, o worker sai aqui com

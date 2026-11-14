@@ -2,7 +2,8 @@
 
 PDFs de demonstrações financeiras viram indicadores com a origem de cada valor, análise
 qualitativa com citação, respostas a perguntas e um relatório consolidado. O sistema é dividido
-em quatro serviços independentes, cada um com Docker, testes e README próprios.
+em quatro serviços independentes, cada um com Docker, testes e README próprios, mais uma pilha de
+observabilidade que junta traces, métricas e logs de todos.
 
 ```mermaid
 flowchart LR
@@ -21,6 +22,7 @@ flowchart LR
 | [`mcp-server/`](mcp-server/README.md) | Porta única dos agentes: política por agente, portões que conferem tudo o que é gravado, fórmulas fixas, auditoria e montagem do relatório |
 | [`agents/`](agents/README.md) | Orquestrador em grafo e cinco especialistas ligados por A2A; conversa com memória e raciocínio registrado |
 | [`frontend/`](frontend/README.md) | Envio dos PDFs e chat; sessão em cookie httpOnly e proxy para as APIs |
+| [`observability/`](observability/README.md) | Tempo, Prometheus, Loki e Grafana, com o Alloy como coletor: um trace atravessa os quatro serviços, e os painéis mostram custo, tokens e portões dos agentes |
 
 ## Princípios
 
@@ -38,6 +40,7 @@ cd indexer    && cp .env.example .env && docker compose up -d --build   # :8000
 cd mcp-server && cp .env.example .env && docker compose up -d --build   # :8100
 cd agents     && cp .env.example .env && docker compose up -d --build   # :8200, :8201
 cd frontend   && docker compose up -d --build                           # :3000
+cd observability && docker compose up -d                                # Grafana :3001
 ```
 
 Os serviços se falam pela rede Docker do indexador (`indexer_default`). Indexador e agentes
@@ -49,4 +52,5 @@ Páginas HTML com os fluxos desenhados (abrem direto no navegador, sem internet)
 
 - [Visão geral](docs/visao-geral.html): arquitetura, fluxo de uma pergunta, fluxo do relatório, identidade
 - [Indexador](indexer/docs/fluxos.html) · [Servidor MCP](mcp-server/docs/fluxos.html) ·
-  [Agentes](agents/docs/fluxos.html) · [Frontend](frontend/docs/fluxos.html)
+  [Agentes](agents/docs/fluxos.html) · [Frontend](frontend/docs/fluxos.html) ·
+  [Observabilidade](observability/docs/fluxos.html)

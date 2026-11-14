@@ -18,6 +18,7 @@ x-agente: &agente
     ESPECIALISTAS_URL: http://especialistas:8201
     AGENTES_DIR: /app/agentes
     DATA_DIR: /data
+    OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT-http://alloy:4318} # observabilidade; vazio desliga
   networks:
     - default
     - indexer

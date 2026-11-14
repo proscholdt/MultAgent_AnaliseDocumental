@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy import text
 
-from app import db
+from app import db, telemetria
 from app.api import auth, documents, jobs, search
 from app.config import INSECURE_JWT_SECRET, get_settings
 from app.messaging import KafkaPublisher, wait_for_kafka
@@ -75,6 +75,8 @@ def create_app(with_lifespan: bool = True) -> FastAPI:
         openapi_tags=TAGS,
         lifespan=lifespan if with_lifespan else None,
     )
+    telemetria.configurar("indexer-api")
+    telemetria.instrumentar(app)
     app.include_router(auth.router)
     app.include_router(documents.router)
     app.include_router(jobs.router)

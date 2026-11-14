@@ -38,11 +38,11 @@ from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from app import mcp
+from app import mcp, telemetria
 from app.config import Settings, get_settings
 from app.memoria import Memory, compact, split_runs
 from app.registry import AgentFile, Registry
-from app.runner import AgentRun, Budget, Engine, default_engine, run_agent
+from app.runner import AgentRun, Budget, Engine, default_engine, instrumentar_agentes, run_agent
 from app.tokens import CATALOG, AuthError, Identity, verify_a2a_token
 
 PROTOCOL_VERSION = "1.0"
@@ -272,6 +272,9 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
         title="Especialistas (A2A)",
         description="Agentes especialistas servidos pelo protocolo A2A. Só o orquestrador os chama.")
     app.state.service = service
+    if telemetria.configurar("agents-especialistas"):
+        instrumentar_agentes()
+    telemetria.instrumentar(app)
 
     @app.get("/health", summary="Estado do serviço")
     async def health() -> dict[str, Any]:

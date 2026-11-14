@@ -14,8 +14,10 @@ from typing import Any
 import mcp.types as t
 from mcp import MCPError
 from mcp.server import Server
+from opentelemetry import trace
 from pydantic import ValidationError
 
+from app import telemetria
 from app.auth import Caller, identify
 from app.catalog import Call, Deps, ToolSpec
 from app.errors import AuthError, IndexerAuthError, IndexerError, IndexerNotFound, ToolRejected
@@ -52,6 +54,12 @@ class Governance:
 
     async def call_tool(self, headers: Mapping[str, str], name: str,
                         arguments: dict[str, Any] | None) -> t.CallToolResult:
+        # Um span por chamada de tool, filho da requisição HTTP (que já traz o trace do agente).
+        with telemetria.tracer().start_as_current_span(f"tool {name}", attributes={"mcp.tool": name}):
+            return await self._call_tool(headers, name, arguments)
+
+    async def _call_tool(self, headers: Mapping[str, str], name: str,
+                         arguments: dict[str, Any] | None) -> t.CallToolResult:
         started = time.perf_counter()
         try:
             caller = await self._caller(headers)
@@ -62,9 +70,11 @@ class Governance:
         policy = self._deps.policies.current()
 
         async def finish(outcome: str, payload: Any, detail: str = "") -> t.CallToolResult:
+            seconds = time.perf_counter() - started
             await self._deps.audit.record(
                 caller, kind="chamada", tool=name, outcome=outcome, policy_digest=policy.digest, detail=detail,
-                arguments=arguments, duration_ms=round((time.perf_counter() - started) * 1000))
+                arguments=arguments, duration_ms=round(seconds * 1000))
+            _observe(caller, name, outcome, seconds, detail)
             return _result(payload, error=outcome != "ok")
 
         spec = self._tools.get(name)
@@ -100,6 +110,38 @@ class Governance:
             log.exception("Falha na tool %s", name)
             return await finish("erro", {"erro": "Falha interna na tool."}, f"{type(exc).__name__}: {exc}")
         return await finish("ok", payload)
+
+
+_TOOL_CALLS = telemetria.medidor().create_counter(
+    "mcp.tool.chamadas", description="Chamadas de tool, por agente, tool e resultado")
+_TOOL_SECONDS = telemetria.medidor().create_histogram(
+    "mcp.tool.duracao", unit="s", description="Duração das chamadas de tool")
+
+
+RESULTADOS = ("ok", "rejeitada", "recusada", "invalida", "erro")
+
+
+def zerar_metricas(policy: Any) -> None:
+    """Cria as séries dos contadores em zero, na subida. Um contador do OpenTelemetry só passa a
+    existir no primeiro incremento, e o Prometheus nunca vê o zero de antes: increase() perde o
+    primeiro evento. Com as séries conhecidas já em zero, a conta fecha."""
+    for agente, entrada in policy.agents.items():
+        for tool in entrada.tools:
+            for resultado in RESULTADOS:
+                _TOOL_CALLS.add(0, {"agente": agente, "tool": tool, "resultado": resultado})
+
+
+def _observe(caller: Caller, name: str, outcome: str, seconds: float, detail: str) -> None:
+    """Métricas, atributos do span e uma linha de log por chamada (o log vai ao Loki)."""
+    labels = {"agente": caller.agent, "tool": name, "resultado": outcome}
+    _TOOL_CALLS.add(1, labels)
+    _TOOL_SECONDS.record(seconds, {"tool": name, "resultado": outcome})
+    span = trace.get_current_span()
+    span.set_attributes({"mcp.agente": caller.agent, "mcp.resultado": outcome, "mcp.execucao": caller.run_id})
+    if outcome != "ok":
+        span.set_status(trace.Status(trace.StatusCode.ERROR, detail[:200]))
+    log.info("tool=%s agente=%s execucao=%s resultado=%s ms=%d detalhe=%r", name, caller.agent, caller.run_id,
+             outcome, round(seconds * 1000), detail[:200])
 
 
 def build_server(governance: Governance) -> Server:

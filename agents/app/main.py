@@ -17,12 +17,13 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from pydantic import BaseModel, Field
 
+from app import telemetria
 from app.a2a import SpecialistClient
 from app.config import Settings, get_settings
 from app.execucoes import RUNNING, Conversations, Run, Runs
-from app.grafo import Deps, execute
+from app.grafo import Deps, execute, zerar_metricas
 from app.registry import ORCHESTRATOR, Registry
-from app.runner import Engine, default_engine
+from app.runner import Engine, default_engine, instrumentar_agentes
 from app.security import Users
 from app.tokens import Identity
 
@@ -107,6 +108,10 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
                     "ferramentas pelo servidor MCP.",
         lifespan=lifespan)
     app.state.deps = deps
+    if telemetria.configurar("agents-orquestrador"):
+        instrumentar_agentes()
+        zerar_metricas(sorted(deps.registry.current().agents), sorted(set(settings.modelos.values())))
+    telemetria.instrumentar(app)
 
     async def caller(credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)]) -> tuple[str, str]:
         return await users.identify(credentials.credentials), credentials.credentials

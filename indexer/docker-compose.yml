@@ -10,6 +10,7 @@ x-app-env: &app-env
   KAFKA_BOOTSTRAP_SERVERS: kafka:9092
   QDRANT_URL: http://qdrant:6333
   STORAGE_DIR: /data/storage
+  OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT-http://alloy:4318} # observabilidade; vazio desliga
 
 x-app-depends: &app-depends
   kafka:

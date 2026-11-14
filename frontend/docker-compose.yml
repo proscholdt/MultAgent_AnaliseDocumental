@@ -20,6 +20,7 @@ services:
       # PDFs de até 50 MB passam pelo proxy (o padrão do adapter-node é 512 KB).
       BODY_SIZE_LIMIT: ${BODY_SIZE_LIMIT:-60M}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT-http://alloy:4318} # observabilidade; vazio desliga
     ports:
       - "3000:3000"
     networks:

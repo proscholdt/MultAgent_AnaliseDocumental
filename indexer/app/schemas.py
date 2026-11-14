@@ -14,6 +14,8 @@ class ParseRequested(BaseModel):
     user_id: str
     doc_id: str
     attempt: int = 1
+    # Contexto do trace (W3C traceparent) de quem pediu: o processamento continua o mesmo trace.
+    rastro: dict[str, str] = Field(default_factory=dict)
 
 
 ParserName = Literal["docling", "azure"]
@@ -28,6 +30,7 @@ class IndexRequested(BaseModel):
     # Parser que produziu o parsed.json a indexar. Quem preenche é o parse-worker; quando a API
     # manda reindexar (PATCH, retry), fica vazio e vale o parser configurado no index-worker.
     parser: ParserName | None = None
+    rastro: dict[str, str] = Field(default_factory=dict)
 
 
 class DocumentEvent(BaseModel):

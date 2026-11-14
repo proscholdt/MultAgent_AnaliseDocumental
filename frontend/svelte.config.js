@@ -7,7 +7,12 @@ const config = {
 	kit: {
 		// Servidor Node: além das páginas, ele faz o login (cookie httpOnly) e repassa as chamadas
 		// ao indexador e ao orquestrador. O navegador nunca vê o token.
-		adapter: adapter()
+		adapter: adapter(),
+		// Spans de handle, load e actions, e src/instrumentation.server.ts (OpenTelemetry).
+		experimental: {
+			tracing: { server: true },
+			instrumentation: { server: true }
+		}
 	}
 };
 

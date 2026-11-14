@@ -1,0 +1,94 @@
+name: observability
+
+# Observabilidade dos quatro serviços num lugar só.
+#   docker compose up -d        Grafana em http://localhost:3001
+#
+#   alloy       coletor: recebe traces e métricas (OTLP) dos serviços e lê os logs dos contêineres
+#   tempo       traces (e as métricas de RED e o mapa de serviços gerados a partir deles)
+#   loki        logs
+#   prometheus  métricas
+#   grafana     painéis, com os três já ligados entre si (log → trace → log, métrica → trace)
+#
+# Entra na rede do indexador, a mesma dos outros serviços: eles mandam para http://alloy:4318.
+
+services:
+  alloy:
+    image: grafana/alloy:v1.9.1
+    command: ["run", "--server.http.listen-addr=0.0.0.0:12345", "--storage.path=/var/lib/alloy/data",
+              "/etc/alloy/config.alloy"]
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro # para ler os logs dos contêineres
+      - alloy-data:/var/lib/alloy/data
+    ports:
+      - "4317:4317"   # OTLP gRPC (serviços rodando fora do Docker)
+      - "4318:4318"   # OTLP HTTP
+      - "12345:12345" # interface do Alloy
+    depends_on: [tempo, loki, prometheus]
+    networks: [default, indexer]
+
+  tempo:
+    image: grafana/tempo:2.8.1
+    command: ["-config.file=/etc/tempo.yaml"]
+    user: "0" # grava no volume
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    ports:
+      - "3200:3200"
+    depends_on: [prometheus]
+
+  loki:
+    image: grafana/loki:3.5.1
+    command: ["-config.file=/etc/loki/loki.yaml"]
+    volumes:
+      - ./loki/loki.yaml:/etc/loki/loki.yaml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+
+  prometheus:
+    image: prom/prometheus:v3.4.1
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-remote-write-receiver # o Alloy e o Tempo empurram as métricas
+      - --enable-feature=exemplar-storage  # ponto da métrica → trace
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:12.0.2
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USUARIO:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_SENHA:-admin}
+      GF_AUTH_ANONYMOUS_ENABLED: ${GRAFANA_ANONIMO:-true} # uso local: abre sem login, só leitura
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_USERS_DEFAULT_LANGUAGE: pt-BR
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/visao-geral.json
+      GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    depends_on: [tempo, loki, prometheus]
+
+networks:
+  indexer:
+    name: ${INDEXER_NETWORK:-indexer_default}
+    external: true
+
+volumes:
+  alloy-data:
+  tempo-data:
+  loki-data:
+  prometheus-data:
+  grafana-data:

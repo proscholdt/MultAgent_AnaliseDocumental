@@ -155,6 +155,17 @@ class Engine:
     model: Callable[[str], Model]
 
 
+def instrumentar_agentes() -> None:
+    """Liga os spans do PydanticAI (execução do agente, cada chamada ao modelo com os tokens, cada
+    tool). O conteúdo das mensagens (texto dos documentos) só vai junto com OTEL_INCLUIR_CONTEUDO=true."""
+    import os
+
+    from pydantic_ai.models.instrumented import InstrumentationSettings
+
+    incluir = os.getenv("OTEL_INCLUIR_CONTEUDO", "false").lower() == "true"
+    Agent.instrument_all(InstrumentationSettings(include_content=incluir, include_binary_content=False))
+
+
 def default_engine(settings: Settings) -> Engine:
     from pydantic_ai.models.openai import OpenAIResponsesModel
     from pydantic_ai.providers.openai import OpenAIProvider
