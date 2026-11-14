@@ -250,4 +250,4 @@ class SearchResponse(BaseModel):
 class HealthOut(BaseModel):
     status: Literal["ok", "degraded"]
     components: dict[str, str]
-    parser: str = Field(description="Parser configurado em PARSER: docling ou azure.")
+    parser: str = Field(description="Parser configurado em config/ajustes.yaml: docling ou azure.")

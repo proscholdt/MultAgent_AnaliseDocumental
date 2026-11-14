@@ -122,6 +122,26 @@ async def handle_parse(message: ParseRequested, *, parser: DocumentParser, publi
     log.info("Parse de %s (%s) concluído em %.1fs (cache=%s)", message.doc_id, parser.name, elapsed, cached)
 
 
+class ParserSlot:
+    """O parser do ajustes.yaml de agora. O Docling lê o modo das tabelas e as threads ao carregar;
+    se um deles (ou o próprio parser) mudar, o próximo PDF monta e aquece um parser novo."""
+
+    def __init__(self, settings: Settings) -> None:
+        self._settings = settings
+        self._key: tuple | None = None
+        self._parser: DocumentParser | None = None
+
+    async def current(self) -> DocumentParser:
+        key = (self._settings.parser, self._settings.table_mode, self._settings.parse_threads)
+        if self._parser is None or key != self._key:
+            parser = build_parser(self._settings)  # ParserError: configuração incompleta
+            log.info("Parser: %s. Carregando...", parser.name)
+            await asyncio.to_thread(parser.warmup)
+            log.info("Parser %s pronto.", parser.name)
+            self._parser, self._key = parser, key
+        return self._parser
+
+
 async def main() -> None:
     if telemetria.configurar("indexer-parse-worker"):  # antes do log: as linhas ganham o trace_id
         zerar_metricas("parse")
@@ -132,14 +152,12 @@ async def main() -> None:
     settings = get_settings()
     # Antes de abrir qualquer conexão: se faltar configuração do parser, o worker sai aqui com
     # uma linha dizendo o que falta, e não com um job preso na fila.
+    parsers = ParserSlot(settings)
     try:
-        parser = build_parser(settings)
+        await parsers.current()
     except ParserError as exc:
         log.error("parse-worker não pode subir: %s", exc)
         raise SystemExit(1) from None
-    log.info("Parser: %s. Carregando...", parser.name)
-    await asyncio.to_thread(parser.warmup)
-    log.info("Parser %s pronto.", parser.name)
 
     await db.init_db()
     await wait_for_kafka(settings)
@@ -149,7 +167,7 @@ async def main() -> None:
     on_retry, on_dead = make_callbacks("parse", publisher, settings)
 
     async def handler(message: ParseRequested) -> None:
-        await handle_parse(message, parser=parser, publisher=publisher, settings=settings)
+        await handle_parse(message, parser=await parsers.current(), publisher=publisher, settings=settings)
 
     try:
         await run_consumer(

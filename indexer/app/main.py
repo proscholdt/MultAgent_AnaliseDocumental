@@ -77,6 +77,11 @@ def create_app(with_lifespan: bool = True) -> FastAPI:
     )
     telemetria.configurar("indexer-api")
     telemetria.instrumentar(app)
+
+    @app.middleware("http")
+    async def ajustes(request, call_next):
+        get_settings().reload()  # um stat por pedido; o arquivo só é lido quando muda
+        return await call_next(request)
     app.include_router(auth.router)
     app.include_router(documents.router)
     app.include_router(jobs.router)
@@ -100,6 +105,8 @@ def create_app(with_lifespan: bool = True) -> FastAPI:
         settings = get_settings()
         if settings.parser_problem:
             components["parser"] = f"erro: {settings.parser_problem}"
+        if settings.config_error:
+            components["ajustes"] = f"erro: {settings.config_error}"
         healthy = all(value == "ok" for value in components.values())
         return HealthOut(status="ok" if healthy else "degraded", components=components,
                          parser=settings.parser)

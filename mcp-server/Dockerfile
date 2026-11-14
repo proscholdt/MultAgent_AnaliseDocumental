@@ -10,8 +10,8 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-default-groups
 COPY app ./app
-# A política vai na imagem como padrão; o compose monta o arquivo da pasta por cima, para que
-# editar policy.yaml valha na hora, sem reconstruir.
-COPY policy.yaml ./policy.yaml
+# A política e os ajustes vão na imagem como padrão; o compose monta a pasta config por cima,
+# para que editar valha na hora, sem reconstruir.
+COPY config ./config
 EXPOSE 8100
 CMD ["uvicorn", "app.main:app_factory", "--factory", "--host", "0.0.0.0", "--port", "8100"]

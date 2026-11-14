@@ -87,6 +87,7 @@ services:
     environment: *app-env
     volumes:
       - storage:/data/storage
+      - ./config:/app/config:ro # ajustes.yaml: relido sem reiniciar
     depends_on: *app-depends
 
   parse-worker:
@@ -100,6 +101,7 @@ services:
     environment: *app-env
     volumes:
       - storage:/data/storage
+      - ./config:/app/config:ro # ajustes.yaml: relido sem reiniciar
     depends_on: *app-depends
 
   index-worker:
@@ -113,6 +115,7 @@ services:
     environment: *app-env
     volumes:
       - storage:/data/storage
+      - ./config:/app/config:ro # ajustes.yaml: relido sem reiniciar
     depends_on: *app-depends
 
 volumes:

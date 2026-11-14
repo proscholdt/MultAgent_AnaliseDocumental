@@ -35,6 +35,7 @@ RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-default-grou
 RUN python -c "import tiktoken; tiktoken.get_encoding('cl100k_base')" \
  && python -c "from fastembed import SparseTextEmbedding; SparseTextEmbedding('Qdrant/bm25', language='portuguese')"
 COPY app ./app
+COPY config ./config
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 # ---------------------------------------------------------------------------
@@ -50,4 +51,5 @@ RUN python -c "import tiktoken; tiktoken.get_encoding('cl100k_base')" \
 # Modelos do OCR dos recortes de gráfico (RapidOCR), também baixados no build.
 RUN python -c "import numpy as np; from rapidocr import RapidOCR; RapidOCR()(np.full((64, 256, 3), 255, dtype=np.uint8))"
 COPY app ./app
+COPY config ./config
 CMD ["python", "-m", "app.workers.parse_worker"]

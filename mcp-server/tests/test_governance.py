@@ -106,7 +106,7 @@ def test_shipped_policy_is_valid_and_keeps_one_owner_per_writing_tool():
     from pathlib import Path
 
     tools = load_tools()
-    policy = parse_policy((Path(__file__).parents[1] / "policy.yaml").read_text(encoding="utf-8"), set(tools))
+    policy = parse_policy((Path(__file__).parents[1] / "config" / "policy.yaml").read_text(encoding="utf-8"), set(tools))
     owners = {"salvar_indicador": "extrator", "salvar_nao_encontrado": "extrator", "fechar_extracao": "extrator",
               "registrar_alerta": "validador", "concluir_revisao": "validador",
               "salvar_item_analise": "analista", "registrar_ausencia_analise": "analista",
@@ -177,3 +177,21 @@ def test_every_tool_schema_is_flat_and_strict():
             assert definition.get("type") != "object", f"{name}.{field}: argumento aninhado"
             assert definition.get("description"), f"{name}.{field}: sem descrição para o modelo"
         assert spec.definition().description == spec.description and "\n" not in spec.description
+
+
+def test_adjustments_apply_when_the_file_changes_and_a_bad_file_keeps_the_last_good_one(tmp_path):
+    import os
+
+    from app.config import Settings
+
+    path = tmp_path / "ajustes.yaml"
+    settings = Settings(_env_file=None, config_path=path)
+    for bump, text in enumerate(("search_text_chars: 600\n", "search_text_chars: muito\n", "indexer_url: http://x\n")):
+        path.write_text(text, encoding="utf-8")
+        os.utime(path, (1_700_000_000 + bump, 1_700_000_000 + bump))
+        settings.reload()
+        assert settings.search_text_chars == 600 and settings.indexer_url == "http://localhost:8000"
+    assert "indexer_url" in settings.config_error
+    shipped = Settings(_env_file=None)  # config/ajustes.yaml, na pasta do projeto
+    shipped.reload()
+    assert shipped.config_error is None

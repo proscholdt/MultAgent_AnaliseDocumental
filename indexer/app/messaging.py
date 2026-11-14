@@ -169,6 +169,7 @@ async def handle_record[M: BaseModel](
     settings: Settings,
 ) -> None:
     """Processa uma mensagem aplicando a política de retry. Separado do laço para ser testável."""
+    settings.reload()  # o config/ajustes.yaml de agora vale para esta mensagem
     try:
         message = model.model_validate_json(raw)
     except ValidationError as exc:

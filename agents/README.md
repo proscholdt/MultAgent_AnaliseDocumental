@@ -38,7 +38,7 @@ flowchart LR
 | `redator` | Resumo por empresa e montagem do relatório | padrão |
 
 Um agente é um arquivo `agentes/<nome>.md` (cabeçalho + prompt), relido sem reiniciar. A
-permissão é uma entrada em `mcp-server/policy.yaml`: quem escreve o agente não concede a própria
+permissão é uma entrada em `mcp-server/config/policy.yaml`: quem escreve o agente não concede a própria
 permissão.
 
 ## Estado e memória

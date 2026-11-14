@@ -1,9 +1,22 @@
-"""Configuração central. Tudo vem de variáveis de ambiente / .env — nenhum segredo no código."""
+"""Configuração central, em três lugares:
+
+- `config/ajustes.yaml`: o que se ajusta (parser, chunks, preços, limites de upload...). Relido a
+  cada pedido da API e a cada mensagem dos workers: mudar vale sem build e sem reiniciar.
+- `.env`: só chaves e segredos (OPENAI_API_KEY, JWT_SECRET, AZURE_DI_KEY e o endpoint dela).
+- o docker-compose: os endereços da infraestrutura (Postgres, Kafka, Qdrant, pasta de arquivos).
+
+Os campos abaixo têm o padrão; o YAML diz só o que muda.
+"""
+import logging
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
+import yaml
+from pydantic import PrivateAttr, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+log = logging.getLogger(__name__)
 
 # Muda sempre que parse/chunking mudam de forma incompatível; invalida o cache de parse.
 PIPELINE_VERSION = "4"
@@ -66,8 +79,8 @@ class Settings(BaseSettings):
     # "docling": local, sem custo por página, minutos por documento em CPU.
     # "azure": Azure AI Document Intelligence (modelo de layout): o parse roda no serviço
     #          (tempo não medido aqui), é pago por página, e o PDF é enviado ao recurso da Azure.
-    # Para trocar, mude PARSER e reinicie os serviços. Cada parser guarda o próprio cache por
-    # documento, então voltar ao anterior não refaz o parse.
+    # Para trocar, mude `parser` no config/ajustes.yaml: vale no próximo PDF, sem reiniciar. Cada
+    # parser guarda o próprio cache por documento, então voltar ao anterior não refaz o parse.
     parser: Literal["docling", "azure"] = "docling"
     figure_min_area_ratio: float = 0.04  # figuras menores que 4% da página são logotipos
     # A exceção: figura pequena (a partir de 2%) em que uma segunda fonte leu números. É um
@@ -98,6 +111,47 @@ class Settings(BaseSettings):
     chunk_max_tokens: int = 800
     table_max_tokens: int = 1500
 
+    # --- Ajustes ---
+    config_path: Path = Path("config/ajustes.yaml")
+    _config_lido: int | None = PrivateAttr(default=None)
+    _config_erro: str | None = PrivateAttr(default=None)
+
+    @property
+    def config_error(self) -> str | None:
+        """Por que o ajustes.yaml atual não foi aplicado (vale a versão anterior), ou None."""
+        return self._config_erro
+
+    def reload(self) -> None:
+        """Aplica o config/ajustes.yaml, se ele mudou. Arquivo inválido não derruba nada: continua
+        valendo o que estava, e o motivo aparece em /health."""
+        try:
+            stamp = self.config_path.stat().st_mtime_ns
+        except FileNotFoundError:
+            return
+        if stamp == self._config_lido:
+            return
+        self._config_lido = stamp
+        try:
+            data: Any = yaml.safe_load(self.config_path.read_text(encoding="utf-8")) or {}
+            if not isinstance(data, dict):
+                raise ValueError("o arquivo tem de ser uma lista de 'chave: valor'")  # noqa: TRY004
+            unknown = sorted(set(data) - AJUSTAVEIS)
+            if unknown:
+                raise ValueError(f"chave que não se ajusta aqui: {', '.join(unknown)}")
+            checked = type(self).model_validate({**self.model_dump(), **data})
+        except ValidationError as error:
+            self._config_erro = f"{self.config_path}: " + "; ".join(
+                f"{'.'.join(map(str, item['loc']))}: {item['msg']}" for item in error.errors())[:400]
+            log.warning("ajustes não aplicados: %s", self._config_erro)
+            return
+        except (yaml.YAMLError, ValueError) as error:
+            self._config_erro = f"{self.config_path}: {str(error).splitlines()[0]}"[:400]
+            log.warning("ajustes não aplicados: %s", self._config_erro)
+            return
+        for name in data:
+            setattr(self, name, getattr(checked, name))
+        self._config_erro = None
+
     @property
     def llm_enabled(self) -> bool:
         return self.embedding_provider == "openai" and bool(self.openai_api_key)
@@ -110,11 +164,25 @@ class Settings(BaseSettings):
     def parser_problem(self) -> str | None:
         """O que falta para o parser escolhido funcionar, ou None se está tudo configurado."""
         if self.parser == "azure" and not self.azure_di_configured:
-            return ("PARSER=azure exige AZURE_DI_ENDPOINT e AZURE_DI_KEY no .env "
+            return ("parser: azure (config/ajustes.yaml) exige AZURE_DI_ENDPOINT e AZURE_DI_KEY no .env "
                     "(endpoint e chave do recurso de Document Intelligence).")
         return None
 
 
+# O que o config/ajustes.yaml pode mudar. Fica de fora o que não pode mudar com documentos já
+# indexados (modelo e dimensão dos embeddings, idioma do BM25, coleção) e a infraestrutura.
+AJUSTAVEIS = frozenset({
+    "parser", "table_mode", "parse_page_batch", "parse_threads", "figure_min_area_ratio",
+    "figure_small_min_area_ratio", "figure_render_scale", "azure_di_model", "azure_di_timeout_seconds",
+    "azure_di_price_per_1k_pages", "chunk_target_tokens", "chunk_max_tokens", "table_max_tokens",
+    "openai_llm_model", "embedding_batch_size", "embedding_price_per_1m", "llm_input_price_per_1m",
+    "llm_output_price_per_1m", "max_upload_mb", "max_pages", "jwt_expires_minutes", "max_attempts",
+    "retry_backoff_seconds",
+})
+
+
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    settings = Settings()
+    settings.reload()
+    return settings

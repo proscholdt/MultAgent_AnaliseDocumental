@@ -20,14 +20,13 @@ services:
     environment:
       INDEXER_URL: ${INDEXER_URL:-http://api:8000}
       DATABASE_URL: sqlite+aiosqlite:////data/mcp.db
-      POLICY_PATH: /app/policy.yaml
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT-http://alloy:4318} # observabilidade; vazio desliga
     networks:
       - default
       - indexer
     volumes:
       - mcp-data:/data # base dos dados extraídos e da auditoria
-      - ./policy.yaml:/app/policy.yaml:ro # editar o arquivo vale na hora
+      - ./config:/app/config:ro # policy.yaml e ajustes.yaml: editar vale na hora
 
 networks:
   indexer:

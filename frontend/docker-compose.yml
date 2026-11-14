@@ -21,6 +21,8 @@ services:
       BODY_SIZE_LIMIT: ${BODY_SIZE_LIMIT:-60M}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT-http://alloy:4318} # observabilidade; vazio desliga
+    volumes:
+      - ./config:/app/config:ro # ajustes.yaml: relido quando muda
     ports:
       - "3000:3000"
     networks:

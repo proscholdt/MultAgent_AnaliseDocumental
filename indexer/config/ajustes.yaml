@@ -1,0 +1,47 @@
+# Ajustes do indexador. Relido a cada pedido da API e a cada mensagem dos workers: mudou aqui,
+# vale no próximo, sem build e sem reiniciar. Arquivo inválido não derruba nada: continua
+# valendo a versão anterior, e o motivo aparece em GET /health (components.ajustes).
+#
+# Chaves e segredos ficam no .env. O que não pode mudar com documentos já indexados (modelo e
+# dimensão dos embeddings, idioma do BM25) fica no código, e a infraestrutura no docker-compose.
+
+# --- Quem lê o PDF -----------------------------------------------------------------------------
+# docling: local, sem custo por página, minutos por documento em CPU.
+# azure:   Azure Document Intelligence, pago por página; exige AZURE_DI_ENDPOINT e AZURE_DI_KEY no .env.
+# A troca vale no próximo PDF. Cada parser guarda o próprio cache: voltar ao anterior não refaz o parse.
+parser: azure            # sem conta na Azure, use docling
+
+# Docling. O modo e as threads são lidos ao carregar: mudar recarrega o parser no próximo PDF.
+table_mode: accurate      # accurate | fast
+parse_page_batch: 10      # páginas por chamada (o pico de memória depende disto)
+parse_threads: 0          # 0 = todos os núcleos
+
+# Azure Document Intelligence
+azure_di_model: prebuilt-layout
+azure_di_timeout_seconds: 900
+azure_di_price_per_1k_pages: 10.0   # US$, nível S0; só para estimar o custo do job
+
+# Figuras: menores que isto (fração da área da página) são logotipos, salvo gráfico pequeno com números.
+figure_min_area_ratio: 0.04
+figure_small_min_area_ratio: 0.02
+figure_render_scale: 2.0            # 2 = 144 dpi nos recortes
+
+# --- Chunks (valem para os documentos processados depois da mudança) --------------------------
+chunk_target_tokens: 450
+chunk_max_tokens: 800
+table_max_tokens: 1500
+
+# --- OpenAI: leitura de gráficos e metadados -----------------------------------------------------
+openai_llm_model: gpt-4o-mini
+embedding_batch_size: 64
+# US$ por milhão de tokens, só para estimar o custo por documento.
+embedding_price_per_1m: 0.02
+llm_input_price_per_1m: 0.15
+llm_output_price_per_1m: 0.60
+
+# --- Limites ---------------------------------------------------------------------------------------
+max_upload_mb: 50
+max_pages: 500
+jwt_expires_minutes: 60      # validade do login
+max_attempts: 3              # tentativas de cada etapa antes da fila de erro (DLQ)
+retry_backoff_seconds: 5.0

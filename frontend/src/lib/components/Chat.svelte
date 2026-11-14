@@ -11,7 +11,9 @@
 		indexados,
 		processando,
 		aoCriarConversa,
-		aoMudarConversas
+		aoMudarConversas,
+		sugestoes,
+		intervaloMs
 	}: {
 		conversaId: string | null;
 		nomes: Record<string, string>;
@@ -19,16 +21,12 @@
 		processando: number;
 		aoCriarConversa: (id: string) => void;
 		aoMudarConversas: () => void;
+		/** Atalhos acima da caixa, do config/ajustes.yaml. */
+		sugestoes: string[];
+		/** De quanto em quanto tempo o andamento é consultado, do config/ajustes.yaml. */
+		intervaloMs: number;
 	} = $props();
 
-	const SUGESTOES = [
-		'Gere o relatório consolidado completo',
-		'Gere o relatório da Brasal',
-		'Qual empresa teve a maior margem EBITDA?',
-		'Compare o lucro líquido das empresas',
-		'Quais riscos as empresas destacam?'
-	];
-	const INTERVALO_MS = 1500;
 
 	let turnos = $state<TurnoT[]>([]);
 	let texto = $state('');
@@ -130,7 +128,7 @@
 					erro = e instanceof ErroApi ? e.message : 'Perdi o contato com o servidor. Recarregue a página.';
 					break;
 				}
-				await esperar(INTERVALO_MS * 2);
+				await esperar(intervaloMs * 2);
 				continue;
 			}
 			if (minha !== geracao) return;
@@ -148,7 +146,7 @@
 				aoMudarConversas();
 				break;
 			}
-			await esperar(INTERVALO_MS);
+			await esperar(intervaloMs);
 		}
 		if (minha === geracao) {
 			emCurso = null;
@@ -251,7 +249,7 @@
 		{/if}
 
 		<div class="sugestoes">
-			{#each SUGESTOES as sugestao (sugestao)}
+			{#each sugestoes as sugestao (sugestao)}
 				<button type="button" disabled={bloqueado} onclick={() => enviar(sugestao)}>{sugestao}</button>
 			{/each}
 		</div>

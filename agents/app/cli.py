@@ -59,7 +59,7 @@ def new_agent(folder: Path, nome: str, descricao: str, tools: str) -> int:
     path.write_text(text, encoding="utf-8")
     print(f"Criado: {path}\n")
     print("1. Edite o prompt (o corpo do arquivo).")
-    print("2. Cole esta entrada em mcp-server/policy.yaml, dentro de 'agentes:', com as tools que ele pode usar:\n")
+    print("2. Cole esta entrada em mcp-server/config/policy.yaml, dentro de 'agentes:', com as tools que ele pode usar:\n")
     print(POLICY.format(nome=nome, tools=", ".join(item.strip() for item in tools.split(","))))
     print("Os dois passos valem sem reiniciar nenhum serviço. Confira em GET /api/agentes.")
     return 0

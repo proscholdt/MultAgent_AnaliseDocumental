@@ -19,7 +19,8 @@ flowchart LR
 1. **API** (FastAPI): valida o PDF, grava em `storage/{user}/{doc}/`, cria o job, publica no
    Kafka e responde `202`.
 2. **Parse**: PDF → elementos (título, parágrafo, tabela em Markdown, recorte de gráfico) com
-   página, em `parsed.json`. Dois parsers trocáveis por `PARSER`, com cache por parser.
+   página, em `parsed.json`. Dois parsers trocáveis por `parser` no `config/ajustes.yaml`, sem
+   reiniciar, com cache por parser.
 3. **Indexação**: gráficos transcritos por um modelo de visão e **conferidos** contra o texto da
    página e o OCR; metadados (empresa, período) aceitos só com trecho copiado da página; unidade
    decidida por chunk, por regra; chunks cortados pela estrutura (texto ~450 tokens, tabela
@@ -44,7 +45,7 @@ flowchart LR
 ## Rodar
 
 ```bash
-cp .env.example .env          # OPENAI_API_KEY, JWT_SECRET; PARSER=docling|azure
+cp .env.example .env          # só chaves: OPENAI_API_KEY, JWT_SECRET (e a Azure, se usar)
 docker compose up -d --build  # kafka, postgres, qdrant, api, parse-worker, index-worker
 uv run python scripts/smoke.py   # cria usuário, envia os PDFs de data/pdfs e mede
 
@@ -52,6 +53,12 @@ uv run pytest                 # sem rede nem contêiner
 ```
 
 Só com Azure, sem a imagem do Docling: `docker compose -f docker-compose.yml -f docker-compose.azure.yml up -d --build`.
+
+`config/ajustes.yaml` guarda o que se ajusta: parser (`docling` ou `azure`), modo das tabelas,
+tamanho dos chunks, modelo e preços da OpenAI, limites de envio e tentativas. A API relê a
+cada pedido e os workers a cada mensagem; trocar o parser monta o novo no próximo PDF. O que
+não pode mudar com documentos já indexados (modelo e dimensão dos embeddings, idioma do BM25)
+fica no código. Erro no arquivo aparece em `GET /health` (`components.ajustes`).
 
 | Rota | Função |
 |---|---|

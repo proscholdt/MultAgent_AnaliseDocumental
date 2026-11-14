@@ -54,6 +54,7 @@ class HealthOut(BaseModel):
     indexer: str
     politica: str
     erro_politica: str | None
+    erro_ajustes: str | None = None
 
 
 class GovernanceOut(BaseModel):
@@ -123,8 +124,10 @@ def create_app(settings: Settings | None = None, *,
     async def health() -> HealthOut:
         reachable = await indexer.ping()
         policy = deps.policies.current()
+        settings.reload()
         return HealthOut(status="ok" if reachable else "degraded", indexer="ok" if reachable else "inacessível",
-                         politica=policy.digest, erro_politica=deps.policies.last_error)
+                         politica=policy.digest, erro_politica=deps.policies.last_error,
+                         erro_ajustes=settings.config_error)
 
     @app.get("/governanca", response_model=GovernanceOut, tags=["Apoio"], dependencies=[Depends(admin)],
              summary="Política em vigor: o que cada agente vê e chama")

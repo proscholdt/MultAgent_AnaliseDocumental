@@ -40,7 +40,10 @@ cp .env.example .env && npm install && npm run dev    # fora do Docker
 npm run check && npm test && npm run build
 ```
 
-| Variável | Para quê |
+`config/ajustes.yaml`: os atalhos acima do chat, o intervalo da consulta do andamento e a
+margem da sessão. Relido quando muda: vale no próximo carregamento da página, sem build.
+
+| Variável (docker-compose) | Para quê |
 |---|---|
 | `INDEXER_URL`, `AGENTS_URL` | Endereços vistos do servidor (no Docker: `api:8000`, `orquestrador:8200`) |
 | `ORIGIN` | Origem conferida no formulário de login |

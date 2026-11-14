@@ -44,7 +44,22 @@ cd observability && docker compose up -d                                # Grafan
 ```
 
 Os serviços se falam pela rede Docker do indexador (`indexer_default`). Indexador e agentes
-precisam de uma chave da OpenAI; os segredos ficam só no `.env` de cada pasta.
+precisam de uma chave da OpenAI.
+
+## Configuração
+
+Em todos os sistemas, a mesma divisão:
+
+| Onde | O quê | Quando vale |
+|---|---|---|
+| `<sistema>/config/ajustes.yaml` | o que se ajusta: parser, chunks, preços, limites, atalhos do chat | no próximo pedido, sem build nem restart |
+| `agents/agentes/<nome>.md` | modelo, raciocínio, turnos e prompt de cada agente | quando o arquivo muda |
+| `mcp-server/config/policy.yaml` | o que cada agente vê e chama | quando o arquivo muda |
+| `<sistema>/.env` | só chaves e segredos | ao recriar o contêiner |
+| `docker-compose.yml` | endereços da infraestrutura | ao recriar o contêiner |
+
+As pastas `config/` são montadas nos contêineres. Arquivo inválido não derruba nada: continua
+valendo a versão anterior, e o motivo aparece no `/health` do serviço.
 
 ## Documentação
 

@@ -78,6 +78,8 @@
 		</header>
 		<Chat
 			{conversaId}
+			sugestoes={data.sugestoes}
+			intervaloMs={data.intervaloMs}
 			{nomes}
 			{indexados}
 			{processando}

@@ -6,13 +6,13 @@
  *
  * O token vale 60 minutos (`JWT_EXPIRES_MINUTES` do indexador), e o orquestrador recusa começar
  * uma execução com menos de 15 minutos restantes, porque as buscas falhariam no meio. Por isso a
- * sessão termina antes: com menos de `MINUTOS_MINIMOS`, o usuário volta ao login.
+ * sessão termina antes: com menos de `minutos_minimos` (config/ajustes.yaml), o usuário volta ao login.
  */
 import type { Cookies } from '@sveltejs/kit';
+import { ajustes } from './ajustes';
 
 export const COOKIE_TOKEN = 'sessao';
 export const COOKIE_USUARIO = 'usuario';
-export const MINUTOS_MINIMOS = 16;
 
 /** O `exp` do JWT, em segundos, lido sem conferir a assinatura (quem confere é o indexador). */
 export function vencimento(token: string): number | null {
@@ -34,9 +34,9 @@ export function minutosRestantes(token: string, agora: number = Date.now()): num
 }
 
 /** O token ainda serve para começar uma execução? */
-export function tokenValido(token: string, agora: number = Date.now()): boolean {
+export function tokenValido(token: string, agora: number = Date.now(), minimos = ajustes().minutos_minimos): boolean {
 	const minutos = minutosRestantes(token, agora);
-	return minutos !== null && minutos >= MINUTOS_MINIMOS;
+	return minutos !== null && minutos >= minimos;
 }
 
 function opcoes(segura: boolean, segundos: number) {

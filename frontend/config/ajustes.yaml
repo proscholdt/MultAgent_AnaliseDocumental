@@ -1,0 +1,19 @@
+# Ajustes do frontend. Relido quando muda: salvou, vale no próximo carregamento da página, sem
+# build e sem reiniciar. Arquivo inválido mantém a versão anterior (o motivo vai para o log).
+#
+# Os endereços do indexador e dos agentes ficam no docker-compose; segredos, no .env.
+
+# Atalhos acima da caixa do chat (até 8).
+sugestoes:
+  - Gere o relatório consolidado completo
+  - Gere o relatório da Brasal
+  - Qual empresa teve a maior margem EBITDA?
+  - Compare o lucro líquido das empresas
+  - Quais riscos as empresas destacam?
+
+# De quanto em quanto tempo o chat pergunta o andamento de uma execução (milissegundos).
+intervalo_ms: 1500
+
+# A sessão termina quando faltam menos que isto para o login vencer. O orquestrador recusa
+# começar uma execução com menos de 15 minutos de login.
+minutos_minimos: 16

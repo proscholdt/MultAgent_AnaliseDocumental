@@ -270,6 +270,7 @@ def policy_file(tmp_path: Path) -> Path:
 @pytest.fixture
 def settings(tmp_path: Path, policy_file: Path) -> Settings:
     return Settings(_env_file=None, mcp_agent_secret=SECRET, admin_key=ADMIN_KEY, policy_path=policy_file,
+                    config_path=tmp_path / "ajustes-de-teste.yaml",
                     database_url=f"sqlite+aiosqlite:///{(tmp_path / 'mcp.db').as_posix()}",
                     indexer_url="http://indexador.teste", search_text_chars=120)
 

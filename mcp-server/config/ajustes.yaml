@@ -1,0 +1,11 @@
+# Ajustes do servidor MCP. Relido a cada chamada de tool: mudou aqui, vale na próxima, sem
+# build e sem reiniciar. Arquivo inválido mantém a versão anterior, e o motivo aparece em
+# GET /health (erro_ajustes).
+#
+# O que cada agente vê e chama fica em config/policy.yaml. Segredos ficam no .env.
+
+# Tamanho do que buscar_trechos devolve ao modelo: o texto de cada trecho é cortado aqui, e
+# quem precisa do trecho inteiro pede com ler_chunk ou ler_pagina.
+search_text_chars: 1200
+# Máximo de trechos por busca (o agente pode pedir menos).
+search_limit_max: 10

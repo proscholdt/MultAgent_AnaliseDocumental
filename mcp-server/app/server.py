@@ -55,6 +55,7 @@ class Governance:
     async def call_tool(self, headers: Mapping[str, str], name: str,
                         arguments: dict[str, Any] | None) -> t.CallToolResult:
         # Um span por chamada de tool, filho da requisição HTTP (que já traz o trace do agente).
+        self._deps.settings.reload()  # o config/ajustes.yaml de agora vale para esta chamada
         with telemetria.tracer().start_as_current_span(f"tool {name}", attributes={"mcp.tool": name}):
             return await self._call_tool(headers, name, arguments)
 
