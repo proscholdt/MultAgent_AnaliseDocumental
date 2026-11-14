@@ -110,12 +110,12 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "currencyUSD",
+          "unit": "prefix:US$ ",
           "color": {
             "mode": "fixed",
             "fixedColor": "orange"
           },
-          "decimals": 3
+          "decimals": 2
         },
         "overrides": []
       },
@@ -134,7 +134,7 @@
       "id": 3,
       "type": "stat",
       "title": "Tokens",
-      "description": "",
+      "description": "Entrada (já inclui a parte servida do cache) mais saída.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -148,7 +148,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(sum(increase(agentes_tokens_total[$__range]))) or vector(0)",
+          "expr": "(sum(increase(agentes_tokens_total{tipo!=\"cache\"}[$__range]))) or vector(0)",
           "instant": true,
           "datasource": {
             "type": "prometheus",
@@ -158,7 +158,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
+          "unit": "locale",
           "color": {
             "mode": "fixed",
             "fixedColor": "blue"
@@ -364,7 +364,8 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "currencyUSD",
+          "unit": "prefix:US$ ",
+          "decimals": 2,
           "color": {
             "mode": "continuous-GrYlRd"
           }
@@ -400,7 +401,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (agente) (increase(agentes_tokens_total[$__range]))",
+          "expr": "sum by (agente) (increase(agentes_tokens_total{tipo!=\"cache\"}[$__range]))",
           "legendFormat": "{{agente}}",
           "instant": true,
           "datasource": {
@@ -411,7 +412,8 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
+          "unit": "locale",
+          "decimals": 0,
           "color": {
             "mode": "continuous-GrYlRd"
           }
@@ -433,7 +435,7 @@
       "id": 10,
       "type": "bargauge",
       "title": "Tokens por tipo",
-      "description": "entrada, entrada em cache (mais barata) e saída (inclui o raciocínio).",
+      "description": "entrada (total, já com o cache), cache (a parte da entrada que saiu mais barata) e saída (inclui o raciocínio).",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -458,7 +460,8 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
+          "unit": "locale",
+          "decimals": 0,
           "color": {
             "mode": "continuous-GrYlRd"
           }
@@ -494,7 +497,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (agente) (rate(agentes_tokens_total[$__rate_interval])) * 60",
+          "expr": "sum by (agente) (rate(agentes_tokens_total{tipo!=\"cache\"}[$__rate_interval])) * 60",
           "legendFormat": "{{agente}}",
           "datasource": {
             "type": "prometheus",
@@ -504,7 +507,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
+          "unit": "locale",
           "custom": {
             "lineWidth": 2,
             "fillOpacity": 18,
@@ -560,7 +563,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "currencyUSD",
+          "unit": "prefix:US$ ",
           "custom": {
             "lineWidth": 2,
             "fillOpacity": 8,
@@ -743,6 +746,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "short",
+          "decimals": 0,
           "color": {
             "mode": "continuous-GrYlRd"
           }
@@ -790,6 +794,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "short",
+          "decimals": 0,
           "color": {
             "mode": "continuous-GrYlRd"
           }
@@ -837,6 +842,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "short",
+          "decimals": 0,
           "color": {
             "mode": "continuous-GrYlRd"
           }
