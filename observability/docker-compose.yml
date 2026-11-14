@@ -68,6 +68,9 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_SENHA:-admin}
       GF_AUTH_ANONYMOUS_ENABLED: ${GRAFANA_ANONIMO:-true} # uso local: abre sem login, só leitura
       GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      # O Explore (onde abre um trace, com a árvore de spans) é fechado para Viewer por padrão; sem
+      # isto, o link do trace_id nos logs não abre nada. Continua sem poder salvar painéis.
+      GF_USERS_VIEWERS_CAN_EDIT: "true"
       GF_USERS_DEFAULT_LANGUAGE: pt-BR
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/visao-geral.json
       GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
