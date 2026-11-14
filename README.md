@@ -50,7 +50,8 @@ precisam de uma chave da OpenAI; os segredos ficam só no `.env` de cada pasta.
 
 Páginas HTML com os fluxos desenhados (abrem direto no navegador, sem internet):
 
-- [Visão geral](docs/visao-geral.html): arquitetura, fluxo de uma pergunta, fluxo do relatório, identidade
+- [Visão geral](docs/visao-geral.html): arquitetura, fluxo completo passo a passo, fluxo de uma pergunta,
+  fluxo do relatório (quem faz o quê e em que ordem), identidade
 - [Indexador](indexer/docs/fluxos.html) · [Servidor MCP](mcp-server/docs/fluxos.html) ·
   [Agentes](agents/docs/fluxos.html) · [Frontend](frontend/docs/fluxos.html) ·
   [Observabilidade](observability/docs/fluxos.html)
