@@ -11,6 +11,7 @@ O que sai de uma execução de agente:
 - as mensagens completas, que ficam guardadas e servem de memória na chamada seguinte.
 """
 import asyncio
+import dataclasses
 import json
 import time
 from collections.abc import Callable
@@ -28,6 +29,7 @@ from pydantic_ai.messages import (
     ToolReturnPart,
 )
 from pydantic_ai.models import Model
+from pydantic_ai.tools import ToolDefinition
 from pydantic_ai.usage import UsageLimits
 
 from app import mcp
@@ -166,23 +168,42 @@ def instrumentar_agentes() -> None:
     Agent.instrument_all(InstrumentationSettings(include_content=incluir, include_binary_content=False))
 
 
+GROQ = "groq:"
+
+
 def default_engine(settings: Settings) -> Engine:
-    from pydantic_ai.models.openai import OpenAIResponsesModel
+    from pydantic_ai.models.openai import OpenAIChatModel, OpenAIResponsesModel
     from pydantic_ai.providers.openai import OpenAIProvider
 
     provider = OpenAIProvider(api_key=settings.openai_api_key or "sem-chave")
+    groq = OpenAIProvider(base_url=settings.groq_base_url, api_key=settings.groq_api_key or "sem-chave")
 
     def model(alias: str) -> Model:
         if alias not in settings.modelos:
             raise KeyError(f"o apelido de modelo '{alias}' não está em MODELOS ({', '.join(sorted(settings.modelos))})")
+        name = settings.modelos[alias]
+        if name.startswith(GROQ):
+            # Chat Completions: o esforço de raciocínio vai como reasoning_effort (os gpt-oss aceitam).
+            effort = {"openai_reasoning_effort": settings.esforco_raciocinio} if settings.esforco_raciocinio else None
+            return OpenAIChatModel(name.removeprefix(GROQ), provider=groq, settings=effort)
         model_settings = None
         if settings.esforco_raciocinio:  # sem esforço, o modelo não raciocina e não há resumo
             model_settings = {"thinking": settings.esforco_raciocinio}
             if settings.resumo_raciocinio:
                 model_settings["openai_reasoning_summary"] = settings.resumo_raciocinio
-        return OpenAIResponsesModel(settings.modelos[alias], provider=provider, settings=model_settings)
+        return OpenAIResponsesModel(name, provider=provider, settings=model_settings)
 
     return Engine(settings, lambda agent, identity: mcp.connect(settings, agent, identity), model)
+
+
+async def _with_properties(_ctx: Any, tools: list[ToolDefinition]) -> list[ToolDefinition]:
+    """Tool sem argumento (listar_documentos, pendencias...). A Groq recusa o pedido inteiro se uma
+    delas vai em modo strict ("'required' present but 'properties' is missing", mesmo com
+    "properties": {}); a OpenAI aceita. Sem argumento, o strict não tem o que garantir."""
+    return [tool if tool.parameters_json_schema.get("properties") else
+            dataclasses.replace(tool, strict=False,
+                                parameters_json_schema={**tool.parameters_json_schema, "properties": {}})
+            for tool in tools]
 
 
 def _limit_state(error: UsageLimitExceeded, spec: AgentFile) -> tuple[str, str]:
@@ -211,7 +232,7 @@ async def run_agent(spec: AgentFile, entrada: str, *, identity: Identity, engine
                             "política do servidor MCP (policy.yaml)")
                 return run
             agent = Agent(model, name=spec.nome, instructions=spec.prompt, output_type=output_type,
-                          toolsets=[session.toolset])
+                          toolsets=[session.toolset.prepared(_with_properties)])
             limits = UsageLimits(request_limit=spec.max_turnos, total_tokens_limit=budget.tokens_left)
             async with agent.iter(entrada, message_history=load(history), usage_limits=limits) as agent_run:
                 async for _node in agent_run:

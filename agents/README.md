@@ -68,6 +68,10 @@ uv run python scripts/gerar_entrega.py --usuario <u> --senha <s> --rodar   # rel
 uv run python scripts/avaliar.py --usuario <u> --senha <s>                 # contra avaliacao/gabarito.json
 ```
 
+Os modelos ficam em `MODELOS` (apelido → nome). Com o prefixo `groq:` (por exemplo
+`groq:openai/gpt-oss-120b`), o modelo vai à Groq pela API compatível com a OpenAI, com
+`GROQ_API_KEY`. Tools sem argumento seguem sem `strict`, porque a Groq recusa esse caso.
+
 | Rota | Função |
 |---|---|
 | `POST /api/conversas`, `POST /api/conversas/{id}/mensagens` | Conversa e turno em texto livre |
