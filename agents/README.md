@@ -79,9 +79,16 @@ Os modelos ficam em `MODELOS` (apelido → nome). Com o prefixo `groq:` (por exe
 | `POST /api/relatorios`, `/api/perguntas` | Atalhos com tipo definido |
 | `GET /api/execucoes/{id}[/mensagens]` | Estado, passos, custo; mensagens de cada agente |
 
-Relatório completo dos três documentos: 332 s e US$ 1,02 com raciocínio ligado (146 s e
-US$ 0,58 sem); 24 de 24 indicadores com status certo e nenhum valor ausente gravado como
-informado.
+Relatório completo dos três documentos, com raciocínio ligado:
+
+| Modelos | Tempo | Custo | Indicadores certos | Inconsistências da fonte |
+|---|---|---|---|---|
+| `gpt-5.4-nano` em todos (padrão) | 195 s | US$ 0,14 | 24 de 24 | 2 de 6 |
+| `gpt-5.4-mini` + `gpt-5.4` no validador | 332 s | US$ 1,02 | 24 de 24 | 4 de 6 |
+| `gpt-5-nano` em todos | parou em 12 min | US$ 0,08 | nenhuma extração fechada | — |
+
+Nos dois primeiros, nenhum valor ausente foi gravado como informado, os valores calculados e
+as cinco perguntas saíram certos, e todas as citações existem no trecho citado.
 
 ## Estrutura
 

@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     # Modelo. O arquivo do agente traz um apelido ("padrao", "forte"); o modelo real fica aqui,
     # para trocar de modelo sem tocar nos agentes.
     openai_api_key: str = ""
-    modelos: dict[str, str] = {"padrao": "gpt-5.4-mini", "forte": "gpt-5.4"}
+    modelos: dict[str, str] = {"padrao": "gpt-5.4-nano", "forte": "gpt-5.4-nano"}
     # Modelo com o prefixo "groq:" (ex.: "groq:openai/gpt-oss-120b") vai à Groq, pela API compatível
     # com a OpenAI (Chat Completions). O preço em PRECOS usa o nome com o prefixo.
     groq_api_key: str = ""
