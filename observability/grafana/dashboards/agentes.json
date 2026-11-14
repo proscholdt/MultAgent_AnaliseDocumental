@@ -664,7 +664,7 @@
       "id": 15,
       "type": "timeseries",
       "title": "Resultado das chamadas",
-      "description": "ok, rejeitada (portão), recusada (política), invalida, erro.",
+      "description": "Por minuto. ok, rejeitada (portão), recusada (política), invalida, erro. Linhas separadas, sem empilhar: cada linha é o valor do próprio resultado.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -691,9 +691,9 @@
           "unit": "short",
           "custom": {
             "lineWidth": 2,
-            "fillOpacity": 18,
+            "fillOpacity": 8,
             "stacking": {
-              "mode": "normal"
+              "mode": "none"
             },
             "drawStyle": "line",
             "showPoints": "never"
