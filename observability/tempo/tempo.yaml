@@ -56,5 +56,10 @@ storage:
 
 overrides:
   defaults:
+    # Um relatório é um trace só, com milhares de spans e o texto das mensagens (6 MB num
+    # relatório de 3 PDFs). Com o limite padrão (5 MB), o gerador de métricas descarta em silêncio
+    # o resto do trace, inclusive o span da execução, que fecha por último e leva custo e nota.
+    global:
+      max_bytes_per_trace: 50000000
     metrics_generator:
       processors: [service-graphs, span-metrics, local-blocks]
