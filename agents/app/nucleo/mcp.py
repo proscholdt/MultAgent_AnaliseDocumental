@@ -15,6 +15,7 @@ from pydantic_ai.exceptions import ToolFailed
 from pydantic_ai.mcp import MCPToolset
 from pydantic_ai.toolsets import AbstractToolset
 
+from app import telemetria
 from app.config import Settings
 from app.nucleo.tokens import Identity, mcp_headers
 
@@ -79,6 +80,9 @@ def connect(settings: Settings, agent: str, identity: Identity) -> Connection:
     # tool_error_behavior="failed": a recusa de um portão volta ao modelo como resultado da tool,
     # para ele corrigir, sem gastar a cota de novas tentativas do PydanticAI. Os agentes recebem
     # dezenas de recusas numa execução; com "retry" (o padrão), a terceira derrubaria a execução.
-    return Connection(MCPToolset(settings.mcp_url, headers=mcp_headers(settings, agent, identity),
+    # O baggage vai junto: o cliente do MCP não passa pela instrumentação do httpx, e sem ele o
+    # servidor não saberia de que conversa é cada chamada de tool.
+    headers = mcp_headers(settings, agent, identity) | telemetria.cabecalho_da_conversa()
+    return Connection(MCPToolset(settings.mcp_url, headers=headers,
                                  tool_error_behavior="failed", read_timeout=settings.mcp_timeout_seconds,
                                  id=f"mcp-{agent}"))

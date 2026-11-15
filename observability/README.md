@@ -35,6 +35,13 @@ do PydanticAI), cada tool no MCP e cada busca no índice.
 **Log ↔ trace.** Toda linha de log dos serviços Python traz `trace_id=` e `span_id=`. No Grafana,
 a linha abre o trace, e o trace mostra as linhas dele.
 
+**A conversa vai junto.** O orquestrador põe o id da conversa no *baggage* do OpenTelemetry, que
+segue o `traceparent` nas chamadas HTTP (e vai como cabeçalho na conexão MCP, que a instrumentação
+do httpx não alcança). Cada serviço copia o id para os spans que abre (`conversa.id`) e para as
+linhas de log (`conversa=`). O span da execução leva também `conversa.rotulo` (a primeira mensagem
+e o id), `execucao.custo_usd` e `execucao.tokens`. Assim a visão geral filtra uma conversa inteira,
+de todos os serviços, sem pôr o id como rótulo de métrica no Prometheus.
+
 ## Métricas próprias
 
 | Métrica | Rótulos |
@@ -53,9 +60,14 @@ a linha abre o trace, e o trace mostra as linhas dele.
 
 | Painel | Mostra |
 |---|---|
-| **Visão geral** (página inicial) | requisições, erros e latência por serviço, mapa dos serviços, execuções e custo dos agentes, erros nos logs |
+| **Visão geral** (página inicial) | requisições, erros e latência por serviço, execuções (traces), custo dos agentes, chamadas de tool, operações mais lentas, mapa dos serviços, erros nos logs e logs. No alto, a lista **Conversa**: escolhida uma, tudo passa a ser só dela (menos o mapa, que é de todas) |
 | **Agentes** | a nota do último relatório contra o gabarito (status, valores, invenções, perguntas, inconsistências) ao longo do tempo e ao lado do custo, custo e tokens por agente, chamadas de tool e o que os portões barraram, delegações, duração, execuções recentes (traces), os passos e o raciocínio de cada execução |
 | **Indexador** | mensagens por etapa, retries e DLQ, duração do parse e da indexação, páginas, chunks, custo, documentos processados (traces) |
+
+Os números e gráficos da visão geral vêm do Tempo (métricas por TraceQL, calculadas a partir dos
+spans), e não do Prometheus: é o que deixa filtrar por conversa. Por isso a latência é aproximada
+(o Tempo mede a duração em faixas que dobram de tamanho) e o período vai até 72 h, a retenção dos
+traces. Os painéis Agentes e Indexador seguem no Prometheus.
 
 Para investigar, a aba **Explore** do Grafana consulta as três fontes direto (TraceQL no Tempo,
 LogQL no Loki, PromQL no Prometheus).

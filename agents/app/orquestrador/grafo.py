@@ -449,14 +449,28 @@ def _resumo_da_nota(nota: dict) -> dict:
             "perguntas": f"{resumo['perguntas_certas']['acertos']}/{resumo['perguntas_certas']['de']}"}
 
 
+def _rotulo_da_conversa(run: Run, deps: Deps) -> str:
+    """"<primeira mensagem> (conv-…)": a lista de conversas da visão geral no Grafana."""
+    turnos = deps.runs.of_conversation(run.conversa_id)
+    titulo = " ".join((turnos[0].pedido if turnos else run.pedido).split())
+    return f"{titulo[:60]}{'…' if len(titulo) > 60 else ''} ({run.conversa_id})"
+
+
 async def execute(run: Run, user_token: str, deps: Deps) -> Run:
-    with telemetria.tracer().start_as_current_span(
-            "execucao", attributes={"execucao.id": run.id, "conversa.id": run.conversa_id or ""}) as span:
+    atributos = {"execucao.id": run.id}
+    if run.conversa_id:
+        atributos |= {"conversa.id": run.conversa_id, "conversa.rotulo": _rotulo_da_conversa(run, deps)}
+    # Com a conversa no baggage, os spans e os logs de todos os serviços desta execução levam o id dela.
+    with telemetria.conversa(run.conversa_id), \
+            telemetria.tracer().start_as_current_span("execucao", attributes=atributos) as span:
         inicio = time.monotonic()
         try:
             return await _execute(run, user_token, deps)
         finally:
-            span.set_attributes({"execucao.tipo": run.tipo, "execucao.estado": run.estado})
+            total = (run.uso or {}).get("total") or {}
+            span.set_attributes({"execucao.tipo": run.tipo, "execucao.estado": run.estado,
+                                 "execucao.custo_usd": float(total.get("custo_usd") or 0.0),
+                                 "execucao.tokens": int((total.get("uso") or {}).get("total") or 0)})
             span.update_name(f"execucao {run.tipo}")
             _EXECUCOES.add(1, {"tipo": run.tipo, "estado": run.estado})
             _EXECUCAO_S.record(time.monotonic() - inicio, {"tipo": run.tipo})

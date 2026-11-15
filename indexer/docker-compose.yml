@@ -60,6 +60,8 @@ services:
       KAFKA_CLUSTERS_0_NAME: indexador
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       JAVA_OPTS: -Xmx256m
+      LOGGING_LEVEL_ROOT: warn # sem isso, uma linha de DEBUG a cada 30 s no Loki
+      LOGGING_LEVEL_IO_KAFBAT: warn
     depends_on:
       kafka:
         condition: service_healthy

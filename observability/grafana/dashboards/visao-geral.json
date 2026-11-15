@@ -1,7 +1,7 @@
 {
   "uid": "visao-geral",
   "title": "Visão geral",
-  "description": "Os quatro serviços: tráfego, erros, latência, mapa e logs.",
+  "description": "Os quatro serviços: tráfego, erros, latência, mapa e logs. Escolha uma conversa no alto para ver só ela.",
   "tags": [
     "demonstracoes"
   ],
@@ -17,8 +17,33 @@
   "templating": {
     "list": [
       {
+        "name": "conversa",
+        "label": "Conversa",
+        "type": "query",
+        "datasource": {
+          "type": "tempo",
+          "uid": "tempo"
+        },
+        "query": {
+          "type": 1,
+          "label": "conversa.rotulo",
+          "refId": "TempoDatasourceVariableQueryEditor-VariableQuery"
+        },
+        "definition": "conversa.rotulo",
+        "regex": "/^(?<text>.*\\((?<value>conv-[0-9a-f]+)\\))$/",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": false,
+        "sort": 0,
+        "refresh": 2,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
         "name": "projeto",
-        "label": "Serviço",
+        "label": "Serviço (logs)",
         "type": "query",
         "datasource": {
           "type": "loki",
@@ -60,10 +85,10 @@
       "id": 1,
       "type": "stat",
       "title": "Requisições por segundo",
-      "description": "",
+      "description": "Média no período das requisições recebidas pelos serviços.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 0,
@@ -74,12 +99,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(sum(rate(traces_spanmetrics_calls_total{span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval]))) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ kind = server && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | rate()",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -89,6 +117,7 @@
             "mode": "fixed",
             "fixedColor": "blue"
           },
+          "noValue": "0",
           "decimals": 2
         },
         "overrides": []
@@ -96,22 +125,22 @@
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "mean"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
     {
       "id": 2,
       "type": "stat",
-      "title": "Erros",
+      "title": "Respostas com erro",
       "description": "",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 4,
@@ -122,33 +151,37 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(100 * sum(rate(traces_spanmetrics_calls_total{span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[$__rate_interval])) / clamp_min(sum(rate(traces_spanmetrics_calls_total{span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval])), 1e-9)) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ kind = server && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") && status = error } | count_over_time()",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
+          "unit": "short",
           "color": {
             "mode": "fixed",
             "fixedColor": "red"
           },
-          "decimals": 1
+          "noValue": "0",
+          "decimals": 0
         },
         "overrides": []
       },
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -156,10 +189,10 @@
       "id": 3,
       "type": "stat",
       "title": "Latência p95",
-      "description": "p95 das requisições recebidas no período.",
+      "description": "O maior p95 das requisições recebidas, entre as janelas do período. Calculado pelo Tempo a partir dos traces, em faixas que dobram de tamanho: o valor é aproximado (8,59 s, 17,18 s...).",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 8,
@@ -170,12 +203,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(histogram_quantile(0.95, sum by (le) (increase(traces_spanmetrics_latency_bucket{span_kind=\"SPAN_KIND_SERVER\"}[$__range])))) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ kind = server && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | quantile_over_time(duration, .95)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -185,6 +221,7 @@
             "mode": "fixed",
             "fixedColor": "purple"
           },
+          "noValue": "0",
           "decimals": 2
         },
         "overrides": []
@@ -192,11 +229,11 @@
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "max"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -206,8 +243,8 @@
       "title": "Execuções dos agentes",
       "description": "Execuções terminadas no período (relatórios, perguntas, turnos de conversa).",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 12,
@@ -218,12 +255,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(sum(increase(agentes_execucoes_total[$__range]))) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"execucao.*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | count_over_time()",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -233,6 +273,7 @@
             "mode": "fixed",
             "fixedColor": "green"
           },
+          "noValue": "0",
           "decimals": 0
         },
         "overrides": []
@@ -240,11 +281,11 @@
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -252,10 +293,10 @@
       "id": 5,
       "type": "stat",
       "title": "Custo dos agentes",
-      "description": "Custo de modelo no período, pelos preços do .env dos agentes.",
+      "description": "Custo de modelo das execuções do período, gravado no span de cada execução.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 16,
@@ -266,12 +307,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(sum(increase(agentes_custo_usd_total[$__range]))) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"execucao.*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | sum_over_time(span.execucao.custo_usd)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -281,6 +325,7 @@
             "mode": "fixed",
             "fixedColor": "orange"
           },
+          "noValue": "0",
           "decimals": 2
         },
         "overrides": []
@@ -288,22 +333,22 @@
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
     {
       "id": 6,
       "type": "stat",
-      "title": "Páginas indexadas",
-      "description": "",
+      "title": "Chamadas de tool",
+      "description": "Chamadas de tool atendidas pelo servidor MCP.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 20,
@@ -314,12 +359,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(sum(increase(indexador_paginas_total[$__range]))) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"tool .*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | count_over_time()",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -329,6 +377,7 @@
             "mode": "fixed",
             "fixedColor": "blue"
           },
+          "noValue": "0",
           "decimals": 0
         },
         "overrides": []
@@ -336,19 +385,19 @@
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
     {
       "id": 7,
-      "type": "nodeGraph",
-      "title": "Mapa dos serviços",
-      "description": "Montado pelo Tempo a partir dos traces: quem chama quem, com taxa e latência.",
+      "type": "table",
+      "title": "Execuções",
+      "description": "Cada linha é um turno: clique para abrir o trace inteiro (orquestrador, especialistas, modelo, tools no servidor MCP e as chamadas ao indexador).",
       "datasource": {
         "type": "tempo",
         "uid": "tempo"
@@ -356,6 +405,329 @@
       "gridPos": {
         "x": 0,
         "y": 4,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"execucao.*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") }",
+          "limit": 30,
+          "tableType": "traces"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Requisições por serviço",
+      "description": "",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ kind = server && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | rate() by (resource.service.name)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "stacking": {
+              "mode": "none"
+            },
+            "drawStyle": "line",
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*(?:resource\\.service\\.name|name)=\"([^\"]*)\".*",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Latência p95 por serviço",
+      "description": "Aproximado: o Tempo mede a duração em faixas que dobram de tamanho.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 12,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ kind = server && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | quantile_over_time(duration, .95) by (resource.service.name)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "stacking": {
+              "mode": "none"
+            },
+            "drawStyle": "line",
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*(?:resource\\.service\\.name|name)=\"([^\"]*)\".*",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Erros por serviço",
+      "description": "",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ kind = server && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") && status = error } | rate() by (resource.service.name)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "stacking": {
+              "mode": "none"
+            },
+            "drawStyle": "line",
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*(?:resource\\.service\\.name|name)=\"([^\"]*)\".*",
+            "renamePattern": "$1"
+          }
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "bargauge",
+      "title": "Operações mais lentas (p95)",
+      "description": "Qualquer etapa: requisição, execução, chamada ao modelo, tool, leitura de PDF. Aproximado: o Tempo mede a duração em faixas que dobram de tamanho.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name !~ \"a2a[.].*|.* http (send|receive)\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | quantile_over_time(duration, .95) by (name)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 2,
+          "color": {
+            "mode": "continuous-GrYlRd"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "values": true,
+          "calcs": [],
+          "fields": "/^Max$/"
+        }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*(?:resource\\.service\\.name|name)=\"([^\"]*)\".*",
+            "renamePattern": "$1"
+          }
+        },
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "max"
+            ],
+            "mode": "seriesToRows"
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Max",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitField": 8
+          }
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "nodeGraph",
+      "title": "Mapa dos serviços",
+      "description": "Quem chama quem, com taxa e latência, de todas as conversas: o mapa não filtra. O de uma conversa só está em cada trace (aba Node graph).",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 28,
         "w": 24,
         "h": 11
       },
@@ -376,231 +748,7 @@
       "options": {}
     },
     {
-      "id": 8,
-      "type": "timeseries",
-      "title": "Requisições por serviço",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 0,
-        "y": 15,
-        "w": 12,
-        "h": 8
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (service) (rate(traces_spanmetrics_calls_total{span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval]))",
-          "legendFormat": "{{service}}",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "reqps",
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 8,
-            "stacking": {
-              "mode": "none"
-            },
-            "drawStyle": "line",
-            "showPoints": "never"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
-    },
-    {
-      "id": 9,
-      "type": "timeseries",
-      "title": "Latência p95 por serviço",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 12,
-        "y": 15,
-        "w": 12,
-        "h": 8
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "histogram_quantile(0.95, sum by (le, service) (rate(traces_spanmetrics_latency_bucket{span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval])))",
-          "legendFormat": "{{service}}",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 8,
-            "stacking": {
-              "mode": "none"
-            },
-            "drawStyle": "line",
-            "showPoints": "never"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
-    },
-    {
-      "id": 10,
-      "type": "timeseries",
-      "title": "Erros por serviço",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 0,
-        "y": 23,
-        "w": 12,
-        "h": 8
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (service) (rate(traces_spanmetrics_calls_total{span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[$__rate_interval]))",
-          "legendFormat": "{{service}}",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "reqps",
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 8,
-            "stacking": {
-              "mode": "none"
-            },
-            "drawStyle": "line",
-            "showPoints": "never"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
-    },
-    {
-      "id": 11,
-      "type": "timeseries",
-      "title": "Operações mais lentas (p95)",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 12,
-        "y": 23,
-        "w": 12,
-        "h": 8
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "topk(8, histogram_quantile(0.95, sum by (le, service, span_name) (rate(traces_spanmetrics_latency_bucket{span_kind=\"SPAN_KIND_SERVER\",span_name!~\"a2a[.].*\"}[$__rate_interval]))))",
-          "legendFormat": "{{service}} · {{span_name}}",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 8,
-            "stacking": {
-              "mode": "none"
-            },
-            "drawStyle": "line",
-            "showPoints": "never"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
-    },
-    {
-      "id": 12,
+      "id": 13,
       "type": "logs",
       "title": "Erros nos logs",
       "description": "Linhas de erro dos quatro serviços. A linha com trace_id abre o trace.",
@@ -610,14 +758,14 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 31,
+        "y": 39,
         "w": 24,
         "h": 9
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "{projeto=~\".+\", nivel=~\"ERROR|CRITICAL\"}",
+          "expr": "{projeto=~\".+\", nivel=~\"ERROR|CRITICAL\"} |~ \"$conversa\"",
           "datasource": {
             "type": "loki",
             "uid": "loki"
@@ -639,24 +787,24 @@
       }
     },
     {
-      "id": 13,
+      "id": 14,
       "type": "logs",
       "title": "Logs",
-      "description": "Sem as linhas de acesso a /auth/me (cada requisição confere o login no indexador) e /health.",
+      "description": "Sem as linhas de acesso a /auth/me (cada requisição confere o login no indexador) e /health. Com uma conversa escolhida, só as linhas com conversa=<id>, de todos os serviços.",
       "datasource": {
         "type": "loki",
         "uid": "loki"
       },
       "gridPos": {
         "x": 0,
-        "y": 40,
+        "y": 48,
         "w": 24,
         "h": 12
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "{projeto=~\"$projeto\"} != \"/auth/me\" != \"/health\"",
+          "expr": "{projeto=~\"$projeto\"} != \"/auth/me\" != \"/health\" |~ \"$conversa\"",
           "datasource": {
             "type": "loki",
             "uid": "loki"

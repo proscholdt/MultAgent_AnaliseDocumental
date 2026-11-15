@@ -33,6 +33,15 @@ metrics_generator:
         send_exemplars: true
   traces_storage:
     path: /var/tempo/generator/traces
+  # Métricas por TraceQL (a visão geral filtrada por conversa) de todos os spans, não só dos de
+  # entrada: o span da execução, o de cada tool e o de cada chamada ao modelo também contam.
+  processor:
+    local_blocks:
+      filter_server_spans: false
+
+query_frontend:
+  metrics:
+    max_duration: 72h # o mesmo que a retenção
 
 storage:
   trace:

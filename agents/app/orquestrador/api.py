@@ -16,6 +16,7 @@ import httpx
 from fastapi import Depends, FastAPI, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from langgraph.checkpoint.base import BaseCheckpointSaver
+from opentelemetry import trace
 from pydantic import BaseModel, Field
 
 from app import telemetria
@@ -200,6 +201,9 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
         # resposta gravada com fonte; o relatório, o relatório montado). Fora do escopo, nada roda e a
         # resposta é um texto fixo com as opções. Na primeira versão, sem essa
         # cobrança, o orquestrador respondia perguntas sozinho, na mensagem de estado, sem fonte.
+        # A requisição chega antes de a conversa ir para o baggage: marcada aqui, ela também conta
+        # na visão geral filtrada por conversa.
+        trace.get_current_span().set_attribute(telemetria.CONVERSA, conversa_id)
         return await start(user, "auto", body.texto, wait=body.aguardar, conversa_id=conversa_id)
 
     # --- execuções ----------------------------------------------------------------------------
