@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 
-from app.evaluation import check_answer, check_field, evaluate, in_reais, render, same, stability
+from app.ferramentas.avaliacao import check_answer, check_field, evaluate, in_reais, render, same, stability
 
 
 def informed(value, unit, page, text=None, previous=None):

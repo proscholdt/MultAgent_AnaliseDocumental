@@ -101,13 +101,40 @@ Relatório completo dos três documentos, com raciocínio ligado:
 Nos dois primeiros, nenhum valor ausente foi gravado como informado, os valores calculados e
 as cinco perguntas saíram certos, e todas as citações existem no trecho citado.
 
-## Estrutura
+## Mapa do código
 
 ```
-app/grafo.py          execução em grafo: orquestrador, delegar, conferencia, fim
-app/runner.py         um agente PydanticAI: modelo, toolset MCP, passos, freios
-app/especialistas.py  serviço A2A dos especialistas, memória
-app/memoria.py        histórico por conversa e compactação
-app/main.py           API do orquestrador
-agentes/              um .md por agente
+agentes/                    UM ARQUIVO POR AGENTE: modelo, raciocínio, turnos e prompt
+config/ajustes.yaml         preços, freios, tempos, traces com conteúdo
+
+app/
+├─ config.py                .env (chaves) + config/ajustes.yaml
+├─ telemetria.py
+│
+├─ orquestrador/            O SERVIÇO :8200
+│  ├─ api.py                rotas: conversas, mensagens, execuções, atalhos
+│  ├─ grafo.py              o grafo: orquestrador → delegar → conferência → fim
+│  ├─ execucoes.py          execuções, conversas e trace em disco
+│  ├─ especialistas_a2a.py  descobrir e chamar os especialistas por A2A
+│  └─ usuario.py            quem é o usuário (login do indexador)
+│
+├─ especialistas/           O SERVIÇO :8201
+│  ├─ servico.py            cada arquivo de agente vira um agente A2A
+│  └─ memoria.py            histórico de cada especialista na conversa, compactado
+│
+├─ nucleo/                  O QUE OS DOIS USAM
+│  ├─ agentes.py            ler e validar agentes/<nome>.md
+│  ├─ executar.py           rodar UM agente PydanticAI: modelo, tools do MCP, passos, freios
+│  ├─ mcp.py                conexão com o servidor MCP
+│  ├─ tokens.py             token A2A e token do agente
+│  └─ custos.py             custo pelos tokens e pelos preços do ajustes.yaml
+│
+└─ ferramentas/             APOIO
+   ├─ cli.py                python -m app.ferramentas.cli validar | novo-agente
+   └─ avaliacao.py          comparar a base com o gabarito
+
+scripts/                    avaliar.py, gerar_entrega.py
 ```
+
+Para criar um agente: `python -m app.ferramentas.cli novo-agente <nome>` cria `agentes/<nome>.md`
+e mostra a entrada para colar em `mcp-server/config/policy.yaml`.

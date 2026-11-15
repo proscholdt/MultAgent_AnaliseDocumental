@@ -1,7 +1,7 @@
 """Comandos de apoio.
 
-    python -m app.cli novo-agente <nome> --descricao "O que ele faz" [--tools a,b,c]
-    python -m app.cli validar
+    python -m app.ferramentas.cli novo-agente <nome> --descricao "O que ele faz" [--tools a,b,c]
+    python -m app.ferramentas.cli validar
 
 `novo-agente` cria o arquivo do agente a partir de um modelo e imprime o trecho para colar na
 política do servidor MCP. São os dois passos para um agente existir: o arquivo diz o que ele
@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 from app.config import get_settings
-from app.registry import NAME, ORCHESTRATOR, RESERVED, AgentFileError, Registry, parse_agent
+from app.nucleo.agentes import NAME, ORCHESTRATOR, RESERVED, AgentFileError, Registry, parse_agent
 
 TEMPLATE = """---
 nome: {nome}
@@ -77,7 +77,7 @@ def validate(folder: Path) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="python -m app.cli", description="Apoio ao sistema dos agentes.")
+    parser = argparse.ArgumentParser(prog="python -m app.ferramentas.cli", description="Apoio ao sistema dos agentes.")
     commands = parser.add_subparsers(dest="command", required=True)
     new = commands.add_parser("novo-agente", help="cria o arquivo de um agente e mostra a entrada da política")
     new.add_argument("nome")

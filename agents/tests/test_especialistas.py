@@ -3,9 +3,9 @@ volta é um relato montado pelo código."""
 import httpx
 import pytest
 
-from app.a2a import A2AError, SpecialistClient, delegate, for_the_model
-from app.runner import Budget
-from app.tokens import AuthError, Identity, a2a_headers, verify_a2a_token
+from app.nucleo.executar import Budget
+from app.nucleo.tokens import AuthError, Identity, a2a_headers, verify_a2a_token
+from app.orquestrador.especialistas_a2a import A2AError, SpecialistClient, delegate, for_the_model
 from tests.conftest import ANA, DOC, SECRET_A2A, call, say, write_agent
 
 BASE = "http://especialistas.teste"

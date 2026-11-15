@@ -6,10 +6,10 @@ import jwt
 from pydantic import BaseModel
 from pydantic_ai.messages import ToolReturnPart
 
-from app.costs import Ledger, cost_usd
-from app.registry import AgentFile, Registry
-from app.runner import Budget, run_agent
-from app.tokens import mcp_headers
+from app.nucleo.agentes import AgentFile, Registry
+from app.nucleo.custos import Ledger, cost_usd
+from app.nucleo.executar import Budget, run_agent
+from app.nucleo.tokens import mcp_headers
 from tests.conftest import ANA, DOC, MODEL_NAME, SECRET_MCP, Refused, call, say, think, write_agent
 
 

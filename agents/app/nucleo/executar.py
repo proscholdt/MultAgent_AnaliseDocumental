@@ -32,10 +32,10 @@ from pydantic_ai.models import Model
 from pydantic_ai.tools import ToolDefinition
 from pydantic_ai.usage import UsageLimits
 
-from app import mcp
 from app.config import Settings
-from app.registry import AgentFile
-from app.tokens import Identity
+from app.nucleo import mcp
+from app.nucleo.agentes import AgentFile
+from app.nucleo.tokens import Identity
 
 _ARGS_IN_TRACE = 300
 _THOUGHT_IN_TRACE = 1500

@@ -13,8 +13,8 @@ from a2a.types import Message, Role, SendMessageRequest, TaskState
 from google.protobuf.json_format import MessageToDict
 
 from app.config import Settings
-from app.runner import Budget
-from app.tokens import CATALOG, Identity, a2a_headers
+from app.nucleo.executar import Budget
+from app.nucleo.tokens import CATALOG, Identity, a2a_headers
 
 
 class A2AError(Exception):

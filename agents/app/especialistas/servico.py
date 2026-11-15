@@ -38,11 +38,12 @@ from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from app import mcp, telemetria
+from app import telemetria
 from app.config import Settings, get_settings
-from app.memoria import Memory, compact, split_runs
-from app.registry import AgentFile, Registry
-from app.runner import (
+from app.especialistas.memoria import Memory, compact, split_runs
+from app.nucleo import mcp
+from app.nucleo.agentes import AgentFile, Registry
+from app.nucleo.executar import (
     AgentRun,
     Budget,
     Engine,
@@ -51,7 +52,7 @@ from app.runner import (
     instrumentar_agentes,
     run_agent,
 )
-from app.tokens import CATALOG, AuthError, Identity, verify_a2a_token
+from app.nucleo.tokens import CATALOG, AuthError, Identity, verify_a2a_token
 
 PROTOCOL_VERSION = "1.0"
 _CLAIMS = "a2a.claims"

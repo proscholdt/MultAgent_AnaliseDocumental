@@ -28,8 +28,8 @@ from pathlib import Path
 import httpx
 from base import ROOT, arguments, login, settings, snapshot
 
-from app.evaluation import evaluate, render
-from app.grafo import latin_only
+from app.ferramentas.avaliacao import evaluate, render
+from app.orquestrador.grafo import latin_only
 
 OUT = ROOT / "entrega"
 

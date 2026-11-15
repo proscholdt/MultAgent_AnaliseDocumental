@@ -16,7 +16,7 @@ from pathlib import Path
 
 from base import ROOT, arguments, login, settings, snapshot
 
-from app.evaluation import evaluate, render, stability
+from app.ferramentas.avaliacao import evaluate, render, stability
 
 RESULTS = ROOT / "avaliacao" / "resultados"
 

@@ -27,11 +27,11 @@ from pydantic_ai.models.function import AgentInfo, FunctionModel
 from pydantic_ai.usage import RequestUsage
 
 from app.config import Settings
-from app.especialistas import create_app as create_specialists
-from app.main import create_app
-from app.mcp import McpError
-from app.runner import Engine
-from app.tokens import Identity
+from app.especialistas.servico import create_app as create_specialists
+from app.nucleo.executar import Engine
+from app.nucleo.mcp import McpError
+from app.nucleo.tokens import Identity
+from app.orquestrador.api import create_app
 
 SECRET_MCP = "segredo-do-mcp-para-os-testes-com-40-chars"
 SECRET_A2A = "segredo-do-a2a-para-os-testes-com-40-chars"

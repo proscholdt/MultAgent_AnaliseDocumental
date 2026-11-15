@@ -1,11 +1,11 @@
-"""Custo de uma execução, a partir dos tokens contados e da tabela de preços do .env.
+"""Custo de uma execução, a partir dos tokens contados e da tabela de preços do config/ajustes.yaml.
 
 O preço não fica no código: muda com o tempo e com o modelo. Modelo sem preço na tabela
 aparece com os tokens e com custo nulo, em vez de um número inventado.
 """
 from typing import Any
 
-from app.runner import add_usage, empty_usage
+from app.nucleo.executar import add_usage, empty_usage
 
 MILLION = 1_000_000
 

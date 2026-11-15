@@ -18,14 +18,14 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from pydantic import BaseModel, Field
 
 from app import telemetria
-from app.a2a import SpecialistClient
 from app.config import Settings, get_settings
-from app.execucoes import RUNNING, Conversations, Run, Runs
-from app.grafo import Deps, execute, zerar_metricas
-from app.registry import ORCHESTRATOR, Registry
-from app.runner import Engine, default_engine, instrumentar_agentes
-from app.security import Users
-from app.tokens import Identity
+from app.nucleo.agentes import ORCHESTRATOR, Registry
+from app.nucleo.executar import Engine, default_engine, instrumentar_agentes
+from app.nucleo.tokens import Identity
+from app.orquestrador.especialistas_a2a import SpecialistClient
+from app.orquestrador.execucoes import RUNNING, Conversations, Run, Runs
+from app.orquestrador.grafo import Deps, execute, zerar_metricas
+from app.orquestrador.usuario import Users
 
 _bearer = HTTPBearer(description="O access_token devolvido por POST /auth/login do indexador.")
 _CONVERSA = Field(default=None, description="Continua esta conversa (o orquestrador e os especialistas lembram os "

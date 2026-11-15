@@ -4,8 +4,8 @@ import time
 
 import pytest
 
-from app.cli import main as cli
-from app.registry import AgentFileError, Registry, parse_agent
+from app.ferramentas.cli import main as cli
+from app.nucleo.agentes import AgentFileError, Registry, parse_agent
 from tests.conftest import write_agent
 
 GOOD = """---

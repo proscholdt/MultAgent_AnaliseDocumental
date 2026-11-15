@@ -1,5 +1,5 @@
 """A memória do especialista: o que volta para ele e o quanto."""
-from app.memoria import Memory, compact, split_runs
+from app.especialistas.memoria import Memory, compact, split_runs
 
 
 def run(prompt: str, result_size: int = 2000) -> list[dict]:
@@ -66,7 +66,7 @@ def test_item_ids_leave_with_the_reasoning():
         UserPromptPart,
     )
 
-    from app.runner import dump, load
+    from app.nucleo.executar import dump, load
 
     messages = [
         ModelRequest(parts=[UserPromptPart(content="Feche a extração.")]),

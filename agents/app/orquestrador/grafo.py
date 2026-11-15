@@ -34,14 +34,15 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
 from pydantic import BaseModel, Field
 
-from app import mcp, telemetria
-from app.a2a import SpecialistClient, delegate, for_the_model
+from app import telemetria
 from app.config import Settings
-from app.costs import Ledger, cost_usd
-from app.execucoes import Run, Runs, Trace, now
-from app.registry import ORCHESTRATOR, AgentFile, Registry
-from app.runner import AgentRun, Budget, Engine, atualizar_instrumentacao, run_agent
-from app.tokens import Identity
+from app.nucleo import mcp
+from app.nucleo.agentes import ORCHESTRATOR, AgentFile, Registry
+from app.nucleo.custos import Ledger, cost_usd
+from app.nucleo.executar import AgentRun, Budget, Engine, atualizar_instrumentacao, run_agent
+from app.nucleo.tokens import Identity
+from app.orquestrador.especialistas_a2a import SpecialistClient, delegate, for_the_model
+from app.orquestrador.execucoes import Run, Runs, Trace, now
 
 _medidor = telemetria.medidor()
 _TOKENS = _medidor.create_counter("agentes.tokens", description="Tokens por agente, modelo e tipo")

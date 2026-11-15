@@ -4,7 +4,7 @@ import asyncio
 import json
 from datetime import UTC, datetime
 
-from app.execucoes import Run, Runs
+from app.orquestrador.execucoes import Run, Runs
 from tests.conftest import (
     ANA,
     BRUNO,

@@ -16,4 +16,4 @@ COPY app ./app
 COPY agentes ./agentes
 COPY config ./config
 EXPOSE 8200 8201
-CMD ["uvicorn", "app.main:app_factory", "--factory", "--host", "0.0.0.0", "--port", "8200"]
+CMD ["uvicorn", "app.orquestrador.api:app_factory", "--factory", "--host", "0.0.0.0", "--port", "8200"]

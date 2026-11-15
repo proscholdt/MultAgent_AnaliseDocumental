@@ -11,9 +11,9 @@ import httpx
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # rodar como `python scripts/x.py`, de agents/
 
-from app import mcp
 from app.config import Settings, get_settings
-from app.tokens import Identity
+from app.nucleo import mcp
+from app.nucleo.tokens import Identity
 
 ROOT = Path(__file__).resolve().parents[1]
 

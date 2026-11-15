@@ -13,7 +13,7 @@ from dataclasses import dataclass
 import jwt
 
 from app.config import Settings
-from app.registry import ORCHESTRATOR
+from app.nucleo.agentes import ORCHESTRATOR
 
 CATALOG = "catalogo"  # destinatário do token que lista os especialistas
 

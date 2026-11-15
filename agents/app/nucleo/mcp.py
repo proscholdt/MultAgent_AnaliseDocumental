@@ -16,7 +16,7 @@ from pydantic_ai.mcp import MCPToolset
 from pydantic_ai.toolsets import AbstractToolset
 
 from app.config import Settings
-from app.tokens import Identity, mcp_headers
+from app.nucleo.tokens import Identity, mcp_headers
 
 # O próprio sistema, quando lê a base sem modelo no meio (conferir pendências, buscar o
 # resultado). Na política do servidor ele só tem tools de leitura.
