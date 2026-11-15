@@ -6,3 +6,7 @@ __pycache__/
 data/
 avaliacao/resultados/
 *.db
+
+# resultados gerados localmente (scripts/gerar_entrega.py e scripts/avaliar.py)
+entrega/
+avaliacao/resultados/
