@@ -18,8 +18,8 @@ from dataclasses import dataclass
 import jwt
 
 from app.config import Settings
-from app.errors import AuthError
-from app.indexer_client import IndexerClient
+from app.dados.indexador import IndexerClient
+from app.governanca.erros import AuthError
 
 AGENT_NAME = re.compile(r"[a-z][a-z0-9_-]{1,39}")
 _REQUIRED_CLAIMS = ["exp", "aud", "agent", "run_id", "usr"]

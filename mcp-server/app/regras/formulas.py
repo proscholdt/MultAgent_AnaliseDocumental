@@ -12,8 +12,8 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any
 
-from app.fields import FIELDS, MAIN_FIELDS
-from app.numbers import format_br, in_reais
+from app.regras.campos import FIELDS, MAIN_FIELDS
+from app.regras.numeros import format_br, in_reais
 
 MARGIN_TOLERANCE = Decimal("0.2")  # pontos percentuais
 VARIATION_TOLERANCE = Decimal("0.5")  # pontos percentuais

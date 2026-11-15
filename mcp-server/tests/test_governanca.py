@@ -5,10 +5,10 @@ import time
 import jwt
 import pytest
 
-from app.auth import identify, verify_agent_token
-from app.catalog import load_tools, strict_schema
-from app.errors import AuthError, IndexerAuthError
-from app.policy import PolicyError, parse_policy
+from app.governanca.catalogo import load_tools, strict_schema
+from app.governanca.erros import AuthError, IndexerAuthError
+from app.governanca.identidade import identify, verify_agent_token
+from app.governanca.politica import PolicyError, parse_policy
 from tests.conftest import ANA, BRUNO, DOC_ANA, SECRET, agent_token, headers, payload
 
 # --- o que cada agente vê e chama ---------------------------------------------------------

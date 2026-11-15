@@ -12,7 +12,7 @@ from pathlib import Path
 
 import yaml
 
-from app.auth import AGENT_NAME
+from app.governanca.identidade import AGENT_NAME
 
 log = logging.getLogger(__name__)
 

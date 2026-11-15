@@ -3,8 +3,8 @@ from decimal import Decimal
 
 import pytest
 
-from app.errors import ToolRejected
-from app.numbers import (
+from app.governanca.erros import ToolRejected
+from app.regras.numeros import (
     contains_number,
     format_br,
     in_reais,
@@ -13,7 +13,7 @@ from app.numbers import (
     unit_in_text,
     unit_of_number,
 )
-from app.tables import parse_table, read_cell, scope_of
+from app.regras.tabelas import parse_table, read_cell, scope_of
 from tests.conftest import DRE
 
 # --- números ------------------------------------------------------------------------------

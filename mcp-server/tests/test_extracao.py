@@ -145,7 +145,7 @@ async def test_not_found_is_refused_while_the_term_appears_on_pages_not_discarde
 
 
 async def _caller(deps):
-    from app.auth import identify
+    from app.governanca.identidade import identify
     return await identify(headers("extrator"), deps.settings, deps.users)
 
 

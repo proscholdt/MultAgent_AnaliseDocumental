@@ -18,9 +18,9 @@ from opentelemetry import trace
 from pydantic import ValidationError
 
 from app import telemetria
-from app.auth import Caller, identify
-from app.catalog import Call, Deps, ToolSpec
-from app.errors import AuthError, IndexerAuthError, IndexerError, IndexerNotFound, ToolRejected
+from app.governanca.catalogo import Call, Deps, ToolSpec
+from app.governanca.erros import AuthError, IndexerAuthError, IndexerError, IndexerNotFound, ToolRejected
+from app.governanca.identidade import Caller, identify
 
 log = logging.getLogger(__name__)
 

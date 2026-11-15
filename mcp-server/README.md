@@ -61,14 +61,51 @@ A pasta `config/` é montada no contêiner: `policy.yaml` (quem vê e chama o qu
 (tamanho do que a busca devolve ao modelo) valem sem build nem restart. Erro aparece em
 `GET /health` (`erro_politica`, `erro_ajustes`).
 
-## Estrutura
+## Mapa do código
 
 ```
-app/server.py     endpoint MCP: identidade, política e auditoria em cada chamada
-app/auth.py  policy.py  audit.py
-app/tools/        rag, extraction, analysis, answers, reporting
-app/formulas.py   cálculos e validações
-app/pending.py    pendências e ordem
-app/report.py     relatório
-config/          policy.yaml (quem pode o quê) e ajustes.yaml
+app/
+├─ main.py               aplicação HTTP: /mcp, /health, /governanca, /auditoria
+├─ config.py             .env (segredos) + config/ajustes.yaml
+│
+├─ tools/                AS TOOLS, um arquivo por assunto
+│  ├─ documentos.py      listar_documentos, buscar_trechos, ler_chunk, ler_pagina
+│  ├─ extracao.py        salvar_indicador, salvar_nao_encontrado, fechar_extracao, ler_extracao
+│  ├─ validacao.py       registrar_alerta, ler_alertas, concluir_revisao
+│  ├─ analise.py         salvar_item_analise, registrar_ausencia_analise, ler_analise
+│  ├─ respostas.py       comparar_indicadores, salvar_resposta, ler_respostas
+│  └─ relatorio.py       salvar_resumo, pendencias, montar_relatorio(_empresa), ler_relatorio(_empresa)
+│
+├─ governanca/           QUEM PODE O QUÊ, em toda chamada
+│  ├─ servidor.py        tools/list e tools/call: política, auditoria, span
+│  ├─ identidade.py      token do agente + login do usuário
+│  ├─ politica.py        config/policy.yaml, relida quando muda
+│  ├─ auditoria.py       uma linha por chamada
+│  ├─ catalogo.py        o @tool e o registro das tools
+│  └─ erros.py           recusa de portão e erros que voltam ao agente
+│
+├─ regras/               O QUE OS PORTÕES CONFEREM
+│  ├─ campos.py          os 8 indicadores, os valores de apoio, as categorias e as perguntas
+│  ├─ formulas.py        valores calculados e validações automáticas
+│  ├─ numeros.py         números no formato brasileiro e unidades
+│  ├─ tabelas.py         ler a célula de uma tabela
+│  ├─ texto.py           citação literal, número solto, alfabeto
+│  ├─ evidencias.py      onde um indicador aparece e a prova de "não encontrado"
+│  ├─ pendencias.py      o que falta e em que ordem
+│  ├─ marcadores.py      {{receita_liquida}} → valor com unidade e página
+│  ├─ relatorios.py      os relatórios em Markdown
+│  └─ extracao_enxuta.py a extração no formato enxuto
+│
+└─ dados/                ONDE FICA
+   ├─ banco.py           SQLite
+   ├─ modelos.py         as tabelas
+   ├─ base.py            leitura e gravação, sempre por usuário
+   ├─ visoes.py          linhas do banco → dicionários para os agentes
+   ├─ documentos.py      trechos em memória + a impressão do documento
+   └─ indexador.py       cliente da API do indexador
+
+config/                  policy.yaml (quem pode o quê) e ajustes.yaml
 ```
+
+Para criar uma tool: uma função com `@tool` no arquivo do assunto, em `app/tools/`, e o nome
+dela na entrada do agente em `config/policy.yaml`.

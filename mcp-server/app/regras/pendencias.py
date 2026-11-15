@@ -18,11 +18,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from app.catalog import Call
-from app.documents import IndexedDocument
-from app.errors import ToolRejected
-from app.fields import CATEGORIES, QUESTIONS
-from app.tools.analysis import alert_view, analysis_view
+from app.dados.documentos import IndexedDocument
+from app.dados.visoes import alert_view, analysis_view
+from app.governanca.catalogo import Call
+from app.governanca.erros import ToolRejected
+from app.regras.campos import CATEGORIES, QUESTIONS
 
 REVIEW_DONE = "revisao_das_fontes_concluida"
 

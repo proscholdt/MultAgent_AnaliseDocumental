@@ -12,17 +12,17 @@ from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import BaseModel
 
 from app import telemetria
-from app.audit import Audit
-from app.auth import UserResolver, check_request
-from app.catalog import Deps, load_tools
 from app.config import Settings, get_settings
-from app.db import Database
-from app.documents import Documents
-from app.errors import AuthError
-from app.indexer_client import IndexerClient
-from app.policy import PolicyStore
-from app.server import Governance, build_server, zerar_metricas
-from app.store import Store
+from app.dados.banco import Database
+from app.dados.base import Store
+from app.dados.documentos import Documents
+from app.dados.indexador import IndexerClient
+from app.governanca.auditoria import Audit
+from app.governanca.catalogo import Deps, load_tools
+from app.governanca.erros import AuthError
+from app.governanca.identidade import UserResolver, check_request
+from app.governanca.politica import PolicyStore
+from app.governanca.servidor import Governance, build_server, zerar_metricas
 
 MCP_PATH = "/mcp"
 

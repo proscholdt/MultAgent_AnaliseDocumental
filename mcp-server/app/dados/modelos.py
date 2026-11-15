@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from sqlalchemy import JSON, DateTime, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db import Base
+from app.dados.banco import Base
 
 
 def now() -> datetime:

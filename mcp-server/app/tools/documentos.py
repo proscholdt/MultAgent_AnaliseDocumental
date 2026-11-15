@@ -9,8 +9,8 @@ from typing import Any, Literal
 
 from pydantic import Field
 
-from app.catalog import Args, Call, tool
-from app.errors import ToolRejected
+from app.governanca.catalogo import Args, Call, tool
+from app.governanca.erros import ToolRejected
 
 _TYPES = {"texto": "text", "tabela": "table", "grafico": "figure"}
 _TYPE_NAMES = {value: key for key, value in _TYPES.items()}

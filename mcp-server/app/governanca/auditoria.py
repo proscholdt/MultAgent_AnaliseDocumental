@@ -3,9 +3,9 @@ from typing import Any
 
 from sqlalchemy import func, select
 
-from app.auth import Caller
-from app.db import Database
-from app.models import AuditRow
+from app.dados.banco import Database
+from app.dados.modelos import AuditRow
+from app.governanca.identidade import Caller
 
 _VALUE_CHARS = 300  # argumento longo (um trecho de documento) é cortado na trilha
 

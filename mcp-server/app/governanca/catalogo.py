@@ -12,14 +12,14 @@ from typing import Any, get_type_hints
 import mcp.types as t
 from pydantic import BaseModel, ConfigDict
 
-from app.audit import Audit
-from app.auth import Caller, UserResolver
 from app.config import Settings
-from app.db import Database
-from app.documents import Documents
-from app.indexer_client import IndexerClient
-from app.policy import PolicyStore
-from app.store import Store
+from app.dados.banco import Database
+from app.dados.base import Store
+from app.dados.documentos import Documents
+from app.dados.indexador import IndexerClient
+from app.governanca.auditoria import Audit
+from app.governanca.identidade import Caller, UserResolver
+from app.governanca.politica import PolicyStore
 
 # Restrições que a validação daqui confere, mas que o modo estrito de saída do modelo não aceita
 # no esquema. Ficam só no Pydantic.
@@ -112,6 +112,6 @@ def tool(name: str, group: str, description: str) -> Callable[[Handler], Handler
 
 def load_tools() -> dict[str, ToolSpec]:
     """Todas as tools, na ordem em que foram registradas. Importar os módulos é o que registra."""
-    from app.tools import analysis, answers, extraction, rag, reporting  # noqa: F401
+    from app.tools import analise, documentos, extracao, relatorio, respostas, validacao  # noqa: F401
 
     return dict(_TOOLS)

@@ -1,17 +1,17 @@
-"""Resumo executivo, relatório final, revisão das fontes e controle de pendências."""
+"""Tools do redator e do controle: resumo executivo, pendências e a montagem dos relatórios."""
 from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import Field
 
-from app.catalog import Args, Call, tool
-from app.errors import ToolRejected
-from app.formulas import AlertDraft
-from app.models import Summary
-from app.pending import REVIEW_DONE, gather, pending, summary_blockers
-from app.report import MARKER, build_company_report, build_report
-from app.text import check_script, squash, unbacked_numbers
-from app.tools.answers import markers_for
+from app.dados.modelos import Summary
+from app.governanca.catalogo import Args, Call, tool
+from app.governanca.erros import ToolRejected
+from app.regras.marcadores import MARKER
+from app.regras.pendencias import REVIEW_DONE, gather, pending, summary_blockers
+from app.regras.relatorios import build_company_report, build_report
+from app.regras.texto import check_script, squash, unbacked_numbers
+from app.tools.respostas import markers_for
 
 _SUMMARY_LINES = 5  # o teste pede resumo executivo de até 5 linhas por empresa
 _SUMMARY_CHARS = 900
@@ -54,35 +54,6 @@ async def salvar_resumo(call: Call, args: SalvarResumo) -> dict[str, Any]:
         user_id=call.caller.user_id, doc_id=args.doc_id, fingerprint=state.document.fingerprint,
         run_id=call.caller.run_id, texto=text, renderizado=rendered.text))
     return {"salvo": {"empresa": state.name, "linhas": len(lines)}, "resumo": rendered.text}
-
-
-class ConcluirRevisao(Args):
-    doc_id: str = Field(description="Documento revisado.")
-    observacao: str = Field(min_length=15, max_length=400, description="O que foi revisado e o resultado, em uma "
-                            "frase (ex.: 'Relatório da administração e notas de dívida lidos; duas "
-                            "inconsistências registradas').")
-
-
-@tool("concluir_revisao", "validacao", """
-    Marca que as fontes de um documento foram revisadas em busca de inconsistências. Chame depois
-    de ler os alertas automáticos e de registrar, com registrar_alerta, o que encontrou no texto.
-    Sem isso, a revisão continua aparecendo como pendência.""")
-async def concluir_revisao(call: Call, args: ConcluirRevisao) -> dict[str, Any]:
-    document = await call.deps.documents.get(call.caller, args.doc_id)
-    published = await call.deps.store.extraction(call.caller.user_id, args.doc_id)
-    if published is None or published.fingerprint != document.fingerprint:
-        raise ToolRejected("A revisão vem depois da extração: este documento não tem extração publicada.")
-    note = squash(args.observacao)
-    check_script(note, "A observação")
-    loose = unbacked_numbers(note, [])
-    if loose:
-        raise ToolRejected(f"A observação não leva valores ({', '.join(loose)}): eles ficam nos alertas, com citação.")
-    alerts = await call.deps.store.alerts(call.caller.user_id, args.doc_id, document.fingerprint)
-    found = sum(alert.tipo == "fonte" and alert.codigo != REVIEW_DONE for alert in alerts)
-    await call.deps.store.add_alerts(call.caller, args.doc_id, document.fingerprint, "fonte", [AlertDraft(
-        REVIEW_DONE, "informacao", mensagem=f"Fontes revisadas pelo agente {call.caller.agent}. {note}",
-        detalhes={"inconsistencias_registradas": found})])
-    return {"concluida": True, "inconsistencias_registradas": found}
 
 
 class Pendencias(Args):

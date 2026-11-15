@@ -8,9 +8,9 @@ indexador.
 from dataclasses import dataclass
 from typing import Any
 
-from app.auth import Caller
-from app.errors import IndexerNotFound, ToolRejected
-from app.indexer_client import IndexerClient
+from app.dados.indexador import IndexerClient
+from app.governanca.erros import IndexerNotFound, ToolRejected
+from app.governanca.identidade import Caller
 
 _MAX_CACHED = 64
 

@@ -8,7 +8,7 @@ from typing import Any
 import httpx
 
 from app.config import Settings
-from app.errors import IndexerAuthError, IndexerError, IndexerNotFound
+from app.governanca.erros import IndexerAuthError, IndexerError, IndexerNotFound
 
 _PAGE = 100  # máximo de chunks por página na API do indexador
 

@@ -19,7 +19,7 @@ class Database:
         self._sessions = async_sessionmaker(self.engine, expire_on_commit=False)
 
     async def init(self) -> None:
-        from app import models  # noqa: F401 - registra as tabelas no metadata
+        from app.dados import modelos  # noqa: F401 - registra as tabelas no metadata
 
         async with self.engine.begin() as connection:
             await connection.run_sync(Base.metadata.create_all)

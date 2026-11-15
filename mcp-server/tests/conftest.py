@@ -9,16 +9,16 @@ import httpx
 import jwt
 import pytest
 
-from app.audit import Audit
-from app.auth import UserResolver
-from app.catalog import Deps, load_tools
 from app.config import Settings
-from app.db import Database
-from app.documents import Documents
-from app.indexer_client import IndexerClient
-from app.policy import PolicyStore
-from app.server import Governance
-from app.store import Store
+from app.dados.banco import Database
+from app.dados.base import Store
+from app.dados.documentos import Documents
+from app.dados.indexador import IndexerClient
+from app.governanca.auditoria import Audit
+from app.governanca.catalogo import Deps, load_tools
+from app.governanca.identidade import UserResolver
+from app.governanca.politica import PolicyStore
+from app.governanca.servidor import Governance
 
 SECRET = "segredo-de-teste-com-mais-de-32-caracteres!"
 ADMIN_KEY = "chave-de-administracao-de-teste"

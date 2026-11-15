@@ -1,6 +1,6 @@
 """Análise qualitativa e alertas de inconsistência na fonte: a citação é literal e conferida."""
 from tests.conftest import DOC_ANA, headers, payload
-from tests.test_extraction import fill
+from tests.test_extracao import fill
 
 DEBT, PERFORMANCE, RISK, MESSAGE = 3, 7, 8, 9  # chunks de texto do documento de exemplo
 GROWTH = "Em 2022, a receita líquida cresceu 30% em relação a 2021."

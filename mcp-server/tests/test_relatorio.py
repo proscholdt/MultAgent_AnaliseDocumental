@@ -1,9 +1,9 @@
 """Respostas, resumo, pendências e o relatório final: os números vêm de marcadores que o
 código preenche, e o relatório só é montado quando nada falta."""
-from app.fields import QUESTIONS
+from app.regras.campos import QUESTIONS
 from tests.conftest import BRUNO, DOC_ANA, DOC_ANA_2, DOC_BRUNO, add_second_document, headers, payload
-from tests.test_analysis import GROWTH, LIQUIDITY, MESSAGE, OUTLOOK, PERFORMANCE, RISK, item
-from tests.test_extraction import cell, fill, save
+from tests.test_analise import GROWTH, LIQUIDITY, MESSAGE, OUTLOOK, PERFORMANCE, RISK, item
+from tests.test_extracao import cell, fill, save
 
 
 async def call(governance, agent, name, arguments=None, **who):
