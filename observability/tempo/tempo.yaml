@@ -33,11 +33,14 @@ metrics_generator:
         send_exemplars: true
   traces_storage:
     path: /var/tempo/generator/traces
-  # Métricas por TraceQL (a visão geral filtrada por conversa) de todos os spans, não só dos de
+  # Métricas por TraceQL (os painéis filtrados por conversa) de todos os spans, não só dos de
   # entrada: o span da execução, o de cada tool e o de cada chamada ao modelo também contam.
+  # flush_to_storage grava os blocos do gerador no disco: é deles que saem as métricas de mais de
+  # 30 minutos atrás (sem isso, os painéis só enxergam a última meia hora).
   processor:
     local_blocks:
       filter_server_spans: false
+      flush_to_storage: true
 
 query_frontend:
   metrics:

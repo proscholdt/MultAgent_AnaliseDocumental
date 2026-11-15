@@ -308,6 +308,12 @@ class Execution:
         custo = cost_usd(modelo, uso, self.ledger.prices) if modelo else None
         if custo:
             _CUSTO.add(custo, {"agente": agente, "modelo": modelo})
+        # O mesmo no span do nó (grafo.orquestrador, grafo.delegar): o Grafana soma por conversa.
+        entrada, saida = int(uso.get("entrada") or 0), int(uso.get("saida") or 0)
+        telemetria.trace.get_current_span().set_attributes({
+            "agente": agente, "agente.modelo": modelo or "?", "agente.custo_usd": float(custo or 0.0),
+            "agente.tokens": entrada + saida, "agente.tokens_entrada": entrada,
+            "agente.tokens_cache": int(uso.get("entrada_cache") or 0), "agente.tokens_saida": saida})
         for step in passos:
             if "raciocinio" in step:
                 self.trace.add("raciocinio", agente=agente, doc_id=doc_id, texto=step["raciocinio"])
@@ -379,6 +385,7 @@ class Execution:
         self.record(report["agente"], item.get("doc_id"), detail.get("modelo", ""), usage, detail.get("passos") or [],
                     detail.get("mensagens") or [])
         _DELEGACOES.add(1, {"agente": report["agente"], "estado": report["estado"]})
+        telemetria.trace.get_current_span().set_attribute("delegacao.estado", report["estado"])
         if detail.get("segundos") is not None:
             _ESPECIALISTA_S.record(float(detail["segundos"]), {"agente": report["agente"]})
         self.trace.add("especialista", agente=report["agente"], doc_id=item.get("doc_id"), tarefa=item["tarefa"],

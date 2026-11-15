@@ -117,6 +117,8 @@ async def handle_parse(message: ParseRequested, *, parser: DocumentParser, publi
                        parser=parser.name),
     )
     _PAGINAS.add(parsed.page_count, {"parser": parser.name, "cache": str(cached).lower()})
+    telemetria.trace.get_current_span().set_attributes(  # o mesmo no span da etapa, para o Grafana
+        {"indexador.paginas": parsed.page_count, "indexador.parser": parser.name, "indexador.cache": bool(cached)})
     log.info("Parse de %s (%s) concluído em %.1fs (cache=%s)", message.doc_id, parser.name, elapsed, cached)
 
 

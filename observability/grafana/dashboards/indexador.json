@@ -1,7 +1,7 @@
 {
   "uid": "indexador",
   "title": "Indexador",
-  "description": "Ingestão: etapas, filas, páginas, chunks, custo e a API.",
+  "description": "Ingestão: etapas, filas, páginas, chunks, custo e a API. Escolha uma conversa no alto para ver o que ela pediu ao indexador.",
   "tags": [
     "demonstracoes",
     "indexador"
@@ -16,7 +16,33 @@
   },
   "refresh": "30s",
   "templating": {
-    "list": []
+    "list": [
+      {
+        "name": "conversa",
+        "label": "Conversa",
+        "type": "query",
+        "datasource": {
+          "type": "tempo",
+          "uid": "tempo"
+        },
+        "query": {
+          "type": 1,
+          "label": "conversa.rotulo",
+          "refId": "TempoDatasourceVariableQueryEditor-VariableQuery"
+        },
+        "definition": "conversa.rotulo",
+        "regex": "/^(?<text>.*\\((?<value>conv-[0-9a-f]+)\\))$/",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": false,
+        "sort": 0,
+        "refresh": 2,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
   },
   "annotations": {
     "list": []
@@ -29,8 +55,20 @@
         "demonstracoes"
       ],
       "asDropdown": false,
-      "includeVars": false,
+      "includeVars": true,
       "keepTime": true
+    },
+    {
+      "title": "Limpar filtros",
+      "type": "link",
+      "icon": "bolt",
+      "tooltip": "Todas as listas em All",
+      "url": "/d/indexador?var-conversa=$__all&var-projeto=$__all",
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false,
+      "asDropdown": false,
+      "tags": []
     }
   ],
   "panels": [
@@ -38,10 +76,10 @@
       "id": 1,
       "type": "stat",
       "title": "Páginas",
-      "description": "",
+      "description": "O upload e a leitura dos PDFs não são de uma conversa: com uma conversa escolhida, aqui fica zero. O que a conversa usou do indexador está nas requisições da API.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 0,
@@ -52,12 +90,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(sum(increase(indexador_paginas_total[$__range]))) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"parse .*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | sum_over_time(span.indexador.paginas)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -67,6 +108,7 @@
             "mode": "fixed",
             "fixedColor": "blue"
           },
+          "noValue": "0",
           "decimals": 0
         },
         "overrides": []
@@ -74,11 +116,11 @@
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -86,10 +128,10 @@
       "id": 2,
       "type": "stat",
       "title": "Chunks gravados",
-      "description": "",
+      "description": "O upload e a leitura dos PDFs não são de uma conversa: com uma conversa escolhida, aqui fica zero. O que a conversa usou do indexador está nas requisições da API.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 4,
@@ -100,12 +142,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(sum(increase(indexador_chunks_total[$__range]))) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"index .*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | sum_over_time(span.indexador.chunks)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -115,6 +160,7 @@
             "mode": "fixed",
             "fixedColor": "green"
           },
+          "noValue": "0",
           "decimals": 0
         },
         "overrides": []
@@ -122,11 +168,11 @@
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -134,10 +180,10 @@
       "id": 3,
       "type": "stat",
       "title": "Custo de LLM e embeddings",
-      "description": "",
+      "description": "O upload e a leitura dos PDFs não são de uma conversa: com uma conversa escolhida, aqui fica zero. O que a conversa usou do indexador está nas requisições da API.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 8,
@@ -148,12 +194,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(sum(increase(indexador_custo_usd_total[$__range]))) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"index .*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | sum_over_time(span.indexador.custo_usd)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -163,6 +212,7 @@
             "mode": "fixed",
             "fixedColor": "orange"
           },
+          "noValue": "0",
           "decimals": 4
         },
         "overrides": []
@@ -170,11 +220,11 @@
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -182,10 +232,10 @@
       "id": 4,
       "type": "stat",
       "title": "Falhas (retry e DLQ)",
-      "description": "",
+      "description": "O upload e a leitura dos PDFs não são de uma conversa: com uma conversa escolhida, aqui fica zero. O que a conversa usou do indexador está nas requisições da API.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 12,
@@ -196,12 +246,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(sum(increase(indexador_mensagens_total{resultado!=\"ok\"}[$__range]))) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ span.messaging.destination =~ \"indexer[.](parse|index)\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") && status = error } | count_over_time()",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -211,6 +264,7 @@
             "mode": "fixed",
             "fixedColor": "red"
           },
+          "noValue": "0",
           "decimals": 0
         },
         "overrides": []
@@ -218,19 +272,19 @@
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
     {
       "id": 5,
       "type": "stat",
-      "title": "Qdrant no ar",
-      "description": "",
+      "title": "Qdrant no ar (todas as conversas)",
+      "description": "O banco de vetores está respondendo. É da infraestrutura: não filtra por conversa.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -278,10 +332,10 @@
       "id": 6,
       "type": "stat",
       "title": "API p95",
-      "description": "",
+      "description": "Aproximado: o Tempo mede a duração em faixas que dobram de tamanho.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 20,
@@ -292,12 +346,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(histogram_quantile(0.95, sum by (le) (increase(traces_spanmetrics_latency_bucket{service=\"indexer-api\",span_kind=\"SPAN_KIND_SERVER\"}[$__range])))) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"indexer-api\" && kind = server && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | quantile_over_time(duration, .95)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -307,6 +364,7 @@
             "mode": "fixed",
             "fixedColor": "purple"
           },
+          "noValue": "0",
           "decimals": 2
         },
         "overrides": []
@@ -314,11 +372,11 @@
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "max"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -326,10 +384,10 @@
       "id": 7,
       "type": "timeseries",
       "title": "Mensagens processadas por etapa",
-      "description": "",
+      "description": "O upload e a leitura dos PDFs não são de uma conversa: com uma conversa escolhida, aqui fica zero. O que a conversa usou do indexador está nas requisições da API. Cada tentativa conta (uma etapa que falha e tenta de novo aparece duas vezes).",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 0,
@@ -340,12 +398,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (etapa, resultado) (increase(indexador_mensagens_total[$__rate_interval]))",
-          "legendFormat": "{{etapa}} · {{resultado}}",
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ span.messaging.destination =~ \"indexer[.](parse|index)\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | count_over_time() by (span.messaging.destination)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -358,7 +419,8 @@
               "mode": "none"
             },
             "drawStyle": "bars",
-            "showPoints": "never"
+            "showPoints": "never",
+            "spanNulls": false
           }
         },
         "overrides": []
@@ -368,24 +430,33 @@
           "displayMode": "table",
           "placement": "right",
           "calcs": [
-            "lastNotNull",
-            "max"
+            "max",
+            "sum"
           ]
         },
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
         }
-      }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^[^\"]*\"indexer[.]([^\"]*)\".*$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     },
     {
       "id": 8,
       "type": "timeseries",
       "title": "Duração das etapas (p95)",
-      "description": "",
+      "description": "Aproximado: o Tempo mede a duração em faixas que dobram de tamanho.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 12,
@@ -396,12 +467,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "histogram_quantile(0.95, sum by (le, etapa) (rate(indexador_etapa_duracao_seconds_bucket[$__rate_interval])))",
-          "legendFormat": "{{etapa}}",
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ span.messaging.destination =~ \"indexer[.](parse|index)\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | quantile_over_time(duration, .95) by (span.messaging.destination)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -414,7 +488,8 @@
               "mode": "none"
             },
             "drawStyle": "line",
-            "showPoints": "never"
+            "showPoints": "never",
+            "spanNulls": true
           }
         },
         "overrides": []
@@ -424,15 +499,24 @@
           "displayMode": "table",
           "placement": "right",
           "calcs": [
-            "lastNotNull",
-            "max"
+            "max",
+            "sum"
           ]
         },
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
         }
-      }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^[^\"]*\"indexer[.]([^\"]*)\".*$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     },
     {
       "id": 9,
@@ -440,8 +524,8 @@
       "title": "Requisições da API por rota",
       "description": "",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 0,
@@ -452,12 +536,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (span_name) (rate(traces_spanmetrics_calls_total{service=\"indexer-api\",span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval]))",
-          "legendFormat": "{{span_name}}",
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"indexer-api\" && kind = server && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | rate() by (name)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -470,7 +557,8 @@
               "mode": "none"
             },
             "drawStyle": "line",
-            "showPoints": "never"
+            "showPoints": "never",
+            "spanNulls": true
           }
         },
         "overrides": []
@@ -480,15 +568,24 @@
           "displayMode": "table",
           "placement": "right",
           "calcs": [
-            "lastNotNull",
-            "max"
+            "max",
+            "sum"
           ]
         },
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
         }
-      }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^[^\"]*\"([^\"]*)\".*$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     },
     {
       "id": 10,
@@ -496,8 +593,8 @@
       "title": "Busca e chunks pedidos pelo servidor MCP",
       "description": "",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 12,
@@ -508,12 +605,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (span_name) (rate(traces_spanmetrics_calls_total{service=\"indexer-api\",span_kind=\"SPAN_KIND_SERVER\",span_name=~\".*(search|chunks).*\"}[$__rate_interval]))",
-          "legendFormat": "{{span_name}}",
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"indexer-api\" && kind = server && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") && name =~ \".*(search|chunks).*\" } | rate() by (name)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -526,7 +626,8 @@
               "mode": "none"
             },
             "drawStyle": "line",
-            "showPoints": "never"
+            "showPoints": "never",
+            "spanNulls": true
           }
         },
         "overrides": []
@@ -536,15 +637,24 @@
           "displayMode": "table",
           "placement": "right",
           "calcs": [
-            "lastNotNull",
-            "max"
+            "max",
+            "sum"
           ]
         },
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
         }
-      }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^[^\"]*\"([^\"]*)\".*$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     },
     {
       "id": 11,
@@ -569,7 +679,7 @@
             "uid": "tempo"
           },
           "queryType": "traceql",
-          "query": "{ name =~ \"(parse|index) .*\" }",
+          "query": "{ name =~ \"(parse|index) .*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") }",
           "limit": 30,
           "tableType": "traces"
         }
@@ -598,7 +708,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "{projeto=\"indexer\"} != \"/auth/me\" != \"/health\"",
+          "expr": "{projeto=\"indexer\"} != \"/auth/me\" != \"/health\" |~ \"$conversa\"",
           "datasource": {
             "type": "loki",
             "uid": "loki"

@@ -94,6 +94,9 @@ async def handle_index(message: IndexRequested, *, store: VectorStore, dense: De
     )
     _CHUNKS.add(result.chunk_count, {"parser": parser or "?"})
     _CUSTO.add(float(result.usage.get("cost_usd") or 0), {"parser": parser or "?"})
+    telemetria.trace.get_current_span().set_attributes(  # o mesmo no span da etapa, para o Grafana
+        {"indexador.chunks": result.chunk_count, "indexador.custo_usd": float(result.usage.get("cost_usd") or 0),
+         "indexador.parser": parser or "?"})
     log.info("Documento %s indexado (%s): %d chunks, custo estimado US$ %.4f",
              message.doc_id, parser, result.chunk_count, result.usage["cost_usd"])
 

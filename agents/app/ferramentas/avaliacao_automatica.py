@@ -47,6 +47,9 @@ def _publish(summary: dict[str, Any], tipo: str) -> None:
         _ACERTOS.set(acertos, labels)
         _DE.set(de, labels)
         _TAXA.set(round(acertos / de, 4), labels)
+        # E no span da execução, para o Grafana mostrar a nota de uma conversa.
+        telemetria.trace.get_current_span().set_attribute(
+            f"avaliacao.{medida}", acertos if medida == "invencao" else round(acertos / de, 4))
 
 
 async def avaliar(settings: Settings, identity: Identity, tipo: str, doc_id: str | None) -> dict[str, Any] | None:

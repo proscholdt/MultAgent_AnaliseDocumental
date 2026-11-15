@@ -39,7 +39,7 @@ a linha abre o trace, e o trace mostra as linhas dele.
 segue o `traceparent` nas chamadas HTTP (e vai como cabeçalho na conexão MCP, que a instrumentação
 do httpx não alcança). Cada serviço copia o id para os spans que abre (`conversa.id`) e para as
 linhas de log (`conversa=`). O span da execução leva também `conversa.rotulo` (a primeira mensagem
-e o id), `execucao.custo_usd` e `execucao.tokens`. Assim a visão geral filtra uma conversa inteira,
+e o id), `execucao.custo_usd` e `execucao.tokens`. Assim os painéis filtram uma conversa inteira,
 de todos os serviços, sem pôr o id como rótulo de métrica no Prometheus.
 
 ## Métricas próprias
@@ -60,14 +60,23 @@ de todos os serviços, sem pôr o id como rótulo de métrica no Prometheus.
 
 | Painel | Mostra |
 |---|---|
-| **Visão geral** (página inicial) | requisições, erros e latência por serviço, execuções (traces), custo dos agentes, chamadas de tool, operações mais lentas, mapa dos serviços, erros nos logs e logs. No alto, a lista **Conversa**: escolhida uma, tudo passa a ser só dela (menos o mapa, que é de todas) |
-| **Agentes** | a nota do último relatório contra o gabarito (status, valores, invenções, perguntas, inconsistências) ao longo do tempo e ao lado do custo, custo e tokens por agente, chamadas de tool e o que os portões barraram, delegações, duração, execuções recentes (traces), os passos e o raciocínio de cada execução |
-| **Indexador** | mensagens por etapa, retries e DLQ, duração do parse e da indexação, páginas, chunks, custo, documentos processados (traces) |
+| **Visão geral** (página inicial) | requisições, erros e latência por serviço, execuções (traces), custo dos agentes, chamadas de tool, operações mais lentas, mapa dos serviços, erros nos logs e logs |
+| **Agentes** | a nota do último relatório contra o gabarito (status, valores, invenções, perguntas, inconsistências), custo e tokens por agente, chamadas de tool e o que os portões barraram, delegações, duração, execuções recentes (traces), os passos e o raciocínio de cada execução |
+| **Indexador** | mensagens por etapa, falhas, duração do parse e da indexação, páginas, chunks, custo, requisições da API, documentos processados (traces) |
 
-Os números e gráficos da visão geral vêm do Tempo (métricas por TraceQL, calculadas a partir dos
-spans), e não do Prometheus: é o que deixa filtrar por conversa. Por isso a latência é aproximada
-(o Tempo mede a duração em faixas que dobram de tamanho) e o período vai até 72 h, a retenção dos
-traces. Os painéis Agentes e Indexador seguem no Prometheus.
+**Filtro por conversa.** Os três painéis têm a mesma lista **Conversa** no alto: escolhida uma,
+números, gráficos, traces e logs passam a ser só dela. Os links entre os painéis (no alto, à
+direita) levam a conversa e o período junto, e **Limpar filtros** volta tudo para All. O que não
+filtra diz "(todas as conversas)" no título: o mapa dos serviços, o Qdrant no ar e, no painel
+Agentes, a nota e o custo ao longo do tempo, que ficam no Prometheus para comparar dias (15 dias de
+histórico). No Indexador, a leitura dos PDFs não é de uma conversa: com uma escolhida, o que
+aparece é o que ela pediu à API (busca e trechos).
+
+Os números e gráficos vêm do Tempo (métricas por TraceQL, calculadas a partir dos spans), e não do
+Prometheus: é o que deixa filtrar por conversa sem pôr o id como rótulo de métrica. Os spans levam
+o que antes só a métrica tinha (custo e tokens por agente, estado da delegação, a nota do
+relatório, páginas e chunks do indexador). A latência é aproximada (o Tempo mede a duração em
+faixas que dobram de tamanho) e o período vai até 72 h, a retenção dos traces.
 
 Para investigar, a aba **Explore** do Grafana consulta as três fontes direto (TraceQL no Tempo,
 LogQL no Loki, PromQL no Prometheus).

@@ -1,7 +1,7 @@
 {
   "uid": "agentes",
   "title": "Agentes",
-  "description": "Execuções, custo, tokens, ferramentas, portões e os passos de cada agente.",
+  "description": "Execuções, custo, tokens, ferramentas, portões e os passos de cada agente. Escolha uma conversa no alto para ver só ela.",
   "tags": [
     "demonstracoes",
     "agentes"
@@ -16,7 +16,33 @@
   },
   "refresh": "30s",
   "templating": {
-    "list": []
+    "list": [
+      {
+        "name": "conversa",
+        "label": "Conversa",
+        "type": "query",
+        "datasource": {
+          "type": "tempo",
+          "uid": "tempo"
+        },
+        "query": {
+          "type": 1,
+          "label": "conversa.rotulo",
+          "refId": "TempoDatasourceVariableQueryEditor-VariableQuery"
+        },
+        "definition": "conversa.rotulo",
+        "regex": "/^(?<text>.*\\((?<value>conv-[0-9a-f]+)\\))$/",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": false,
+        "sort": 0,
+        "refresh": 2,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
   },
   "annotations": {
     "list": []
@@ -29,8 +55,20 @@
         "demonstracoes"
       ],
       "asDropdown": false,
-      "includeVars": false,
+      "includeVars": true,
       "keepTime": true
+    },
+    {
+      "title": "Limpar filtros",
+      "type": "link",
+      "icon": "bolt",
+      "tooltip": "Todas as listas em All",
+      "url": "/d/agentes?var-conversa=$__all&var-projeto=$__all",
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false,
+      "asDropdown": false,
+      "tags": []
     }
   ],
   "panels": [
@@ -40,8 +78,8 @@
       "title": "Execuções",
       "description": "",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 0,
@@ -52,12 +90,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(sum(increase(agentes_execucoes_total[$__range]))) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"execucao.*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | count_over_time()",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -67,6 +108,7 @@
             "mode": "fixed",
             "fixedColor": "green"
           },
+          "noValue": "0",
           "decimals": 0
         },
         "overrides": []
@@ -74,11 +116,11 @@
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -88,8 +130,8 @@
       "title": "Custo",
       "description": "",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 4,
@@ -100,12 +142,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(sum(increase(agentes_custo_usd_total[$__range]))) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"execucao.*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | sum_over_time(span.execucao.custo_usd)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -115,6 +160,7 @@
             "mode": "fixed",
             "fixedColor": "orange"
           },
+          "noValue": "0",
           "decimals": 2
         },
         "overrides": []
@@ -122,11 +168,11 @@
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -134,10 +180,10 @@
       "id": 3,
       "type": "stat",
       "title": "Tokens",
-      "description": "Entrada (já inclui a parte servida do cache) mais saída.",
+      "description": "Entrada (já inclui a parte servida do cache) mais saída, de todos os agentes.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 8,
@@ -148,12 +194,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(sum(increase(agentes_tokens_total{tipo!=\"cache\"}[$__range]))) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"grafo[.](orquestrador|delegar).*\" && span.agente != nil && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | sum_over_time(span.agente.tokens)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -163,6 +212,7 @@
             "mode": "fixed",
             "fixedColor": "blue"
           },
+          "noValue": "0",
           "decimals": 0
         },
         "overrides": []
@@ -170,11 +220,11 @@
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -184,8 +234,8 @@
       "title": "Delegações",
       "description": "",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 12,
@@ -196,12 +246,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(sum(increase(agentes_delegacoes_total[$__range]))) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"grafo[.]delegar.*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | count_over_time()",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -211,6 +264,7 @@
             "mode": "fixed",
             "fixedColor": "purple"
           },
+          "noValue": "0",
           "decimals": 0
         },
         "overrides": []
@@ -218,11 +272,11 @@
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -232,8 +286,8 @@
       "title": "Chamadas de tool",
       "description": "",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 16,
@@ -244,12 +298,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(sum(increase(mcp_tool_chamadas_total[$__range]))) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"tool .*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | count_over_time()",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -259,6 +316,7 @@
             "mode": "fixed",
             "fixedColor": "blue"
           },
+          "noValue": "0",
           "decimals": 0
         },
         "overrides": []
@@ -266,11 +324,11 @@
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -280,8 +338,8 @@
       "title": "Barradas pelos portões",
       "description": "Chamadas rejeitadas por um portão, recusadas pela política ou com argumentos inválidos. O agente corrige e tenta de novo.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 20,
@@ -292,12 +350,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(sum(increase(mcp_tool_chamadas_total{resultado!=\"ok\"}[$__range]))) or vector(0)",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"tool .*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") && span.mcp.resultado != \"ok\" } | count_over_time()",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -307,6 +368,7 @@
             "mode": "fixed",
             "fixedColor": "red"
           },
+          "noValue": "0",
           "decimals": 0
         },
         "overrides": []
@@ -314,11 +376,11 @@
       "options": {
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -339,10 +401,10 @@
       "id": 8,
       "type": "stat",
       "title": "Status certo",
-      "description": "Do último relatório consolidado, contra o gabarito conferido à mão. Só documentos com gabarito (reconhecidos pelo conteúdo) entram na conta; sem relatório no período, fica sem nota.",
+      "description": "Do último relatório consolidado do período (da conversa escolhida, se houver), contra o gabarito conferido à mão. Só documentos com gabarito (reconhecidos pelo conteúdo) entram na conta; sem relatório, fica sem nota.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 0,
@@ -353,12 +415,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "last_over_time(agentes_avaliacao_taxa{medida=\"status_certo\",tipo=\"relatorio\"}[$__range])",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"execucao.*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") && span.execucao.tipo = \"relatorio\" && span.avaliacao.status_certo != nil } | max_over_time(span.avaliacao.status_certo)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -368,6 +433,7 @@
             "mode": "fixed",
             "fixedColor": "green"
           },
+          "noValue": "sem nota",
           "decimals": 0
         },
         "overrides": []
@@ -379,7 +445,7 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -387,10 +453,10 @@
       "id": 9,
       "type": "stat",
       "title": "Valor informado certo",
-      "description": "Do último relatório consolidado, contra o gabarito conferido à mão. Só documentos com gabarito (reconhecidos pelo conteúdo) entram na conta; sem relatório no período, fica sem nota.",
+      "description": "Do último relatório consolidado do período (da conversa escolhida, se houver), contra o gabarito conferido à mão. Só documentos com gabarito (reconhecidos pelo conteúdo) entram na conta; sem relatório, fica sem nota.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 4,
@@ -401,12 +467,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "last_over_time(agentes_avaliacao_taxa{medida=\"valor_informado_certo\",tipo=\"relatorio\"}[$__range])",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"execucao.*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") && span.execucao.tipo = \"relatorio\" && span.avaliacao.valor_informado_certo != nil } | max_over_time(span.avaliacao.valor_informado_certo)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -416,6 +485,7 @@
             "mode": "fixed",
             "fixedColor": "green"
           },
+          "noValue": "sem nota",
           "decimals": 0
         },
         "overrides": []
@@ -427,7 +497,7 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -435,10 +505,10 @@
       "id": 10,
       "type": "stat",
       "title": "Calculado certo",
-      "description": "Do último relatório consolidado, contra o gabarito conferido à mão. Só documentos com gabarito (reconhecidos pelo conteúdo) entram na conta; sem relatório no período, fica sem nota.",
+      "description": "Do último relatório consolidado do período (da conversa escolhida, se houver), contra o gabarito conferido à mão. Só documentos com gabarito (reconhecidos pelo conteúdo) entram na conta; sem relatório, fica sem nota.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 8,
@@ -449,12 +519,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "last_over_time(agentes_avaliacao_taxa{medida=\"valor_calculado_certo\",tipo=\"relatorio\"}[$__range])",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"execucao.*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") && span.execucao.tipo = \"relatorio\" && span.avaliacao.valor_calculado_certo != nil } | max_over_time(span.avaliacao.valor_calculado_certo)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -464,6 +537,7 @@
             "mode": "fixed",
             "fixedColor": "green"
           },
+          "noValue": "sem nota",
           "decimals": 0
         },
         "overrides": []
@@ -475,7 +549,7 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -485,8 +559,8 @@
       "title": "Valores inventados",
       "description": "Indicadores que a empresa NÃO informa e que foram gravados como informados. Tem de ser 0.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 12,
@@ -497,12 +571,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "last_over_time(agentes_avaliacao_acertos{medida=\"invencao\",tipo=\"relatorio\"}[$__range])",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"execucao.*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") && span.execucao.tipo = \"relatorio\" && span.avaliacao.invencao != nil } | max_over_time(span.avaliacao.invencao)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -511,6 +588,7 @@
           "color": {
             "mode": "thresholds"
           },
+          "noValue": "sem nota",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -535,7 +613,7 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -543,10 +621,10 @@
       "id": 12,
       "type": "stat",
       "title": "Perguntas certas",
-      "description": "Do último relatório consolidado, contra o gabarito conferido à mão. Só documentos com gabarito (reconhecidos pelo conteúdo) entram na conta; sem relatório no período, fica sem nota.",
+      "description": "Do último relatório consolidado do período (da conversa escolhida, se houver), contra o gabarito conferido à mão. Só documentos com gabarito (reconhecidos pelo conteúdo) entram na conta; sem relatório, fica sem nota.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 16,
@@ -557,12 +635,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "last_over_time(agentes_avaliacao_taxa{medida=\"perguntas_certas\",tipo=\"relatorio\"}[$__range])",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"execucao.*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") && span.execucao.tipo = \"relatorio\" && span.avaliacao.perguntas_certas != nil } | max_over_time(span.avaliacao.perguntas_certas)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -572,6 +653,7 @@
             "mode": "fixed",
             "fixedColor": "blue"
           },
+          "noValue": "sem nota",
           "decimals": 0
         },
         "overrides": []
@@ -583,7 +665,7 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
@@ -593,8 +675,8 @@
       "title": "Inconsistências achadas",
       "description": "Das inconsistências que os próprios PDFs têm, quantas o validador registrou.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 20,
@@ -605,12 +687,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "last_over_time(agentes_avaliacao_taxa{medida=\"inconsistencias_na_fonte\",tipo=\"relatorio\"}[$__range])",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"execucao.*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") && span.execucao.tipo = \"relatorio\" && span.avaliacao.inconsistencias_na_fonte != nil } | max_over_time(span.avaliacao.inconsistencias_na_fonte)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -620,6 +705,7 @@
             "mode": "fixed",
             "fixedColor": "orange"
           },
+          "noValue": "sem nota",
           "decimals": 0
         },
         "overrides": []
@@ -631,15 +717,15 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "textMode": "value"
       }
     },
     {
       "id": 14,
       "type": "timeseries",
-      "title": "Nota ao longo do tempo",
-      "description": "Cada degrau é um relatório avaliado. relatorio = consolidado; relatorio_empresa = uma empresa.",
+      "title": "Nota ao longo do tempo (todas as conversas)",
+      "description": "Cada degrau é um relatório avaliado. relatorio = consolidado; relatorio_empresa = uma empresa. Vem do Prometheus (15 dias) e não filtra.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -694,8 +780,8 @@
     {
       "id": 15,
       "type": "timeseries",
-      "title": "Custo dos agentes por hora",
-      "description": "Para comparar com a nota: o que cada mudança de modelo ou de prompt custou e rendeu.",
+      "title": "Custo dos agentes por hora (todas as conversas)",
+      "description": "Para comparar com a nota: o que cada mudança de modelo ou de prompt custou e rendeu. Vem do Prometheus (15 dias) e não filtra.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -762,172 +848,357 @@
     },
     {
       "id": 17,
-      "type": "bargauge",
-      "title": "Custo por agente",
-      "description": "",
+      "type": "stat",
+      "title": "Tokens de entrada",
+      "description": "Total, já com a parte servida do cache.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 0,
         "y": 18,
         "w": 8,
-        "h": 8
+        "h": 4
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (agente) (increase(agentes_custo_usd_total[$__range]))",
-          "legendFormat": "{{agente}}",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"grafo[.](orquestrador|delegar).*\" && span.agente != nil && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | sum_over_time(span.agente.tokens_entrada)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "prefix:US$ ",
-          "decimals": 2,
+          "unit": "locale",
           "color": {
-            "mode": "continuous-GrYlRd"
-          }
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "noValue": "0",
+          "decimals": 0
         },
         "overrides": []
       },
       "options": {
-        "orientation": "horizontal",
-        "displayMode": "gradient",
-        "showUnfilled": true,
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
-        }
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value"
       }
     },
     {
       "id": 18,
-      "type": "bargauge",
-      "title": "Tokens por agente",
-      "description": "",
+      "type": "stat",
+      "title": "Tokens do cache",
+      "description": "A parte da entrada que saiu mais barata (já contada na entrada).",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 8,
         "y": 18,
         "w": 8,
-        "h": 8
+        "h": 4
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (agente) (increase(agentes_tokens_total{tipo!=\"cache\"}[$__range]))",
-          "legendFormat": "{{agente}}",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"grafo[.](orquestrador|delegar).*\" && span.agente != nil && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | sum_over_time(span.agente.tokens_cache)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "locale",
-          "decimals": 0,
           "color": {
-            "mode": "continuous-GrYlRd"
-          }
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "noValue": "0",
+          "decimals": 0
         },
         "overrides": []
       },
       "options": {
-        "orientation": "horizontal",
-        "displayMode": "gradient",
-        "showUnfilled": true,
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
-        }
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value"
       }
     },
     {
       "id": 19,
-      "type": "bargauge",
-      "title": "Tokens por tipo",
-      "description": "entrada (total, já com o cache), cache (a parte da entrada que saiu mais barata) e saída (inclui o raciocínio).",
+      "type": "stat",
+      "title": "Tokens de saída",
+      "description": "Inclui o raciocínio.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 16,
         "y": 18,
         "w": 8,
-        "h": 8
+        "h": 4
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (tipo) (increase(agentes_tokens_total[$__range]))",
-          "legendFormat": "{{tipo}}",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"grafo[.](orquestrador|delegar).*\" && span.agente != nil && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | sum_over_time(span.agente.tokens_saida)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "locale",
-          "decimals": 0,
           "color": {
-            "mode": "continuous-GrYlRd"
-          }
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "noValue": "0",
+          "decimals": 0
         },
         "overrides": []
       },
       "options": {
-        "orientation": "horizontal",
-        "displayMode": "gradient",
-        "showUnfilled": true,
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ]
-        }
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value"
       }
     },
     {
       "id": 20,
-      "type": "timeseries",
-      "title": "Tokens por minuto, por agente",
+      "type": "bargauge",
+      "title": "Custo por agente",
       "description": "",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 0,
-        "y": 26,
+        "y": 22,
         "w": 12,
         "h": 8
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (agente) (rate(agentes_tokens_total{tipo!=\"cache\"}[$__rate_interval])) * 60",
-          "legendFormat": "{{agente}}",
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"grafo[.](orquestrador|delegar).*\" && span.agente != nil && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | sum_over_time(span.agente.custo_usd) by (span.agente)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "prefix:US$ ",
+          "decimals": 4,
+          "color": {
+            "mode": "continuous-GrYlRd"
           }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "values": true,
+          "calcs": [],
+          "fields": "/^Total$/"
+        }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^[^\"]*\"([^\"]*)\".*$",
+            "renamePattern": "$1"
+          }
+        },
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "sum"
+            ],
+            "mode": "seriesToRows"
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Total",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitField": 8
+          }
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "bargauge",
+      "title": "Tokens por agente",
+      "description": "",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 22,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"grafo[.](orquestrador|delegar).*\" && span.agente != nil && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | sum_over_time(span.agente.tokens) by (span.agente)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "decimals": 0,
+          "color": {
+            "mode": "continuous-GrYlRd"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "values": true,
+          "calcs": [],
+          "fields": "/^Total$/"
+        }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^[^\"]*\"([^\"]*)\".*$",
+            "renamePattern": "$1"
+          }
+        },
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "sum"
+            ],
+            "mode": "seriesToRows"
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Total",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitField": 8
+          }
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Tokens por agente ao longo do tempo",
+      "description": "Tokens de cada agente em cada intervalo do gráfico.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"grafo[.](orquestrador|delegar).*\" && span.agente != nil && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | sum_over_time(span.agente.tokens) by (span.agente)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -939,8 +1210,9 @@
             "stacking": {
               "mode": "normal"
             },
-            "drawStyle": "line",
-            "showPoints": "never"
+            "drawStyle": "bars",
+            "showPoints": "never",
+            "spanNulls": false
           }
         },
         "overrides": []
@@ -950,40 +1222,52 @@
           "displayMode": "table",
           "placement": "right",
           "calcs": [
-            "lastNotNull",
-            "max"
+            "max",
+            "sum"
           ]
         },
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
         }
-      }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^[^\"]*\"([^\"]*)\".*$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     },
     {
-      "id": 21,
+      "id": 23,
       "type": "timeseries",
-      "title": "Custo acumulado",
-      "description": "Custo de cada agente desde o início do período.",
+      "title": "Custo por agente ao longo do tempo",
+      "description": "Custo de cada agente em cada intervalo do gráfico.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 12,
-        "y": 26,
+        "y": 30,
         "w": 12,
         "h": 8
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (agente) (increase(agentes_custo_usd_total[$__range]))",
-          "legendFormat": "{{agente}}",
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"grafo[.](orquestrador|delegar).*\" && span.agente != nil && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | sum_over_time(span.agente.custo_usd) by (span.agente)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -991,12 +1275,13 @@
           "unit": "prefix:US$ ",
           "custom": {
             "lineWidth": 2,
-            "fillOpacity": 8,
+            "fillOpacity": 18,
             "stacking": {
-              "mode": "none"
+              "mode": "normal"
             },
-            "drawStyle": "line",
-            "showPoints": "never"
+            "drawStyle": "bars",
+            "showPoints": "never",
+            "spanNulls": false
           }
         },
         "overrides": []
@@ -1006,53 +1291,65 @@
           "displayMode": "table",
           "placement": "right",
           "calcs": [
-            "lastNotNull",
-            "max"
+            "max",
+            "sum"
           ]
         },
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
         }
-      }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^[^\"]*\"([^\"]*)\".*$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     },
     {
-      "id": 22,
+      "id": 24,
       "type": "row",
       "title": "Ferramentas e delegações",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 34,
+        "y": 38,
         "w": 24,
         "h": 1
       },
       "panels": []
     },
     {
-      "id": 23,
+      "id": 25,
       "type": "timeseries",
       "title": "Chamadas de tool por agente",
-      "description": "Por minuto. Contadas no servidor MCP, em tempo real.",
+      "description": "Chamadas em cada intervalo, contadas no servidor MCP.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 0,
-        "y": 35,
+        "y": 39,
         "w": 12,
         "h": 8
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (agente) (rate(mcp_tool_chamadas_total[$__rate_interval])) * 60",
-          "legendFormat": "{{agente}}",
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"tool .*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | count_over_time() by (span.mcp.agente)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -1064,8 +1361,9 @@
             "stacking": {
               "mode": "normal"
             },
-            "drawStyle": "line",
-            "showPoints": "never"
+            "drawStyle": "bars",
+            "showPoints": "never",
+            "spanNulls": false
           }
         },
         "overrides": []
@@ -1075,40 +1373,52 @@
           "displayMode": "table",
           "placement": "right",
           "calcs": [
-            "lastNotNull",
-            "max"
+            "max",
+            "sum"
           ]
         },
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
         }
-      }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^[^\"]*\"([^\"]*)\".*$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     },
     {
-      "id": 24,
+      "id": 26,
       "type": "timeseries",
       "title": "Resultado das chamadas",
-      "description": "Por minuto. ok, rejeitada (portão), recusada (política), invalida, erro. Linhas separadas, sem empilhar: cada linha é o valor do próprio resultado.",
+      "description": "ok, rejeitada (portão), recusada (política), invalida, erro.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
         "x": 12,
-        "y": 35,
+        "y": 39,
         "w": 12,
         "h": 8
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (resultado) (rate(mcp_tool_chamadas_total[$__rate_interval])) * 60",
-          "legendFormat": "{{resultado}}",
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"tool .*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | count_over_time() by (span.mcp.resultado)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -1120,8 +1430,9 @@
             "stacking": {
               "mode": "none"
             },
-            "drawStyle": "line",
-            "showPoints": "never"
+            "drawStyle": "bars",
+            "showPoints": "never",
+            "spanNulls": false
           }
         },
         "overrides": []
@@ -1131,137 +1442,52 @@
           "displayMode": "table",
           "placement": "right",
           "calcs": [
-            "lastNotNull",
-            "max"
+            "max",
+            "sum"
           ]
         },
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
         }
-      }
-    },
-    {
-      "id": 25,
-      "type": "bargauge",
-      "title": "Tools mais chamadas",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
       },
-      "gridPos": {
-        "x": 0,
-        "y": 43,
-        "w": 8,
-        "h": 9
-      },
-      "targets": [
+      "transformations": [
         {
-          "refId": "A",
-          "expr": "topk(12, sum by (tool) (increase(mcp_tool_chamadas_total[$__range]))) > 0",
-          "legendFormat": "{{tool}}",
-          "instant": true,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^[^\"]*\"([^\"]*)\".*$",
+            "renamePattern": "$1"
           }
         }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "color": {
-            "mode": "continuous-GrYlRd"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "orientation": "horizontal",
-        "displayMode": "gradient",
-        "showUnfilled": true,
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        }
-      }
-    },
-    {
-      "id": 26,
-      "type": "bargauge",
-      "title": "Portões que mais barram",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 8,
-        "y": 43,
-        "w": 8,
-        "h": 9
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "topk(10, sum by (tool, agente) (increase(mcp_tool_chamadas_total{resultado=\"rejeitada\"}[$__range]))) > 0",
-          "legendFormat": "{{agente}} · {{tool}}",
-          "instant": true,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "color": {
-            "mode": "continuous-GrYlRd"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "orientation": "horizontal",
-        "displayMode": "gradient",
-        "showUnfilled": true,
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        }
-      }
+      ]
     },
     {
       "id": 27,
       "type": "bargauge",
-      "title": "Delegações por especialista",
+      "title": "Tools mais chamadas",
       "description": "",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
-        "x": 16,
-        "y": 43,
+        "x": 0,
+        "y": 47,
         "w": 8,
         "h": 9
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (agente, estado) (increase(agentes_delegacoes_total[$__range])) > 0",
-          "legendFormat": "{{agente}} · {{estado}}",
-          "instant": true,
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"tool .*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | count_over_time() by (span.mcp.tool)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -1279,101 +1505,244 @@
         "displayMode": "gradient",
         "showUnfilled": true,
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
+          "values": true,
+          "calcs": [],
+          "fields": "/^Total$/"
         }
-      }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^[^\"]*\"([^\"]*)\".*$",
+            "renamePattern": "$1"
+          }
+        },
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "sum"
+            ],
+            "mode": "seriesToRows"
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Total",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitField": 12
+          }
+        }
+      ]
     },
     {
       "id": 28,
-      "type": "timeseries",
-      "title": "Duração de cada especialista (p95)",
+      "type": "bargauge",
+      "title": "Portões que mais barram",
       "description": "",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
-        "x": 0,
-        "y": 52,
-        "w": 12,
-        "h": 8
+        "x": 8,
+        "y": 47,
+        "w": 8,
+        "h": 9
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "histogram_quantile(0.95, sum by (le, agente) (rate(agentes_especialista_duracao_seconds_bucket[$__rate_interval])))",
-          "legendFormat": "{{agente}}",
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"tool .*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") && span.mcp.resultado = \"rejeitada\" } | count_over_time() by (span.mcp.agente, span.mcp.tool)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "s",
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 8,
-            "stacking": {
-              "mode": "none"
-            },
-            "drawStyle": "line",
-            "showPoints": "never"
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "continuous-GrYlRd"
           }
         },
         "overrides": []
       },
       "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "values": true,
+          "calcs": [],
+          "fields": "/^Total$/"
         }
-      }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^[^\"]*\"([^\"]*)\"[^\"]*\"([^\"]*)\".*$",
+            "renamePattern": "$1 · $2"
+          }
+        },
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "sum"
+            ],
+            "mode": "seriesToRows"
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Total",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitField": 10
+          }
+        }
+      ]
     },
     {
       "id": 29,
-      "type": "timeseries",
-      "title": "Duração das execuções (p50 e p95)",
+      "type": "bargauge",
+      "title": "Delegações por especialista",
       "description": "",
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "tempo",
+        "uid": "tempo"
       },
       "gridPos": {
-        "x": 12,
-        "y": 52,
+        "x": 16,
+        "y": 47,
+        "w": 8,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"grafo[.]delegar.*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | count_over_time() by (span.agente, span.delegacao.estado)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "continuous-GrYlRd"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "values": true,
+          "calcs": [],
+          "fields": "/^Total$/"
+        }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^[^\"]*\"([^\"]*)\"[^\"]*\"([^\"]*)\".*$",
+            "renamePattern": "$1 · $2"
+          }
+        },
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "sum"
+            ],
+            "mode": "seriesToRows"
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Total",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitField": 8
+          }
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "type": "timeseries",
+      "title": "Duração de cada especialista (p95)",
+      "description": "A chamada A2A inteira. Aproximado: o Tempo mede a duração em faixas que dobram de tamanho.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 56,
         "w": 12,
         "h": 8
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "histogram_quantile(0.5, sum by (le, tipo) (rate(agentes_execucao_duracao_seconds_bucket[$__rate_interval])))",
-          "legendFormat": "p50 {{tipo}}",
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
-        },
-        {
-          "refId": "B",
-          "expr": "histogram_quantile(0.95, sum by (le, tipo) (rate(agentes_execucao_duracao_seconds_bucket[$__rate_interval])))",
-          "legendFormat": "p95 {{tipo}}",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          }
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"grafo[.]delegar.*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | quantile_over_time(duration, .95) by (span.agente)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
         }
       ],
       "fieldConfig": {
@@ -1386,7 +1755,8 @@
               "mode": "none"
             },
             "drawStyle": "line",
-            "showPoints": "never"
+            "showPoints": "never",
+            "spanNulls": true
           }
         },
         "overrides": []
@@ -1396,31 +1766,109 @@
           "displayMode": "table",
           "placement": "right",
           "calcs": [
-            "lastNotNull",
-            "max"
+            "max",
+            "sum"
           ]
         },
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
         }
-      }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^[^\"]*\"([^\"]*)\".*$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     },
     {
-      "id": 30,
+      "id": 31,
+      "type": "timeseries",
+      "title": "Duração das execuções (p50 e p95)",
+      "description": "Aproximado: o Tempo mede a duração em faixas que dobram de tamanho.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 56,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ name =~ \"execucao.*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") } | quantile_over_time(duration, .5, .95) by (span.execucao.tipo)",
+          "metricsQueryType": "range",
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "stacking": {
+              "mode": "none"
+            },
+            "drawStyle": "line",
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "max",
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^\\{(p=[0-9.]+)[^\"]*\"([^\"]*)\".*$",
+            "renamePattern": "$1 · $2"
+          }
+        }
+      ]
+    },
+    {
+      "id": 32,
       "type": "row",
       "title": "Execuções",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 60,
+        "y": 64,
         "w": 24,
         "h": 1
       },
       "panels": []
     },
     {
-      "id": 31,
+      "id": 33,
       "type": "table",
       "title": "Execuções recentes",
       "description": "Cada linha é uma execução inteira: o orquestrador, cada onda, cada especialista, cada chamada ao modelo e cada tool no MCP.",
@@ -1430,7 +1878,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 61,
+        "y": 65,
         "w": 24,
         "h": 9
       },
@@ -1442,7 +1890,7 @@
             "uid": "tempo"
           },
           "queryType": "traceql",
-          "query": "{ name =~ \"execucao.*\" }",
+          "query": "{ name =~ \"execucao.*\" && (span.conversa.id = \"$conversa\" || \"$conversa\" = \".*\") }",
           "limit": 30,
           "tableType": "traces"
         }
@@ -1454,7 +1902,7 @@
       "options": {}
     },
     {
-      "id": 32,
+      "id": 34,
       "type": "logs",
       "title": "Passos das execuções",
       "description": "Os passos do trace dos agentes: decisões, delegações, relatos, conferência.",
@@ -1464,14 +1912,14 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 70,
+        "y": 74,
         "w": 24,
         "h": 11
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "{projeto=\"agents\"} |= \"passo=\" != \"passo=raciocinio\"",
+          "expr": "{projeto=\"agents\"} |= \"passo=\" != \"passo=raciocinio\" |~ \"$conversa\"",
           "datasource": {
             "type": "loki",
             "uid": "loki"
@@ -1493,7 +1941,7 @@
       }
     },
     {
-      "id": 33,
+      "id": 35,
       "type": "logs",
       "title": "Raciocínio dos modelos",
       "description": "",
@@ -1503,14 +1951,14 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 81,
+        "y": 85,
         "w": 24,
         "h": 9
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "{projeto=\"agents\"} |= \"passo=raciocinio\"",
+          "expr": "{projeto=\"agents\"} |= \"passo=raciocinio\" |~ \"$conversa\"",
           "datasource": {
             "type": "loki",
             "uid": "loki"
@@ -1532,7 +1980,7 @@
       }
     },
     {
-      "id": 34,
+      "id": 36,
       "type": "logs",
       "title": "Chamadas de tool no servidor MCP",
       "description": "",
@@ -1542,14 +1990,14 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 90,
+        "y": 94,
         "w": 24,
         "h": 11
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "{projeto=\"mcp-server\"} |= \"tool=\"",
+          "expr": "{projeto=\"mcp-server\"} |= \"tool=\" |~ \"$conversa\"",
           "datasource": {
             "type": "loki",
             "uid": "loki"
