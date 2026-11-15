@@ -54,6 +54,10 @@ uv run pytest                 # sem rede nem contêiner
 
 Só com Azure, sem a imagem do Docling: `docker compose -f docker-compose.yml -f docker-compose.azure.yml up -d --build`.
 
+Para ver por dentro: o Kafka UI em http://localhost:8080 (tópicos `indexer.parse`, `indexer.index`,
+`indexer.events` e `indexer.dlq`, mensagens e grupos de consumo) e o painel do Qdrant em
+http://localhost:6333/dashboard (coleção `financial_docs`). Nenhum dos dois pede login.
+
 `config/ajustes.yaml` guarda o que se ajusta: parser (`docling` ou `azure`), modo das tabelas,
 tamanho dos chunks, modelo e preços da OpenAI, limites de envio e tentativas. A API relê a
 cada pedido e os workers a cada mensagem; trocar o parser monta o novo no próximo PDF. O que
