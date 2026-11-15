@@ -83,6 +83,22 @@ uv run python scripts/avaliar.py --usuario <u> --senha <s>                 # con
 O `modelo` do agente é o nome no provedor. Com o prefixo `groq:` (por exemplo
 `groq:openai/gpt-oss-120b`), ele vai à Groq pela API compatível com a OpenAI, com `GROQ_API_KEY`. Tools sem argumento seguem sem `strict`, porque a Groq recusa esse caso.
 
+## Nota contra o gabarito
+
+Ao fim de cada relatório completo (consolidado ou de uma empresa), o orquestrador tira o retrato
+da base e compara com `avaliacao/gabarito.json`, conferido à mão: status e valor de cada
+indicador, página, ano anterior, calculados, invenções, alertas, inconsistências da fonte, as
+cinco perguntas e as citações. Não chama modelo. A nota fica na execução (`avaliacao`), no
+trace (passo `avaliacao`) e vira métrica no painel "Agentes" do Grafana.
+
+- O documento é reconhecido pelo **conteúdo** (`doc_id`, o hash do PDF), não pelo nome. Documento
+  sem gabarito não entra na conta e aparece em `sem_gabarito`; sem nenhum, a execução diz que não
+  houve nota.
+- As **perguntas** comparam as empresas: só contam quando a base tem exatamente os documentos do
+  gabarito. No relatório de uma empresa, não contam.
+- Liga e desliga em `config/ajustes.yaml` (`avaliacao.ao_fim_do_relatorio`). O mesmo cálculo roda
+  à mão com `scripts/avaliar.py`.
+
 | Rota | Função |
 |---|---|
 | `POST /api/conversas`, `POST /api/conversas/{id}/mensagens` | Conversa e turno em texto livre |
@@ -131,7 +147,9 @@ app/
 │
 └─ ferramentas/             APOIO
    ├─ cli.py                python -m app.ferramentas.cli validar | novo-agente
-   └─ avaliacao.py          comparar a base com o gabarito
+   ├─ avaliacao.py          a conta: a base contra o gabarito (só os documentos que têm gabarito)
+   ├─ retrato.py            o retrato da base, lido pelo servidor MCP como "sistema"
+   └─ avaliacao_automatica.py  a nota ao fim de cada relatório e as métricas dela
 
 scripts/                    avaliar.py, gerar_entrega.py
 ```

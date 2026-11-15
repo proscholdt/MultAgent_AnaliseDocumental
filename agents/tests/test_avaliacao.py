@@ -72,7 +72,7 @@ def test_answers_need_the_expected_content_and_the_expected_source():
 
 
 def snapshot(light_margin, alerts):
-    return {"documentos": [{"arquivo": "Light.pdf", "alertas": alerts, "extracao": {"indicadores": {
+    return {"documentos": [{"doc_id": "a87339d097478f1c", "arquivo": "Light.pdf", "alertas": alerts, "extracao": {"indicadores": {
         "receita_liquida": informed(13253286.0, "R$ mil", 20, previous=14897920.0),
         "margem_ebitda": light_margin}}}],
         "respostas": [{"pergunta_id": "p3", "resposta": "A Light, com 3,32x.", "fontes": ["Light.pdf, p. 10"]}],
@@ -80,6 +80,7 @@ def snapshot(light_margin, alerts):
 
 
 KEY = {"documentos": {"Light.pdf": {
+    "doc_id": "a87339d097478f1c",
     "indicadores": {
         "receita_liquida": {"status": "informado", "valor": 13253286, "unidade": "R$ mil", "paginas": [20],
                             "comparavel": 14897920},
@@ -145,3 +146,22 @@ def test_the_shipped_answer_key_is_complete_and_consistent():
     assert millet["ebitda"]["calculado"] == 25298 + 18248 and millet["capex"]["calculado"] == 6263 + 11469
     assert round(millet["divida_liquida"]["valor"] / millet["ebitda"]["calculado"], 2) == millet["alavancagem"]["calculado"]
     assert key["documentos"]["Light.pdf"]["indicadores"]["capex"]["calculado"] == 307759 + 1162533
+
+
+def test_only_documents_with_a_key_are_evaluated_and_questions_need_exactly_the_key_documents():
+    """O documento é reconhecido pelo conteúdo (doc_id), não pelo nome; sem gabarito, fica de fora."""
+    other = {"doc_id": "ffffffffffffffff", "arquivo": "Light.pdf", "alertas": [], "extracao": {"indicadores": {}}}
+    only_other = {**snapshot(not_found(), []), "documentos": [other]}
+    report = evaluate(KEY, only_other)
+    assert report["avaliados"] == [] and report["sem_gabarito"] == ["Light.pdf"]  # mesmo nome, outro PDF
+    assert report["resumo"]["status_certo"]["de"] == 0 and report["perguntas"] == {}
+
+    mixed = snapshot(not_found(), [])
+    mixed["documentos"].append({**other, "arquivo": "Outra.pdf"})
+    report = evaluate(KEY, mixed)
+    assert report["avaliados"] == ["Light.pdf"] and report["sem_gabarito"] == ["Outra.pdf"]
+    assert report["perguntas"] == {} and "não são exatamente" in report["perguntas_nao_avaliadas"]
+
+    company = evaluate(KEY, snapshot(not_found(), []), {"a87339d097478f1c"})  # relatório de uma empresa
+    assert company["avaliados"] == ["Light.pdf"] and company["perguntas"] == {}
+    assert "uma empresa" in company["perguntas_nao_avaliadas"]

@@ -105,11 +105,32 @@ def _rate(rows: list[dict[str, Any]], key: str) -> dict[str, Any]:
     return {"acertos": hits, "de": len(applicable), "taxa": round(hits / len(applicable), 3) if applicable else None}
 
 
-def evaluate(gabarito: dict[str, Any], snapshot: dict[str, Any]) -> dict[str, Any]:
-    documents = {doc["arquivo"]: doc for doc in snapshot["documentos"]}
+def coverage(gabarito: dict[str, Any], snapshot: dict[str, Any], doc_ids: set[str] | None = None) -> dict[str, Any]:
+    """Quais documentos do retrato têm gabarito. O documento é reconhecido pelo doc_id (o hash do
+    PDF), não pelo nome: outro PDF chamado Brasal.pdf não é a Brasal do gabarito.
+
+    `doc_ids` limita a avaliação (o relatório de uma empresa só avalia a empresa dele). As perguntas
+    comparam as empresas, então só são avaliadas quando o retrato tem exatamente os documentos do
+    gabarito, nem mais nem menos: com outra empresa junto, a resposta certa pode ser outra."""
+    by_id = {expected["doc_id"]: name for name, expected in gabarito["documentos"].items() if expected.get("doc_id")}
+    present = [doc for doc in snapshot["documentos"] if doc_ids is None or doc["doc_id"] in doc_ids]
+    with_key = {by_id[doc["doc_id"]]: doc for doc in present if doc["doc_id"] in by_id}
+    without = [doc["arquivo"] for doc in present if doc["doc_id"] not in by_id]
+    all_snapshot = {doc["doc_id"] for doc in snapshot["documentos"]}
+    questions = doc_ids is None and all_snapshot == set(by_id)
+    reason = None if questions else ("relatório de uma empresa: as perguntas comparam as empresas" if doc_ids is not None
+                                     else "os documentos não são exatamente os do gabarito")
+    return {"documentos": with_key, "sem_gabarito": without, "perguntas": questions, "perguntas_motivo": reason}
+
+
+def evaluate(gabarito: dict[str, Any], snapshot: dict[str, Any], doc_ids: set[str] | None = None) -> dict[str, Any]:
+    scope = coverage(gabarito, snapshot, doc_ids)
+    documents = scope["documentos"]
     rows, automatic, source = [], [], []
     for file_name, expected_doc in gabarito["documentos"].items():
-        doc = documents.get(file_name) or {}
+        if file_name not in documents:
+            continue  # documento do gabarito que não está nesta base (ou fora deste relatório)
+        doc = documents[file_name]
         indicators = ((doc.get("extracao") or {}).get("indicadores")) or {}
         for campo, expected in expected_doc["indicadores"].items():
             rows.append({"arquivo": file_name, "campo": campo, **check_field(expected, indicators.get(campo))})
@@ -123,10 +144,13 @@ def evaluate(gabarito: dict[str, Any], snapshot: dict[str, Any]) -> dict[str, An
 
     answers = {answer["pergunta_id"]: answer for answer in snapshot.get("respostas", [])}
     questions = {question_id: check_answer(expected, answers.get(question_id))
-                 for question_id, expected in gabarito["perguntas"].items() if not question_id.startswith("_")}
+                 for question_id, expected in gabarito["perguntas"].items()
+                 if not question_id.startswith("_") and scope["perguntas"]}
     not_informed = [row for row in rows if row["status_esperado"] == "nao_encontrado"]
     invented = [row for row in not_informed if row["inventado"]]
     return {
+        "avaliados": sorted(documents), "sem_gabarito": scope["sem_gabarito"],
+        "perguntas_nao_avaliadas": scope["perguntas_motivo"],
         "indicadores": rows,
         "resumo": {
             "status_certo": _rate(rows, "status_certo"),

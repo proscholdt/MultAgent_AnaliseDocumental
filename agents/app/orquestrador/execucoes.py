@@ -52,6 +52,7 @@ class Run:
     pendencias: list[dict[str, Any]] = field(default_factory=list)
     uso: dict[str, Any] = field(default_factory=dict)
     erro: str | None = None
+    avaliacao: dict[str, Any] | None = None  # relatório completo: a nota contra o gabarito
 
 
 class Trace:

@@ -7,6 +7,7 @@ ele, o pedido continua a conversa: o orquestrador lembra os turnos anteriores, e
 especialista lembra o que fez nela.
 """
 import asyncio
+from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
 from dataclasses import asdict
 from typing import Annotated, Any
@@ -19,6 +20,8 @@ from pydantic import BaseModel, Field
 
 from app import telemetria
 from app.config import Settings, get_settings
+from app.ferramentas.avaliacao_automatica import avaliar as avaliar_relatorio
+from app.ferramentas.avaliacao_automatica import zerar_metricas as zerar_metricas_avaliacao
 from app.nucleo.agentes import ORCHESTRATOR, Registry
 from app.nucleo.executar import Engine, default_engine, instrumentar_agentes
 from app.nucleo.tokens import Identity
@@ -77,10 +80,12 @@ def turn_view(run: Run) -> dict[str, Any]:
 def create_app(settings: Settings | None = None, engine: Engine | None = None,
                specialists_transport: httpx.AsyncBaseTransport | None = None,
                indexer_transport: httpx.AsyncBaseTransport | None = None,
-               checkpointer: BaseCheckpointSaver | None = None) -> FastAPI:
+               checkpointer: BaseCheckpointSaver | None = None,
+               avaliar: Callable[[Settings, Identity, str, str | None], Awaitable[dict | None]] | None = avaliar_relatorio,
+               ) -> FastAPI:
     settings = settings or get_settings()
     deps = Deps(settings=settings, registry=Registry(settings.agentes_dir), engine=engine or default_engine(settings),
-                runs=Runs(settings.data_dir), checkpointer=checkpointer,
+                runs=Runs(settings.data_dir), checkpointer=checkpointer, avaliar=avaliar,
                 specialists=lambda identity: SpecialistClient(settings, identity, specialists_transport))
     conversations = Conversations(settings.data_dir)
     users = Users(settings, indexer_transport)
@@ -112,6 +117,7 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
         instrumentar_agentes(settings)
         agentes = deps.registry.current().agents
         zerar_metricas(sorted(agentes), sorted({spec.modelo for spec in agentes.values()}))
+        zerar_metricas_avaliacao()
     telemetria.instrumentar(app)
 
     async def caller(credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)]) -> tuple[str, str]:

@@ -24,7 +24,7 @@ import json
 import operator
 import time
 import unicodedata
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Annotated, Any, Literal, TypedDict
@@ -126,6 +126,8 @@ class Deps:
     runs: Runs
     specialists: Callable[[Identity], SpecialistClient]
     checkpointer: BaseCheckpointSaver | None = None
+    # A nota ao fim de um relatório (app/ferramentas/avaliacao_automatica.py). Os testes trocam.
+    avaliar: Callable[[Settings, Identity, str, str | None], Awaitable[dict | None]] | None = None
 
 
 class RunFailed(Exception):
@@ -436,6 +438,17 @@ class Execution:
         return graph.compile(checkpointer=self.deps.checkpointer)
 
 
+def _resumo_da_nota(nota: dict) -> dict:
+    """O passo "avaliacao" do trace: o essencial, sem a tabela inteira."""
+    if not nota.get("avaliado"):
+        return {"avaliado": False, "motivo": nota.get("motivo"), "sem_gabarito": nota.get("sem_gabarito")}
+    resumo = nota["resumo"]
+    return {"avaliado": True, "documentos": nota["avaliados"], "sem_gabarito": nota["sem_gabarito"],
+            "status_certo": f"{resumo['status_certo']['acertos']}/{resumo['status_certo']['de']}",
+            "invencoes": f"{resumo['invencao']['inventados']}/{resumo['invencao']['de']}",
+            "perguntas": f"{resumo['perguntas_certas']['acertos']}/{resumo['perguntas_certas']['de']}"}
+
+
 async def execute(run: Run, user_token: str, deps: Deps) -> Run:
     with telemetria.tracer().start_as_current_span(
             "execucao", attributes={"execucao.id": run.id, "conversa.id": run.conversa_id or ""}) as span:
@@ -489,6 +502,10 @@ async def _execute(run: Run, user_token: str, deps: Deps) -> Run:
         if final.get("falha"):
             raise RunFailed(final["falha"])
         run.estado = "completa" if final.get("completo") else "incompleta"
+        if run.estado == "completa" and run.tipo in REPORT_TYPES and deps.avaliar:
+            run.avaliacao = await deps.avaliar(settings, execution.identity, run.tipo, run.doc_id)
+            if run.avaliacao is not None:
+                trace.add("avaliacao", **_resumo_da_nota(run.avaliacao))
         if not final.get("completo"):
             run.erro = final.get("parada") or f"terminou com pendências depois de {run.rodadas} rodada(s) do orquestrador"
     except RunFailed as error:

@@ -281,7 +281,7 @@ def checkpointer() -> InMemorySaver:
 def api(settings, engine, specialists_app, checkpointer):
     """A API do orquestrador ligada aos especialistas em memória."""
     return create_app(settings, engine, specialists_transport=httpx.ASGITransport(app=specialists_app),
-                      indexer_transport=httpx.MockTransport(fake_indexer), checkpointer=checkpointer)
+                      indexer_transport=httpx.MockTransport(fake_indexer), checkpointer=checkpointer, avaliar=None)
 
 
 @pytest.fixture

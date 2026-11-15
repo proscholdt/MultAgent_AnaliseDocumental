@@ -504,3 +504,42 @@ async def test_a_company_report_without_the_company_goes_back_to_the_orchestrato
                            headers=auth())).json()
     assert (run["estado"], run["tipo"]) == ("completa", "relatorio_empresa"), run["erro"]
     assert "o doc_id em `empresa`" in model.first_input("orquestrador", 1)
+
+
+async def test_a_finished_report_gets_its_grade_and_a_question_does_not(settings, engine, specialists_app, checkpointer,
+                                                                        world, model, agents_dir):
+    """Ao fim de um relatório completo, a nota contra o gabarito fica na execução e no trace."""
+    import httpx
+
+    from app.orquestrador.api import create_app
+    from tests.conftest import fake_indexer
+
+    graded: list[tuple[str, str | None]] = []
+
+    async def grade(_settings, identity, tipo, doc_id):
+        graded.append((tipo, doc_id))
+        return {"avaliado": True, "avaliados": ["Brasal.pdf"], "sem_gabarito": ["Outra.pdf"],
+                "perguntas_nao_avaliadas": None,
+                "resumo": {"status_certo": {"acertos": 8, "de": 8}, "invencao": {"inventados": 0, "de": 5},
+                           "perguntas_certas": {"acertos": 5, "de": 5}}}
+
+    api = create_app(settings, engine, specialists_transport=httpx.ASGITransport(app=specialists_app),
+                     indexer_transport=httpx.MockTransport(fake_indexer), checkpointer=checkpointer, avaliar=grade)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=api), base_url="http://agentes.teste") as http:
+        working_team(world, model)
+        model.scripts["orquestrador"] = [[decide(delegation("extrator", "Extraia.", DOC))],
+                                         [decide(delegation("redator", "Monte o relatório."))], [decide(terminado=True)]]
+        run = (await http.post("/api/relatorios", json={"aguardar": True}, headers=auth())).json()
+        assert run["estado"] == "completa" and graded == [("relatorio", None)]
+        assert run["avaliacao"]["avaliado"] and run["avaliacao"]["sem_gabarito"] == ["Outra.pdf"]
+        step = next(s for s in run["passos"] if s["tipo"] == "avaliacao")
+        assert (step["status_certo"], step["invencoes"], step["sem_gabarito"]) == ("8/8", "0/5", ["Outra.pdf"])
+
+        asked = answering_researcher(world, agents_dir, "A maior é a Brasal.")
+        model.scripts["pesquisador"] = [[call("salvar_resposta", pergunta_id="livre", pergunta="Qual a maior margem?",
+                                              resposta="A maior é a Brasal.")], [say("Resposta gravada.")]]
+        model.scripts["orquestrador"] = [[decide(delegation("pesquisador", "Responda."))], [decide(terminado=True)]]
+        question = (await http.post("/api/perguntas", json={"pergunta": "Qual a maior margem?", "aguardar": True},
+                                    headers=auth())).json()
+        assert question["estado"] == "completa" and asked and graded == [("relatorio", None)]  # pergunta não tem nota
+        assert question["avaliacao"] is None

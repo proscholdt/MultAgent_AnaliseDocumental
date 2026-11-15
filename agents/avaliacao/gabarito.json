@@ -1,7 +1,9 @@
 {
   "_como_foi_feito": "Valores conferidos à mão na camada de texto dos PDFs (pypdfium2), sem passar pelo índice nem pelos agentes. 'valor' é o número como a empresa escreve, na 'unidade' dela; a comparação é feita em reais, com tolerância de 0,1%. 'paginas' lista as páginas do PDF em que o valor pode ser lido (a mesma linha aparece na demonstração do resultado e na do resultado abrangente, por exemplo). 'calculado' é o que as fórmulas fixas do servidor devem dar a partir dos valores certos; só entra onde a definição não deixa dúvida.",
+  "_identificacao": "Cada documento é reconhecido pelo doc_id: os 16 primeiros caracteres do SHA-256 do PDF, o mesmo que o indexador usa. O mesmo PDF com outro nome é avaliado; outro PDF com o mesmo nome, não.",
   "documentos": {
     "Brasal.pdf": {
+      "doc_id": "5905cd3412e40fea",
       "empresa": "Brasal",
       "periodo": "2022",
       "indicadores": {
@@ -72,6 +74,7 @@
       ]
     },
     "Millet.pdf": {
+      "doc_id": "42589e4b7ad3999b",
       "empresa": "Millet",
       "periodo": "2022",
       "indicadores": {
@@ -153,6 +156,7 @@
       ]
     },
     "Light.pdf": {
+      "doc_id": "a87339d097478f1c",
       "empresa": "Light",
       "periodo": "2022",
       "indicadores": {

@@ -325,7 +325,7 @@
     {
       "id": 7,
       "type": "row",
-      "title": "Custo e tokens",
+      "title": "Qualidade contra o gabarito",
       "collapsed": false,
       "gridPos": {
         "x": 0,
@@ -337,6 +337,431 @@
     },
     {
       "id": 8,
+      "type": "stat",
+      "title": "Status certo",
+      "description": "Do último relatório consolidado, contra o gabarito conferido à mão. Só documentos com gabarito (reconhecidos pelo conteúdo) entram na conta; sem relatório no período, fica sem nota.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(agentes_avaliacao_taxa{medida=\"status_certo\",tipo=\"relatorio\"}[$__range])",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 9,
+      "type": "stat",
+      "title": "Valor informado certo",
+      "description": "Do último relatório consolidado, contra o gabarito conferido à mão. Só documentos com gabarito (reconhecidos pelo conteúdo) entram na conta; sem relatório no período, fica sem nota.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 5,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(agentes_avaliacao_taxa{medida=\"valor_informado_certo\",tipo=\"relatorio\"}[$__range])",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "Calculado certo",
+      "description": "Do último relatório consolidado, contra o gabarito conferido à mão. Só documentos com gabarito (reconhecidos pelo conteúdo) entram na conta; sem relatório no período, fica sem nota.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 5,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(agentes_avaliacao_taxa{medida=\"valor_calculado_certo\",tipo=\"relatorio\"}[$__range])",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "Valores inventados",
+      "description": "Indicadores que a empresa NÃO informa e que foram gravados como informados. Tem de ser 0.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 5,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(agentes_avaliacao_acertos{medida=\"invencao\",tipo=\"relatorio\"}[$__range])",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "green"
+              },
+              {
+                "value": 1,
+                "color": "red"
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 12,
+      "type": "stat",
+      "title": "Perguntas certas",
+      "description": "Do último relatório consolidado, contra o gabarito conferido à mão. Só documentos com gabarito (reconhecidos pelo conteúdo) entram na conta; sem relatório no período, fica sem nota.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 5,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(agentes_avaliacao_taxa{medida=\"perguntas_certas\",tipo=\"relatorio\"}[$__range])",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 13,
+      "type": "stat",
+      "title": "Inconsistências achadas",
+      "description": "Das inconsistências que os próprios PDFs têm, quantas o validador registrou.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 5,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(agentes_avaliacao_taxa{medida=\"inconsistencias_na_fonte\",tipo=\"relatorio\"}[$__range])",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Nota ao longo do tempo",
+      "description": "Cada degrau é um relatório avaliado. relatorio = consolidado; relatorio_empresa = uma empresa.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(agentes_avaliacao_taxa{medida!=\"invencao\"}[1h])",
+          "legendFormat": "{{medida}} · {{tipo}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "stacking": {
+              "mode": "none"
+            },
+            "drawStyle": "line",
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "Custo dos agentes por hora",
+      "description": "Para comparar com a nota: o que cada mudança de modelo ou de prompt custou e rendeu.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 9,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(agentes_custo_usd_total[1h]))",
+          "legendFormat": "custo",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "prefix:US$ ",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "stacking": {
+              "mode": "none"
+            },
+            "drawStyle": "line",
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 16,
+      "type": "row",
+      "title": "Custo e tokens",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 17,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 17,
       "type": "bargauge",
       "title": "Custo por agente",
       "description": "",
@@ -346,7 +771,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 5,
+        "y": 18,
         "w": 8,
         "h": 8
       },
@@ -384,7 +809,7 @@
       }
     },
     {
-      "id": 9,
+      "id": 18,
       "type": "bargauge",
       "title": "Tokens por agente",
       "description": "",
@@ -394,7 +819,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 5,
+        "y": 18,
         "w": 8,
         "h": 8
       },
@@ -432,7 +857,7 @@
       }
     },
     {
-      "id": 10,
+      "id": 19,
       "type": "bargauge",
       "title": "Tokens por tipo",
       "description": "entrada (total, já com o cache), cache (a parte da entrada que saiu mais barata) e saída (inclui o raciocínio).",
@@ -442,7 +867,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 5,
+        "y": 18,
         "w": 8,
         "h": 8
       },
@@ -480,7 +905,7 @@
       }
     },
     {
-      "id": 11,
+      "id": 20,
       "type": "timeseries",
       "title": "Tokens por minuto, por agente",
       "description": "",
@@ -490,7 +915,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 13,
+        "y": 26,
         "w": 12,
         "h": 8
       },
@@ -536,7 +961,7 @@
       }
     },
     {
-      "id": 12,
+      "id": 21,
       "type": "timeseries",
       "title": "Custo acumulado",
       "description": "Custo de cada agente desde o início do período.",
@@ -546,7 +971,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 13,
+        "y": 26,
         "w": 12,
         "h": 8
       },
@@ -592,20 +1017,20 @@
       }
     },
     {
-      "id": 13,
+      "id": 22,
       "type": "row",
       "title": "Ferramentas e delegações",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 21,
+        "y": 34,
         "w": 24,
         "h": 1
       },
       "panels": []
     },
     {
-      "id": 14,
+      "id": 23,
       "type": "timeseries",
       "title": "Chamadas de tool por agente",
       "description": "Por minuto. Contadas no servidor MCP, em tempo real.",
@@ -615,7 +1040,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 22,
+        "y": 35,
         "w": 12,
         "h": 8
       },
@@ -661,7 +1086,7 @@
       }
     },
     {
-      "id": 15,
+      "id": 24,
       "type": "timeseries",
       "title": "Resultado das chamadas",
       "description": "Por minuto. ok, rejeitada (portão), recusada (política), invalida, erro. Linhas separadas, sem empilhar: cada linha é o valor do próprio resultado.",
@@ -671,7 +1096,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 22,
+        "y": 35,
         "w": 12,
         "h": 8
       },
@@ -717,7 +1142,7 @@
       }
     },
     {
-      "id": 16,
+      "id": 25,
       "type": "bargauge",
       "title": "Tools mais chamadas",
       "description": "",
@@ -727,7 +1152,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 30,
+        "y": 43,
         "w": 8,
         "h": 9
       },
@@ -765,7 +1190,7 @@
       }
     },
     {
-      "id": 17,
+      "id": 26,
       "type": "bargauge",
       "title": "Portões que mais barram",
       "description": "",
@@ -775,7 +1200,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 30,
+        "y": 43,
         "w": 8,
         "h": 9
       },
@@ -813,7 +1238,7 @@
       }
     },
     {
-      "id": 18,
+      "id": 27,
       "type": "bargauge",
       "title": "Delegações por especialista",
       "description": "",
@@ -823,7 +1248,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 30,
+        "y": 43,
         "w": 8,
         "h": 9
       },
@@ -861,7 +1286,7 @@
       }
     },
     {
-      "id": 19,
+      "id": 28,
       "type": "timeseries",
       "title": "Duração de cada especialista (p95)",
       "description": "",
@@ -871,7 +1296,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 39,
+        "y": 52,
         "w": 12,
         "h": 8
       },
@@ -917,7 +1342,7 @@
       }
     },
     {
-      "id": 20,
+      "id": 29,
       "type": "timeseries",
       "title": "Duração das execuções (p50 e p95)",
       "description": "",
@@ -927,7 +1352,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 39,
+        "y": 52,
         "w": 12,
         "h": 8
       },
@@ -982,20 +1407,20 @@
       }
     },
     {
-      "id": 21,
+      "id": 30,
       "type": "row",
       "title": "Execuções",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 47,
+        "y": 60,
         "w": 24,
         "h": 1
       },
       "panels": []
     },
     {
-      "id": 22,
+      "id": 31,
       "type": "table",
       "title": "Execuções recentes",
       "description": "Cada linha é uma execução inteira: o orquestrador, cada onda, cada especialista, cada chamada ao modelo e cada tool no MCP.",
@@ -1005,7 +1430,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 48,
+        "y": 61,
         "w": 24,
         "h": 9
       },
@@ -1029,7 +1454,7 @@
       "options": {}
     },
     {
-      "id": 23,
+      "id": 32,
       "type": "logs",
       "title": "Passos das execuções",
       "description": "Os passos do trace dos agentes: decisões, delegações, relatos, conferência.",
@@ -1039,7 +1464,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 57,
+        "y": 70,
         "w": 24,
         "h": 11
       },
@@ -1068,7 +1493,7 @@
       }
     },
     {
-      "id": 24,
+      "id": 33,
       "type": "logs",
       "title": "Raciocínio dos modelos",
       "description": "",
@@ -1078,7 +1503,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 68,
+        "y": 81,
         "w": 24,
         "h": 9
       },
@@ -1107,7 +1532,7 @@
       }
     },
     {
-      "id": 25,
+      "id": 34,
       "type": "logs",
       "title": "Chamadas de tool no servidor MCP",
       "description": "",
@@ -1117,7 +1542,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 77,
+        "y": 90,
         "w": 24,
         "h": 11
       },

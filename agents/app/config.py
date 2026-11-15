@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     # O texto das mensagens (prompts, respostas, resultado das tools) nos traces do Tempo, como no
     # LangSmith. Leva trechos dos documentos para a observabilidade.
     traces_com_conteudo: bool = False
+    # Ao fim de cada relatório, a nota contra o gabarito (só para os documentos que têm gabarito).
+    avaliar_relatorios: bool = True
+    gabarito_path: Path = Path("avaliacao/gabarito.json")
 
     # Servidor MCP: a única porta dos agentes para tools e RAG. O segredo é o mesmo do servidor.
     mcp_url: str = "http://localhost:8100/mcp"
@@ -149,6 +152,11 @@ class _Tempos(_Bloco):
     especialista_segundos: float | None = None
 
 
+class _Avaliacao(_Bloco):
+    ao_fim_do_relatorio: bool | None = None
+    gabarito: Path | None = None
+
+
 class Ajustes(_Bloco):
     """O formato do config/ajustes.yaml."""
 
@@ -158,6 +166,7 @@ class Ajustes(_Bloco):
     execucao: _Execucao | None = None
     memoria_max_tokens: int | None = None
     traces_com_conteudo: bool | None = None
+    avaliacao: _Avaliacao | None = None
     tempo_limite: _Tempos | None = None
     min_minutos_token: int | None = None
 
@@ -178,6 +187,11 @@ class Ajustes(_Bloco):
             for key, name in fields.items():
                 if block is not None and getattr(block, key) is not None:
                     out[name] = getattr(block, key)
+        if self.avaliacao is not None:
+            if self.avaliacao.ao_fim_do_relatorio is not None:
+                out["avaliar_relatorios"] = self.avaliacao.ao_fim_do_relatorio
+            if self.avaliacao.gabarito is not None:
+                out["gabarito_path"] = self.avaliacao.gabarito
         for name in ("memoria_max_tokens", "min_minutos_token", "traces_com_conteudo"):
             if getattr(self, name) is not None:
                 out[name] = getattr(self, name)

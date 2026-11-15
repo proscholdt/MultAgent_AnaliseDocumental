@@ -15,5 +15,6 @@ COPY app ./app
 # editar um agente valha na hora, sem reconstruir.
 COPY agentes ./agentes
 COPY config ./config
+COPY avaliacao/gabarito.json ./avaliacao/gabarito.json
 EXPOSE 8200 8201
 CMD ["uvicorn", "app.orquestrador.api:app_factory", "--factory", "--host", "0.0.0.0", "--port", "8200"]

@@ -42,6 +42,8 @@ a linha abre o trace, e o trace mostra as linhas dele.
 | `agentes_execucoes_total`, `agentes_execucao_duracao_seconds` | `tipo`, `estado` |
 | `agentes_tokens_total`, `agentes_custo_usd_total` | `agente`, `modelo`, `tipo` (entrada, cache, saída) |
 | `agentes_delegacoes_total`, `agentes_especialista_duracao_seconds` | `agente`, `estado` |
+| `agentes_avaliacao_taxa`, `agentes_avaliacao_acertos`, `agentes_avaliacao_de` | `medida` (status_certo, invencao, perguntas_certas...), `tipo` (relatorio, relatorio_empresa): a nota do último relatório contra o gabarito |
+| `agentes_avaliacoes_total` | `resultado` (avaliada, sem_gabarito, erro) |
 | `mcp_tool_chamadas_total`, `mcp_tool_duracao_seconds` | `agente`, `tool`, `resultado` (ok, rejeitada, recusada, invalida, erro) |
 | `indexador_mensagens_total`, `indexador_etapa_duracao_seconds` | `etapa` (parse, index), `resultado` (ok, retry, dlq) |
 | `indexador_paginas_total`, `indexador_chunks_total`, `indexador_custo_usd_total` | `parser` |
@@ -52,7 +54,7 @@ a linha abre o trace, e o trace mostra as linhas dele.
 | Painel | Mostra |
 |---|---|
 | **Visão geral** (página inicial) | requisições, erros e latência por serviço, mapa dos serviços, execuções e custo dos agentes, erros nos logs |
-| **Agentes** | custo e tokens por agente, chamadas de tool e o que os portões barraram, delegações, duração, execuções recentes (traces), os passos e o raciocínio de cada execução |
+| **Agentes** | a nota do último relatório contra o gabarito (status, valores, invenções, perguntas, inconsistências) ao longo do tempo e ao lado do custo, custo e tokens por agente, chamadas de tool e o que os portões barraram, delegações, duração, execuções recentes (traces), os passos e o raciocínio de cada execução |
 | **Indexador** | mensagens por etapa, retries e DLQ, duração do parse e da indexação, páginas, chunks, custo, documentos processados (traces) |
 
 Para investigar, a aba **Explore** do Grafana consulta as três fontes direto (TraceQL no Tempo,
