@@ -1,4 +1,4 @@
-from app import storage
+from app.infra import arquivos as storage
 from app.schemas import IndexRequested, ParseRequested
 from tests.conftest import register_and_login
 
@@ -149,7 +149,8 @@ async def test_retry_only_for_failed_jobs_and_routes_by_stage(ctx, pdf_bytes):
     assert not_failed.status_code == 409
 
     # Falha na indexação com o parse já em cache: volta direto para a fila de indexação.
-    from app import db, repo
+    from app.infra import banco as db
+    from app.infra import repo
 
     parsed_file = storage.parsed_path(user_id, body["doc_id"], ctx.settings.parser)
     parsed_file.parent.mkdir(parents=True)

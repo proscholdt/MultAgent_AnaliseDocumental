@@ -1,6 +1,6 @@
 """parse-worker: consome indexer.parse, lê o PDF com o parser escolhido e publica em indexer.index.
 
-O parser vem de PARSER (ver app/pipeline/parsing.py): "docling", local e pesado, ou "azure",
+O parser vem de `parser` no config/ajustes.yaml (ver app/leitura/parsing.py): "docling", local e pesado, ou "azure",
 que chama o Azure AI Document Intelligence. Escala separado do index-worker:
     docker compose up --scale parse-worker=2
 """
@@ -10,10 +10,14 @@ import shutil
 import time
 from pathlib import Path
 
-from app import db, repo, storage, telemetria
+from app import telemetria
 from app.config import Settings, get_settings
-from app.db import session_scope
-from app.messaging import (
+from app.indexacao.indexar import load_parsed
+from app.infra import arquivos as storage
+from app.infra import banco as db
+from app.infra import repo
+from app.infra.banco import session_scope
+from app.infra.kafka import (
     KafkaPublisher,
     PermanentError,
     Publisher,
@@ -21,13 +25,7 @@ from app.messaging import (
     wait_for_kafka,
     zerar_metricas,
 )
-from app.pipeline.indexing import load_parsed
-from app.pipeline.parsing import (
-    DocumentParser,
-    ParserError,
-    build_parser,
-    unconfirmed_table_numbers,
-)
+from app.leitura.parsing import DocumentParser, ParserError, build_parser, unconfirmed_table_numbers
 from app.schemas import IndexRequested, ParsedDocument, ParseRequested
 from app.workers.common import make_callbacks, setup_logging
 

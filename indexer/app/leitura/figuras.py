@@ -34,7 +34,7 @@ from typing import Literal
 from pydantic import BaseModel, ValidationError
 
 from app.config import Settings
-from app.pipeline.llm import LLMClient
+from app.indexacao.llm import LLMClient
 from app.schemas import OcrWord, ParsedDocument, ParsedItem
 
 log = logging.getLogger(__name__)

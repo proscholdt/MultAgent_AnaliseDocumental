@@ -3,14 +3,14 @@ import json
 
 import pytest
 
-from app.pipeline.figure_ocr import read_figures
-from app.pipeline.figures import (
+from app.leitura.figuras import (
     FigureTranscription,
     FigureValue,
     number_key,
     transcribe_figures,
     verify_transcription,
 )
+from app.leitura.ocr import read_figures
 from app.schemas import OcrWord, ParsedDocument, ParsedItem, ParsedPage
 
 

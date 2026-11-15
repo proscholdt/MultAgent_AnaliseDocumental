@@ -1,6 +1,6 @@
 import pytest
 
-from app.pipeline.metadata import (
+from app.indexacao.metadados import (
     DocMetaLLM,
     FieldEvidence,
     detect_declared_unit,

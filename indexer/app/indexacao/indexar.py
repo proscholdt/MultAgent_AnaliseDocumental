@@ -13,12 +13,12 @@ from pathlib import Path
 from typing import Any
 
 from app.config import PIPELINE_VERSION, Settings
-from app.pipeline.chunker import Chunk, build_context_header, chunk_document
-from app.pipeline.embedder import DenseEmbedder, SparseEmbedder
-from app.pipeline.figures import transcribe_figures
-from app.pipeline.llm import LLMClient
-from app.pipeline.metadata import DocMetadata, DocMetaLLM, llm_metadata, merge_metadata
-from app.pipeline.vector_store import VectorStore
+from app.indexacao.embeddings import DenseEmbedder, SparseEmbedder
+from app.indexacao.llm import LLMClient
+from app.indexacao.metadados import DocMetadata, DocMetaLLM, llm_metadata, merge_metadata
+from app.indexacao.qdrant import VectorStore
+from app.indexacao.trechos import Chunk, build_context_header, chunk_document
+from app.leitura.figuras import transcribe_figures
 from app.schemas import ParsedDocument
 
 StageCallback = Callable[[str], Awaitable[None]]

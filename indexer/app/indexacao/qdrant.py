@@ -10,7 +10,7 @@ from typing import Any
 from qdrant_client import AsyncQdrantClient, models
 
 from app.config import Settings
-from app.pipeline.embedder import SparseVec
+from app.indexacao.embeddings import SparseVec
 
 log = logging.getLogger(__name__)
 

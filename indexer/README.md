@@ -67,11 +67,49 @@ fica no código. Erro no arquivo aparece em `GET /health` (`components.ajustes`)
 | `GET /api/jobs/{id}`, `POST /api/jobs/{id}/retry` | Progresso, tempos, custo, retry |
 | `GET /api/documents/{id}/chunks`, `POST /api/search` | Chunks e busca |
 
-## Estrutura
+## Mapa do código
 
 ```
-app/api/        rotas (auth, documents, jobs, search)
-app/pipeline/   parsers, figuras, metadados, chunker, embedder, vector_store
-app/workers/    parse_worker, index_worker
-scripts/        smoke.py
+config/ajustes.yaml      parser, chunks, preços, limites (relido sem reiniciar)
+
+app/
+├─ main.py               a API (:8000) e o /health
+├─ config.py             .env (chaves) + config/ajustes.yaml
+├─ schemas.py            o formato das rotas e das mensagens do Kafka
+├─ telemetria.py
+│
+├─ api/                  AS ROTAS
+│  ├─ auth.py            cadastro e login (JWT)
+│  ├─ documents.py       envio, lista, remoção e reindexação
+│  ├─ jobs.py            progresso, tempos, custo, retry
+│  ├─ search.py          busca híbrida
+│  └─ deps.py            o usuário de cada pedido
+│
+├─ workers/              OS CONSUMIDORES DO KAFKA
+│  ├─ parse_worker.py    indexer.parse → lê o PDF → indexer.index
+│  └─ index_worker.py    indexer.index → trechos, embeddings, Qdrant
+│
+├─ leitura/              LER O PDF
+│  ├─ parsing.py         a escolha do parser e o formato comum
+│  ├─ azure.py           Azure Document Intelligence
+│  ├─ docling.py         Docling, na máquina
+│  ├─ figuras.py         recortes de gráfico e a leitura deles
+│  └─ ocr.py             OCR local dos gráficos (RapidOCR)
+│
+├─ indexacao/            DO DOCUMENTO LIDO AO ÍNDICE
+│  ├─ indexar.py         o passo a passo da indexação
+│  ├─ trechos.py         cortar em trechos com página e seção
+│  ├─ metadados.py       empresa, período e tipo do documento
+│  ├─ llm.py             chamadas à OpenAI (gráficos e metadados)
+│  ├─ embeddings.py      vetores densos e esparsos (BM25)
+│  └─ qdrant.py          gravar, buscar e apagar, sempre filtrando pelo usuário
+│
+└─ infra/                INFRAESTRUTURA
+   ├─ banco.py, modelos.py, repo.py    Postgres: usuários, documentos, jobs
+   ├─ arquivos.py        a pasta de cada usuário e documento
+   ├─ kafka.py           publicar, consumir, retry e DLQ
+   ├─ seguranca.py       senha (Argon2), JWT e o usuário de cada pedido
+   └─ warmup.py          carregar os modelos antes do primeiro PDF
+
+scripts/                 smoke.py, eval_search.py, audit_index.py
 ```

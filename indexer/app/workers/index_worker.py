@@ -6,20 +6,23 @@ import asyncio
 import logging
 from datetime import UTC, datetime
 
-from app import db, repo, storage, telemetria
+from app import telemetria
 from app.config import Settings, get_settings
-from app.db import session_scope
-from app.messaging import KafkaPublisher, Publisher, run_consumer, wait_for_kafka, zerar_metricas
-from app.models import utcnow
-from app.pipeline.embedder import (
+from app.indexacao.embeddings import (
     DenseEmbedder,
     SparseEmbedder,
     build_dense_embedder,
     build_sparse_embedder,
 )
-from app.pipeline.indexing import index_document, load_parsed
-from app.pipeline.llm import LLMClient
-from app.pipeline.vector_store import VectorStore
+from app.indexacao.indexar import index_document, load_parsed
+from app.indexacao.llm import LLMClient
+from app.indexacao.qdrant import VectorStore
+from app.infra import arquivos as storage
+from app.infra import banco as db
+from app.infra import repo
+from app.infra.banco import session_scope
+from app.infra.kafka import KafkaPublisher, Publisher, run_consumer, wait_for_kafka, zerar_metricas
+from app.infra.modelos import utcnow
 from app.schemas import DocumentEvent, IndexRequested, ParseRequested
 from app.workers.common import make_callbacks, setup_logging
 

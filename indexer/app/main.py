@@ -5,11 +5,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy import text
 
-from app import db, telemetria
+from app import telemetria
 from app.api import auth, documents, jobs, search
 from app.config import INSECURE_JWT_SECRET, get_settings
-from app.messaging import KafkaPublisher, wait_for_kafka
-from app.pipeline.vector_store import VectorStore
+from app.indexacao.qdrant import VectorStore
+from app.infra import banco as db
+from app.infra.kafka import KafkaPublisher, wait_for_kafka
 from app.schemas import HealthOut
 
 log = logging.getLogger("api")

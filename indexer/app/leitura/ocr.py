@@ -3,7 +3,7 @@
 Gráfico colado no PDF como imagem não tem os rótulos na camada de texto. O OCR lê o recorte e
 guarda cada trecho com a sua posição em `ParsedItem.ocr_words`. Na indexação isso serve para
 conferir o que o modelo de visão transcreveu: o texto confirma números e rótulos, e a posição
-confirma qual rótulo pertence a qual número (ver figures.py).
+confirma qual rótulo pertence a qual número (ver figuras.py).
 """
 import logging
 from pathlib import Path

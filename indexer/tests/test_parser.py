@@ -14,8 +14,8 @@ from docling_core.types.doc import (
     TextItem,
 )
 
-from app.pipeline import docling_parser as parser
-from app.pipeline import parsing
+from app.leitura import docling as parser
+from app.leitura import parsing
 from app.schemas import ParsedItem, ParsedPage
 
 

@@ -8,11 +8,11 @@ from pydantic import BaseModel
 from pypdf import PdfWriter
 from qdrant_client import AsyncQdrantClient
 
-from app import db
 from app.config import PIPELINE_VERSION, get_settings
+from app.indexacao.embeddings import FakeDenseEmbedder, FakeSparseEmbedder
+from app.indexacao.qdrant import VectorStore
+from app.infra import banco as db
 from app.main import create_app
-from app.pipeline.embedder import FakeDenseEmbedder, FakeSparseEmbedder
-from app.pipeline.vector_store import VectorStore
 from app.schemas import ParsedDocument, ParsedItem, ParsedPage
 
 

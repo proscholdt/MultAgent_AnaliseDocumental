@@ -1,11 +1,13 @@
 """Etapa de indexação de ponta a ponta, com Qdrant em memória e embedders falsos."""
 import pytest
 
-from app import db, repo, storage
-from app.models import Document, Job, User
-from app.pipeline.embedder import FakeDenseEmbedder, FakeSparseEmbedder
-from app.pipeline.indexing import index_document
-from app.pipeline.vector_store import point_id
+from app.indexacao.embeddings import FakeDenseEmbedder, FakeSparseEmbedder
+from app.indexacao.indexar import index_document
+from app.indexacao.qdrant import point_id
+from app.infra import arquivos as storage
+from app.infra import banco as db
+from app.infra import repo
+from app.infra.modelos import Document, Job, User
 from app.schemas import IndexRequested, ParseRequested
 from app.workers.index_worker import handle_index
 from tests.conftest import FakePublisher

@@ -1,11 +1,11 @@
-from app.pipeline.chunker import (
+from app.indexacao.trechos import (
     build_context_header,
     chunk_document,
     count_tokens,
     numbering_depth,
     split_table,
 )
-from app.pipeline.figures import FigureResult
+from app.leitura.figuras import FigureResult
 from app.schemas import ParsedDocument, ParsedItem, ParsedPage
 
 

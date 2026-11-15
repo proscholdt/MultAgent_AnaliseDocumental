@@ -7,23 +7,23 @@ import pytest
 from azure.core.exceptions import ClientAuthenticationError, HttpResponseError
 from pypdf import PdfReader, PdfWriter
 
-from app.pipeline import azure_parser
-from app.pipeline.azure_parser import (
+from app.indexacao.trechos import chunk_document
+from app.leitura import azure as azure_parser
+from app.leitura.azure import (
     AzureParser,
     convert_layout,
     figure_segments,
     pdf_for_upload,
     table_markdown,
 )
-from app.pipeline.chunker import chunk_document
-from app.pipeline.figures import (
+from app.leitura.figuras import (
     FigureResult,
     FigureTranscription,
     FigureValue,
     is_chart_candidate,
     verify_transcription,
 )
-from app.pipeline.parsing import ParserError, build_parser, unconfirmed_table_numbers
+from app.leitura.parsing import ParserError, build_parser, unconfirmed_table_numbers
 from app.schemas import OcrWord, ParsedDocument, ParsedItem, ParsedPage
 
 PAGE = (8.5, 11.0)  # polegadas, como o serviço informa para PDF
@@ -645,15 +645,15 @@ def test_figure_without_service_text_falls_back_to_local_ocr_when_installed(sett
 
     # Imagem leve, sem RapidOCR: a figura fica sem texto de conferência.
     monkeypatch.setattr(azure_parser, "check_system_fonts", lambda: None)
-    monkeypatch.setattr("app.pipeline.figure_ocr.FigureOcr.warmup", no_rapidocr)
+    monkeypatch.setattr("app.leitura.ocr.FigureOcr.warmup", no_rapidocr)
     parsed = document()
     assert AzureParser(settings).read_figures(parsed, tmp_path) == 0
     assert parsed.items[0].ocr_words == [] and parsed.items[2].ocr_words is None
 
     # Imagem com o OCR local: ele lê só a figura que o serviço deixou sem texto.
     read = [OcrWord(text="14,68%", x0=1, y0=1, x1=9, y1=4)]
-    monkeypatch.setattr("app.pipeline.figure_ocr.FigureOcr.warmup", lambda self: None)
-    monkeypatch.setattr("app.pipeline.figure_ocr.FigureOcr.read", lambda self, path: read)
+    monkeypatch.setattr("app.leitura.ocr.FigureOcr.warmup", lambda self: None)
+    monkeypatch.setattr("app.leitura.ocr.FigureOcr.read", lambda self, path: read)
     parsed = document()
     assert AzureParser(settings).read_figures(parsed, tmp_path) == 1
     assert parsed.items[0].ocr_words == read and parsed.items[1].ocr_words[0].text == "26,51%"

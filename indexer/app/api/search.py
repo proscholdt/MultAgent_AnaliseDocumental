@@ -5,8 +5,8 @@ import asyncio
 from fastapi import APIRouter
 
 from app.api.deps import EmbeddersDep, StoreDep
+from app.infra.seguranca import CurrentUser
 from app.schemas import SearchHit, SearchRequest, SearchResponse
-from app.security import CurrentUser
 
 router = APIRouter(prefix="/api/search", tags=["Busca"])
 

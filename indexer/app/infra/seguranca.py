@@ -13,8 +13,8 @@ from pwdlib import PasswordHash
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.db import get_session
-from app.models import User
+from app.infra.banco import get_session
+from app.infra.modelos import User
 
 _password_hash = PasswordHash.recommended()
 # tokenUrl faz o botão "Authorize" do Swagger usar o fluxo usuário/senha.

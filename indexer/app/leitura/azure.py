@@ -39,8 +39,8 @@ from azure.core.exceptions import ClientAuthenticationError, HttpResponseError
 from pypdf import PdfReader, PdfWriter
 
 from app.config import PIPELINE_VERSION, Settings
-from app.pipeline.chunker import STATEMENT_TITLE
-from app.pipeline.parsing import (
+from app.indexacao.trechos import STATEMENT_TITLE
+from app.leitura.parsing import (
     MIN_NATIVE_CHARS,
     ParserError,
     ProgressCallback,
@@ -82,7 +82,7 @@ _BAND_TOLERANCE = 0.02  # fração da altura da página
 # distintos: os rótulos "dez/20" e "mar/21" de um eixo, e não as palavras de "Perdas Totais".
 _SEGMENT_GAP = 1.2
 _ROW_OVERLAP = 0.5
-_HAS_NUMBER = re.compile(r"\d\D*\d")  # dois dígitos: um solto não prova nada (ver figures.py)
+_HAS_NUMBER = re.compile(r"\d\D*\d")  # dois dígitos: um solto não prova nada (ver figuras.py)
 _NUMERIC = re.compile(r"[+\-−(]?\d[\d.,]*[%x)]?$")  # palavra que é só um número: "3.573", "85%", "-2,45%"
 # Respostas que não mudam se a chamada for repetida: credencial, endpoint ou documento recusado.
 _PERMANENT_STATUS = {400, 401, 403, 404, 413}
@@ -788,7 +788,7 @@ class AzureParser:
         recorte, se estiver instalado (imagem do alvo "parse"). Na imagem leve a figura fica
         sem texto de conferência, e os valores dela que não estiverem no texto da página são
         omitidos, como manda a regra dos gráficos."""
-        from app.pipeline.figure_ocr import FigureOcr, read_figures  # só numpy e Pillow no import
+        from app.leitura.ocr import FigureOcr, read_figures  # só numpy e Pillow no import
 
         pending = [item for item in parsed.items
                    if item.type == "figure" and item.image_path and item.ocr_words is None]

@@ -1,5 +1,5 @@
 """Política de retry e DLQ do consumidor Kafka."""
-from app.messaging import PermanentError, handle_record
+from app.infra.kafka import PermanentError, handle_record
 from app.schemas import IndexRequested
 from tests.conftest import FakePublisher
 

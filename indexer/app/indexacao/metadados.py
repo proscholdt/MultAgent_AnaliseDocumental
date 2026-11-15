@@ -12,7 +12,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from app.pipeline.llm import LLMClient
+from app.indexacao.llm import LLMClient
 from app.schemas import ParsedDocument
 
 UNIT_THOUSAND = "R$ mil"

@@ -32,13 +32,8 @@ from docling_core.types.doc import (
 )
 
 from app.config import PIPELINE_VERSION, Settings
-from app.pipeline.figure_ocr import FigureOcr, read_figures
-from app.pipeline.parsing import (
-    MIN_NATIVE_CHARS,
-    ProgressCallback,
-    check_system_fonts,
-    native_pages,
-)
+from app.leitura.ocr import FigureOcr, read_figures
+from app.leitura.parsing import MIN_NATIVE_CHARS, ProgressCallback, check_system_fonts, native_pages
 from app.schemas import ParsedDocument, ParsedItem
 
 log = logging.getLogger(__name__)

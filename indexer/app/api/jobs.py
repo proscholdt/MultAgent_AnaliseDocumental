@@ -1,12 +1,13 @@
 """Acompanhamento e reprocessamento de jobs."""
 from fastapi import APIRouter, HTTPException, status
 
-from app import repo, storage
 from app.api.deps import PublisherDep, SessionDep, SettingsDep
 from app.api.documents import publish_or_fail
-from app.models import Job
+from app.infra import arquivos as storage
+from app.infra import repo
+from app.infra.modelos import Job
+from app.infra.seguranca import CurrentUser
 from app.schemas import IndexRequested, JobOut, ParseRequested
-from app.security import CurrentUser
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 

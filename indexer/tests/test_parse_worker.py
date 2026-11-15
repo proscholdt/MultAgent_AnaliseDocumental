@@ -1,12 +1,14 @@
 """parse-worker e troca de parser: um cache por parser, e o index-worker lê o do parser certo."""
 import pytest
 
-from app import db, repo, storage
 from app.config import PIPELINE_VERSION
-from app.messaging import PermanentError
-from app.models import Document, Job, User
-from app.pipeline.embedder import FakeDenseEmbedder, FakeSparseEmbedder
-from app.pipeline.parsing import ParserError
+from app.indexacao.embeddings import FakeDenseEmbedder, FakeSparseEmbedder
+from app.infra import arquivos as storage
+from app.infra import banco as db
+from app.infra import repo
+from app.infra.kafka import PermanentError
+from app.infra.modelos import Document, Job, User
+from app.leitura.parsing import ParserError
 from app.schemas import IndexRequested, ParsedDocument, ParsedItem, ParsedPage, ParseRequested
 from app.workers.index_worker import handle_index
 from app.workers.parse_worker import handle_parse

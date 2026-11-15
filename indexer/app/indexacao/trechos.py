@@ -12,8 +12,8 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 from app.config import Settings
-from app.pipeline.figures import FigureResult
-from app.pipeline.metadata import detect_declared_unit, page_units, resolve_unit, scope_units
+from app.indexacao.metadados import detect_declared_unit, page_units, resolve_unit, scope_units
+from app.leitura.figuras import FigureResult
 from app.schemas import ParsedDocument, ParsedItem
 
 ChunkType = Literal["text", "table", "figure"]

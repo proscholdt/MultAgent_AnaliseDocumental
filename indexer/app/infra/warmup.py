@@ -1,6 +1,6 @@
 """Baixa uma vez os modelos e recursos usados em execução.
 
-    uv run --group parse python -m app.warmup
+    uv run --group parse python -m app.infra.warmup
 
 No Docker isso acontece no build da imagem; este módulo serve para rodar fora dele.
 """
@@ -19,12 +19,12 @@ def main() -> None:
     print(f"tiktoken ok ({time.perf_counter() - started:.1f}s)")
 
     started = time.perf_counter()
-    from app.pipeline.embedder import Bm25SparseEmbedder
+    from app.indexacao.embeddings import Bm25SparseEmbedder
 
     Bm25SparseEmbedder(settings).embed_query("receita líquida")
     print(f"BM25 ({settings.bm25_language}) ok ({time.perf_counter() - started:.1f}s)")
 
-    from app.pipeline.parsing import ParserError, build_parser
+    from app.leitura.parsing import ParserError, build_parser
 
     started = time.perf_counter()
     try:

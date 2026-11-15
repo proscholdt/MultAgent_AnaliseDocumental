@@ -1,9 +1,9 @@
 """Etapa de parse: PDF → ParsedDocument. Aqui ficam o contrato comum aos parsers, o que os
 dois compartilham e a escolha entre eles (variável PARSER).
 
-- "docling" (docling_parser.py): roda na máquina, sem custo por página, minutos por documento
+- "docling" (docling.py): roda na máquina, sem custo por página, minutos por documento
   em CPU, imagem de 4 GB.
-- "azure" (azure_parser.py): Azure AI Document Intelligence. O parse roda no serviço (tempo
+- "azure" (azure.py): Azure AI Document Intelligence. O parse roda no serviço (tempo
   não medido aqui), é pago por página, e o PDF é enviado ao recurso da Azure.
 
 Os dois devolvem o mesmo ParsedDocument, então o resto do pipeline não sabe qual rodou. Este
@@ -61,11 +61,11 @@ def build_parser(settings: Settings) -> DocumentParser:
     if settings.parser_problem:
         raise ParserError(settings.parser_problem)
     if settings.parser == "azure":
-        from app.pipeline.azure_parser import AzureParser
+        from app.leitura.azure import AzureParser
 
         return AzureParser(settings)
     try:
-        from app.pipeline.docling_parser import DoclingParser
+        from app.leitura.docling import DoclingParser
     except ImportError as exc:
         raise ParserError(
             "PARSER=docling, mas o Docling não está instalado nesta imagem. Use a imagem do alvo "

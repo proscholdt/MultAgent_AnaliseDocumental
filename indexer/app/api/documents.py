@@ -6,9 +6,11 @@ from typing import Annotated
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.concurrency import run_in_threadpool
 
-from app import repo, storage
 from app.api.deps import PublisherDep, SessionDep, SettingsDep, StoreDep
-from app.models import Document, Job
+from app.infra import arquivos as storage
+from app.infra import repo
+from app.infra.modelos import Document, Job
+from app.infra.seguranca import CurrentUser
 from app.schemas import (
     ChunkOut,
     ChunkPage,
@@ -19,7 +21,6 @@ from app.schemas import (
     ParseRequested,
     UploadAccepted,
 )
-from app.security import CurrentUser
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/documents", tags=["Documentos"])

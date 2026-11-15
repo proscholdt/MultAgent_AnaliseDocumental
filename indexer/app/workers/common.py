@@ -2,10 +2,10 @@
 import logging
 from datetime import UTC, datetime
 
-from app import repo
 from app.config import Settings
-from app.db import session_scope
-from app.messaging import Publisher
+from app.infra import repo
+from app.infra.banco import session_scope
+from app.infra.kafka import Publisher
 from app.schemas import DocumentEvent, IndexRequested, ParseRequested
 
 log = logging.getLogger(__name__)

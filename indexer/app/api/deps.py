@@ -6,15 +6,15 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings, get_settings
-from app.db import get_session
-from app.messaging import Publisher
-from app.pipeline.embedder import (
+from app.indexacao.embeddings import (
     DenseEmbedder,
     SparseEmbedder,
     build_dense_embedder,
     build_sparse_embedder,
 )
-from app.pipeline.vector_store import VectorStore
+from app.indexacao.qdrant import VectorStore
+from app.infra.banco import get_session
+from app.infra.kafka import Publisher
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]

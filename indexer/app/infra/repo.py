@@ -4,7 +4,7 @@ from typing import Any
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Document, Job, utcnow
+from app.infra.modelos import Document, Job, utcnow
 
 
 async def get_document(session: AsyncSession, user_id: str, doc_id: str) -> Document | None:
