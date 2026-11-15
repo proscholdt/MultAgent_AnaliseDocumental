@@ -1,0 +1,56 @@
+  :root { --bg:#0d1117; --painel:#111a24; --borda:#2b3b4d; --tinta:#d7e3ef; --fraco:#7f93a8; --verde:#3ddc84; --ambar:#f4b740; --vermelho:#ff6b6b; --azul:#58a6ff; --roxo:#b392f0; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--tinta); font:14px/1.45 'JetBrains Mono', Consolas, monospace; }
+  header { display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px; padding:10px 16px; border-bottom:2px solid var(--borda); background:#0a0f15; }
+  h1 { font:12px 'Press Start 2P', monospace; margin:0; color:var(--verde); letter-spacing:1px; }
+  .abas { display:flex; gap:4px; }
+  .abas button, .ctl button, select, input[type=text], .login input { background:var(--painel); color:var(--tinta); border:1px solid var(--borda); border-radius:4px; padding:6px 10px; font:inherit; }
+  .abas button.ativa { background:var(--verde); color:#06210f; border-color:var(--verde); font-weight:600; }
+  .ctl { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-left:auto; font-size:13px; }
+  select { max-width:420px; }
+  main { padding:12px 16px 24px; }
+  .palco { position:relative; max-width:1240px; margin:0 auto; }
+  canvas { width:100%; height:auto; display:block; image-rendering:pixelated; border:2px solid var(--borda); border-radius:6px; background:#1b2430; }
+  .janela { position:absolute; background:rgba(9,14,20,.92); border:2px solid var(--borda); border-radius:4px; font-size:12px; }
+  .janela .titulo { font:9px 'Press Start 2P', monospace; color:var(--azul); padding:6px 8px; border-bottom:1px solid var(--borda); display:flex; justify-content:space-between; }
+  #conversa { left:12px; bottom:12px; width:min(430px, 40%); display:flex; flex-direction:column; z-index:2; }
+  #conversa .titulo button { background:none; border:1px solid var(--borda); color:var(--tinta); font:9px 'Press Start 2P', monospace; padding:2px 5px; margin-left:4px; cursor:pointer; border-radius:3px; }
+  #conversa .titulo button:hover, #conversa .titulo button:focus-visible { border-color:var(--azul); color:var(--azul); outline:none; }
+  #conversa .filtros { display:flex; gap:6px; padding:5px 8px; border-bottom:1px solid var(--borda); }
+  #conversa .filtros input, #conversa .filtros select { background:var(--painel); color:var(--tinta); border:1px solid var(--borda); border-radius:3px; padding:3px 6px; font:11px 'JetBrains Mono', monospace; }
+  #conversa .filtros input { flex:1; min-width:0; }
+  #conversa .linhas { padding:6px 8px; height:150px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:var(--borda) transparent; }
+  #conversa .l { margin:3px 0; white-space:pre-wrap; overflow-wrap:anywhere; }
+  #conversa .l b { color:var(--verde); font-weight:600; }
+  #conversa .l.pensa { color:var(--roxo); font-style:italic; }
+  #conversa .l.pensa b { color:var(--roxo); }
+  #conversa .l.portao { color:var(--vermelho); }
+  #conversa .l.portao b { color:var(--vermelho); }
+  #conversa .l .h { color:var(--fraco); margin-right:6px; }
+  #conversa.min .filtros, #conversa.min .linhas { display:none; }
+  #conversa.max { left:12px; right:12px; top:12px; bottom:12px; width:auto; background:var(--bg); }
+  #conversa.max .linhas { height:auto; flex:1; font-size:13px; }
+  #painel { right:12px; bottom:12px; width:min(300px, 34%); }
+  #painel .linhas { padding:8px 10px; font:9px/2 'Press Start 2P', monospace; }
+  #painel .linhas div { display:flex; justify-content:space-between; gap:8px; }
+  #painel .v { color:var(--verde); }
+  .logs { display:grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap:12px; max-width:1500px; margin:0 auto; }
+  @media (max-width: 1000px) { .logs { grid-template-columns: 1fr; } }
+  .caixa { background:var(--painel); border:1px solid var(--borda); border-radius:6px; min-width:0; display:flex; flex-direction:column; height:calc(100vh - 110px); }
+  .caixa h2 { font:10px 'Press Start 2P', monospace; color:var(--azul); margin:0; padding:10px 12px; border-bottom:1px solid var(--borda); display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .caixa h2 .esp { margin-left:auto; display:flex; gap:6px; }
+  .rolo { overflow:auto; flex:1; font-size:12px; }
+  table { width:100%; border-collapse:collapse; }
+  td { padding:3px 8px; border-bottom:1px solid #1c2733; vertical-align:top; }
+  td.t { color:var(--fraco); white-space:nowrap; }
+  td.q { white-space:nowrap; font-weight:600; }
+  .tg { font-size:10px; padding:1px 6px; border-radius:3px; background:#1e2a38; white-space:nowrap; }
+  .ok { color:var(--verde); } .ruim { color:var(--vermelho); } .pensa { color:var(--roxo); } .amb { color:var(--ambar); }
+  pre.loki { margin:0; padding:8px 10px; white-space:pre-wrap; word-break:break-word; font-size:11.5px; }
+  pre.loki .s { color:var(--azul); }
+  .login { position:fixed; inset:0; display:grid; place-items:center; background:rgba(5,8,12,.88); z-index:9; }
+  .login form { background:var(--painel); border:2px solid var(--verde); padding:22px; border-radius:6px; display:grid; gap:10px; width:300px; }
+  .login h2 { font:11px 'Press Start 2P', monospace; color:var(--verde); margin:0 0 6px; }
+  .login button { background:var(--verde); color:#06210f; border:0; padding:8px; font-weight:700; border-radius:4px; cursor:pointer; }
+  .erro { color:var(--vermelho); font-size:12px; min-height:16px; }
+  [hidden] { display:none !important; }

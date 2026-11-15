@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sala dos Agentes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="sala.css">
+</head>
+<body>
+<header>
+  <h1>▮ SALA DOS AGENTES</h1>
+  <div class="abas"><button id="aba-sala" class="ativa">Sala</button><button id="aba-logs">Logs</button></div>
+  <div class="ctl">
+    <select id="execucoes" title="Execução"></select>
+    <label><input type="checkbox" id="seguir" checked> seguir a mais nova</label>
+    <button id="repetir" title="Repete a execução do começo, no ritmo em que aconteceu (1×) ou acelerada">↻ Repetir</button>
+    <select id="vel" title="Velocidade da repetição (1× = tempo real)"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option><option value="8">8×</option></select>
+  </div>
+</header>
+
+<main>
+  <section id="sala" class="palco">
+    <canvas id="tela" width="1120" height="770"></canvas>
+    <div class="janela" id="conversa">
+      <div class="titulo"><span>CONVERSA <span id="conversa-n"></span></span><span><button id="conversa-min" type="button" title="Minimizar" aria-label="Minimizar a conversa">_</button><button id="conversa-max" type="button" title="Maximizar" aria-label="Maximizar a conversa">□</button></span></div>
+      <div class="filtros"><input id="conversa-filtro" type="text" placeholder="filtrar (agente ou texto)…" aria-label="Filtrar a conversa"><select id="conversa-tipo" aria-label="O que mostrar"><option value="">tudo</option><option value="fala">falas</option><option value="pensa">pensamentos</option><option value="portao">portões</option></select></div>
+      <div class="linhas" aria-live="polite"></div>
+    </div>
+    <div class="janela" id="painel"><div class="titulo"><span>PAINEL DE CONTROLE</span></div><div class="linhas"></div></div>
+  </section>
+
+  <section id="logs" class="logs" hidden>
+    <div class="caixa">
+      <h2>EVENTOS DA EXECUÇÃO <span class="esp"><input type="text" id="filtro" placeholder="filtrar…"></span></h2>
+      <div class="rolo"><table><tbody id="eventos"></tbody></table></div>
+    </div>
+    <div class="caixa">
+      <h2>CONTÊINERES (LOKI)
+        <span class="esp">
+          <select id="consulta">
+            <option value='{projeto=~"agents|mcp-server"} |~ "passo=|tool=" != "passo=raciocinio"'>passos e tools</option>
+            <option value='{projeto=~"agents|mcp-server"} != "/auditoria" != "/api/execucoes" != "/auth/me"'>agentes + MCP (sem ruído)</option>
+            <option value='{projeto="agents"} |= "passo="'>passos dos agentes</option>
+            <option value='{projeto="mcp-server"} |= "tool="'>tools no MCP</option>
+            <option value='{projeto=~".+", nivel=~"ERROR|CRITICAL|WARNING"}'>avisos e erros</option>
+            <option value='{projeto=~".+"}'>todos os serviços</option>
+          </select>
+        </span>
+      </h2>
+      <div class="rolo"><pre class="loki" id="loki">carregando…</pre></div>
+    </div>
+  </section>
+</main>
+
+<div class="login" id="login" hidden>
+  <form id="form-login">
+    <h2>ENTRAR</h2>
+    <input id="u" placeholder="usuário" autocomplete="username">
+    <input id="s" type="password" placeholder="senha" autocomplete="current-password">
+    <button>Entrar na sala</button>
+    <div class="erro" id="erro-login"></div>
+  </form>
+</div>
+
+<script src="cena.js"></script>
+<script src="conversa.js"></script>
+<script src="eventos.js"></script>
+<script src="dados.js"></script>
+<script src="logs.js"></script>
+<script src="inicio.js"></script>
+</body>
+</html>

@@ -38,9 +38,23 @@ docker compose up -d    # http://localhost:3300, com o login do chat
 Sem build: a imagem do uv roda o servidor com as dependências fixadas no compose, e a pasta é
 montada. Depende do indexador, do servidor MCP e dos agentes; a aba de logs usa a observabilidade.
 
+## Mapa do código
+
 ```
-servidor.py   FastAPI: login, execuções, passos + auditoria, Loki
-index.html    a sala (canvas) e a aba de logs
+servidor.py          FastAPI: login, execuções, passos + auditoria, Loki, e serve pagina/
+pagina/
+├─ index.html        a estrutura: cabeçalho, sala, janelas, aba de logs, login
+├─ sala.css          o visual
+├─ cena.js           o escritório: lugares, pessoas, fila de ações e desenho no canvas
+├─ conversa.js       a janela de conversa (filtros, minimizar, maximizar) e o painel
+├─ eventos.js        passo do orquestrador / chamada da auditoria → ação na sala
+├─ dados.js          API da sala, eventos da aba Logs, abrir, repetir e acompanhar
+├─ logs.js           as abas e os logs do Loki
+└─ inicio.js         login e o começo
 ```
+
+Os scripts são clássicos e carregados em ordem pelo `index.html`: o que um declara, os seguintes
+enxergam. Para mudar o que acontece na sala com um evento, o lugar é `eventos.js`; para mudar o
+desenho, `cena.js`.
 
 Fluxos com imagens: [docs/fluxos.html](docs/fluxos.html).

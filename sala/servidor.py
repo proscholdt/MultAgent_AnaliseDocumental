@@ -11,7 +11,7 @@ from typing import Any
 
 import httpx
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 INDEXADOR = os.getenv("INDEXER_URL", "http://api:8000")
@@ -35,11 +35,6 @@ def _token() -> str:
     if not sessao["token"] or sessao["vence"] - time.time() < 16 * 60:
         raise HTTPException(401, "Entre de novo.")
     return sessao["token"]
-
-
-@app.get("/")
-async def pagina() -> FileResponse:
-    return FileResponse(AQUI / "index.html")
 
 
 @app.post("/api/entrar")
@@ -107,3 +102,8 @@ async def loki(consulta: str = '{projeto=~"agents|mcp-server"} |~ "passo=|tool="
             linhas.append({"ts": int(ts), "servico": fluxo["stream"].get("servico", ""), "linha": linha})
     linhas.sort(key=lambda item: item["ts"], reverse=True)
     return linhas[:limite]
+
+
+# A página (pagina/: estrutura, estilo e um script por assunto). Montada por último, para as
+# rotas /api/... acima terem prioridade.
+app.mount("/", StaticFiles(directory=AQUI / "pagina", html=True), name="pagina")
