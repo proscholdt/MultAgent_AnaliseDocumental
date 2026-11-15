@@ -3,9 +3,9 @@
 	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { api } from '$lib/api';
-	import Chat from '$lib/components/Chat.svelte';
-	import Conversas from '$lib/components/Conversas.svelte';
-	import Documentos from '$lib/components/Documentos.svelte';
+	import Chat from '$lib/componentes/chat/Chat.svelte';
+	import Conversas from '$lib/componentes/lateral/Conversas.svelte';
+	import Documentos from '$lib/componentes/lateral/Documentos.svelte';
 	import type { Conversa, Documento } from '$lib/tipos';
 	import type { PageData } from './$types';
 

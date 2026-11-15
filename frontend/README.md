@@ -50,12 +50,30 @@ margem da sessão. Relido quando muda: vale no próximo carregamento da página,
 | `BODY_SIZE_LIMIT` | Tamanho do envio pelo proxy (`60M`) |
 | `COOKIE_SECURE` | `true` atrás de HTTPS |
 
-## Estrutura
+## Mapa do código
 
 ```
-src/hooks.server.ts               sessão
-src/lib/server/                   cookie, lista do proxy, endereços
-src/lib/progresso.ts              trace → aviso
-src/lib/components/               Documentos, Conversas, Chat, Turno, Andamento, Markdown
-src/routes/api/[sistema]/[...rota] proxy
+config/ajustes.yaml             atalhos do chat, intervalo do andamento, margem da sessão
+
+src/
+├─ hooks.server.ts              confere a sessão em todo pedido
+├─ instrumentation.server.ts    OpenTelemetry
+│
+├─ routes/                      AS PÁGINAS E AS ROTAS DO SERVIDOR
+│  ├─ +page.svelte              a tela principal: lateral + chat
+│  ├─ +page.server.ts           usuário e ajustes para a tela
+│  ├─ login/                    entrar e criar conta (form actions, cookie httpOnly)
+│  ├─ sair/                     encerrar a sessão
+│  └─ api/[sistema]/[...rota]/  o proxy para o indexador e o orquestrador
+│
+└─ lib/
+   ├─ componentes/
+   │  ├─ chat/                  Chat (caixa, envio, acompanhamento), Turno (pergunta e resposta),
+   │  │                         Andamento ("pensando…"), Markdown (limpo pelo DOMPurify)
+   │  └─ lateral/               Documentos (envio e progresso), Conversas
+   ├─ server/                   SÓ NO SERVIDOR: sessao, rotas (lista do proxy), config, ajustes
+   ├─ api.ts                    chamadas do navegador ao próprio frontend
+   ├─ progresso.ts              passos da execução → aviso de andamento
+   ├─ markdown.ts               Markdown → HTML seguro
+   └─ tipos.ts                  os tipos das respostas das APIs
 ```
