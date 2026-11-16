@@ -1,0 +1,147 @@
+# Comandos do dia a dia do projeto. Rode `make` (ou `make ajuda`) para ver a lista.
+#
+# Funciona no Git Bash e no PowerShell: no Windows, sem um sh no PATH, o make usa o cmd.exe, por
+# isso as receitas são comandos simples, uma linha por sistema.
+#
+# Usuário e senha: os comandos que falam com o sistema pedem USUARIO e SENHA (a do indexador).
+#   make inconsistencias USUARIO=avaliacao SENHA=xxx DOC=Millet
+# Também valem as variáveis de ambiente AVALIACAO_USUARIO e AVALIACAO_SENHA.
+
+USUARIO ?= $(AVALIACAO_USUARIO)
+SENHA ?= $(AVALIACAO_SENHA)
+DOC ?=
+S ?= agents
+
+.DEFAULT_GOAL := ajuda
+.PHONY: ajuda urls subir reconstruir descer status logs zerar zerar-base testes testes-indexer testes-mcp \
+        testes-agentes testes-frontend lint validar-agentes inconsistencias relatorio avaliar
+
+# Para quem pede login: para com a mensagem se faltar usuário ou senha.
+precisa_login = $(if $(and $(USUARIO),$(SENHA)),,$(error Informe USUARIO=... e SENHA=..., a conta do indexador))
+# Para o que apaga dados: só roda com CONFIRMA=sim.
+precisa_confirmar = $(if $(filter sim,$(CONFIRMA)),,$(error Isto apaga dados. Para confirmar: make $@ CONFIRMA=sim))
+
+ajuda:
+	@echo Uso: make COMANDO [VARIAVEL=valor]
+	@echo ---------------------------------------------------------------------------------------
+	@echo subir ............................ liga tudo: indexador, observabilidade, MCP, agentes, frontend, sala
+	@echo reconstruir ...................... o mesmo, refazendo as imagens: use depois de mudar codigo
+	@echo descer ........................... desliga tudo, sem apagar nada
+	@echo status ........................... o que esta rodando
+	@echo logs S=agents .................... logs de um sistema: indexer, mcp-server, agents, frontend, sala
+	@echo urls ............................. os enderecos de cada tela
+	@echo ---------------------------------------------------------------------------------------
+	@echo zerar CONFIRMA=sim ............... apaga TUDO: documentos, usuarios, base, memoria, traces
+	@echo zerar-base CONFIRMA=sim .......... apaga so a base do MCP e a memoria dos agentes, mantem os PDFs
+	@echo ---------------------------------------------------------------------------------------
+	@echo testes ........................... testes de todos os sistemas, sem rede e sem custo
+	@echo testes-indexer, testes-mcp ....... um sistema so; tambem testes-agentes e testes-frontend
+	@echo lint ............................. ruff nos tres sistemas Python
+	@echo validar-agentes .................. confere os arquivos dos agentes
+	@echo ---------------------------------------------------------------------------------------
+	@echo inconsistencias USUARIO SENHA DOC  candidatos por regra, sem modelo, gratis; DOC e opcional
+	@echo relatorio USUARIO SENHA .......... relatorio completo pelos agentes, custa cerca de US$$ 0,15
+	@echo avaliar USUARIO SENHA ............ nota da base contra o gabarito, sem modelo
+	@echo ---------------------------------------------------------------------------------------
+	@echo Exemplo: make inconsistencias USUARIO=avaliacao SENHA=xxx DOC=Millet
+
+urls:
+	@echo Chat e envio de PDFs .... http://localhost:3000
+	@echo Sala dos agentes ........ http://localhost:3300
+	@echo Grafana ................. http://localhost:3001
+	@echo Kafka UI ................ http://localhost:8080
+	@echo Indexador, API .......... http://localhost:8000/docs
+	@echo Servidor MCP ............ http://localhost:8100/health
+	@echo Orquestrador ............ http://localhost:8200/docs
+
+# --- ligar e desligar -------------------------------------------------------------------------
+# A ordem importa: o indexador cria a rede que os outros usam, e a sala usa a da observabilidade.
+
+subir:
+	cd indexer && docker compose up -d
+	cd observability && docker compose up -d
+	cd mcp-server && docker compose up -d
+	cd agents && docker compose up -d --remove-orphans
+	cd frontend && docker compose up -d
+	cd sala && docker compose up -d
+	@echo Pronto. Veja os enderecos com: make urls
+
+reconstruir:
+	cd indexer && docker compose up -d --build
+	cd observability && docker compose up -d
+	cd mcp-server && docker compose up -d --build
+	cd agents && docker compose up -d --build --remove-orphans
+	cd frontend && docker compose up -d --build
+	cd sala && docker compose up -d --build
+
+descer:
+	cd sala && docker compose down
+	cd frontend && docker compose down
+	cd agents && docker compose down
+	cd mcp-server && docker compose down
+	cd observability && docker compose down
+	cd indexer && docker compose down
+
+status:
+	docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+logs:
+	cd $(S) && docker compose logs -f --tail 100
+
+# --- zerar ------------------------------------------------------------------------------------
+
+zerar:
+	$(precisa_confirmar)
+	cd sala && docker compose down -v
+	cd frontend && docker compose down -v
+	cd agents && docker compose down -v
+	cd mcp-server && docker compose down -v
+	cd observability && docker compose down -v
+	cd indexer && docker compose down -v
+	@echo Tudo apagado. Para recomecar: make subir, crie a conta em http://localhost:3000 e envie os PDFs.
+
+zerar-base:
+	$(precisa_confirmar)
+	cd agents && docker compose down -v
+	cd mcp-server && docker compose down -v
+	cd mcp-server && docker compose up -d
+	cd agents && docker compose up -d --remove-orphans
+	@echo Base do MCP e memoria dos agentes zeradas. Documentos e usuarios continuam no indexador.
+
+# --- testes -----------------------------------------------------------------------------------
+
+testes: testes-indexer testes-mcp testes-agentes testes-frontend
+
+testes-indexer:
+	cd indexer && uv run pytest -q
+
+testes-mcp:
+	cd mcp-server && uv run pytest -q
+
+testes-agentes:
+	cd agents && uv run pytest -q
+
+testes-frontend:
+	cd frontend && npm test
+
+lint:
+	cd indexer && uv run ruff check .
+	cd mcp-server && uv run ruff check .
+	cd agents && uv run ruff check .
+
+validar-agentes:
+	cd agents && uv run python -m app.ferramentas.cli validar
+
+# --- usar o sistema ---------------------------------------------------------------------------
+
+inconsistencias:
+	$(precisa_login)
+	@cd mcp-server && docker compose exec -T mcp-server python -m app.ferramentas.candidatos --usuario $(USUARIO) --senha $(SENHA) $(if $(DOC),--doc $(DOC),)
+
+relatorio:
+	$(precisa_login)
+	@cd agents && uv run python scripts/gerar_entrega.py --usuario $(USUARIO) --senha $(SENHA) --rodar
+
+avaliar:
+	$(precisa_login)
+	@cd agents && uv run python scripts/avaliar.py --usuario $(USUARIO) --senha $(SENHA) --sem-guardar

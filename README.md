@@ -258,6 +258,22 @@ cd sala       && cp .env.example .env && docker compose up -d           # :3300
 Os serviços se falam pela rede Docker do indexador (`indexer_default`). Indexador e agentes
 precisam de uma chave da OpenAI.
 
+Depois de criar os `.env`, o dia a dia fica no [Makefile](Makefile) da raiz (`make` lista tudo;
+funciona no Git Bash e no PowerShell):
+
+| Comando | O que faz |
+|---|---|
+| `make subir` / `make reconstruir` / `make descer` | Liga tudo na ordem certa (com `--build` no segundo) e desliga |
+| `make status`, `make logs S=agents`, `make urls` | O que está rodando, os logs de um sistema e os endereços |
+| `make zerar CONFIRMA=sim` | Apaga tudo: documentos, usuários, base, memória e traces |
+| `make zerar-base CONFIRMA=sim` | Apaga só a base do MCP e a memória dos agentes; os PDFs indexados ficam |
+| `make testes`, `make lint`, `make validar-agentes` | Os testes dos quatro sistemas (sem rede e sem custo), o ruff e os arquivos dos agentes |
+| `make inconsistencias USUARIO=u SENHA=s DOC=Millet` | Os candidatos a inconsistência da fonte de um PDF, por regra: sem modelo e sem custo |
+| `make relatorio USUARIO=u SENHA=s` | O relatório completo pelos agentes (cerca de US$ 0,15) |
+| `make avaliar USUARIO=u SENHA=s` | A nota da base contra o gabarito, sem modelo |
+
+`USUARIO` e `SENHA` também podem vir de `AVALIACAO_USUARIO` e `AVALIACAO_SENHA` no ambiente.
+
 ## Configuração
 
 Em todos os sistemas, a mesma divisão:

@@ -113,13 +113,16 @@ app/
 │  ├─ relatorios.py      os relatórios em Markdown
 │  └─ extracao_enxuta.py a extração no formato enxuto
 │
-└─ dados/                ONDE FICA
-   ├─ banco.py           SQLite
-   ├─ modelos.py         as tabelas
-   ├─ base.py            leitura e gravação, sempre por usuário
-   ├─ visoes.py          linhas do banco → dicionários para os agentes
-   ├─ documentos.py      trechos em memória + a impressão do documento
-   └─ indexador.py       cliente da API do indexador
+├─ dados/                ONDE FICA
+│  ├─ banco.py           SQLite
+│  ├─ modelos.py         as tabelas
+│  ├─ base.py            leitura e gravação, sempre por usuário
+│  ├─ visoes.py          linhas do banco → dicionários para os agentes
+│  ├─ documentos.py      trechos em memória + a impressão do documento
+│  └─ indexador.py       cliente da API do indexador
+│
+└─ ferramentas/          COMANDOS DE TERMINAL, fora do servidor
+   └─ candidatos.py      os candidatos a inconsistência de um PDF, sem modelo (make inconsistencias)
 
 config/                  policy.yaml (quem pode o quê) e ajustes.yaml
 ```

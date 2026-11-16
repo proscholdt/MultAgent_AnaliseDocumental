@@ -7,9 +7,8 @@ from app.dados.documentos import IndexedDocument
 from app.dados.visoes import alert_view
 from app.governanca.catalogo import Args, Call, tool
 from app.governanca.erros import ToolRejected
-from app.regras.campos import FIELDS, MAIN_FIELDS
 from app.regras.formulas import AlertDraft
-from app.regras.inconsistencias import Candidate, Indicator, find
+from app.regras.inconsistencias import Candidate, find, indicators_of
 from app.regras.pendencias import DISCARDED, REVIEW_DONE
 from app.regras.texto import (
     check_quote,
@@ -74,13 +73,7 @@ async def candidatos_inconsistencia(call: Call, args: CandidatosInconsistencia) 
 async def _candidates(call: Call, document: IndexedDocument) -> list[Candidate]:
     """Os candidatos do documento, com a extração publicada para a regra que compara com ela."""
     extraction, _ = await build_extraction(call, document)
-    indicators = []
-    for campo in MAIN_FIELDS:
-        spec = FIELDS[campo]
-        now, before = extraction.amount(campo, extraction.reference), extraction.amount(campo, extraction.comparable)
-        if spec.kind == "valor" and now is not None and before is not None:
-            indicators.append(Indicator(spec.label, spec.mention, now, before))
-    return find(document.chunks, document.period, indicators)
+    return find(document.chunks, document.period, indicators_of(extraction))
 
 
 def _judged(candidate: Candidate, alerts: list[Any]) -> bool:

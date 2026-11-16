@@ -19,6 +19,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from decimal import Decimal
 
+from app.regras.campos import FIELDS, MAIN_FIELDS
+from app.regras.formulas import Extraction
 from app.regras.numeros import format_br, in_reais, to_decimal
 from app.regras.tabelas import parse_table
 from app.regras.texto import plain, squash
@@ -79,6 +81,18 @@ class Indicator:
     termos: tuple[str, ...]  # sem acento, minúsculas: o que a frase tem de mencionar
     atual: Decimal
     anterior: Decimal
+
+
+def indicators_of(extraction: Extraction) -> list[Indicator]:
+    """Os indicadores em dinheiro com os dois períodos, para a regra que compara o texto com a
+    extração. Sem extração (ou sem o ano anterior), a lista fica vazia e a regra não roda."""
+    out = []
+    for campo in MAIN_FIELDS:
+        spec = FIELDS[campo]
+        now, before = extraction.amount(campo, extraction.reference), extraction.amount(campo, extraction.comparable)
+        if spec.kind == "valor" and now is not None and before is not None:
+            out.append(Indicator(spec.label, spec.mention, now, before))
+    return out
 
 
 def year_of(period: str | None) -> int | None:
