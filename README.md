@@ -193,7 +193,13 @@ aparecem no Grafana.
 ## Limitações
 
 - **Só demonstrações anuais, um documento por empresa.** Premissa adotada a partir dos três PDFs
-  recebidos, todos anuais. O período de um documento é um ano, e o comparável é o ano anterior
+  recebidos: as demonstrações das três são anuais (2022 contra 2021), e nenhuma tabela tem coluna
+  por trimestre. Trimestre aparece só em frases (provisões do 4º trimestre de 2022 na Light,
+  covenants do "trimestre findo em 31 de dezembro", créditos do 4º trimestre de 2021 na Brasal),
+  que entram nos chunks como texto, e em gráficos operacionais da Light com um ponto por
+  trimestre (perdas de energia, p. 6), que entram como transcrição conferida; no de perdas
+  totais, só 24 de 54 ligações rótulo-valor conferiram, e o ponto set/22 ficou sem valor. O
+  período de um documento é um ano, e o comparável é o ano anterior
   (`periods()` no servidor MCP); `salvar_indicador` só aceita ano com 4 dígitos. Num documento
   trimestral (`3T25`), o período não tem comparável e os valores gravados por ano não casam com
   ele: a extração não fecha. O que já é geral: parse, chunks, unidade, busca, portões e citação;
