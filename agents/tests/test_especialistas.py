@@ -60,10 +60,11 @@ async def test_catalog_lists_the_specialists_with_the_tools_the_mcp_policy_gives
 
     # Um arquivo novo aparece na hora. Sem entrada na política, aparece sem tools.
     write_agent(agents_dir, "tradutor")
-    (agents_dir / "quebrado.md").write_text("sem cabeçalho", encoding="utf-8")
+    (agents_dir / "quebrado").mkdir()
+    (agents_dir / "quebrado" / "quebrado.md").write_text("sem cabeçalho", encoding="utf-8")
     again = await client.catalog()
     assert [(entry["nome"], entry["tools"]) for entry in again["agentes"]][-1] == ("tradutor", [])
-    assert list(again["arquivos_invalidos"]) == ["quebrado.md"] and again["digest"] != catalog["digest"]
+    assert list(again["arquivos_invalidos"]) == ["quebrado/quebrado.md"] and again["digest"] != catalog["digest"]
 
 
 # --- só o orquestrador entra ----------------------------------------------------------------
@@ -282,7 +283,7 @@ async def test_a_service_with_ESPECIALISTA_serves_only_that_specialist(settings,
     # Arquivo do agente sumiu: o /health diz o que falta.
     ghost = one_agent_service(settings, engine, "fantasma")
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=ghost), base_url="http://fantasma.teste") as http:
-        assert "agentes/fantasma.md" in (await http.get("/health")).json()["problema"]
+        assert "agentes/fantasma/fantasma.md" in (await http.get("/health")).json()["problema"]
 
 
 async def test_orchestrator_calls_each_specialist_at_its_own_address(settings, engine, identity, world, model):

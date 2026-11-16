@@ -2,7 +2,7 @@
 
 Três lugares, cada um com o seu papel:
 
-- `agentes/<nome>.md`: o que é de cada agente (modelo, raciocínio, turnos, prompt). Relido
+- `agentes/<nome>/<nome>.md`: o que é de cada agente (modelo, raciocínio, turnos, prompt). Relido
   quando muda.
 - `config/ajustes.yaml`: o que vale para todos (preços, freios, raciocínio padrão, tempos).
   Relido a cada pedido: mudar ali vale no próximo, sem build nem restart.

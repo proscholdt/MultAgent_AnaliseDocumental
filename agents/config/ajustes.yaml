@@ -2,7 +2,7 @@
 # pedido, sem build e sem reiniciar. Arquivo inválido não derruba nada: continua valendo a
 # versão anterior, e o erro aparece em GET /health ("erro_ajustes").
 #
-# O que é de cada agente (modelo, raciocínio, turnos) fica no arquivo dele, em agentes/<nome>.md.
+# O que é de cada agente (modelo, raciocínio, turnos) fica no arquivo dele, em agentes/<nome>/<nome>.md.
 # Chaves e segredos ficam no .env.
 
 # Esforço de raciocínio de quem não diz o seu no arquivo do agente:

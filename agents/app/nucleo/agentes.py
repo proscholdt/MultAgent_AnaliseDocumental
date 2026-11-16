@@ -1,4 +1,5 @@
-"""Um agente é um arquivo: `agentes/<nome>.md`, com um cabeçalho YAML e o prompt no corpo.
+"""Um agente é uma pasta, `agentes/<nome>/`, com o arquivo `<nome>.md` (um cabeçalho YAML e o
+prompt no corpo) e o `Dockerfile` do serviço dele:
 
     ---
     nome: extrator
@@ -10,7 +11,8 @@
     Você extrai indicadores...
 
 A pasta é relida quando muda, sem reiniciar. Um arquivo inválido não derruba os outros: ele
-fica de fora, e o motivo aparece em GET /api/agentes.
+fica de fora, e o motivo aparece em GET /api/agentes. Um `.md` solto na raiz de `agentes/` (o
+formato antigo) também fica de fora, com o lugar certo no motivo.
 
 O que o arquivo NÃO define é o que o agente pode chamar: isso é a política do servidor MCP.
 """
@@ -116,6 +118,11 @@ class Snapshot:
         return [agent for name, agent in sorted(self.agents.items()) if name != ORCHESTRATOR]
 
 
+def agent_file(nome: str) -> str:
+    """Onde mora o arquivo de um agente, relativo à pasta de agentes. É a chave dos erros."""
+    return f"{nome}/{nome}.md"
+
+
 class Registry:
     def __init__(self, folder: Path) -> None:
         self.folder = folder
@@ -123,16 +130,22 @@ class Registry:
         self._snapshot = Snapshot()
 
     def current(self) -> Snapshot:
-        files = sorted(self.folder.glob("*.md")) if self.folder.is_dir() else []
-        stamp = tuple((path.name, path.stat().st_mtime_ns, path.stat().st_size) for path in files)
+        files = sorted([*self.folder.glob("*/*.md"), *self.folder.glob("*.md")]) if self.folder.is_dir() else []
+        stamp = tuple((path.relative_to(self.folder).as_posix(), path.stat().st_mtime_ns, path.stat().st_size)
+                      for path in files)
         if stamp != self._stamp:
             agents, errors = {}, {}
             for path in files:
+                key = path.relative_to(self.folder).as_posix()
                 try:
+                    if path.parent == self.folder:
+                        raise AgentFileError(f"o arquivo fica na pasta do agente: agentes/{agent_file(path.stem)}")
                     agent = parse_agent(path.read_text(encoding="utf-8"), path.name)
+                    if path.parent.name != agent.nome:
+                        raise AgentFileError(f"o arquivo do agente '{agent.nome}' fica em agentes/{agent_file(agent.nome)}")
                     agents[agent.nome] = agent
                 except (AgentFileError, UnicodeDecodeError) as error:
-                    errors[path.name] = str(error)
+                    errors[key] = str(error)
             digest = hashlib.sha256("".join(sorted(a.digest for a in agents.values())).encode()).hexdigest()[:12]
             self._stamp, self._snapshot = stamp, Snapshot(agents, errors, digest)
         return self._snapshot

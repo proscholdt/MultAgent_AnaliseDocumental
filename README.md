@@ -56,7 +56,7 @@ Em todos os sistemas, a mesma divisão:
 | Onde | O quê | Quando vale |
 |---|---|---|
 | `<sistema>/config/ajustes.yaml` | o que se ajusta: parser, chunks, preços, limites, atalhos do chat | no próximo pedido, sem build nem restart |
-| `agents/agentes/<nome>.md` | modelo, raciocínio, turnos e prompt de cada agente | quando o arquivo muda |
+| `agents/agentes/<nome>/<nome>.md` | modelo, raciocínio, turnos e prompt de cada agente (o Dockerfile do serviço dele fica na mesma pasta) | quando o arquivo muda |
 | `mcp-server/config/policy.yaml` | o que cada agente vê e chama | quando o arquivo muda |
 | `<sistema>/.env` | só chaves e segredos | ao recriar o contêiner |
 | `docker-compose.yml` | endereços da infraestrutura | ao recriar o contêiner |

@@ -36,12 +36,12 @@ flowchart LR
 
 | Serviço | Porta | Dockerfile |
 |---|---|---|
-| orquestrador | 8200 | `docker/orquestrador/Dockerfile` |
-| extrator | 8201 | `docker/extrator/Dockerfile` |
-| validador | 8202 | `docker/validador/Dockerfile` |
-| analista | 8203 | `docker/analista/Dockerfile` |
-| pesquisador | 8204 | `docker/pesquisador/Dockerfile` |
-| redator | 8205 | `docker/redator/Dockerfile` |
+| orquestrador | 8200 | `agentes/orquestrador/Dockerfile` |
+| extrator | 8201 | `agentes/extrator/Dockerfile` |
+| validador | 8202 | `agentes/validador/Dockerfile` |
+| analista | 8203 | `agentes/analista/Dockerfile` |
+| pesquisador | 8204 | `agentes/pesquisador/Dockerfile` |
+| redator | 8205 | `agentes/redator/Dockerfile` |
 
 | Agente | Faz | Modelo |
 |---|---|---|
@@ -52,7 +52,8 @@ flowchart LR
 | `pesquisador` | Uma pergunta, com fontes | padrão |
 | `redator` | Resumo por empresa e montagem do relatório | padrão |
 
-Um agente é um arquivo `agentes/<nome>.md` (cabeçalho + prompt), relido sem reiniciar. A
+Um agente é uma pasta, `agentes/<nome>/`, com o arquivo `<nome>.md` (cabeçalho + prompt, relido
+sem reiniciar) e o `Dockerfile` do serviço dele. A
 permissão é uma entrada em `mcp-server/config/policy.yaml`: quem escreve o agente não concede a própria
 permissão.
 
@@ -62,7 +63,7 @@ permissão.
 |---|---|
 | Resultados (valores, análise, respostas, relatório) | base do servidor MCP, fonte da verdade |
 | Turnos da conversa | checkpoint LangGraph em SQLite, `thread_id` = conversa |
-| Memória de cada especialista | SQLite por (usuário, conversa, agente, documento), compactada na leitura |
+| Memória de cada especialista | SQLite por (usuário, conversa, agente, documento), compactada na leitura; cada especialista no próprio volume (`memoria-<nome>`) |
 | Trace com raciocínio e mensagens completas | `data/execucoes/` |
 
 ## Freios
@@ -76,7 +77,7 @@ de 15 min de vencer.
 
 | Onde | O quê | Quando vale |
 |---|---|---|
-| `agentes/<nome>.md` | `modelo`, `raciocinio`, `max_turnos` e o prompt de cada agente | quando o arquivo muda |
+| `agentes/<nome>/<nome>.md` | `modelo`, `raciocinio`, `max_turnos` e o prompt de cada agente | quando o arquivo muda |
 | `config/ajustes.yaml` | preços, freios, raciocínio padrão, tempos | no próximo pedido |
 | `.env` | só chaves e segredos | ao recriar o contêiner |
 
@@ -135,7 +136,8 @@ as cinco perguntas saíram certos, e todas as citações existem no trecho citad
 ## Mapa do código
 
 ```
-agentes/                    UM ARQUIVO POR AGENTE: modelo, raciocínio, turnos e prompt
+agentes/<nome>/             UMA PASTA POR AGENTE: <nome>.md (modelo, raciocínio, turnos e prompt)
+                            e o Dockerfile do serviço dele
 config/ajustes.yaml         preços, freios, tempos, traces com conteúdo
 
 app/
@@ -154,7 +156,7 @@ app/
 │  └─ memoria.py            histórico de cada especialista na conversa, compactado
 │
 ├─ nucleo/                  O QUE OS DOIS USAM
-│  ├─ agentes.py            ler e validar agentes/<nome>.md
+│  ├─ agentes.py            ler e validar agentes/<nome>/<nome>.md
 │  ├─ executar.py           rodar UM agente PydanticAI: modelo, tools do MCP, passos, freios
 │  ├─ mcp.py                conexão com o servidor MCP
 │  ├─ tokens.py             token A2A e token do agente
@@ -167,8 +169,9 @@ app/
    └─ avaliacao_automatica.py  a nota ao fim de cada relatório e as métricas dela
 
 scripts/                    avaliar.py, gerar_entrega.py
-docker/<serviço>/Dockerfile um por serviço: orquestrador e cada especialista
 ```
 
-Para criar um agente: `python -m app.ferramentas.cli novo-agente <nome>` cria `agentes/<nome>.md`
-e mostra a entrada para colar em `mcp-server/config/policy.yaml`.
+Para criar um agente: `python -m app.ferramentas.cli novo-agente <nome> --descricao "..."` cria
+`agentes/<nome>/` (o arquivo e o Dockerfile, na porta seguinte à do último especialista) e mostra
+o que colar: a entrada em `mcp-server/config/policy.yaml` e o serviço, o volume da memória e o
+endereço no `docker-compose.yml`.

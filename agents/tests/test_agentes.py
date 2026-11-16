@@ -68,10 +68,22 @@ def test_folder_is_reread_when_it_changes_and_a_bad_file_does_not_take_the_other
     assert registry.current() is first  # nada mudou: não relê
 
     write_agent(agents_dir, "tradutor")
-    (agents_dir / "quebrado.md").write_text("sem cabeçalho", encoding="utf-8")
+    (agents_dir / "quebrado").mkdir()
+    (agents_dir / "quebrado" / "quebrado.md").write_text("sem cabeçalho", encoding="utf-8")
     second = registry.current()
     assert "tradutor" in second.agents and second.digest != first.digest
-    assert second.errors == {"quebrado.md": "falta o cabeçalho entre linhas '---' no começo do arquivo"}
+    assert second.errors == {"quebrado/quebrado.md": "falta o cabeçalho entre linhas '---' no começo do arquivo"}
+
+    # Cada agente mora na própria pasta: arquivo solto na raiz ou na pasta de outro nome fica de fora.
+    solto = write_agent(agents_dir, "solto")
+    solto.rename(agents_dir / "solto.md")
+    trocado = write_agent(agents_dir, "trocado")
+    (agents_dir / "outra").mkdir()
+    trocado.rename(agents_dir / "outra" / "trocado.md")
+    third = registry.current()
+    assert "solto" not in third.agents and "trocado" not in third.agents
+    assert third.errors["solto.md"] == "o arquivo fica na pasta do agente: agentes/solto/solto.md"
+    assert third.errors["outra/trocado.md"] == "o arquivo do agente 'trocado' fica em agentes/trocado/trocado.md"
 
     path = write_agent(agents_dir, "extrator", max_turnos=9)
     bump(path)
@@ -91,6 +103,13 @@ def test_cli_creates_the_file_and_prints_the_policy_entry(agents_dir, monkeypatc
         assert "  consultor:\n    tools: [ler_analise, buscar_trechos]" in printed and "policy.yaml" in printed
         created = Registry(agents_dir).current().agents["consultor"]
         assert created.descricao == "Compara os riscos citados pelas empresas." and created.resposta == "base"
+        # A pasta do agente leva o Dockerfile do serviço dele, na porta seguinte (já há 2 especialistas).
+        docker = (agents_dir / "consultor" / "Dockerfile").read_text(encoding="utf-8")
+        assert "COPY agentes/consultor/consultor.md ./agentes/consultor/consultor.md" in docker
+        assert "ENV ESPECIALISTA=consultor" in docker and '"--port", "8203"' in docker
+        # E o que colar no compose: o serviço, o volume da memória e o endereço.
+        assert "dockerfile: agentes/consultor/Dockerfile" in printed and "memoria-consultor:/data" in printed
+        assert '"consultor": "http://consultor:8203"' in printed
         # Não sobrescreve, e não cria com nome que o servidor MCP recusaria.
         assert cli(["novo-agente", "consultor", "--descricao", "Outra descrição com tamanho suficiente."]) == 2
         assert cli(["novo-agente", "Consultor-2", "--descricao", "Outra descrição com tamanho suficiente."]) == 2

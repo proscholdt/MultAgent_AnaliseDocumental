@@ -1,6 +1,6 @@
 """Serviço dos especialistas: cada arquivo de agente vira um agente remoto A2A.
 
-Para cada `agentes/<nome>.md` (menos o orquestrador) o serviço publica:
+Para cada `agentes/<nome>/<nome>.md` (menos o orquestrador) o serviço publica:
 
     GET  /agentes/<nome>/.well-known/agent-card.json   o Agent Card, gerado do arquivo
     POST /agentes/<nome>/                              o endpoint A2A (JSON-RPC)
@@ -46,7 +46,7 @@ from app import telemetria
 from app.config import Settings, get_settings
 from app.especialistas.memoria import Memory, compact, split_runs
 from app.nucleo import mcp
-from app.nucleo.agentes import AgentFile, Registry
+from app.nucleo.agentes import AgentFile, Registry, agent_file
 from app.nucleo.executar import (
     AgentRun,
     Budget,
@@ -168,7 +168,7 @@ class Specialists:
     def invalid(self, snapshot: Any) -> dict[str, str]:
         """Arquivos inválidos que importam a este serviço (com `ESPECIALISTA`, só o dele)."""
         only = self.settings.especialista
-        return {arquivo: erro for arquivo, erro in snapshot.errors.items() if not only or arquivo == f"{only}.md"}
+        return {arquivo: erro for arquivo, erro in snapshot.errors.items() if not only or arquivo == agent_file(only)}
 
     # --- o trabalho -------------------------------------------------------------------------
 
@@ -312,7 +312,7 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
         served = [spec.nome for spec in service.served(snapshot)]
         problem = settings.problem
         if settings.especialista and not served:
-            problem = f"ESPECIALISTA={settings.especialista}, mas não há agentes/{settings.especialista}.md válido"
+            problem = f"ESPECIALISTA={settings.especialista}, mas não há agentes/{agent_file(settings.especialista)} válido"
         return {"status": "ok" if not problem else "configuração incompleta", "problema": problem,
                 "especialistas": served, "arquivos_invalidos": service.invalid(snapshot)}
 

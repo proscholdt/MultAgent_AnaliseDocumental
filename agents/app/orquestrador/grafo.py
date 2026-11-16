@@ -37,7 +37,7 @@ from pydantic import BaseModel, Field
 from app import telemetria
 from app.config import Settings
 from app.nucleo import mcp
-from app.nucleo.agentes import ORCHESTRATOR, AgentFile, Registry
+from app.nucleo.agentes import ORCHESTRATOR, AgentFile, Registry, agent_file
 from app.nucleo.custos import Ledger, cost_usd
 from app.nucleo.executar import AgentRun, Budget, Engine, atualizar_instrumentacao, run_agent
 from app.nucleo.tokens import Identity
@@ -493,8 +493,8 @@ async def _execute(run: Run, user_token: str, deps: Deps) -> Run:
         snapshot = deps.registry.current()
         run.agentes_digest = snapshot.digest
         if snapshot.orchestrator is None:
-            problem = snapshot.errors.get(f"{ORCHESTRATOR}.md", "o arquivo não existe")
-            raise RunFailed(f"Não há orquestrador: agentes/{ORCHESTRATOR}.md ({problem}).")
+            problem = snapshot.errors.get(agent_file(ORCHESTRATOR), "o arquivo não existe")
+            raise RunFailed(f"Não há orquestrador: agentes/{agent_file(ORCHESTRATOR)} ({problem}).")
         catalog = await execution.client.catalog()
         if any(entry["tools"] is None for entry in catalog["agentes"]):
             raise RunFailed("Um serviço de especialista não conseguiu falar com o servidor MCP.")

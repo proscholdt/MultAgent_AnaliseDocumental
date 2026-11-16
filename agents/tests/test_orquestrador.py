@@ -382,9 +382,10 @@ async def test_run_does_not_start_with_an_agent_that_has_no_policy_entry(http, w
 
 
 async def test_run_fails_clearly_without_the_orchestrator_file(http, agents_dir):
-    (agents_dir / "orquestrador.md").write_text("sem cabeçalho", encoding="utf-8")
+    (agents_dir / "orquestrador" / "orquestrador.md").write_text("sem cabeçalho", encoding="utf-8")
     run = (await http.post("/api/relatorios", json={"aguardar": True}, headers=auth())).json()
-    assert run["estado"] == "falhou" and "orquestrador.md" in run["erro"] and "falta o cabeçalho" in run["erro"]
+    assert run["estado"] == "falhou" and "orquestrador/orquestrador.md" in run["erro"]
+    assert "falta o cabeçalho" in run["erro"]
 
 
 # --- a API ----------------------------------------------------------------------------------

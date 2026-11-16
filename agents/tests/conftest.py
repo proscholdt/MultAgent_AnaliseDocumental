@@ -200,7 +200,8 @@ def write_agent(folder: Path, nome: str, **header: Any) -> Path:
     fields = {"nome": nome, "descricao": f"Agente de teste que faz o papel de {nome} nos testes.",
               "modelo": MODEL_NAME, "max_turnos": 6, **header}
     head = "\n".join(f"{key}: {value}" for key, value in fields.items())
-    path = folder / f"{nome}.md"
+    path = folder / nome / f"{nome}.md"
+    path.parent.mkdir(exist_ok=True)
     path.write_text(f"---\n{head}\n---\nVocê é o agente de teste {nome}. Siga o roteiro do teste, passo a passo.\n",
                     encoding="utf-8")
     return path
