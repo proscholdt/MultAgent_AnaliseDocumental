@@ -192,6 +192,15 @@ aparecem no Grafana.
 
 ## Limitações
 
+- **Só demonstrações anuais, um documento por empresa.** Premissa adotada a partir dos três PDFs
+  recebidos, todos anuais. O período de um documento é um ano, e o comparável é o ano anterior
+  (`periods()` no servidor MCP); `salvar_indicador` só aceita ano com 4 dígitos. Num documento
+  trimestral (`3T25`), o período não tem comparável e os valores gravados por ano não casam com
+  ele: a extração não fecha. O que já é geral: parse, chunks, unidade, busca, portões e citação;
+  os metadados já reconhecem trimestre (`3T25`, "Informações trimestrais"). Dois documentos da
+  mesma empresa (2022 e 2023) aparecem no relatório como duas empresas, e as perguntas
+  "no período" misturariam os anos. O que falta está em
+  [Caminho para produção](#caminho-para-produção-no-azure).
 - **Inconsistências da fonte**: as regras acham as 7 conhecidas, e o validador registrou as 7 na
   última execução (6 de 7 nas duas anteriores, antes da prova). As regras foram desenhadas olhando
   estes três documentos; num PDF novo, um tipo de erro que elas não cobrem depende do olho do
@@ -219,7 +228,23 @@ aparecem no Grafana.
 ## Caminho para produção no Azure
 
 Para milhares de documentos por trimestre, a lógica fica (portões, política, gabarito); trocam
-a infraestrutura e a escala.
+a infraestrutura e a escala. Antes disso, uma mudança de domínio:
+
+**Período trimestral e várias datas por empresa.** É trabalho no servidor MCP (regras, fórmulas
+e testes); a ingestão e os chunks quase não mudam.
+
+1. **O período vira uma entidade**, não um ano: trimestre (`3T25`), acumulado do ano (`9M25`) e
+   data de balanço (`30/09/2025`), cada um com o seu comparável. No resultado, 3T25 se compara
+   com 3T24; no balanço de um ITR, a coluna comparável é 31/12/2024, o último anual.
+2. **A gravação e a conferência da coluna** reconhecem trimestre, acumulado e intervalo de datas
+   ("01/07/2025 a 30/09/2025"). Hoje a coluna é conferida só pelo ano, e trimestre e acumulado do
+   mesmo ano não se distinguem.
+3. **As fórmulas sabem o período**: a alavancagem usa o EBITDA dos últimos 12 meses (somando
+   quatro trimestres, ou "não calculável" sem eles). Com o EBITDA de um trimestre, o múltiplo sai
+   umas quatro vezes maior.
+4. **Relatório e perguntas por empresa e período**: documentos da mesma empresa se agrupam, e
+   "no período" compara empresas no mesmo trimestre.
+5. **Um gabarito com trimestrais**, para medir antes de usar.
 
 | Hoje | No Azure | Por quê |
 |---|---|---|

@@ -53,6 +53,11 @@ Calculado (variação, EBITDA, margem, dívida líquida, alavancagem, capex) usa
 aparece como informado. As validações (`ebitda_divergente`, `margem_divergente`,
 `periodo_nao_confirmado`…) viram alertas com os dois lados da conta.
 
+**Período.** O período de um documento é um ano, e o comparável é o ano anterior
+(`periods()` em `app/tools/extracao.py`); `salvar_indicador` só aceita ano com 4 dígitos, e a
+coluna é conferida pelo ano do cabeçalho. Documento trimestral (`3T25`) ainda não fecha a
+extração: o que falta está no [README da raiz](../README.md#caminho-para-produção-no-azure).
+
 ## Pendências
 
 `pendencias` define a ordem: extração → revisão das fontes e análise → perguntas (com tudo de
