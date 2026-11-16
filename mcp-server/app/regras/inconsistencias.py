@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from app.regras.numeros import format_br, in_reais, to_decimal
+from app.regras.tabelas import parse_table
 from app.regras.texto import plain, squash
 
 MAX_CANDIDATES = 40
@@ -48,6 +49,10 @@ _FORWARD = re.compile(r"(?:cen[áa]rio|proje[çc][ãa]o|proje[çc][õo]es|projet
 _SENTENCE_END = re.compile(r"(?<=[.;!?])\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ(\"“])")
 
 
+RULES = ("conta_na_frase", "variacao_contra_extracao", "ano_comparado_com_ele_mesmo", "projecao_para_o_passado",
+         "data_do_quadro")
+
+
 @dataclass(frozen=True)
 class Candidate:
     chunk_index: int
@@ -55,10 +60,15 @@ class Candidate:
     regra: str
     motivo: str
     trecho: str  # copiado do chunk (espaços normalizados): serve de citação
+    # Nos quadros: os mesmos números em outro quadro do documento, com a coluna (e o ano) de lá.
+    prova: str | None = None
 
     def view(self) -> dict:
-        return {"chunk_index": self.chunk_index, "pagina": self.pagina, "regra": self.regra,
-                "motivo": self.motivo, "trecho": self.trecho}
+        out = {"chunk_index": self.chunk_index, "pagina": self.pagina, "regra": self.regra,
+               "motivo": self.motivo, "trecho": self.trecho}
+        if self.prova:
+            out["prova"] = self.prova
+        return out
 
 
 @dataclass(frozen=True)
@@ -250,10 +260,57 @@ def _quote_for_table(text: str) -> str:
     return squash(" ".join([*preamble[-1:], header_line]))[:_SENTENCE_MAX]
 
 
+# Um número de quadro que identifica um valor: com separador de milhar ("24.176", "(5.672.203)").
+# Os pequenos ("355", "2") se repetem por acaso entre quadros e não provam nada.
+_BIG_NUMBER = re.compile(r"\(?-?(\d{1,3}(?:\.\d{3})+)\)?")
+_PROOF_MAX = 2
+
+
+def _numbers_by_column(chunks: list[dict]) -> dict[str, list[tuple[int, int, str]]]:
+    """Em todos os quadros do documento: número → [(chunk_index, página, título da coluna com ano)]."""
+    index: dict[str, list[tuple[int, int, str]]] = {}
+    for chunk in chunks:
+        table = parse_table(chunk.get("text") or "")
+        if table is None:
+            continue
+        for row in table.rows:
+            for column, cell in enumerate(row[:len(table.header)]):
+                title = table.header[column]
+                match = _BIG_NUMBER.fullmatch(cell.strip())
+                if match and _ANY_YEAR.search(title):
+                    index.setdefault(match.group(1), []).append((chunk["chunk_index"], chunk.get("page_start") or 0,
+                                                                 title))
+    return index
+
+
+def _proof(chunk: dict, index: dict[str, list[tuple[int, int, str]]]) -> str | None:
+    """Os números deste quadro que aparecem em outro quadro, com a coluna (e o ano) de lá."""
+    table = parse_table(chunk.get("text") or "")
+    if table is None:
+        return None
+    found: list[str] = []
+    for row in table.rows:
+        for cell in row:
+            match = _BIG_NUMBER.fullmatch(cell.strip())
+            if not match:
+                continue
+            for other, page, title in index.get(match.group(1), []):
+                if other != chunk["chunk_index"]:
+                    line = f"{match.group(1)} aparece na coluna \"{title}\" do quadro da p. {page} (chunk {other})"
+                    if line not in found:
+                        found.append(line)
+                    break
+            if len(found) >= _PROOF_MAX:
+                return "Os mesmos valores em outro quadro: " + "; ".join(found) + "."
+    return "Os mesmos valores em outro quadro: " + "; ".join(found) + "." if found else None
+
+
 def find(chunks: Iterable[dict], period: str | None, indicators: Iterable[Indicator] = ()) -> list[Candidate]:
     """Os candidatos do documento, na ordem das páginas. No máximo MAX_CANDIDATES."""
     year = year_of(period)
     indicators = list(indicators)
+    chunks = list(chunks)
+    by_column = _numbers_by_column(chunks)
     out: list[Candidate] = []
     for chunk in chunks:
         text = chunk.get("text") or ""
@@ -270,6 +327,8 @@ def find(chunks: Iterable[dict], period: str | None, indicators: Iterable[Indica
                     out.append(Candidate(index, page, rule, reason, sentence))
                     break
         if chunk.get("chunk_type") == "table" or "\n|" in text:
-            for reason in _table_dates(text):
-                out.append(Candidate(index, page, "data_do_quadro", reason, _quote_for_table(text)))
+            problems = _table_dates(text)
+            proof = _proof(chunk, by_column) if problems else None
+            for reason in problems:
+                out.append(Candidate(index, page, "data_do_quadro", reason, _quote_for_table(text), proof))
     return out[:MAX_CANDIDATES]

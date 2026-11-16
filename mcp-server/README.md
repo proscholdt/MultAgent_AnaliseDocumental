@@ -35,7 +35,11 @@ flowchart LR
 
 Inconsistências do próprio documento: `candidatos_inconsistencia` varre todos os chunks com regras
 ([app/regras/inconsistencias.py](app/regras/inconsistencias.py)) e devolve ao validador os trechos
-suspeitos, cada um com o motivo. A regra acha; o validador lê e decide o que registrar.
+suspeitos, cada um com o motivo. A regra acha; o validador lê e decide: registra
+(`registrar_alerta`) ou descarta dizendo por quê (`descartar_candidato`: o motivo fica guardado e
+na auditoria, fora do relatório). `concluir_revisao` recusa enquanto houver candidato sem
+julgamento. Nos quadros, o candidato traz uma `prova`: os mesmos números (com separador de
+milhar) achados em outro quadro do documento, com a coluna e o ano de lá.
 
 | Regra | Marca |
 |---|---|

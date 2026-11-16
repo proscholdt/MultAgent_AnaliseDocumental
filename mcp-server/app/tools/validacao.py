@@ -3,13 +3,14 @@ from typing import Any
 
 from pydantic import Field
 
+from app.dados.documentos import IndexedDocument
 from app.dados.visoes import alert_view
 from app.governanca.catalogo import Args, Call, tool
 from app.governanca.erros import ToolRejected
 from app.regras.campos import FIELDS, MAIN_FIELDS
 from app.regras.formulas import AlertDraft
-from app.regras.inconsistencias import Indicator, find
-from app.regras.pendencias import REVIEW_DONE
+from app.regras.inconsistencias import Candidate, Indicator, find
+from app.regras.pendencias import DISCARDED, REVIEW_DONE
 from app.regras.texto import (
     check_quote,
     check_script,
@@ -60,6 +61,18 @@ class CandidatosInconsistencia(Args):
     São candidatos, não conclusões: leia cada um e registre só o que for erro do documento.""")
 async def candidatos_inconsistencia(call: Call, args: CandidatosInconsistencia) -> dict[str, Any]:
     document = await call.deps.documents.get(call.caller, args.doc_id)
+    found = await _candidates(call, document)
+    return {"doc_id": args.doc_id, "empresa": document.company, "candidatos": [c.view() for c in found],
+            "como_usar": "Julgue CADA candidato: confira o trecho (ler_chunk ou ler_pagina) e, quando houver, a "
+                         "`prova` (os mesmos números em outro quadro, com o ano de lá). Se for erro do documento: "
+                         "registrar_alerta com o chunk_index e a citação copiada do trecho; a descrição só leva "
+                         "números que estão na citação. Se não for (arredondamento, outro período citado de "
+                         "propósito, coluna que o quadro explica): descartar_candidato, dizendo por quê. "
+                         "concluir_revisao só aceita com todos os candidatos julgados."}
+
+
+async def _candidates(call: Call, document: IndexedDocument) -> list[Candidate]:
+    """Os candidatos do documento, com a extração publicada para a regra que compara com ela."""
     extraction, _ = await build_extraction(call, document)
     indicators = []
     for campo in MAIN_FIELDS:
@@ -67,12 +80,50 @@ async def candidatos_inconsistencia(call: Call, args: CandidatosInconsistencia) 
         now, before = extraction.amount(campo, extraction.reference), extraction.amount(campo, extraction.comparable)
         if spec.kind == "valor" and now is not None and before is not None:
             indicators.append(Indicator(spec.label, spec.mention, now, before))
-    found = find(document.chunks, document.period, indicators)
-    return {"doc_id": args.doc_id, "empresa": document.company, "candidatos": [c.view() for c in found],
-            "como_usar": "Para cada candidato, confira o trecho (ler_chunk ou ler_pagina). Se for erro do documento, "
-                         "registrar_alerta com o chunk_index e a citação copiada do trecho; a descrição só leva "
-                         "números que estão na citação. Se não for (arredondamento, outro período citado de "
-                         "propósito, coluna que o quadro explica), siga para o próximo."}
+    return find(document.chunks, document.period, indicators)
+
+
+def _judged(candidate: Candidate, alerts: list[Any]) -> bool:
+    """O candidato virou alerta (no mesmo chunk ou na mesma página) ou foi descartado com motivo."""
+    for alert in alerts:
+        details = alert.detalhes or {}
+        if alert.codigo == "inconsistencia_na_fonte" and (details.get("chunk_index") == candidate.chunk_index
+                                                         or details.get("pagina") == candidate.pagina):
+            return True
+        if alert.codigo == DISCARDED and details.get("chunk_index") == candidate.chunk_index \
+                and details.get("regra") == candidate.regra:
+            return True
+    return False
+
+
+class DescartarCandidato(Args):
+    doc_id: str = Field(description="Documento.")
+    chunk_index: int = Field(ge=0, description="O chunk_index do candidato, como veio em candidatos_inconsistencia.")
+    regra: str = Field(description="A regra do candidato, como veio em candidatos_inconsistencia.")
+    motivo: str = Field(min_length=20, max_length=400, description="Por que não é erro do documento, em uma ou duas "
+                        "frases (ex.: 'arredondamento entre o texto e o quadro', 'a nota explica que a coluna é de "
+                        "outra controlada'). Números só os que estão no trecho.")
+
+
+@tool("descartar_candidato", "validacao", """
+    Diz que um candidato de candidatos_inconsistencia NÃO é erro do documento, e por quê. O motivo
+    fica guardado e na auditoria (não vai para o relatório). Use só depois de ler o trecho e a
+    prova; se o trecho estiver errado, registre com registrar_alerta.""")
+async def descartar_candidato(call: Call, args: DescartarCandidato) -> dict[str, Any]:
+    document = await call.deps.documents.get(call.caller, args.doc_id)
+    found = await _candidates(call, document)
+    candidate = next((c for c in found if c.chunk_index == args.chunk_index and c.regra == args.regra), None)
+    if candidate is None:
+        raise ToolRejected(f"Não há candidato da regra '{args.regra}' no chunk {args.chunk_index}.",
+                           opcoes=[f"chunk {c.chunk_index}, regra {c.regra}" for c in found])
+    reason = squash(args.motivo)
+    check_script(reason, "O motivo")
+    _numbers_backed(reason, _chunk(document, args.chunk_index)["text"], "O motivo")
+    added = await call.deps.store.add_alerts(call.caller, args.doc_id, document.fingerprint, "fonte", [AlertDraft(
+        DISCARDED, "informacao", mensagem=reason,
+        detalhes={"chunk_index": candidate.chunk_index, "pagina": candidate.pagina, "regra": candidate.regra,
+                  "motivo_da_regra": candidate.motivo})])
+    return {"descartado": True, "pagina": candidate.pagina, "aviso": None if added else "Já estava descartado."}
 
 
 class LerAlertas(Args):
@@ -85,7 +136,8 @@ class LerAlertas(Args):
 async def ler_alertas(call: Call, args: LerAlertas) -> dict[str, Any]:
     document = await call.deps.documents.get(call.caller, args.doc_id)
     alerts = await call.deps.store.alerts(call.caller.user_id, args.doc_id, document.fingerprint)
-    return {"doc_id": args.doc_id, "empresa": document.company, "alertas": [alert_view(alert) for alert in alerts]}
+    return {"doc_id": args.doc_id, "empresa": document.company,
+            "alertas": [alert_view(alert) for alert in alerts if alert.codigo != DISCARDED]}
 
 
 class ConcluirRevisao(Args):
@@ -97,8 +149,9 @@ class ConcluirRevisao(Args):
 
 @tool("concluir_revisao", "validacao", """
     Marca que as fontes de um documento foram revisadas em busca de inconsistências. Chame depois
-    de ler os alertas automáticos e de registrar, com registrar_alerta, o que encontrou no texto.
-    Sem isso, a revisão continua aparecendo como pendência.""")
+    de ler os alertas automáticos e de julgar cada candidato (registrar_alerta ou
+    descartar_candidato). Com candidato sem julgamento, é recusada e diz quais faltam. Sem ela, a
+    revisão continua aparecendo como pendência.""")
 async def concluir_revisao(call: Call, args: ConcluirRevisao) -> dict[str, Any]:
     document = await call.deps.documents.get(call.caller, args.doc_id)
     published = await call.deps.store.extraction(call.caller.user_id, args.doc_id)
@@ -110,7 +163,13 @@ async def concluir_revisao(call: Call, args: ConcluirRevisao) -> dict[str, Any]:
     if loose:
         raise ToolRejected(f"A observação não leva valores ({', '.join(loose)}): eles ficam nos alertas, com citação.")
     alerts = await call.deps.store.alerts(call.caller.user_id, args.doc_id, document.fingerprint)
-    found = sum(alert.tipo == "fonte" and alert.codigo != REVIEW_DONE for alert in alerts)
+    open_ = [c for c in await _candidates(call, document) if not _judged(c, alerts)]
+    if open_:
+        raise ToolRejected(
+            f"Falta julgar {len(open_)} candidato(s) de candidatos_inconsistencia: registre com registrar_alerta "
+            "ou descarte com descartar_candidato, dizendo por quê.",
+            problemas=[f"chunk {c.chunk_index} (p. {c.pagina}), regra {c.regra}: {c.motivo}" for c in open_])
+    found = sum(alert.tipo == "fonte" and alert.codigo == "inconsistencia_na_fonte" for alert in alerts)
     await call.deps.store.add_alerts(call.caller, args.doc_id, document.fingerprint, "fonte", [AlertDraft(
         REVIEW_DONE, "informacao", mensagem=f"Fontes revisadas pelo agente {call.caller.agent}. {note}",
         detalhes={"inconsistencias_registradas": found})])

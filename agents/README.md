@@ -129,7 +129,8 @@ Relatório completo dos três documentos, com raciocínio ligado:
 
 | Modelos | Tempo | Custo | Indicadores certos | Inconsistências da fonte | Perguntas |
 |---|---|---|---|---|---|
-| `gpt-5.4-nano` em todos, com candidatos por regra e a trava de ordem (atual) | 231 s | US$ 0,14 | 24 de 24 | **6 de 7** | 5 de 5 |
+| `gpt-5.4-nano` em todos, com candidatos com prova, descarte com motivo e a trava de ordem (atual) | 151 s | US$ 0,15 | 24 de 24 | **7 de 7** | 5 de 5 |
+| o mesmo, sem a prova e o descarte | 231 s | US$ 0,14 | 24 de 24 | 6 de 7 | 5 de 5 |
 | o mesmo, antes da trava de ordem | 311 s | US$ 0,20 | 24 de 24 | 6 de 7 | 4 de 5 |
 | `gpt-5.4-nano` em todos, sem os candidatos | 195 s | US$ 0,14 | 24 de 24 | 2 de 6 | 5 de 5 |
 | `gpt-5.4-mini` + `gpt-5.4` no validador, sem os candidatos | 332 s | US$ 1,02 | 24 de 24 | 4 de 6 | 5 de 5 |
@@ -138,12 +139,21 @@ Relatório completo dos três documentos, com raciocínio ligado:
 Em todas as que terminaram, nenhum valor ausente foi gravado como informado, os valores
 calculados saíram certos e todas as citações existem no trecho citado.
 
-**Inconsistências da fonte.** Desde que o validador começa pela lista de candidatos que o servidor
-MCP acha por regra (`candidatos_inconsistencia`), ele registrou 6 das 7 conhecidas, gastando
-US$ 0,014 nos três documentos. A sétima (Light, p. 21 do arquivo: o consolidado diz 2021 nas
-duas colunas) foi achada pelas regras e entrou no gabarito depois de conferida no PDF. A que
-faltou (Millet, p. 41) estava na lista, e o modelo julgou que não era erro. As regras foram
-desenhadas olhando estes documentos: em outro PDF, a medida honesta é rodar e conferir.
+**Inconsistências da fonte.** O validador começa pela lista de candidatos que o servidor MCP acha
+por regra (`candidatos_inconsistencia`) e julga cada um: registra (`registrar_alerta`) ou descarta
+dizendo por quê (`descartar_candidato`, guardado e auditado, fora do relatório); o
+`concluir_revisao` recusa enquanto houver candidato sem julgamento. Nos quadros, o candidato traz
+uma `prova`: os mesmos números achados em outro quadro do documento, com a coluna e o ano de lá.
+
+- Só com a lista: 6 de 7 em duas execuções. A que faltou (Millet, p. 41: o texto diz 31/12/2021 e o
+  quadro é de 2022) estava na lista, e o modelo julgou que não era erro, sem deixar o motivo.
+- Com a prova e o descarte: 7 de 7, nenhum descarte. A prova da Millet dizia que 24.176 aparece
+  como "Consolidado - 31/12/2022" no quadro da p. 32, e a descrição registrada cita os valores
+  de 2022. É uma execução: mostra o caminho, não a taxa.
+
+A sétima (Light, p. 21 do arquivo: o consolidado diz 2021 nas duas colunas) foi achada pelas regras
+e entrou no gabarito depois de conferida no PDF. As regras foram desenhadas olhando estes
+documentos: em outro PDF, a medida honesta é rodar e conferir.
 
 **Ordem do trabalho.** Na execução de 311 s, o orquestrador pediu as cinco perguntas antes da
 análise qualitativa; o MCP recusou as gravações 13 vezes, e ele repetiu o pedido em mais três

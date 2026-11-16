@@ -25,6 +25,10 @@ from app.governanca.erros import ToolRejected
 from app.regras.campos import CATEGORIES, QUESTIONS
 
 REVIEW_DONE = "revisao_das_fontes_concluida"
+# Candidato a inconsistência que o validador julgou não ser erro, com o motivo dele.
+DISCARDED = "candidato_descartado"
+# Registros da revisão que não são alertas para o analista: ficam fora do relatório.
+INTERNAL_ALERTS = (REVIEW_DONE, DISCARDED)
 
 
 def _latest(*moments: datetime | None) -> datetime | None:

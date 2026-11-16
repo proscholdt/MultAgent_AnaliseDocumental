@@ -81,7 +81,7 @@ flowchart TB
 | **Servidor MCP como porta única** | Regras, permissões e conferências num lugar só, testável, fora do prompt. Qualquer cliente MCP lê os dados extraídos | Um salto a mais e mais código no servidor |
 | **Orquestrador em grafo** (LangGraph) **com especialistas PydanticAI** | O modelo decide; o grafo executa em paralelo, guarda a conversa (checkpoint) e confere no fim por código. PydanticAI dá saída tipada e troca de provedor | Duas bibliotecas |
 | **A2A, um serviço por especialista** | Cada especialista escala e cai sozinho: um fora do ar tira só ele da execução | Um salto de rede por delegação |
-| **`gpt-5.4-nano` em todos os agentes** | Mesma nota do `gpt-5.4-mini` nos indicadores, por 1/7 do custo | Sozinho, achava menos inconsistências da fonte (2 de 6 contra 4 de 6 do `gpt-5.4`); com os candidatos por regra, abaixo, achou 6 de 7. O modelo é por agente |
+| **`gpt-5.4-nano` em todos os agentes** | Mesma nota do `gpt-5.4-mini` nos indicadores, por 1/7 do custo | Sozinho, achava menos inconsistências da fonte (2 de 6 contra 4 de 6 do `gpt-5.4`); com os candidatos por regra, abaixo, achou 6 e depois 7 de 7. O modelo é por agente |
 | **Inconsistências da fonte: a regra acha, o modelo julga** | O servidor MCP varre todos os trechos com regras (conta que não fecha, ano trocado, data do quadro) e entrega a lista ao validador, que lê e decide. O modelo não precisa "enxergar" o erro no meio de 120 páginas | As regras foram desenhadas olhando estes documentos; o modelo ainda pode descartar um erro real |
 | **`gpt-4o-mini` para gráficos e metadados** no indexador | Barato e com visão | A transcrição só vale se conferida (abaixo) |
 | **Prompts curtos, um arquivo por agente** | O prompt diz o que fazer; o portão garante. Mudar o prompt não abre brecha | — |
@@ -130,7 +130,8 @@ Resultado do relatório completo dos três documentos:
 
 | Modelos | Indicadores certos | Inconsistências da fonte | Invenções | Perguntas | Calculados e citações |
 |---|---|---|---|---|---|
-| `gpt-5.4-nano` em todos, com candidatos por regra (atual, duas execuções) | 24 de 24 | 6 de 7 | 0 | 5 de 5 e 4 de 5 | todos certos |
+| `gpt-5.4-nano` em todos, candidatos com prova e descarte com motivo (atual) | 24 de 24 | **7 de 7** | 0 | 5 de 5 | todos certos |
+| `gpt-5.4-nano` em todos, candidatos sem prova (duas execuções) | 24 de 24 | 6 de 7 | 0 | 5 de 5 e 4 de 5 | todos certos |
 | `gpt-5.4-nano` em todos, sem candidatos | 24 de 24 | 2 de 6 | 0 | 5 de 5 | todos certos |
 | `gpt-5.4-mini` + `gpt-5.4` no validador, sem candidatos | 24 de 24 | 4 de 6 | 0 | 5 de 5 | todos certos |
 
@@ -156,7 +157,7 @@ Docling, o parse é de graça e leva 26 min para os três.
 
 | Pedido | Tempo | Tokens | Custo |
 |---|---|---|---|
-| Relatório consolidado dos 3 documentos (`gpt-5.4-nano`, raciocínio ligado) | 195 a 311 s | 1,9 a 2,8 milhões em 145 a 200 chamadas, ~80% em cache | US$ 0,14 a 0,20 |
+| Relatório consolidado dos 3 documentos (`gpt-5.4-nano`, raciocínio ligado) | 151 a 311 s | 1,9 a 2,8 milhões em 133 a 200 chamadas, ~80% em cache | US$ 0,14 a 0,20 |
 | O mesmo com `gpt-5.4-mini` + `gpt-5.4` no validador | 332 s | 3,0 milhões em 160 chamadas, 87% em cache | US$ 1,02 |
 | Uma pergunta | 15 a 30 s | — | US$ 0,01 a 0,03 |
 
@@ -191,9 +192,10 @@ aparecem no Grafana.
 
 ## Limitações
 
-- **Inconsistências da fonte**: as regras acham as 7 conhecidas, mas o validador ainda descarta
-  uma (Millet, p. 41). As regras foram desenhadas olhando estes três documentos; num PDF novo,
-  um tipo de erro que elas não cobrem depende do olho do modelo.
+- **Inconsistências da fonte**: as regras acham as 7 conhecidas, e o validador registrou as 7 na
+  última execução (6 de 7 nas duas anteriores, antes da prova). As regras foram desenhadas olhando
+  estes três documentos; num PDF novo, um tipo de erro que elas não cobrem depende do olho do
+  modelo, e o julgamento de cada candidato continua sendo do modelo.
 - **Página**: "p." é a página do arquivo PDF, contada da primeira folha, não a numeração impressa
   (que na Light recomeça nas demonstrações: a folha impressa 21 é a p. 38 do arquivo). O
   relatório diz isso no início.

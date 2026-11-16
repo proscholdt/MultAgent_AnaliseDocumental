@@ -8,7 +8,7 @@ from app.dados.modelos import Summary
 from app.governanca.catalogo import Args, Call, tool
 from app.governanca.erros import ToolRejected
 from app.regras.marcadores import MARKER
-from app.regras.pendencias import REVIEW_DONE, gather, pending, summary_blockers
+from app.regras.pendencias import INTERNAL_ALERTS, gather, pending, summary_blockers
 from app.regras.relatorios import build_company_report, build_report
 from app.regras.texto import check_script, squash, unbacked_numbers
 from app.tools.respostas import markers_for
@@ -91,7 +91,7 @@ async def montar_relatorio_empresa(call: Call, args: RelatorioEmpresa) -> dict[s
     state = next(state for state in await gather(call) if state.document.doc_id == args.doc_id)
     markdown = build_company_report(
         {"extracao": state.extraction, "analise": state.analysis, "resumo": state.summary,
-         "alertas": [alert for alert in state.alerts if alert["codigo"] != REVIEW_DONE]}, datetime.now(UTC))
+         "alertas": [alert for alert in state.alerts if alert["codigo"] not in INTERNAL_ALERTS]}, datetime.now(UTC))
     await call.deps.store.save_company_report(call.caller, args.doc_id, state.document.fingerprint, markdown)
     return {"montado": True, "empresa": state.name, "caracteres": len(markdown)}
 
@@ -127,7 +127,7 @@ async def montar_relatorio(call: Call, args: MontarRelatorio) -> dict[str, Any]:
     answers = await call.deps.store.answers(call.caller.user_id)
     markdown = build_report(
         [{"extracao": state.extraction, "analise": state.analysis, "resumo": state.summary,
-          "alertas": [alert for alert in state.alerts if alert["codigo"] != REVIEW_DONE]} for state in states],
+          "alertas": [alert for alert in state.alerts if alert["codigo"] not in INTERNAL_ALERTS]} for state in states],
         [{"pergunta_id": answer.pergunta_id, "renderizado": answer.renderizado, "citacoes": answer.citacoes}
          for answer in answers],
         datetime.now(UTC))
