@@ -34,6 +34,29 @@ flowchart LR
 | Custo | zero | ~US$ 10 por mil páginas |
 | Worker | 4,3 GB, pico de 4 GB de RAM | 825 MB |
 
+## Chunks
+
+O corte segue a estrutura do documento, não um tamanho fixo
+([app/indexacao/trechos.py](app/indexacao/trechos.py)). Os tamanhos ficam no
+`config/ajustes.yaml` e valem para os documentos processados depois da mudança. Os tokens são
+contados com o `tiktoken` (`cl100k_base`).
+
+| Etapa | Regra | Valor |
+|---|---|---|
+| Limpeza | Cabeçalho e rodapé corridos saem: linha curta repetida em muitas páginas, quase sempre na borda (o nome da empresa, "As notas explicativas são parte integrante..."). Tabelas e figuras nunca saem. | até 60 tokens; em 5 páginas ou 8% do documento |
+| Limpeza | O índice (sumário) sai: ele repete o nome de todas as seções e casaria com qualquer busca. Letra solta de logotipo também sai. | — |
+| Seção | Cada chunk guarda o caminho da seção, tirado da numeração das notas ("22." > "22.1" > "a)"), com regras para título quebrado e "(continuação)" na outra página. Título novo fecha o chunk anterior. | — |
+| Texto | Parágrafos da mesma seção agrupados até o alvo, cortando sempre entre parágrafos. | `chunk_target_tokens: 450` |
+| Texto | Parágrafo que sozinho passa do teto é dividido em fim de frase. | `chunk_max_tokens: 800` |
+| Texto | Sobreposição: o último parágrafo de um chunk se repete no seguinte, se for curto. | até 120 tokens |
+| Tabela | Um chunk por tabela, com as linhas curtas logo acima dela na mesma página (o título: "Demonstrações dos resultados", "(em milhares de reais)"). A nota de rodapé logo abaixo ("(a) Não auditado") vai junto. | até 4 linhas, 160 tokens |
+| Tabela | Tabela grande é dividida por linhas, repetindo o título e o cabeçalho em cada parte ("parte 1 de 3"). | `table_max_tokens: 1500` |
+| Gráfico | Um chunk por gráfico, com a transcrição do modelo de visão conferida contra o texto da página e o OCR, e a legenda. | — |
+| Contexto | Empresa, período, unidade, seção e página entram como prefixo **só no texto vetorizado**: `[Brasal Brasília Holding S.A. \| 2022 \| R$ mil \| 21. Receita operacional líquida \| p. 43]`. O texto guardado fica literal, para a citação bater com o PDF. | — |
+| Unidade | Decidida por chunk, por regra, sem LLM: no próprio chunk, no texto da página, nos valores citados ("R$1.817 milhões"), na convenção da página anterior. Nada achado: fica vazia. | — |
+| Vetores | Dois por chunk, no mesmo ponto do Qdrant: denso (`text-embedding-3-small`, 1536) e BM25 em português. | — |
+| Segurança | Trecho com padrão de injeção de prompt é indexado com `suspicious=true`. | — |
+
 ## Filas e isolamento
 
 - Chave Kafka = `user_id`; entrega ao menos uma vez com etapas idempotentes; retry com espera
