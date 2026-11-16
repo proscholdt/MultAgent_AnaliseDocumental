@@ -57,9 +57,11 @@ flowchart TB
    Markdown e recortes de gráfico, com página) e à indexação: chunks pela estrutura do
    documento, unidade decidida por regra, gráficos transcritos e conferidos, dois vetores por
    chunk.
-2. **Pedido.** No chat o usuário só escreve. O orquestrador classifica a mensagem (pergunta,
-   relatório consolidado, relatório de uma empresa, fora do escopo) e decide as ondas de
-   delegação; o grafo chama os especialistas em paralelo por A2A.
+2. **Pedido.** No chat o usuário só escreve. A mensagem é classificada em pergunta, relatório
+   consolidado, relatório de uma empresa ou fora do escopo: primeiro por um **roteador
+   semântico** (embedding contra frases de exemplo, com regra para a empresa citada e para a
+   mensagem de seguimento), e, quando ele não tem certeza, pelo orquestrador (LLM). O
+   orquestrador decide as ondas de delegação; o grafo chama os especialistas em paralelo por A2A.
 3. **Trabalho.** Cada especialista usa apenas as tools que a política do MCP lhe dá: busca,
    leitura de chunk e de página, e gravação. Toda gravação passa por um portão que confere o
    valor contra o documento.
@@ -85,6 +87,7 @@ flowchart TB
 | **Inconsistências da fonte: a regra acha, o modelo julga** | O servidor MCP varre todos os trechos com regras (conta que não fecha, ano trocado, data do quadro) e entrega a lista ao validador, que lê e decide. O modelo não precisa "enxergar" o erro no meio de 120 páginas | As regras foram desenhadas olhando estes documentos; o modelo ainda pode descartar um erro real |
 | **`gpt-4o-mini` para gráficos e metadados** no indexador | Barato e com visão | A transcrição só vale se conferida (abaixo) |
 | **Prompts curtos, um arquivo por agente** | O prompt diz o que fazer; o portão garante. Mudar o prompt não abre brecha | — |
+| **Intenção: roteador semântico na frente, LLM nos casos em dúvida** | Embedding da mensagem contra frases de exemplo (`agents/config/intencoes.yaml`), com os embeddings que o sistema já usa: decide o que é claro em ~0,4 s, barra o fora do escopo sem chamar o LLM e evita o erro caro (uma pergunta virar relatório completo). A empresa citada e a mensagem de seguimento são resolvidas por regra | Frases de exemplo para manter; o LLM continua nos casos difíceis |
 | **Kafka + workers** | Parse é lento e pesado; a API responde na hora, com retry, DLQ e retomada na etapa que falhou | Infraestrutura a mais para poucos documentos |
 
 ## Combate à alucinação
@@ -125,6 +128,12 @@ sem uma fonte que o código verifique.
   com teste, em vez de mais uma linha no prompt.
 - **Testes automatizados** em cada serviço, sem rede: modelo com roteiro, MCP em memória, A2A
   por ASGI.
+- **Intenção do chat** ([agents/avaliacao/intencoes.yaml](agents/avaliacao/intencoes.yaml)): 52
+  mensagens rotuladas, nenhuma igual às frases de exemplo do roteador, em ajuste (para escolher
+  o limiar) e teste (para medir). No teste, 37 mensagens: o roteador decide 30 e acerta as 30; o
+  LLM sozinho acerta 33 de 37 (um dos erros é uma pergunta virando relatório completo); roteador
+  e LLM juntos, como roda, acertam 37 de 37. As mensagens foram escritas por mim: medem as
+  regras, não o uso real. Detalhes em [agents/README.md](agents/README.md#intenção).
 
 Resultado do relatório completo dos três documentos:
 
@@ -138,6 +147,11 @@ Resultado do relatório completo dos três documentos:
 A sétima inconsistência (Light, p. 21 do arquivo: o consolidado diz 2021 nas duas colunas) foi
 achada pelas regras e entrou no gabarito depois de conferida no PDF. A pergunta que falhou numa
 das execuções é do pesquisador (faltou um motivo da receita da Light) e saiu certa na outra. Detalhes em [agents/README.md](agents/README.md#nota-contra-o-gabarito).
+
+No teste do sistema inteiro pelo chat (base zerada, seis mensagens e o relatório consolidado), a
+base ficou com 24 de 24 indicadores, 7 de 7 inconsistências, nenhuma invenção, 31 de 31 citações
+e 3 de 5 perguntas: a p2 perdeu o motivo da receita da Light de novo, e a p5 citou a continuidade
+operacional da Light em vez da renovação da concessão.
 
 ## Custo e desempenho
 
@@ -225,7 +239,16 @@ aparecem no Grafana.
 - **Unidade**: se nenhuma regra acha, fica vazia, e o valor é gravado com o aviso "a fonte não
   declara a unidade"; não há inferência pela ordem de grandeza.
 - **Tom** classificado só pelo modelo, com justificativa citada; não há comparação com um
-  classificador de ML tradicional.
+  classificador de ML tradicional (na intenção do chat há: o roteador semântico, medido contra o
+  LLM).
+- **Intenção medida com mensagens escritas por mim**, não colhidas de usuários. O roteador não
+  reconhece uma empresa que não está na base ("relatório da Vale" vira o consolidado), e uma
+  mensagem de seguimento que não começa como continuação é lida sozinha.
+- **A primeira pergunta numa base vazia roda quase o pipeline inteiro.** No teste pelo chat,
+  "Qual empresa teve a maior margem EBITDA?" levou 422 s e US$ 0,21: o orquestrador mandou
+  extrair os três documentos (necessário para a margem), mas também respondeu as 5 perguntas do
+  relatório e montou o relatório, que ninguém pediu. A trava de ordem só vale para relatório; numa
+  pergunta, o que delegar ainda é decisão do LLM.
 - **Escala de uma máquina**: base do MCP e memória dos agentes em SQLite, um contêiner de cada,
   tudo em Docker Compose. O Docling em CPU leva 26 min para 218 páginas.
 - **Sem reranker** na busca, e o relatório leva ~3 min.
@@ -266,6 +289,7 @@ e testes); a ingestão e os chunks quase não mudam.
 | Alloy, Tempo, Loki, Prometheus, Grafana | **Application Insights / Azure Monitor** | Já é OpenTelemetry: troca o exportador. Custo e nota viram alerta |
 | Marca de injeção por regex | **Content Safety Prompt Shields** | Detecção de injeção mantida pela Azure |
 | Gabarito e `avaliar.py` | **Avaliações do AI Foundry** sobre uma amostra conferida por trimestre | Regressão de qualidade antes de trocar modelo ou prompt |
+| Roteador semântico da intenção | **Conversational Language Understanding** (Azure AI Language), com pt-br, treinado com as mensagens reais dos analistas | Intenção e entidades (a empresa) num serviço gerenciado, medido com dados de uso |
 
 **Custo.** Com os números medidos, o parse domina: ~US$ 0,01 por página, contra ~US$ 0,05 por
 documento para indexar e analisar. Para 3.000 documentos de ~70 páginas por trimestre:
@@ -312,6 +336,7 @@ Em todos os sistemas, a mesma divisão:
 | Onde | O quê | Quando vale |
 |---|---|---|
 | `<sistema>/config/ajustes.yaml` | o que se ajusta: parser, chunks, preços, limites, atalhos do chat | no próximo pedido, sem build nem restart |
+| `agents/config/intencoes.yaml` | frases de exemplo, limiar e margem do roteador da intenção | na próxima mensagem |
 | `agents/agentes/<nome>/<nome>.md` | modelo, raciocínio, turnos e prompt de cada agente (o Dockerfile do serviço dele fica na mesma pasta) | quando o arquivo muda |
 | `mcp-server/config/policy.yaml` | o que cada agente vê e chama | quando o arquivo muda |
 | `<sistema>/.env` | só chaves e segredos | ao recriar o contêiner |

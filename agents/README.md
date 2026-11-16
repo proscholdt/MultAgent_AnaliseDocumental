@@ -24,10 +24,13 @@ flowchart LR
 - **Ordem**: num relatório, antes de cada onda o código consulta `pendencias`; a delegação que
   chega antes da hora (perguntas sem análise, resumo sem revisão) não sai e volta ao orquestrador
   como relato `nao_delegado`, dizendo o que delegar no lugar.
-- **Intenção**: no chat, a primeira decisão classifica a mensagem. `pergunta` exige resposta
-  gravada com fonte; `relatorio` exige o relatório consolidado montado; `relatorio_empresa` traz
-  o `doc_id` da empresa e exige o relatório dela (só as pendências daquela empresa);
-  `fora_do_escopo` não executa nada e devolve um texto fixo com as opções.
+- **Intenção**: no chat, cada mensagem é `pergunta`, `relatorio`, `relatorio_empresa` ou
+  `fora_do_escopo`, e o tipo decide o que a conferência cobra: `pergunta` exige resposta gravada
+  com fonte; `relatorio`, o consolidado montado; `relatorio_empresa`, as pendências e o relatório
+  daquela empresa; `fora_do_escopo` não executa nada e devolve um texto fixo com as opções. Quem
+  decide, nesta ordem (veja [Intenção](#intenção)):
+  1. o **roteador semântico**, quando tem certeza (embedding da mensagem contra frases de exemplo);
+  2. senão, o **orquestrador** (LLM), na primeira decisão, como antes.
 - **A2A**: o orquestrador assina um token por chamada (destino, execução, usuário); só ele entra
   no serviço de cada especialista. Cada especialista chega ao MCP com um token de agente próprio.
 - **Um serviço por especialista**: o mesmo código (`app/especialistas/servico.py`) com
@@ -48,7 +51,7 @@ flowchart LR
 
 | Agente | Faz | Modelo |
 |---|---|---|
-| `orquestrador` | Classifica, decide as ondas, acompanha | padrão |
+| `orquestrador` | Decide as ondas e acompanha; classifica a mensagem quando o roteador não tem certeza | padrão |
 | `extrator` | Os 8 indicadores de um documento, com origem | padrão |
 | `validador` | Inconsistências no texto da fonte, a partir dos candidatos achados por regra no MCP | padrão |
 | `analista` | Motivos, riscos, guidance, eventos, tom | padrão |
@@ -59,6 +62,55 @@ Um agente é uma pasta, `agentes/<nome>/`, com o arquivo `<nome>.md` (cabeçalho
 sem reiniciar) e o `Dockerfile` do serviço dele. A
 permissão é uma entrada em `mcp-server/config/policy.yaml`: quem escreve o agente não concede a própria
 permissão.
+
+## Intenção
+
+Antes do orquestrador, o roteador ([app/orquestrador/intencao.py](app/orquestrador/intencao.py))
+tenta decidir sozinho. Ele não substitui o LLM: decide o que é claro e deixa o resto para ele.
+
+```mermaid
+flowchart LR
+    M[mensagem do chat] --> S{seguimento?<br/>'e a menor?'}
+    S -->|sim| J[junta com o<br/>pedido anterior]
+    S -->|não| E
+    J --> E[embedding<br/>text-embedding-3-small]
+    E --> R{frase de exemplo<br/>mais parecida}
+    R -->|semelhança ≥ limiar<br/>e margem ≥ mínima| D[intenção decidida]
+    R -->|senão| L[orquestrador LLM<br/>decide, como antes]
+    D -->|relatorio| C{empresas citadas<br/>pelo nome}
+    C -->|uma| RE[relatorio_empresa<br/>+ doc_id]
+    C -->|nenhuma ou várias| RC[relatorio]
+    D -->|fora_do_escopo| F[texto fixo,<br/>sem chamar o LLM]
+```
+
+| Peça | Como | Por quê |
+|---|---|---|
+| **Rotas** | `config/intencoes.yaml`: frases de exemplo de `relatorio`, `pergunta` e `fora_do_escopo`, limiar e margem. Relido sem reiniciar | O que é claro sai em ~0,4 s e por centésimos de centavo, sem LLM |
+| **Empresa** | Regra: as palavras da mensagem contra os nomes dos documentos do usuário (sem as genéricas, como "Participações" e "Holding"). Uma empresa citada: `relatorio_empresa` com o `doc_id` dela; nenhuma ou várias: `relatorio` | Embedding não diz qual empresa; o nome está escrito na mensagem |
+| **Seguimento** | Mensagem de até 8 palavras que começa como continuação ("e", "por que", "explique"…) é comparada junto com o pedido anterior. A empresa da própria mensagem vale mais que a do pedido anterior | "e a menor?" sozinho não diz nada |
+| **Dúvida** | Semelhança abaixo do limiar, ou duas rotas quase empatadas: o tipo fica `auto`, e o orquestrador classifica com o histórico da conversa | O LLM continua com os casos difíceis |
+
+No trace, o passo `roteador` traz a decisão, a semelhança, a margem, a frase de exemplo mais
+parecida, o seguimento e as empresas achadas; o passo `intencao` diz quem decidiu
+(`fonte: roteador` ou `llm`). O embedding entra no custo da execução (agente `roteador`), e a
+métrica `agentes.intencoes` conta por intenção e por quem decidiu. Arquivo de rotas inválido não
+derruba nada: vale o anterior, e o motivo aparece em `GET /health` (`roteador_intencao`).
+
+**Medida** ([avaliacao/intencoes.yaml](avaliacao/intencoes.yaml), `scripts/avaliar_intencao.py`): 52
+mensagens rotuladas à mão, nenhuma igual às frases de exemplo, em dois conjuntos. Limiar (0,45) e
+margem (0,03) foram escolhidos no de ajuste, antes de medir no de teste:
+
+| No conjunto de teste (37 mensagens) | Resultado |
+|---|---|
+| Roteador: decide | 30 de 37 (81%) |
+| Roteador: certas entre as que decide | 30 de 30 |
+| LLM sozinho (as regras de intenção do prompt do orquestrador) | 33 de 37; dos 4 erros, 3 são de formato da empresa no script de comparação e 1 é o caro: "Compare o fluxo de caixa operacional das três" virou relatório |
+| Roteador + LLM, como roda | 37 de 37 |
+| Tempo por mensagem | roteador ~0,4 s; LLM ~0,9 s |
+
+As mensagens foram escritas por quem fez o sistema: o número mede as regras, não o uso real. Com
+mensagens reais, o próximo passo seria um classificador treinado nelas (SetFit, por exemplo)
+comparado com este.
 
 ## Estado e memória
 
@@ -82,11 +134,12 @@ de 15 min de vencer.
 |---|---|---|
 | `agentes/<nome>/<nome>.md` | `modelo`, `raciocinio`, `max_turnos` e o prompt de cada agente | quando o arquivo muda |
 | `config/ajustes.yaml` | preços, freios, raciocínio padrão, tempos | no próximo pedido |
+| `config/intencoes.yaml` | frases de exemplo, limiar e margem do roteador da intenção | na próxima mensagem |
 | `.env` | só chaves e segredos | ao recriar o contêiner |
 
 As duas pastas são montadas no contêiner: mudar não pede build nem restart. Arquivo inválido
 não derruba nada: continua valendo o anterior, e o motivo aparece em `GET /health`
-(`arquivos_invalidos`, `erro_ajustes`).
+(`arquivos_invalidos`, `erro_ajustes`, `roteador_intencao`).
 
 ## Rodar
 
@@ -97,6 +150,7 @@ uv run pytest                 # sem rede: modelo com roteiro, MCP em memória, A
 
 uv run python scripts/gerar_entrega.py --usuario <u> --senha <s> --rodar   # relatório + JSON em entrega/
 uv run python scripts/avaliar.py --usuario <u> --senha <s>                 # contra avaliacao/gabarito.json
+uv run python scripts/avaliar_intencao.py [--com-llm] [--varrer]          # intenção contra avaliacao/intencoes.yaml
 ```
 
 O `modelo` do agente é o nome no provedor. Com o prefixo `groq:` (por exemplo
@@ -172,6 +226,8 @@ seguinte.
 agentes/<nome>/             UMA PASTA POR AGENTE: <nome>.md (modelo, raciocínio, turnos e prompt)
                             e o Dockerfile do serviço dele
 config/ajustes.yaml         preços, freios, tempos, traces com conteúdo
+config/intencoes.yaml       frases de exemplo, limiar e margem do roteador da intenção
+avaliacao/                  gabarito.json (os indicadores) e intencoes.yaml (mensagens rotuladas)
 
 app/
 ├─ config.py                .env (chaves) + config/ajustes.yaml
@@ -180,6 +236,7 @@ app/
 ├─ orquestrador/            O SERVIÇO :8200
 │  ├─ api.py                rotas: conversas, mensagens, execuções, atalhos
 │  ├─ grafo.py              o grafo: orquestrador → delegar → conferência → fim
+│  ├─ intencao.py           roteador semântico da intenção, empresa citada e seguimento
 │  ├─ execucoes.py          execuções, conversas e trace em disco
 │  ├─ especialistas_a2a.py  descobrir e chamar os especialistas por A2A
 │  └─ usuario.py            quem é o usuário (login do indexador)
@@ -201,7 +258,7 @@ app/
    ├─ retrato.py            o retrato da base, lido pelo servidor MCP como "sistema"
    └─ avaliacao_automatica.py  a nota ao fim de cada relatório e as métricas dela
 
-scripts/                    avaliar.py, gerar_entrega.py
+scripts/                    avaliar.py, gerar_entrega.py, avaliar_intencao.py
 ```
 
 Para criar um agente: `python -m app.ferramentas.cli novo-agente <nome> --descricao "..."` cria

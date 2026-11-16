@@ -49,6 +49,7 @@ de todos os serviços, sem pôr o id como rótulo de métrica no Prometheus.
 | `agentes_execucoes_total`, `agentes_execucao_duracao_seconds` | `tipo`, `estado` |
 | `agentes_tokens_total`, `agentes_custo_usd_total` | `agente`, `modelo`, `tipo` (entrada, cache, saída) |
 | `agentes_delegacoes_total`, `agentes_especialista_duracao_seconds` | `agente`, `estado` |
+| `agentes_intencoes_total` | `intencao` (pergunta, relatorio, relatorio_empresa, fora_do_escopo), `fonte` (roteador ou llm): quem decidiu a intenção de cada mensagem do chat |
 | `agentes_avaliacao_taxa`, `agentes_avaliacao_acertos`, `agentes_avaliacao_de` | `medida` (status_certo, invencao, perguntas_certas...), `tipo` (relatorio, relatorio_empresa): a nota do último relatório contra o gabarito |
 | `agentes_avaliacoes_total` | `resultado` (avaliada, sem_gabarito, erro) |
 | `mcp_tool_chamadas_total`, `mcp_tool_duracao_seconds` | `agente`, `tool`, `resultado` (ok, rejeitada, recusada, invalida, erro) |
