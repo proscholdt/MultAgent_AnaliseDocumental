@@ -21,6 +21,8 @@ precos:
   gpt-5-mini:               {entrada: 0.25,  entrada_cache: 0.025, saida: 2.00}
   groq:openai/gpt-oss-20b:  {entrada: 0.075, entrada_cache: 0.037, saida: 0.30}
   groq:openai/gpt-oss-120b: {entrada: 0.15,  entrada_cache: 0.075, saida: 0.60}
+  # Embeddings do roteamento da intenção (config/intencoes.yaml).
+  text-embedding-3-small:   {entrada: 0.02,  entrada_cache: 0.02,  saida: 0}
 
 # Freios de uma execução inteira (orquestrador + especialistas).
 execucao:

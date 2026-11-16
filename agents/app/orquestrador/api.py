@@ -29,6 +29,7 @@ from app.nucleo.tokens import Identity
 from app.orquestrador.especialistas_a2a import SpecialistClient
 from app.orquestrador.execucoes import RUNNING, Conversations, Run, Runs
 from app.orquestrador.grafo import Deps, execute, zerar_metricas
+from app.orquestrador.intencao import Roteador, embedder_openai
 from app.orquestrador.usuario import Users
 
 _bearer = HTTPBearer(description="O access_token devolvido por POST /auth/login do indexador.")
@@ -83,10 +84,11 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
                indexer_transport: httpx.AsyncBaseTransport | None = None,
                checkpointer: BaseCheckpointSaver | None = None,
                avaliar: Callable[[Settings, Identity, str, str | None], Awaitable[dict | None]] | None = avaliar_relatorio,
+               roteador: Roteador | None = None,
                ) -> FastAPI:
     settings = settings or get_settings()
     deps = Deps(settings=settings, registry=Registry(settings.agentes_dir), engine=engine or default_engine(settings),
-                runs=Runs(settings.data_dir), checkpointer=checkpointer, avaliar=avaliar,
+                runs=Runs(settings.data_dir), checkpointer=checkpointer, avaliar=avaliar, roteador=roteador,
                 specialists=lambda identity: SpecialistClient(settings, identity, specialists_transport))
     conversations = Conversations(settings.data_dir)
     users = Users(settings, indexer_transport)
@@ -164,7 +166,9 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
         return {"status": "ok" if not settings.problem else "configuração incompleta", "problema": settings.problem,
                 "agentes": sorted(snapshot.agents), "arquivos_invalidos": snapshot.errors,
                 "modelos": {nome: spec.modelo for nome, spec in sorted(snapshot.agents.items())},
-                "erro_ajustes": settings.config_error, "em_andamento": len(running)}
+                "erro_ajustes": settings.config_error, "em_andamento": len(running),
+                "roteador_intencao": ("desligado" if deps.roteador is None
+                                      else deps.roteador.erro or "ligado")}
 
     # --- conversas ----------------------------------------------------------------------------
 
@@ -271,4 +275,5 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
 
 
 def app_factory() -> FastAPI:
-    return create_app(get_settings())
+    settings = get_settings()
+    return create_app(settings, roteador=Roteador(settings.intencoes_path, embedder_openai(settings.openai_api_key)))

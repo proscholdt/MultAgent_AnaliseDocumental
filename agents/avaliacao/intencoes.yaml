@@ -1,0 +1,74 @@
+# Mensagens de chat rotuladas à mão, para medir a classificação de intenção (scripts/avaliar_intencao.py).
+#
+# - Nenhuma é igual às frases de exemplo do roteador (config/intencoes.yaml).
+# - "ajuste": usadas para escolher o limiar e a margem; "teste": só para medir, depois de escolhidos.
+# - Rótulo segundo as regras do prompt do orquestrador (seção "Intenção"): pedido de opinião ou de
+#   investimento é fora do escopo, mesmo citando uma empresa; mais de uma empresa no relatório é o
+#   consolidado.
+# - `anterior`: o pedido anterior da conversa, para as mensagens de seguimento.
+# - `empresa`: o arquivo da empresa, só em relatorio_empresa.
+#
+# As mensagens foram escritas por quem fez o sistema, não colhidas de usuários: medem as regras,
+# não o uso real.
+
+documentos:
+  - {doc_id: Brasal.pdf, empresa: Brasal Brasília Holding S.A., arquivo: Brasal.pdf}
+  - {doc_id: Light.pdf, empresa: LIGHT S.A., arquivo: Light.pdf}
+  - {doc_id: Millet.pdf, empresa: Millet Participações S.A., arquivo: Millet.pdf}
+
+mensagens:
+  # --- ajuste ---------------------------------------------------------------------------------
+  - {conjunto: ajuste, texto: "Qual das três empresas teve a maior margem EBITDA?", esperado: pergunta}
+  - {conjunto: ajuste, texto: "Quanto a Light deve de dívida líquida?", esperado: pergunta}
+  - {conjunto: ajuste, texto: "O que a administração da Brasal disse sobre a receita?", esperado: pergunta}
+  - {conjunto: ajuste, texto: "Me mostra o lucro líquido da Millet e a variação", esperado: pergunta}
+  - {conjunto: ajuste, texto: "Gera o relatório completo, por favor", esperado: relatorio}
+  - {conjunto: ajuste, texto: "Quero o relatório consolidado das três empresas", esperado: relatorio}
+  - {conjunto: ajuste, texto: "Relatório só da Light", esperado: relatorio_empresa, empresa: Light.pdf}
+  - {conjunto: ajuste, texto: "Faz uma análise completa da Millet e me dá o relatório", esperado: relatorio_empresa, empresa: Millet.pdf}
+  - {conjunto: ajuste, texto: "oi", esperado: fora_do_escopo}
+  - {conjunto: ajuste, texto: "Muito obrigado, ajudou bastante", esperado: fora_do_escopo}
+  - {conjunto: ajuste, texto: "Vai chover hoje em São Paulo?", esperado: fora_do_escopo}
+  - {conjunto: ajuste, texto: "Vale a pena investir na Light?", esperado: fora_do_escopo}
+  - {conjunto: ajuste, anterior: "Qual empresa teve a maior margem EBITDA?", texto: "e a menor?", esperado: pergunta}
+  - {conjunto: ajuste, anterior: "Qual o lucro líquido da Light?", texto: "e da Millet?", esperado: pergunta}
+  - {conjunto: ajuste, anterior: "Qual a margem da Millet?", texto: "obrigado!", esperado: fora_do_escopo}
+
+  # --- teste ----------------------------------------------------------------------------------
+  - {conjunto: teste, texto: "A alavancagem de alguma empresa passou de 3 vezes?", esperado: pergunta}
+  - {conjunto: teste, texto: "Quais riscos aparecem em mais de uma empresa?", esperado: pergunta}
+  - {conjunto: teste, texto: "Tem guidance para 2023?", esperado: pergunta}
+  - {conjunto: teste, texto: "Por que a Light teve prejuízo em 2022?", esperado: pergunta}
+  - {conjunto: teste, texto: "Qual o capex de cada empresa?", esperado: pergunta}
+  - {conjunto: teste, texto: "A receita da Millet cresceu quanto?", esperado: pergunta}
+  - {conjunto: teste, texto: "Em que página está a DRE da Brasal?", esperado: pergunta}
+  - {conjunto: teste, texto: "Quais eventos relevantes a Light reportou?", esperado: pergunta}
+  - {conjunto: teste, texto: "Compare o fluxo de caixa operacional das três", esperado: pergunta}
+  - {conjunto: teste, texto: "Qual o tom da administração da Millet?", esperado: pergunta}
+  - {conjunto: teste, texto: "A Light cumpriu os covenants?", esperado: pergunta}
+  - {conjunto: teste, texto: "Quanto a Brasal gerou de caixa nas operações?", esperado: pergunta}
+  - {conjunto: teste, texto: "Alguma empresa teve inconsistência nos números divulgados?", esperado: pergunta}
+  - {conjunto: teste, texto: "qual empresa está mais endividada", esperado: pergunta}
+  - {conjunto: teste, texto: "Monta de novo o relatório final", esperado: relatorio}
+  - {conjunto: teste, texto: "Preciso da análise completa de todas as empresas num documento só", esperado: relatorio}
+  - {conjunto: teste, texto: "Faz o relatório comparando Light, Brasal e Millet", esperado: relatorio}
+  - {conjunto: teste, texto: "Atualiza o relatório", esperado: relatorio}
+  - {conjunto: teste, texto: "quero ver o relatório consolidado", esperado: relatorio}
+  - {conjunto: teste, texto: "Gera o relatório individual da Brasal", esperado: relatorio_empresa, empresa: Brasal.pdf}
+  - {conjunto: teste, texto: "Quero o relatório da Light S.A.", esperado: relatorio_empresa, empresa: Light.pdf}
+  - {conjunto: teste, texto: "Análise completa da Millet, por favor", esperado: relatorio_empresa, empresa: Millet.pdf}
+  - {conjunto: teste, texto: "Monta o relatório da Brasal de novo", esperado: relatorio_empresa, empresa: Brasal.pdf}
+  - {conjunto: teste, texto: "faz um relatório só com a Millet", esperado: relatorio_empresa, empresa: Millet.pdf}
+  - {conjunto: teste, texto: "Boa tarde!", esperado: fora_do_escopo}
+  - {conjunto: teste, texto: "Me recomenda uma ação para comprar", esperado: fora_do_escopo}
+  - {conjunto: teste, texto: "Escreve um e-mail para o meu chefe", esperado: fora_do_escopo}
+  - {conjunto: teste, texto: "Quem é o presidente do Brasil?", esperado: fora_do_escopo}
+  - {conjunto: teste, texto: "kkkk", esperado: fora_do_escopo}
+  - {conjunto: teste, texto: "Qual sua opinião sobre a bolsa este ano?", esperado: fora_do_escopo}
+  - {conjunto: teste, texto: "Devo vender minhas ações da Millet?", esperado: fora_do_escopo}
+  - {conjunto: teste, texto: "você é humano?", esperado: fora_do_escopo}
+  - {conjunto: teste, anterior: "Quais riscos a Brasal cita?", texto: "explique melhor o segundo", esperado: pergunta}
+  - {conjunto: teste, anterior: "Qual a dívida líquida da Light?", texto: "por que aumentou?", esperado: pergunta}
+  - {conjunto: teste, anterior: "Gere o relatório da Light", texto: "e da Brasal?", esperado: relatorio_empresa, empresa: Brasal.pdf}
+  - {conjunto: teste, anterior: "Qual empresa teve o maior lucro?", texto: "e o menor prejuízo?", esperado: pergunta}
+  - {conjunto: teste, anterior: "Qual o EBITDA da Millet?", texto: "valeu", esperado: fora_do_escopo}

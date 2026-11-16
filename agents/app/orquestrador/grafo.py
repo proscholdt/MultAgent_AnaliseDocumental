@@ -43,6 +43,7 @@ from app.nucleo.executar import AgentRun, Budget, Engine, atualizar_instrumentac
 from app.nucleo.tokens import Identity
 from app.orquestrador.especialistas_a2a import SpecialistClient, delegate, for_the_model
 from app.orquestrador.execucoes import Run, Runs, Trace, now
+from app.orquestrador.intencao import Roteador
 
 _medidor = telemetria.medidor()
 _TOKENS = _medidor.create_counter("agentes.tokens", description="Tokens por agente, modelo e tipo")
@@ -52,6 +53,7 @@ _ESPECIALISTA_S = _medidor.create_histogram("agentes.especialista.duracao", unit
                                             description="Duração de cada chamada a um especialista")
 _EXECUCOES = _medidor.create_counter("agentes.execucoes", description="Execuções por tipo e estado")
 _EXECUCAO_S = _medidor.create_histogram("agentes.execucao.duracao", unit="s", description="Duração das execuções")
+_INTENCOES = _medidor.create_counter("agentes.intencoes", description="Intenção das mensagens do chat, por quem decidiu")
 
 def zerar_metricas(agentes: list[str], modelos: list[str]) -> None:
     """Cria as séries dos contadores em zero, na subida. Um contador do OpenTelemetry só passa a
@@ -128,6 +130,8 @@ class Deps:
     checkpointer: BaseCheckpointSaver | None = None
     # A nota ao fim de um relatório (app/ferramentas/avaliacao_automatica.py). Os testes trocam.
     avaliar: Callable[[Settings, Identity, str, str | None], Awaitable[dict | None]] | None = None
+    # A intenção das mensagens do chat por roteamento semântico (intencao.py). Sem ele, o LLM decide.
+    roteador: Roteador | None = None
 
 
 class RunFailed(Exception):
@@ -338,7 +342,41 @@ class Execution:
 
     # --- nós --------------------------------------------------------------------------------
 
+    async def rotear(self, turns: list[dict]) -> None:
+        """Antes do orquestrador: o roteador decide a intenção da mensagem, se tiver certeza.
+        Sem certeza (ou sem roteador), o tipo continua "auto" e o orquestrador decide."""
+        roteador = self.deps.roteador
+        if roteador is None or self.run.tipo != "auto":
+            return
+        try:
+            async with self.deps.engine.connect(mcp.SYSTEM, self.identity) as session:
+                documentos = (await session.call("listar_documentos"))["documentos"]
+        except mcp.McpError:
+            documentos = []  # sem a lista, o roteador não acha a empresa: relatório vira o consolidado
+        anterior = turns[-1].get("pedido") if turns else None
+        try:
+            escolha = await roteador.escolher(self.run.pedido, anterior, documentos)
+        except Exception as error:  # noqa: BLE001 - roteador fora do ar: o orquestrador decide, como antes
+            self.trace.add("roteador", decidiu=False, motivo=f"{type(error).__name__}: {error}"[:300])
+            return
+        if escolha.tokens:
+            self.ledger.add("roteador", escolha.modelo, {"entrada": escolha.tokens, "total": escolha.tokens,
+                                                         "chamadas": 1})
+        self.trace.add("roteador", decidiu=escolha.intencao is not None, **escolha.view())
+        if escolha.intencao is None:
+            return
+        self.run.tipo, self.run.doc_id = INTENT_TYPE[escolha.intencao], escolha.doc_id
+        self.trace.add("intencao", intencao=escolha.intencao, tipo_execucao=self.run.tipo, doc_id=self.run.doc_id,
+                       fonte="roteador")
+        _INTENCOES.add(1, {"intencao": escolha.intencao, "fonte": "roteador"})
+        self.deps.runs.save(self.run)
+
     async def orquestrador(self, state: Estado) -> dict:
+        if self.run.tipo == "fora_do_escopo" and not state.get("historico"):
+            # O roteador já decidiu que está fora do escopo: nada a delegar, e o LLM nem é chamado.
+            return {"historico": [], "entrada": None, "ondas": state.get("ondas", 0) + 1,
+                    "relatos": {"substituir": []}, "mensagem": OUT_OF_SCOPE,
+                    "decisao": {"delegacoes": [], "terminado": True}}
         prompt = state.get("entrada") or reports_input(state.get("relatos") or [])
         outcome: AgentRun = await run_agent(self.spec, prompt, identity=self.identity, engine=self.deps.engine,
                                             budget=self.budget, output_type=Decisao, history=state.get("historico"))
@@ -358,7 +396,9 @@ class Execution:
             self.run.tipo = INTENT_TYPE[decision.intencao]
             if self.run.tipo == "relatorio_empresa":
                 self.run.doc_id = decision.empresa
-            self.trace.add("intencao", intencao=decision.intencao, tipo_execucao=self.run.tipo, doc_id=self.run.doc_id)
+            self.trace.add("intencao", intencao=decision.intencao, tipo_execucao=self.run.tipo, doc_id=self.run.doc_id,
+                           fonte="llm")
+            _INTENCOES.add(1, {"intencao": decision.intencao, "fonte": "llm"})
             self.deps.runs.save(self.run)
             if self.run.tipo == "fora_do_escopo":
                 # Nada é delegado, e a mensagem do orquestrador não vai ao usuário: o texto é fixo.
@@ -559,6 +599,7 @@ async def _execute(run: Run, user_token: str, deps: Deps) -> Run:
         turns = list((await graph.aget_state(config)).values.get("turnos") or []) if deps.checkpointer else []
         if turns:
             trace.add("conversa", turnos_anteriores=len(turns))
+        await execution.rotear(turns)
         start: Estado = {"execucao_id": run.id, "entrada": first_input(run, turns), "historico": [],
                          "relatos": {"substituir": []}, "decisao": None, "ondas": 0, "rodada": 1, "parada": None,
                          "falha": None, "completo": False, "pendencias": [], "resultado": {}, "mensagem": ""}

@@ -1,0 +1,70 @@
+# Roteamento semântico da intenção das mensagens do chat (app/orquestrador/intencao.py).
+#
+# A mensagem vira um embedding e é comparada com as frases abaixo. Ela ganha a rota da frase mais
+# parecida se a semelhança passar do `limiar` e ficar à frente da segunda rota pela `margem`.
+# Senão, quem decide é o orquestrador (LLM), como antes. A empresa de um relatório e as mensagens
+# de seguimento ("e a menor?") são resolvidas por regra, não por estas frases.
+#
+# Relido quando muda, sem reiniciar. As frases de exemplo não podem ser as do conjunto de avaliação
+# (avaliacao/intencoes.yaml): o número medido ali só vale se o roteador não viu aquelas frases.
+
+ligado: true
+modelo_embedding: text-embedding-3-small
+# Escolhidos no conjunto de ajuste de avaliacao/intencoes.yaml (scripts/avaliar_intencao.py --varrer),
+# antes de medir no conjunto de teste: de 0,40 a 0,65 o roteador não errou nenhuma das que decidiu;
+# 0,45 e 0,03 decidem 14 de 15. Abaixo do limiar ou sem a margem, quem decide é o LLM.
+limiar: 0.45
+margem: 0.03
+# Mensagem que começa como continuação ("e", "por que", "explique"...) e tem até este número de
+# palavras é comparada junto com o pedido anterior da conversa.
+max_palavras_seguimento: 8
+
+rotas:
+  relatorio:
+    - gere o relatório
+    - gere o relatório consolidado
+    - monte o relatório completo das empresas
+    - quero o relatório final com todas as empresas
+    - faça a análise completa dos documentos
+    - produza o relatório de análise das demonstrações financeiras
+    - refaça o relatório
+    - monte o relatório de novo
+    - quero um relatório só de uma empresa
+    - gere o relatório dessa empresa
+    - faça uma análise completa da empresa e gere um relatório
+    - relatório individual da companhia
+    - preciso do relatório para o analista
+    - consolide tudo em um relatório
+
+  pergunta:
+    - qual empresa teve o maior lucro
+    - qual foi a receita líquida no ano
+    - quanto foi o ebitda e a margem
+    - compare o endividamento das empresas
+    - qual a dívida líquida e a alavancagem
+    - por que o resultado piorou
+    - o que explicou a variação da receita
+    - quais riscos a administração cita
+    - existe guidance para o próximo ano
+    - houve algum evento relevante no período
+    - qual o tom da administração
+    - em que página está o fluxo de caixa
+    - quanto a empresa investiu em capex
+    - o lucro cresceu em relação ao ano anterior
+    - quais empresas estão com prejuízo
+
+  fora_do_escopo:
+    - olá, tudo bem
+    - bom dia
+    - obrigado pela ajuda
+    - valeu
+    - qual a previsão do tempo para amanhã
+    - me conte uma piada
+    - quem ganhou o jogo ontem
+    - escreva um poema
+    - devo comprar ações dessa empresa
+    - qual o melhor investimento para mim
+    - traduza este texto para o inglês
+    - como faço um bolo de chocolate
+    - quem é você
+    - qual a cotação do dólar hoje

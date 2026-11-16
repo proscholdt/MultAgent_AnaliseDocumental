@@ -71,6 +71,9 @@ class Settings(BaseSettings):
     # buscas no meio do caminho).
     min_minutos_token: int = 15
 
+    # Rotas do roteamento semântico da intenção do chat (frases de exemplo, limiar, margem).
+    intencoes_path: Path = Path("config/intencoes.yaml")
+
     agentes_dir: Path = Path("agentes")
     data_dir: Path = Path("data")
 
