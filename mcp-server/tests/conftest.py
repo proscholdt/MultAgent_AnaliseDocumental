@@ -247,7 +247,8 @@ agentes:
     tools: [listar_documentos, buscar_trechos, ler_chunk, ler_pagina, salvar_indicador, salvar_nao_encontrado,
             fechar_extracao, ler_extracao]
   validador:
-    tools: [buscar_trechos, ler_chunk, ler_extracao, ler_alertas, registrar_alerta, concluir_revisao]
+    tools: [buscar_trechos, ler_chunk, ler_extracao, ler_alertas, candidatos_inconsistencia, registrar_alerta,
+            concluir_revisao]
   analista:
     tools: [buscar_trechos, ler_chunk, salvar_item_analise, registrar_ausencia_analise, ler_analise]
   pesquisador:

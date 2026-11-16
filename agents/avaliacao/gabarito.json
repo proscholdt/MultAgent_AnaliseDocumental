@@ -265,6 +265,12 @@
           "contem": "3,32x",
           "origem": "leitura",
           "por_que": "'encerrou 2021 em 3,32x, menor do que no 2021 (3,48x)': o ano está trocado."
+        },
+        {
+          "pagina": 21,
+          "contem": "Consolidado",
+          "origem": "regra",
+          "por_que": "demonstração dos resultados abrangentes: o cabeçalho diz 2022, 2021, 2021, 2021 (conferido na camada de texto do PDF); a terceira coluna, do consolidado, traz os valores de 2022."
         }
       ]
     }
@@ -341,5 +347,5 @@
       "por_que": "a Light fala em antecipar a renovação da concessão, concentrar investimentos e perseguir as estratégias de reestruturação (p. 2, 3 e 28); Brasal e Millet não trazem guidance da administração"
     }
   },
-  "_inconsistencias_na_fonte": "Lista do que foi conferido no PDF, não de tudo o que existe. As duas primeiras da Light saíram da minha leitura; as outras foram apontadas pelo validador em alguma execução e conferidas no PDF antes de entrar aqui. A medida é quantas das conhecidas uma execução registrou."
+  "_inconsistencias_na_fonte": "Lista do que foi conferido no PDF, não de tudo o que existe. As duas primeiras da Light saíram da minha leitura; a da p. 21 da Light, das regras de candidatos do servidor MCP (candidatos_inconsistencia); as outras foram apontadas pelo validador em alguma execução. Todas foram conferidas no PDF antes de entrar aqui. A medida é quantas das conhecidas uma execução registrou."
 }

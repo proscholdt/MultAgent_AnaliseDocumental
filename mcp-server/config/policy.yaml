@@ -28,7 +28,7 @@ agentes:
 
   validador:
     tools: [buscar_trechos, ler_chunk, ler_pagina, ler_extracao, ler_alertas,
-            registrar_alerta, concluir_revisao]
+            candidatos_inconsistencia, registrar_alerta, concluir_revisao]
     limites:
       chamadas_por_execucao: 120
 

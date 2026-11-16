@@ -6,7 +6,9 @@ from pydantic import Field
 from app.dados.visoes import alert_view
 from app.governanca.catalogo import Args, Call, tool
 from app.governanca.erros import ToolRejected
+from app.regras.campos import FIELDS, MAIN_FIELDS
 from app.regras.formulas import AlertDraft
+from app.regras.inconsistencias import Indicator, find
 from app.regras.pendencias import REVIEW_DONE
 from app.regras.texto import (
     check_quote,
@@ -15,6 +17,7 @@ from app.regras.texto import (
     unbacked_numbers,
 )
 from app.tools.analise import _QUOTE_MIN, _chunk, _numbers_backed
+from app.tools.extracao import build_extraction
 
 
 class RegistrarAlerta(Args):
@@ -43,6 +46,33 @@ async def registrar_alerta(call: Call, args: RegistrarAlerta) -> dict[str, Any]:
     added = await call.deps.store.add_alerts(call.caller, args.doc_id, document.fingerprint, "fonte", [draft])
     return {"registrado": bool(added), "pagina": chunk["page_start"],
             "aviso": None if added else "Este alerta já estava registrado."}
+
+
+class CandidatosInconsistencia(Args):
+    doc_id: str = Field(description="Documento.")
+
+
+@tool("candidatos_inconsistencia", "validacao", """
+    Lista os trechos do documento que uma regra marcou como possível inconsistência: conta que
+    não fecha numa frase (valor, variação e comparável), variação no texto que não bate com os
+    dois períodos da extração, um ano comparado com ele mesmo, projeção para um ano que já passou,
+    quadro com data diferente da do texto que o apresenta ou com duas colunas de mesmo título.
+    São candidatos, não conclusões: leia cada um e registre só o que for erro do documento.""")
+async def candidatos_inconsistencia(call: Call, args: CandidatosInconsistencia) -> dict[str, Any]:
+    document = await call.deps.documents.get(call.caller, args.doc_id)
+    extraction, _ = await build_extraction(call, document)
+    indicators = []
+    for campo in MAIN_FIELDS:
+        spec = FIELDS[campo]
+        now, before = extraction.amount(campo, extraction.reference), extraction.amount(campo, extraction.comparable)
+        if spec.kind == "valor" and now is not None and before is not None:
+            indicators.append(Indicator(spec.label, spec.mention, now, before))
+    found = find(document.chunks, document.period, indicators)
+    return {"doc_id": args.doc_id, "empresa": document.company, "candidatos": [c.view() for c in found],
+            "como_usar": "Para cada candidato, confira o trecho (ler_chunk ou ler_pagina). Se for erro do documento, "
+                         "registrar_alerta com o chunk_index e a citação copiada do trecho; a descrição só leva "
+                         "números que estão na citação. Se não for (arredondamento, outro período citado de "
+                         "propósito, coluna que o quadro explica), siga para o próximo."}
 
 
 class LerAlertas(Args):

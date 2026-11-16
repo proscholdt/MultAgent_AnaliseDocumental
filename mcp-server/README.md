@@ -33,6 +33,18 @@ flowchart LR
 | `fechar_extracao` | Os 8 indicadores com valor ou ausência; valores de apoio para calcular o que falta; validações automáticas |
 | análise, alertas, respostas | Citação literal no chunk; números só por marcador (`{{doc.campo}}`) ou dentro de trecho citado |
 
+Inconsistências do próprio documento: `candidatos_inconsistencia` varre todos os chunks com regras
+([app/regras/inconsistencias.py](app/regras/inconsistencias.py)) e devolve ao validador os trechos
+suspeitos, cada um com o motivo. A regra acha; o validador lê e decide o que registrar.
+
+| Regra | Marca |
+|---|---|
+| `conta_na_frase` | valor, variação e comparável na mesma frase que não fecham (2% de folga para arredondamento; 1,5 p.p. no percentual) |
+| `variacao_contra_extracao` | frase com o valor de um indicador e uma variação em reais que não bate com os dois períodos da extração |
+| `ano_comparado_com_ele_mesmo` | "encerrou 2021 em 3,32x, menor do que no 2021" |
+| `projecao_para_o_passado` | cenário ou projeção para um ano anterior ao do documento |
+| `data_do_quadro` | a frase que apresenta o quadro fala de uma data que não está nas colunas; duas colunas com o mesmo título e ano |
+
 Calculado (variação, EBITDA, margem, dívida líquida, alavancagem, capex) usa fórmula fixa e nunca
 aparece como informado. As validações (`ebitda_divergente`, `margem_divergente`,
 `periodo_nao_confirmado`…) viram alertas com os dois lados da conta.
@@ -91,6 +103,7 @@ app/
 │  ├─ tabelas.py         ler a célula de uma tabela
 │  ├─ texto.py           citação literal, número solto, alfabeto
 │  ├─ evidencias.py      onde um indicador aparece e a prova de "não encontrado"
+│  ├─ inconsistencias.py candidatos a erro do próprio documento, para o validador julgar
 │  ├─ pendencias.py      o que falta e em que ordem
 │  ├─ marcadores.py      {{receita_liquida}} → valor com unidade e página
 │  ├─ relatorios.py      os relatórios em Markdown

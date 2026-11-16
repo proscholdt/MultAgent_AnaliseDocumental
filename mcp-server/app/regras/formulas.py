@@ -172,6 +172,11 @@ class Extraction:
             return self._ratio(campo, periodo, "divida_liquida", "ebitda", "dívida líquida / EBITDA", 1, "x")
         return None
 
+    def amount(self, campo: str, periodo: str | None) -> Decimal | None:
+        """Valor em reais de um campo no período, informado ou, na falta, calculado."""
+        found = self._amount(campo, periodo) if periodo else None
+        return found[0] if found else None
+
     def _amount(self, campo: str, periodo: str) -> tuple[Decimal, dict, str] | None:
         """Valor em reais de um campo, informado ou, na falta, calculado. Diz qual dos dois."""
         informed = self.found(campo, periodo)
