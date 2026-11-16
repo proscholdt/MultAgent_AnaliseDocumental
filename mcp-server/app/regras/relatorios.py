@@ -45,7 +45,9 @@ def _not_found(block: dict[str, Any]) -> str | None:
 
 _HOW_TO_READ = ("Todo número deste relatório foi lido do documento pelo código (célula de tabela ou trecho "
                 "conferido) ou calculado por fórmula fixa a partir desses valores. O que a empresa não informa "
-                "aparece como \"não informado\", e o que foi calculado vem marcado como calculado.")
+                "aparece como \"não informado\", e o que foi calculado vem marcado como calculado. As páginas "
+                "(\"p.\") são as do arquivo PDF, contadas da primeira folha, e não a numeração impressa no "
+                "documento, que costuma recomeçar nas demonstrações financeiras.")
 
 
 def _name(doc: dict[str, Any]) -> str:

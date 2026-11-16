@@ -47,7 +47,7 @@ flowchart LR
 |---|---|---|
 | `orquestrador` | Classifica, decide as ondas, acompanha | padrão |
 | `extrator` | Os 8 indicadores de um documento, com origem | padrão |
-| `validador` | Inconsistências no texto da fonte | forte |
+| `validador` | Inconsistências no texto da fonte, a partir dos candidatos achados por regra no MCP | padrão |
 | `analista` | Motivos, riscos, guidance, eventos, tom | padrão |
 | `pesquisador` | Uma pergunta, com fontes | padrão |
 | `redator` | Resumo por empresa e montagem do relatório | padrão |
@@ -124,14 +124,27 @@ trace (passo `avaliacao`) e vira métrica no painel "Agentes" do Grafana.
 
 Relatório completo dos três documentos, com raciocínio ligado:
 
-| Modelos | Tempo | Custo | Indicadores certos | Inconsistências da fonte |
-|---|---|---|---|---|
-| `gpt-5.4-nano` em todos (padrão) | 195 s | US$ 0,14 | 24 de 24 | 2 de 6 |
-| `gpt-5.4-mini` + `gpt-5.4` no validador | 332 s | US$ 1,02 | 24 de 24 | 4 de 6 |
-| `gpt-5-nano` em todos | parou em 12 min | US$ 0,08 | nenhuma extração fechada | — |
+| Modelos | Tempo | Custo | Indicadores certos | Inconsistências da fonte | Perguntas |
+|---|---|---|---|---|---|
+| `gpt-5.4-nano` em todos, com os candidatos por regra do MCP (atual) | 311 s | US$ 0,20 | 24 de 24 | **6 de 7** | 4 de 5 |
+| `gpt-5.4-nano` em todos, sem os candidatos | 195 s | US$ 0,14 | 24 de 24 | 2 de 6 | 5 de 5 |
+| `gpt-5.4-mini` + `gpt-5.4` no validador, sem os candidatos | 332 s | US$ 1,02 | 24 de 24 | 4 de 6 | 5 de 5 |
+| `gpt-5-nano` em todos | parou em 12 min | US$ 0,08 | nenhuma extração fechada | — | — |
 
-Nos dois primeiros, nenhum valor ausente foi gravado como informado, os valores calculados e
-as cinco perguntas saíram certos, e todas as citações existem no trecho citado.
+Em todas as que terminaram, nenhum valor ausente foi gravado como informado, os valores
+calculados saíram certos e todas as citações existem no trecho citado.
+
+**Inconsistências da fonte.** Desde que o validador começa pela lista de candidatos que o servidor
+MCP acha por regra (`candidatos_inconsistencia`), ele registrou 6 das 7 conhecidas, gastando
+US$ 0,014 nos três documentos. A sétima (Light, p. 21 do arquivo: o consolidado diz 2021 nas
+duas colunas) foi achada pelas regras e entrou no gabarito depois de conferida no PDF. A que
+faltou (Millet, p. 41) estava na lista, e o modelo julgou que não era erro. As regras foram
+desenhadas olhando estes documentos: em outro PDF, a medida honesta é rodar e conferir.
+
+**Pergunta 2** na execução atual: faltou o motivo da receita da Light (bandeira, estorno, CVA),
+que nas anteriores saiu certo. É o pesquisador, não o validador: variação entre execuções do
+mesmo modelo. O tempo e o custo a mais vieram do extrator e do pesquisador (24 chamadas nesta
+execução); o validador levou de 13 a 16 s por documento.
 
 ## Mapa do código
 

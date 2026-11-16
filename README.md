@@ -80,7 +80,8 @@ flowchart TB
 | **Servidor MCP como porta única** | Regras, permissões e conferências num lugar só, testável, fora do prompt. Qualquer cliente MCP lê os dados extraídos | Um salto a mais e mais código no servidor |
 | **Orquestrador em grafo** (LangGraph) **com especialistas PydanticAI** | O modelo decide; o grafo executa em paralelo, guarda a conversa (checkpoint) e confere no fim por código. PydanticAI dá saída tipada e troca de provedor | Duas bibliotecas |
 | **A2A, um serviço por especialista** | Cada especialista escala e cai sozinho: um fora do ar tira só ele da execução | Um salto de rede por delegação |
-| **`gpt-5.4-nano` em todos os agentes** | Mesma nota do `gpt-5.4-mini` nos indicadores, por 1/7 do custo | Acha menos inconsistências da fonte (2 de 6 contra 4 de 6). O modelo é por agente: o validador pode usar um maior |
+| **`gpt-5.4-nano` em todos os agentes** | Mesma nota do `gpt-5.4-mini` nos indicadores, por 1/7 do custo | Sozinho, achava menos inconsistências da fonte (2 de 6 contra 4 de 6 do `gpt-5.4`); com os candidatos por regra, abaixo, achou 6 de 7. O modelo é por agente |
+| **Inconsistências da fonte: a regra acha, o modelo julga** | O servidor MCP varre todos os trechos com regras (conta que não fecha, ano trocado, data do quadro) e entrega a lista ao validador, que lê e decide. O modelo não precisa "enxergar" o erro no meio de 120 páginas | As regras foram desenhadas olhando estes documentos; o modelo ainda pode descartar um erro real |
 | **`gpt-4o-mini` para gráficos e metadados** no indexador | Barato e com visão | A transcrição só vale se conferida (abaixo) |
 | **Prompts curtos, um arquivo por agente** | O prompt diz o que fazer; o portão garante. Mudar o prompt não abre brecha | — |
 | **Kafka + workers** | Parse é lento e pesado; a API responde na hora, com retry, DLQ e retomada na etapa que falhou | Infraestrutura a mais para poucos documentos |
@@ -126,10 +127,16 @@ sem uma fonte que o código verifique.
 
 Resultado do relatório completo dos três documentos:
 
-| Modelos | Indicadores certos | Inconsistências da fonte | Invenções | Calculados, perguntas, citações |
-|---|---|---|---|---|
-| `gpt-5.4-nano` em todos (padrão) | 24 de 24 | 2 de 6 | 0 | todos certos |
-| `gpt-5.4-mini` + `gpt-5.4` no validador | 24 de 24 | 4 de 6 | 0 | todos certos |
+| Modelos | Indicadores certos | Inconsistências da fonte | Invenções | Perguntas | Calculados e citações |
+|---|---|---|---|---|---|
+| `gpt-5.4-nano` em todos, com candidatos por regra (atual) | 24 de 24 | 6 de 7 | 0 | 4 de 5 | todos certos |
+| `gpt-5.4-nano` em todos, sem candidatos | 24 de 24 | 2 de 6 | 0 | 5 de 5 | todos certos |
+| `gpt-5.4-mini` + `gpt-5.4` no validador, sem candidatos | 24 de 24 | 4 de 6 | 0 | 5 de 5 | todos certos |
+
+A sétima inconsistência (Light, p. 21 do arquivo: o consolidado diz 2021 nas duas colunas) foi
+achada pelas regras e entrou no gabarito depois de conferida no PDF. A pergunta que falhou na
+execução atual é do pesquisador (faltou um motivo da receita da Light) e variou entre execuções do
+mesmo modelo. Detalhes em [agents/README.md](agents/README.md#nota-contra-o-gabarito).
 
 ## Custo e desempenho
 
@@ -149,7 +156,7 @@ Docling, o parse é de graça e leva 26 min para os três.
 
 | Pedido | Tempo | Tokens | Custo |
 |---|---|---|---|
-| Relatório consolidado dos 3 documentos (`gpt-5.4-nano`, raciocínio ligado) | 195 s | 1,9 milhão em 145 chamadas, 80% em cache | US$ 0,14 |
+| Relatório consolidado dos 3 documentos (`gpt-5.4-nano`, raciocínio ligado) | 195 a 311 s | 1,9 a 2,8 milhões em 145 a 200 chamadas, ~80% em cache | US$ 0,14 a 0,20 |
 | O mesmo com `gpt-5.4-mini` + `gpt-5.4` no validador | 332 s | 3,0 milhões em 160 chamadas, 87% em cache | US$ 1,02 |
 | Uma pergunta | 15 a 30 s | — | US$ 0,01 a 0,03 |
 
@@ -184,8 +191,14 @@ aparecem no Grafana.
 
 ## Limitações
 
-- **Inconsistências da fonte**: com `gpt-5.4-nano`, o validador acha 2 das 6 conhecidas; com
-  `gpt-5.4`, 4 de 6, por 7 vezes o custo. Nenhuma configuração achou todas.
+- **Inconsistências da fonte**: as regras acham as 7 conhecidas, mas o validador ainda descarta
+  uma (Millet, p. 41). As regras foram desenhadas olhando estes três documentos; num PDF novo,
+  um tipo de erro que elas não cobrem depende do olho do modelo.
+- **Página**: "p." é a página do arquivo PDF, contada da primeira folha, não a numeração impressa
+  (que na Light recomeça nas demonstrações: a folha impressa 21 é a p. 38 do arquivo). O
+  relatório diz isso no início.
+- **Variação entre execuções**: o mesmo modelo, nos mesmos documentos, às vezes deixa de fora
+  um motivo numa resposta (a pergunta 2 saiu certa em umas execuções e não em outras).
 - **Gabarito só para os três documentos.** Documento novo é processado, mas fica sem nota
   (`sem_gabarito`).
 - **A marca de injeção é por padrão de texto.** Um ataque reescrito passa sem a marca; o que
