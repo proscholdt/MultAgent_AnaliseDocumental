@@ -5,18 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sala dos Agentes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="sala.css">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;600&family=Monoton&family=Uncial+Antiqua&family=MedievalSharp&display=swap" rel="stylesheet">
+<style>
+  /* o que só aparece nos modos temáticos (avatar, sabedoria) ou só no psicodélico (calmar) */
+  html[data-modo="escritorio"] .tema, html:not([data-modo="psicodelico"]) .so-psico { display: none !important; }
+</style>
+<script src="modos.js"></script>
 </head>
 <body>
 <header>
-  <h1>▮ SALA DOS AGENTES</h1>
+  <div class="marca">
+    <img class="avatar tema" alt="O mestre">
+    <h1><span id="titulo">▮ SALA DOS AGENTES</span><small id="subtitulo" class="tema"></small></h1>
+  </div>
   <div class="abas"><button id="aba-sala" class="ativa">Sala</button><button id="aba-logs">Logs</button></div>
   <div class="ctl">
     <select id="execucoes" title="Execução"></select>
     <label><input type="checkbox" id="seguir" checked> seguir a mais nova</label>
     <button id="repetir" title="Repete a execução do começo, no ritmo em que aconteceu (1×) ou acelerada">↻ Repetir</button>
     <select id="vel" title="Velocidade da repetição (1× = tempo real)"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option><option value="8">8×</option></select>
+    <button id="calmar" type="button" class="so-psico">☮ Calmar</button>
+    <select id="modo" title="Modo da sala" aria-label="Modo da sala"></select>
   </div>
 </header>
 
@@ -28,7 +37,11 @@
       <div class="filtros"><input id="conversa-filtro" type="text" placeholder="filtrar (agente ou texto)…" aria-label="Filtrar a conversa"><select id="conversa-tipo" aria-label="O que mostrar"><option value="">tudo</option><option value="fala">falas</option><option value="pensa">pensamentos</option><option value="portao">portões</option></select></div>
       <div class="linhas" aria-live="polite"></div>
     </div>
-    <div class="janela" id="painel"><div class="titulo"><span>PAINEL DE CONTROLE</span></div><div class="linhas"></div></div>
+    <div class="janela" id="painel">
+      <div class="titulo"><span id="painel-titulo">PAINEL DE CONTROLE</span></div>
+      <div class="linhas"></div>
+      <div class="mestre-diz tema"><img class="avatar" alt="O mestre"><p id="sabedoria"></p></div>
+    </div>
   </section>
 
   <section id="logs" class="logs" hidden>
@@ -56,19 +69,14 @@
 
 <div class="login" id="login" hidden>
   <form id="form-login">
-    <h2>ENTRAR</h2>
+    <img class="avatar tema" alt="O mestre">
+    <h2 id="login-titulo">ENTRAR</h2>
     <input id="u" placeholder="usuário" autocomplete="username">
     <input id="s" type="password" placeholder="senha" autocomplete="current-password">
-    <button>Entrar na sala</button>
+    <button id="login-entrar">Entrar na sala</button>
     <div class="erro" id="erro-login"></div>
   </form>
 </div>
-
-<script src="cena.js"></script>
-<script src="conversa.js"></script>
-<script src="eventos.js"></script>
-<script src="dados.js"></script>
-<script src="logs.js"></script>
-<script src="inicio.js"></script>
+<!-- os scripts da sala entram por modos.js, na ordem, com o do modo escolhido -->
 </body>
 </html>
