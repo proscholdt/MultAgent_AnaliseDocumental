@@ -251,7 +251,7 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
             catalog = await deps.specialists(identity).catalog()
         except Exception as error:
             raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE,
-                                f"Serviço dos especialistas fora do ar ({type(error).__name__}: {error}).") from error
+                                f"Nenhum serviço de especialista respondeu ({type(error).__name__}: {error}).") from error
         orchestrator = None
         if snapshot.orchestrator is not None:
             spec = snapshot.orchestrator
@@ -264,7 +264,8 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
                             "max_turnos": spec.max_turnos, "tools": tools,
                             "chama": [entry["nome"] for entry in catalog["agentes"]]}
         return {"orquestrador": orchestrator, "especialistas": catalog["agentes"],
-                "arquivos_invalidos": {**snapshot.errors, **catalog["arquivos_invalidos"]}}
+                "arquivos_invalidos": {**snapshot.errors, **catalog["arquivos_invalidos"]},
+                "fora_do_ar": catalog.get("fora_do_ar", [])}
 
     return app
 

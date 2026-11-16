@@ -2,7 +2,14 @@
 
 O orquestrador decide quem chamar e com que tarefa; o nó `delegar` do grafo faz a chamada, uma
 por delegação, em paralelo. O protocolo é só o cabo.
+
+Cada especialista pode morar no próprio serviço: o endereço vem de `especialistas_enderecos`
+e, para quem não está lá, de `especialistas_url` (um serviço que atende todos). O catálogo é
+montado perguntando a cada serviço; um serviço fora do ar tira só os especialistas dele da
+execução, e o resto da equipe trabalha.
 """
+import asyncio
+import hashlib
 import uuid
 from typing import Any
 
@@ -36,26 +43,60 @@ class SpecialistClient:
     def __init__(self, settings: Settings, identity: Identity,
                  transport: httpx.AsyncBaseTransport | None = None) -> None:
         self.settings, self.identity, self.transport = settings, identity, transport
+        self.enderecos = {nome: url.rstrip("/") for nome, url in settings.especialistas_enderecos.items()}
         self.base = settings.especialistas_url.rstrip("/")
+
+    def address(self, nome: str) -> str:
+        """Onde o especialista atende: o endereço próprio ou, sem ele, o serviço de todos."""
+        return self.enderecos.get(nome) or self.base
+
+    def services(self) -> list[str]:
+        """Os serviços de especialistas a consultar, sem repetição, na ordem da configuração."""
+        return list(dict.fromkeys([*self.enderecos.values(), *([self.base] if self.base else [])]))
 
     def _http(self, target: str) -> httpx.AsyncClient:
         # Um token por destinatário: o emitido para o extrator não serve no analista.
         return httpx.AsyncClient(headers=a2a_headers(self.settings, target, self.identity), transport=self.transport,
                                  timeout=self.settings.especialista_timeout_seconds)
 
-    async def catalog(self) -> dict[str, Any]:
+    async def _catalog_of(self, service: str) -> dict[str, Any]:
         async with self._http(CATALOG) as http:
-            response = await http.get(f"{self.base}/agentes")
+            response = await http.get(f"{service}/agentes")
         if response.status_code != 200:
-            raise A2AError(f"o serviço dos especialistas respondeu {response.status_code}: {response.text[:200]}")
+            raise A2AError(f"{service} respondeu {response.status_code}: {response.text[:200]}")
         return response.json()
+
+    async def catalog(self) -> dict[str, Any]:
+        """Os especialistas no ar, juntando o catálogo de cada serviço. Cada agente vale pelo
+        serviço que é o endereço dele (o serviço de todos também o lista, mas não é ele quem
+        atende). Serviço fora do ar vai em `fora_do_ar`; se nenhum responder, é erro."""
+        services = self.services()
+        if not services:
+            raise A2AError("nenhum endereço de especialista configurado (ESPECIALISTAS_URL ou ESPECIALISTAS_ENDERECOS)")
+        results = await asyncio.gather(*(self._catalog_of(service) for service in services), return_exceptions=True)
+        agentes: dict[str, dict[str, Any]] = {}
+        invalidos: dict[str, str] = {}
+        digests, fora = [], []
+        for service, result in zip(services, results, strict=True):
+            if isinstance(result, BaseException):
+                fora.append(f"{service}: {type(result).__name__}: {result}"[:300])
+                continue
+            digests.append(result["digest"])
+            invalidos.update(result["arquivos_invalidos"])
+            for entry in result["agentes"]:
+                if self.address(entry["nome"]) == service:
+                    agentes.setdefault(entry["nome"], entry)
+        if not digests:
+            raise A2AError("nenhum serviço de especialista respondeu: " + "; ".join(fora))
+        digest = digests[0] if len(digests) == 1 else hashlib.sha256("|".join(digests).encode()).hexdigest()[:16]
+        return {"digest": digest, "agentes": list(agentes.values()), "arquivos_invalidos": invalidos, "fora_do_ar": fora}
 
     async def call(self, nome: str, tarefa: str, doc_id: str | None, budget: Budget,
                    conversa_id: str | None = None) -> dict[str, Any]:
         """Manda a tarefa e espera o relato. A chamada bloqueia até o especialista terminar. A
         conversa vai junto: é a chave da memória do especialista."""
         async with self._http(nome) as http:
-            card = await A2ACardResolver(http, f"{self.base}/agentes/{nome}").get_agent_card()
+            card = await A2ACardResolver(http, f"{self.address(nome)}/agentes/{nome}").get_agent_card()
             client = await create_client(card, client_config=ClientConfig(streaming=False, httpx_client=http))
             data = {"doc_id": doc_id, "conversa_id": conversa_id,
                     "orcamento": {"tokens": budget.tokens_left, "segundos": budget.seconds_left}}

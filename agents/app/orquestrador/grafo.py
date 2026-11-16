@@ -497,12 +497,13 @@ async def _execute(run: Run, user_token: str, deps: Deps) -> Run:
             raise RunFailed(f"Não há orquestrador: agentes/{ORCHESTRATOR}.md ({problem}).")
         catalog = await execution.client.catalog()
         if any(entry["tools"] is None for entry in catalog["agentes"]):
-            raise RunFailed("O serviço dos especialistas não conseguiu falar com o servidor MCP.")
+            raise RunFailed("Um serviço de especialista não conseguiu falar com o servidor MCP.")
         locked = [entry["nome"] for entry in catalog["agentes"] if not entry["tools"]]
         if locked:
             raise RunFailed("Agente sem entrada na política do servidor MCP (policy.yaml): " + ", ".join(locked)
                             + ". Acrescente a entrada ou remova o arquivo do agente.")
-        trace.add("especialistas", agentes=[entry["nome"] for entry in catalog["agentes"]], digest=catalog["digest"])
+        trace.add("especialistas", agentes=[entry["nome"] for entry in catalog["agentes"]], digest=catalog["digest"],
+                  **({"fora_do_ar": catalog["fora_do_ar"]} if catalog.get("fora_do_ar") else {}))
         execution.spec = with_team(snapshot.orchestrator, catalog)
         execution.team = {entry["nome"] for entry in catalog["agentes"]}
 

@@ -54,8 +54,15 @@ class Settings(BaseSettings):
 
     # A2A: o orquestrador assina um token para cada chamada a um especialista.
     a2a_secret: str = ""
-    # Onde os especialistas atendem. O orquestrador chama este endereço, e ele vai no Agent Card.
+    # Onde os especialistas atendem (A2A). Cada especialista pode ter o seu serviço:
+    # - no orquestrador, `especialistas_enderecos` diz o endereço de cada um ({"extrator":
+    #   "http://extrator:8201", ...}); quem não está ali é procurado em `especialistas_url`, onde
+    #   um serviço só atende todos os arquivos da pasta (vazio: não há esse serviço);
+    # - no serviço de um especialista, `especialista` diz qual ele atende (vazio: todos) e
+    #   `especialistas_url` é o endereço dele, que vai no Agent Card.
     especialistas_url: str = "http://localhost:8201"
+    especialistas_enderecos: dict[str, str] = {}
+    especialista: str = ""
     especialista_timeout_seconds: float = 900
 
     # Indexador: é quem diz quem é o usuário do token.

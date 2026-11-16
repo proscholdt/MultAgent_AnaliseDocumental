@@ -1,7 +1,7 @@
 # Agentes
 
-Um orquestrador em grafo (LangGraph) e cinco especialistas (PydanticAI) em serviços separados,
-ligados por A2A. Todos usam as ferramentas pelo [servidor MCP](../mcp-server/README.md). Os
+Um orquestrador em grafo (LangGraph) e cinco especialistas (PydanticAI), cada um no próprio
+serviço, com Dockerfile e porta próprios, ligados por A2A. Todos usam as ferramentas pelo [servidor MCP](../mcp-server/README.md). Os
 fluxos estão desenhados em [docs/fluxos.html](docs/fluxos.html).
 
 ```mermaid
@@ -26,7 +26,22 @@ flowchart LR
   o `doc_id` da empresa e exige o relatório dela (só as pendências daquela empresa);
   `fora_do_escopo` não executa nada e devolve um texto fixo com as opções.
 - **A2A**: o orquestrador assina um token por chamada (destino, execução, usuário); só ele entra
-  no serviço dos especialistas. Cada especialista chega ao MCP com um token de agente próprio.
+  no serviço de cada especialista. Cada especialista chega ao MCP com um token de agente próprio.
+- **Um serviço por especialista**: o mesmo código (`app/especialistas/servico.py`) com
+  `ESPECIALISTA=<nome>` atende só aquele agente. O orquestrador tem o endereço de cada um
+  (`ESPECIALISTAS_ENDERECOS` no compose) e monta a equipe perguntando a cada serviço: um serviço
+  fora do ar tira só aquele especialista da execução (fica em `fora_do_ar` no trace e em
+  `GET /api/agentes`), e o resto trabalha; a conferência mostra o que ficou pendente. Fora do
+  Docker, sem `ESPECIALISTA`, um serviço só atende todos (`ESPECIALISTAS_URL`).
+
+| Serviço | Porta | Dockerfile |
+|---|---|---|
+| orquestrador | 8200 | `docker/orquestrador/Dockerfile` |
+| extrator | 8201 | `docker/extrator/Dockerfile` |
+| validador | 8202 | `docker/validador/Dockerfile` |
+| analista | 8203 | `docker/analista/Dockerfile` |
+| pesquisador | 8204 | `docker/pesquisador/Dockerfile` |
+| redator | 8205 | `docker/redator/Dockerfile` |
 
 | Agente | Faz | Modelo |
 |---|---|---|
@@ -73,7 +88,7 @@ não derruba nada: continua valendo o anterior, e o motivo aparece em `GET /heal
 
 ```bash
 cp .env.example .env          # só chaves: OPENAI_API_KEY, MCP_AGENT_SECRET (o mesmo do MCP), A2A_SECRET
-docker compose up -d --build  # orquestrador :8200, especialistas :8201
+docker compose up -d --build --remove-orphans  # orquestrador :8200, especialistas :8201 a :8205
 uv run pytest                 # sem rede: modelo com roteiro, MCP em memória, A2A por ASGI
 
 uv run python scripts/gerar_entrega.py --usuario <u> --senha <s> --rodar   # relatório + JSON em entrega/
@@ -134,8 +149,8 @@ app/
 │  ├─ especialistas_a2a.py  descobrir e chamar os especialistas por A2A
 │  └─ usuario.py            quem é o usuário (login do indexador)
 │
-├─ especialistas/           O SERVIÇO :8201
-│  ├─ servico.py            cada arquivo de agente vira um agente A2A
+├─ especialistas/           O SERVIÇO DE CADA ESPECIALISTA (:8201 a :8205)
+│  ├─ servico.py            o arquivo do agente vira um agente A2A (ESPECIALISTA=<nome>: só ele)
 │  └─ memoria.py            histórico de cada especialista na conversa, compactado
 │
 ├─ nucleo/                  O QUE OS DOIS USAM
@@ -152,6 +167,7 @@ app/
    └─ avaliacao_automatica.py  a nota ao fim de cada relatório e as métricas dela
 
 scripts/                    avaliar.py, gerar_entrega.py
+docker/<serviço>/Dockerfile um por serviço: orquestrador e cada especialista
 ```
 
 Para criar um agente: `python -m app.ferramentas.cli novo-agente <nome>` cria `agentes/<nome>.md`

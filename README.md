@@ -11,7 +11,7 @@ flowchart LR
     U[navegador] --> FE[frontend<br/>SvelteKit :3000]
     FE -->|PDFs, login| IDX[indexer<br/>:8000]
     FE -->|chat| ORQ[orquestrador<br/>LangGraph :8200]
-    ORQ -->|A2A| ESP[especialistas<br/>PydanticAI :8201]
+    ORQ -->|A2A| ESP[5 especialistas<br/>PydanticAI :8201 a :8205]
     ORQ -->|MCP| MCP[mcp-server<br/>:8100]
     ESP -->|MCP| MCP
     MCP -->|busca, chunks| IDX
@@ -21,7 +21,7 @@ flowchart LR
 |---|---|
 | [`indexer/`](indexer/README.md) | Ingestão: API com login, filas Kafka, parse (Docling ou Azure Document Intelligence), chunks com página e seção, busca híbrida no Qdrant |
 | [`mcp-server/`](mcp-server/README.md) | Porta única dos agentes: política por agente, portões que conferem tudo o que é gravado, fórmulas fixas, auditoria e montagem do relatório |
-| [`agents/`](agents/README.md) | Orquestrador em grafo e cinco especialistas ligados por A2A; conversa com memória e raciocínio registrado |
+| [`agents/`](agents/README.md) | Orquestrador em grafo e cinco especialistas, cada um no próprio serviço, ligados por A2A; conversa com memória e raciocínio registrado |
 | [`frontend/`](frontend/README.md) | Envio dos PDFs e chat; sessão em cookie httpOnly e proxy para as APIs |
 | [`observability/`](observability/README.md) | Tempo, Prometheus, Loki e Grafana, com o Alloy como coletor: um trace atravessa os quatro serviços, e os painéis mostram custo, tokens e portões dos agentes |
 | [`sala/`](sala/README.md) | Sala dos agentes: a execução em tempo real como um escritório em pixel art (quem trabalha, com qual tool, o que o portão barrou) e uma aba de logs |
@@ -40,7 +40,7 @@ flowchart LR
 ```bash
 cd indexer    && cp .env.example .env && docker compose up -d --build   # :8000
 cd mcp-server && cp .env.example .env && docker compose up -d --build   # :8100
-cd agents     && cp .env.example .env && docker compose up -d --build   # :8200, :8201
+cd agents     && cp .env.example .env && docker compose up -d --build   # :8200, :8201 a :8205
 cd frontend   && docker compose up -d --build                           # :3000
 cd observability && docker compose up -d                                # Grafana :3001
 cd sala       && cp .env.example .env && docker compose up -d           # :3300

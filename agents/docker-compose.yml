@@ -1,46 +1,107 @@
 name: agents
 
-# Agentes: orquestrador (API, porta 8200) e especialistas (A2A, porta 8201).
+# Agentes: o orquestrador (API, porta 8200) e cada especialista no próprio serviço A2A, com o
+# próprio Dockerfile e a própria porta:
+#   extrator 8201 · validador 8202 · analista 8203 · pesquisador 8204 · redator 8205
 # Depende do indexador (sistema 1) e do servidor MCP (sistema 2) já no ar.
-#   docker compose up --build
+#   docker compose up -d --build --remove-orphans
 #
-# Os três sistemas se falam pela rede Docker do indexador, pelo nome do serviço, sem passar
-# pela máquina hospedeira. Se a rede tiver outro nome, defina INDEXER_NETWORK no .env.
+# Os sistemas se falam pela rede Docker do indexador, pelo nome do serviço, sem passar pela
+# máquina hospedeira. Se a rede tiver outro nome, defina INDEXER_NETWORK no .env.
+#
+# Especialista novo: o arquivo agentes/<nome>.md, a entrada em mcp-server/config/policy.yaml,
+# um Dockerfile em docker/<nome>/, um serviço aqui (copie o bloco de um especialista) e o
+# endereço dele em ESPECIALISTAS_ENDERECOS do orquestrador.
 
-x-agente: &agente
-  build: .
+x-ambiente: &ambiente
+  MCP_URL: ${MCP_URL_DOCKER:-http://mcp-server:8100/mcp}
+  INDEXER_URL: ${INDEXER_URL_DOCKER:-http://api:8000}
+  AGENTES_DIR: /app/agentes
+  DATA_DIR: /data
+  OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT-http://alloy:4318} # observabilidade; vazio desliga
+
+x-especialista: &especialista
   env_file:
     - path: .env
       required: false
-  environment:
-    MCP_URL: ${MCP_URL_DOCKER:-http://mcp-server:8100/mcp}
-    INDEXER_URL: ${INDEXER_URL_DOCKER:-http://api:8000}
-    ESPECIALISTAS_URL: http://especialistas:8201
-    AGENTES_DIR: /app/agentes
-    DATA_DIR: /data
-    OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT-http://alloy:4318} # observabilidade; vazio desliga
   networks:
     - default
     - indexer
+  volumes:
+    - ./agentes:/app/agentes:ro # editar o prompt vale na hora (o serviço só atende o agente dele)
+    - ./config:/app/config:ro # ajustes.yaml: relido a cada pedido
+    - agents-data:/data # memória dos especialistas em cada conversa (memoria.db, uma tabela para todos)
 
 services:
-  especialistas:
-    <<: *agente
-    command: ["uvicorn", "app.especialistas.servico:app_factory", "--factory", "--host", "0.0.0.0", "--port", "8201"]
+  extrator:
+    <<: *especialista
+    build: { context: ., dockerfile: docker/extrator/Dockerfile }
+    environment:
+      <<: *ambiente
+      ESPECIALISTA: extrator
+      ESPECIALISTAS_URL: http://extrator:8201 # o endereço dele, que vai no Agent Card
     ports:
-      - "8201:8201" # só para ver os Agent Cards; quem chama é o orquestrador, pela rede interna
-    volumes:
-      - ./agentes:/app/agentes:ro # criar ou editar um agente vale na hora
-      - ./config:/app/config:ro # ajustes.yaml: relido a cada pedido
-      - agents-data:/data # memória dos especialistas em cada conversa (memoria.db)
+      - "8201:8201" # só para ver o Agent Card; quem chama é o orquestrador, pela rede interna
+
+  validador:
+    <<: *especialista
+    build: { context: ., dockerfile: docker/validador/Dockerfile }
+    environment:
+      <<: *ambiente
+      ESPECIALISTA: validador
+      ESPECIALISTAS_URL: http://validador:8202
+    ports:
+      - "8202:8202"
+
+  analista:
+    <<: *especialista
+    build: { context: ., dockerfile: docker/analista/Dockerfile }
+    environment:
+      <<: *ambiente
+      ESPECIALISTA: analista
+      ESPECIALISTAS_URL: http://analista:8203
+    ports:
+      - "8203:8203"
+
+  pesquisador:
+    <<: *especialista
+    build: { context: ., dockerfile: docker/pesquisador/Dockerfile }
+    environment:
+      <<: *ambiente
+      ESPECIALISTA: pesquisador
+      ESPECIALISTAS_URL: http://pesquisador:8204
+    ports:
+      - "8204:8204"
+
+  redator:
+    <<: *especialista
+    build: { context: ., dockerfile: docker/redator/Dockerfile }
+    environment:
+      <<: *ambiente
+      ESPECIALISTA: redator
+      ESPECIALISTAS_URL: http://redator:8205
+    ports:
+      - "8205:8205"
 
   orquestrador:
-    <<: *agente
-    command: ["uvicorn", "app.orquestrador.api:app_factory", "--factory", "--host", "0.0.0.0", "--port", "8200"]
+    build: { context: ., dockerfile: docker/orquestrador/Dockerfile }
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      <<: *ambiente
+      # Um endereço por especialista. Sem serviço que atenda todos: ESPECIALISTAS_URL vazio.
+      ESPECIALISTAS_URL: ""
+      ESPECIALISTAS_ENDERECOS: >-
+        {"extrator": "http://extrator:8201", "validador": "http://validador:8202",
+        "analista": "http://analista:8203", "pesquisador": "http://pesquisador:8204",
+        "redator": "http://redator:8205"}
     ports:
       - "8200:8200"
-    depends_on:
-      - especialistas
+    depends_on: [extrator, validador, analista, pesquisador, redator]
+    networks:
+      - default
+      - indexer
     volumes:
       - ./agentes:/app/agentes:ro
       - ./config:/app/config:ro

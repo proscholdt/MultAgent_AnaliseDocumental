@@ -9,6 +9,10 @@ O card é público. O endpoint só atende o orquestrador: exige o token assinado
 emitido para aquele especialista. É o hub-and-spoke: os raios não se falam e não atendem mais
 ninguém.
 
+Com `ESPECIALISTA=<nome>`, o serviço atende só aquele agente: é assim que cada especialista roda
+no próprio contêiner, com a própria porta (ver docker-compose.yml). Sem ele, um serviço só atende
+todos os arquivos da pasta (o modo dos testes e de rodar fora do Docker).
+
 Os endpoints são montados na hora do pedido, a partir da pasta de agentes. Um arquivo novo
 passa a atender sem reiniciar o serviço.
 """
@@ -154,6 +158,18 @@ class Specialists:
         self.settings, self.registry, self.engine, self.memory = settings, registry, engine, memory
         self._apps: dict[str, tuple[str, ASGIApp]] = {}
 
+    # --- quem este serviço atende -------------------------------------------------------------
+
+    def served(self, snapshot: Any) -> list[AgentFile]:
+        """Os especialistas deste serviço: todos os da pasta ou, com `ESPECIALISTA`, só aquele."""
+        only = self.settings.especialista
+        return [spec for spec in snapshot.specialists if not only or spec.nome == only]
+
+    def invalid(self, snapshot: Any) -> dict[str, str]:
+        """Arquivos inválidos que importam a este serviço (com `ESPECIALISTA`, só o dele)."""
+        only = self.settings.especialista
+        return {arquivo: erro for arquivo, erro in snapshot.errors.items() if not only or arquivo == f"{only}.md"}
+
     # --- o trabalho -------------------------------------------------------------------------
 
     async def work(self, nome: str, request: dict[str, Any], identity: Identity) -> dict[str, Any]:
@@ -224,15 +240,16 @@ class Specialists:
             except Exception:  # noqa: BLE001 - servidor MCP fora do ar: o catálogo diz que não soube
                 return None
 
-        tools = await asyncio.gather(*(tools_of(spec) for spec in snapshot.specialists))
+        served = self.served(snapshot)
+        tools = await asyncio.gather(*(tools_of(spec) for spec in served))
         base = self.settings.especialistas_url.rstrip("/")
         return {
             "digest": snapshot.digest,
             "agentes": [{"nome": spec.nome, "descricao": spec.descricao, "modelo": spec.modelo,
                          "max_turnos": spec.max_turnos, "resposta": spec.resposta, "tools": listed,
                          "card": f"{base}/agentes/{spec.nome}{AGENT_CARD_WELL_KNOWN_PATH}"}
-                        for spec, listed in zip(snapshot.specialists, tools, strict=True)],
-            "arquivos_invalidos": snapshot.errors,
+                        for spec, listed in zip(served, tools, strict=True)],
+            "arquivos_invalidos": self.invalid(snapshot),
         }
 
     # --- o transporte -----------------------------------------------------------------------
@@ -260,7 +277,7 @@ class Specialists:
         root = scope.get("root_path", "")
         path = scope["path"][len(root):] if root and scope["path"].startswith(root) else scope["path"]
         nome, _, rest = path.lstrip("/").partition("/")
-        spec = next((agent for agent in self.registry.current().specialists if agent.nome == nome), None)
+        spec = next((agent for agent in self.served(self.registry.current()) if agent.nome == nome), None)
         if spec is None:
             await JSONResponse({"erro": f"Não há especialista '{nome}'."}, status_code=404)(scope, receive, send)
             return
@@ -283,15 +300,21 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
         title="Especialistas (A2A)",
         description="Agentes especialistas servidos pelo protocolo A2A. Só o orquestrador os chama.")
     app.state.service = service
-    if telemetria.configurar("agents-especialistas"):
+    # Cada especialista no seu serviço aparece com o próprio nome nos traces e no mapa de serviços.
+    nome_servico = f"agents-{settings.especialista}" if settings.especialista else "agents-especialistas"
+    if telemetria.configurar(nome_servico):
         instrumentar_agentes(service.settings)
     telemetria.instrumentar(app)
 
     @app.get("/health", summary="Estado do serviço")
     async def health() -> dict[str, Any]:
         snapshot = service.registry.current()
-        return {"status": "ok" if not settings.problem else "configuração incompleta", "problema": settings.problem,
-                "especialistas": [spec.nome for spec in snapshot.specialists], "arquivos_invalidos": snapshot.errors}
+        served = [spec.nome for spec in service.served(snapshot)]
+        problem = settings.problem
+        if settings.especialista and not served:
+            problem = f"ESPECIALISTA={settings.especialista}, mas não há agentes/{settings.especialista}.md válido"
+        return {"status": "ok" if not problem else "configuração incompleta", "problema": problem,
+                "especialistas": served, "arquivos_invalidos": service.invalid(snapshot)}
 
     @app.get("/agentes", summary="Especialistas no ar e as tools de cada um (só para o orquestrador)")
     async def catalog(request: Request) -> JSONResponse:

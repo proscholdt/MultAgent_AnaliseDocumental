@@ -242,3 +242,82 @@ async def test_specialist_remembers_its_previous_calls_in_the_same_conversation(
     model.scripts["extrator"] = [[say("Avulso.")]]
     alone = await client.call("extrator", "Extraia.", DOC, budget())
     assert alone["execucao"]["memoria"]["chamadas_anteriores"] == 0
+
+
+# --- um serviço por especialista ------------------------------------------------------------
+
+
+class PorHost(httpx.AsyncBaseTransport):
+    """A rede de mentira: cada host é um serviço; host sem serviço está fora do ar."""
+
+    def __init__(self, apps: dict) -> None:
+        self.apps = {host: httpx.ASGITransport(app=app) for host, app in apps.items()}
+
+    async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        service = self.apps.get(request.url.host)
+        if service is None:
+            raise httpx.ConnectError(f"{request.url.host} fora do ar", request=request)
+        return await service.handle_async_request(request)
+
+
+def one_agent_service(settings, engine, nome: str):
+    """O serviço de um especialista só, como no compose: ESPECIALISTA e o endereço próprio."""
+    from app.especialistas.servico import create_app
+
+    return create_app(settings.model_copy(update={"especialista": nome, "especialistas_url": f"http://{nome}.teste"}),
+                      engine)
+
+
+async def test_a_service_with_ESPECIALISTA_serves_only_that_specialist(settings, engine, identity):
+    app = one_agent_service(settings, engine, "extrator")
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://extrator.teste") as http:
+        assert (await http.get("/health")).json()["especialistas"] == ["extrator"]
+        card = (await http.get("/agentes/extrator/.well-known/agent-card.json")).json()
+        assert card["supportedInterfaces"][0]["url"] == "http://extrator.teste/agentes/extrator/"
+        # O redator existe na pasta, mas não é deste serviço.
+        assert (await http.get("/agentes/redator/.well-known/agent-card.json")).status_code == 404
+        catalog = (await http.get("/agentes", headers=a2a_headers(settings, "catalogo", identity))).json()
+        assert [entry["nome"] for entry in catalog["agentes"]] == ["extrator"]
+
+    # Arquivo do agente sumiu: o /health diz o que falta.
+    ghost = one_agent_service(settings, engine, "fantasma")
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=ghost), base_url="http://fantasma.teste") as http:
+        assert "agentes/fantasma.md" in (await http.get("/health")).json()["problema"]
+
+
+async def test_orchestrator_calls_each_specialist_at_its_own_address(settings, engine, identity, world, model):
+    network = PorHost({"extrator.teste": one_agent_service(settings, engine, "extrator"),
+                       "redator.teste": one_agent_service(settings, engine, "redator")})
+    orchestrator = settings.model_copy(update={
+        "especialistas_url": "",
+        "especialistas_enderecos": {"extrator": "http://extrator.teste", "redator": "http://redator.teste/"}})
+    client = SpecialistClient(orchestrator, identity, network)
+
+    catalog = await client.catalog()
+    assert [(entry["nome"], entry["card"]) for entry in catalog["agentes"]] == [
+        ("extrator", "http://extrator.teste/agentes/extrator/.well-known/agent-card.json"),
+        ("redator", "http://redator.teste/agentes/redator/.well-known/agent-card.json")]
+    assert catalog["fora_do_ar"] == []
+
+    model.scripts["redator"] = [[say("Relatório montado.")]]
+    report = await client.call("redator", "Monte o relatório.", None, budget())
+    assert (report["agente"], report["estado"]) == ("redator", "concluido")
+
+
+async def test_a_specialist_service_down_takes_out_only_that_specialist(settings, engine, identity):
+    network = PorHost({"extrator.teste": one_agent_service(settings, engine, "extrator")})  # o redator caiu
+    orchestrator = settings.model_copy(update={
+        "especialistas_url": "",
+        "especialistas_enderecos": {"extrator": "http://extrator.teste", "redator": "http://redator.teste"}})
+    client = SpecialistClient(orchestrator, identity, network)
+
+    catalog = await client.catalog()
+    assert [entry["nome"] for entry in catalog["agentes"]] == ["extrator"]
+    assert len(catalog["fora_do_ar"]) == 1 and "redator.teste" in catalog["fora_do_ar"][0]
+    # Delegar ao que caiu vira relato de erro; a execução não cai.
+    report = await delegate(client, "redator", "Monte o relatório.", None, budget())
+    assert report["estado"] == "erro" and "redator.teste" in report["erro"]
+
+    # Nenhum serviço no ar: aí é erro.
+    with pytest.raises(A2AError, match="nenhum serviço"):
+        await SpecialistClient(orchestrator, identity, PorHost({})).catalog()
