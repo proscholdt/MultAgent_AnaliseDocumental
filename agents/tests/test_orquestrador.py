@@ -362,6 +362,44 @@ async def test_delegation_to_an_unknown_specialist_comes_back_as_an_error_report
     assert "não há especialista 'ninguem'" in model.first_input("orquestrador", turn=1)
 
 
+async def test_a_delegation_that_comes_before_its_turn_is_held_and_the_orchestrator_hears_why(
+        http, world, model, agents_dir):
+    """As perguntas aguardam a extração: pedir ao pesquisador agora não sai do grafo. O extrator,
+    que está liberado, vai na mesma onda; na onda seguinte o orquestrador sabe o que faltava."""
+    working_team(world, model)
+    answering_researcher(world, agents_dir, "A Brasal.")
+    question = {"o_que_falta": "resposta à pergunta", "agente": "pesquisador", "liberada": False,
+                "aguarda": "extração dos indicadores de Brasal", "pergunta_id": "p1"}
+    world.pending = [{**EXTRACTION, "liberada": True}, question]
+    model.scripts["orquestrador"] = [
+        [decide(delegation("pesquisador", "Responda a p1."), delegation("extrator", "Extraia.", DOC))],
+        [decide(delegation("redator", "Monte."))], [decide(terminado=True, mensagem="Pronto.")]]
+    run = (await http.post("/api/relatorios", json={"aguardar": True}, headers=auth())).json()
+
+    assert run["estado"] == "completa"
+    assert "pesquisador" not in model.prompts and world.called("extrator")
+    held = [s for s in run["passos"] if s["tipo"] == "barrada"]
+    assert [(s["agente"], s["doc_id"]) for s in held] == [("pesquisador", None)]
+    told = model.first_input("orquestrador", turn=1)
+    assert "não delegado: chegou antes da hora" in told and "extração dos indicadores de Brasal" in told
+    assert "O que já pode ser delegado: extrator: extração dos indicadores (fechar_extracao) (Brasal)" in told
+
+
+async def test_outside_the_report_nothing_is_held(http, world, model, agents_dir):
+    """Numa pergunta do chat, a lista do relatório não manda: o pesquisador responde a pergunta livre."""
+    asked = answering_researcher(world, agents_dir, "A Brasal.")
+    world.pending = [{**EXTRACTION, "liberada": True},
+                     {"o_que_falta": "resposta à pergunta", "agente": "pesquisador", "liberada": False,
+                      "aguarda": "extração dos indicadores de Brasal"}]
+    model.scripts["orquestrador"] = [[decide(delegation("pesquisador", "Qual a maior margem?"))],
+                                     [decide(terminado=True)]]
+    model.scripts["pesquisador"] = [[call("salvar_resposta", pergunta="Qual a maior margem?")], [say("Gravada.")]]
+    run = (await http.post("/api/perguntas", json={"pergunta": "Qual a maior margem?", "aguardar": True},
+                           headers=auth())).json()
+    assert run["estado"] == "completa" and asked == ["Qual a maior margem?"]
+    assert not [s for s in run["passos"] if s["tipo"] == "barrada"]
+
+
 async def test_run_does_not_start_with_an_agent_that_has_no_policy_entry(http, world, model, agents_dir):
     write_agent(agents_dir, "tradutor")  # arquivo criado, política não
     run = (await http.post("/api/relatorios", json={"aguardar": True}, headers=auth())).json()

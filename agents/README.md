@@ -21,6 +21,9 @@ flowchart LR
   as delegações da onda em paralelo e volta com os relatos montados pelo código.
 - **Conferência**: o código pergunta ao MCP o que falta (`pendencias`). "Terminei" dito pelo
   modelo não encerra; até 2 rodadas extras, depois a execução fica `incompleta`.
+- **Ordem**: num relatório, antes de cada onda o código consulta `pendencias`; a delegação que
+  chega antes da hora (perguntas sem análise, resumo sem revisão) não sai e volta ao orquestrador
+  como relato `nao_delegado`, dizendo o que delegar no lugar.
 - **Intenção**: no chat, a primeira decisão classifica a mensagem. `pergunta` exige resposta
   gravada com fonte; `relatorio` exige o relatório consolidado montado; `relatorio_empresa` traz
   o `doc_id` da empresa e exige o relatório dela (só as pendências daquela empresa);
@@ -126,7 +129,8 @@ Relatório completo dos três documentos, com raciocínio ligado:
 
 | Modelos | Tempo | Custo | Indicadores certos | Inconsistências da fonte | Perguntas |
 |---|---|---|---|---|---|
-| `gpt-5.4-nano` em todos, com os candidatos por regra do MCP (atual) | 311 s | US$ 0,20 | 24 de 24 | **6 de 7** | 4 de 5 |
+| `gpt-5.4-nano` em todos, com candidatos por regra e a trava de ordem (atual) | 231 s | US$ 0,14 | 24 de 24 | **6 de 7** | 5 de 5 |
+| o mesmo, antes da trava de ordem | 311 s | US$ 0,20 | 24 de 24 | 6 de 7 | 4 de 5 |
 | `gpt-5.4-nano` em todos, sem os candidatos | 195 s | US$ 0,14 | 24 de 24 | 2 de 6 | 5 de 5 |
 | `gpt-5.4-mini` + `gpt-5.4` no validador, sem os candidatos | 332 s | US$ 1,02 | 24 de 24 | 4 de 6 | 5 de 5 |
 | `gpt-5-nano` em todos | parou em 12 min | US$ 0,08 | nenhuma extração fechada | — | — |
@@ -141,10 +145,16 @@ duas colunas) foi achada pelas regras e entrou no gabarito depois de conferida n
 faltou (Millet, p. 41) estava na lista, e o modelo julgou que não era erro. As regras foram
 desenhadas olhando estes documentos: em outro PDF, a medida honesta é rodar e conferir.
 
-**Pergunta 2** na execução atual: faltou o motivo da receita da Light (bandeira, estorno, CVA),
-que nas anteriores saiu certo. É o pesquisador, não o validador: variação entre execuções do
-mesmo modelo. O tempo e o custo a mais vieram do extrator e do pesquisador (24 chamadas nesta
-execução); o validador levou de 13 a 16 s por documento.
+**Ordem do trabalho.** Na execução de 311 s, o orquestrador pediu as cinco perguntas antes da
+análise qualitativa; o MCP recusou as gravações 13 vezes, e ele repetiu o pedido em mais três
+ondas (22 delegações ao pesquisador, 78 chamadas ao modelo) até a conferência listar o que
+faltava. Desde então o grafo consulta `pendencias` antes de cada onda de um relatório e não
+manda a delegação cujos itens ainda aguardam outra etapa: ela volta ao orquestrador como relato
+`nao_delegado`, com o que falta antes e o que já pode ser feito (passo `barrada` no trace). Na
+execução seguinte (231 s, US$ 0,14) o orquestrador seguiu a ordem sozinho e a trava não precisou
+agir: a diferença entre as duas é, em boa parte, variação do modelo, e a trava garante o pior
+caso. A pergunta 2 que falhou na de 311 s (faltou um motivo da receita da Light) saiu certa na
+seguinte.
 
 ## Mapa do código
 

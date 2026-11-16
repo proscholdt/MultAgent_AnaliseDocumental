@@ -270,6 +270,20 @@ async def check_company_report(run: Run, identity: Identity, deps: Deps) -> tupl
                                   "doc_id": run.doc_id}
 
 
+_READY_IN_REASON = 6
+
+
+def _held_reason(mine: list[dict[str, Any]], ready: list[dict[str, Any]]) -> str:
+    """Por que a delegação não saiu e o que delegar no lugar dela."""
+    waits = list(dict.fromkeys(item["aguarda"] for item in mine if item.get("aguarda")))
+    text = "não delegado: chegou antes da hora. Antes disso falta: " + "; ".join(waits) + "."
+    if ready:
+        options = [f"{item['agente']}: {item['o_que_falta']}" + (f" ({item['empresa']})" if item.get("empresa") else "")
+                   for item in ready[:_READY_IN_REASON]]
+        text += " O que já pode ser delegado: " + "; ".join(options) + "."
+    return text
+
+
 def turn_answer(run: Run, state: Estado) -> str:
     """O que este turno respondeu, para os turnos seguintes da conversa lembrarem."""
     answers = (state.get("resultado") or {}).get("respostas") or []
@@ -358,8 +372,39 @@ class Execution:
                     "erro": f"não há especialista '{item.agente}'"} for item in decision.delegacoes
                    if item.agente not in self.team]
         valid = [item.model_dump() for item in decision.delegacoes if item.agente in self.team]
-        return {**update, "relatos": {"substituir": unknown}, "mensagem": latin_only(decision.mensagem),
+        valid, early = await self.in_order(valid)
+        return {**update, "relatos": {"substituir": unknown + early}, "mensagem": latin_only(decision.mensagem),
                 "decisao": {"delegacoes": valid, "terminado": decision.terminado}}
+
+    async def in_order(self, delegations: list[dict]) -> tuple[list[dict], list[dict]]:
+        """Separa as delegações que chegam antes da hora. No relatório, a ordem do trabalho é do
+        servidor MCP (`pendencias`: cada item diz se está liberado ou o que aguarda), e as tools de
+        gravação recusam o que vem fora de ordem. Mandar o especialista assim mesmo só gasta: ele
+        trabalha, a gravação é recusada, e o orquestrador repete (visto numa execução real: as cinco
+        perguntas pedidas quatro vezes antes da análise). A delegação cujos itens estão todos
+        aguardando não sai: volta ao orquestrador como relato, com o que falta antes e o que já pode
+        ser feito. Delegação sem item na lista (refazer algo, uma pergunta livre) segue."""
+        if not delegations or self.run.tipo not in REPORT_TYPES:
+            return delegations, []
+        arguments = {"doc_id": self.run.doc_id} if self.run.tipo == "relatorio_empresa" and self.run.doc_id else {}
+        try:
+            async with self.deps.engine.connect(mcp.SYSTEM, self.identity) as session:
+                pending = (await session.call("pendencias", arguments))["pendencias"]
+        except mcp.McpError:
+            return delegations, []  # sem a lista, quem confere é a tool de gravação, como antes
+        ready = [item for item in pending if item.get("liberada", True)]
+        go, held = [], []
+        for delegation in delegations:
+            mine = [item for item in pending if item.get("agente") == delegation["agente"]
+                    and (delegation.get("doc_id") is None or item.get("doc_id") in (None, delegation.get("doc_id")))]
+            if mine and not any(item.get("liberada", True) for item in mine):
+                held.append({"agente": delegation["agente"], "estado": "nao_delegado", "doc_id": delegation.get("doc_id"),
+                             "erro": _held_reason(mine, ready)})
+            else:
+                go.append(delegation)
+        for report in held:
+            self.trace.add("barrada", agente=report["agente"], doc_id=report["doc_id"], motivo=report["erro"])
+        return go, held
 
     def after_orchestrator(self, state: Estado) -> list[Send] | str:
         if state.get("falha"):

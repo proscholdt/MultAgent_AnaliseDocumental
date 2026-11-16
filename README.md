@@ -64,7 +64,8 @@ flowchart TB
    leitura de chunk e de página, e gravação. Toda gravação passa por um portão que confere o
    valor contra o documento.
 4. **Conferência.** O "terminei" do modelo não encerra: o código pergunta ao MCP o que falta
-   e devolve ao orquestrador, até 2 rodadas.
+   e devolve ao orquestrador, até 2 rodadas. Antes de cada onda, o código também barra a
+   delegação que chega antes da hora (perguntas antes da análise, por exemplo).
 5. **Relatório.** O MCP monta o Markdown a partir da base: resumo por empresa, tabela
    comparativa, análise, as 5 perguntas, alertas e "não encontrado". Ao fim, a nota contra o
    gabarito.
@@ -129,14 +130,13 @@ Resultado do relatório completo dos três documentos:
 
 | Modelos | Indicadores certos | Inconsistências da fonte | Invenções | Perguntas | Calculados e citações |
 |---|---|---|---|---|---|
-| `gpt-5.4-nano` em todos, com candidatos por regra (atual) | 24 de 24 | 6 de 7 | 0 | 4 de 5 | todos certos |
+| `gpt-5.4-nano` em todos, com candidatos por regra (atual, duas execuções) | 24 de 24 | 6 de 7 | 0 | 5 de 5 e 4 de 5 | todos certos |
 | `gpt-5.4-nano` em todos, sem candidatos | 24 de 24 | 2 de 6 | 0 | 5 de 5 | todos certos |
 | `gpt-5.4-mini` + `gpt-5.4` no validador, sem candidatos | 24 de 24 | 4 de 6 | 0 | 5 de 5 | todos certos |
 
 A sétima inconsistência (Light, p. 21 do arquivo: o consolidado diz 2021 nas duas colunas) foi
-achada pelas regras e entrou no gabarito depois de conferida no PDF. A pergunta que falhou na
-execução atual é do pesquisador (faltou um motivo da receita da Light) e variou entre execuções do
-mesmo modelo. Detalhes em [agents/README.md](agents/README.md#nota-contra-o-gabarito).
+achada pelas regras e entrou no gabarito depois de conferida no PDF. A pergunta que falhou numa
+das execuções é do pesquisador (faltou um motivo da receita da Light) e saiu certa na outra. Detalhes em [agents/README.md](agents/README.md#nota-contra-o-gabarito).
 
 ## Custo e desempenho
 

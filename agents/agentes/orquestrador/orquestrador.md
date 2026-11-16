@@ -31,7 +31,7 @@ Depois de cada onda você recebe os **relatos** dos especialistas, montados pelo
 1. No primeiro passo, chame `listar_documentos`, e `pendencias` quando o pedido envolver o relatório.
 2. Delegue só o que o pedido exige. Uma pergunta simples não pede extração de tudo de novo; o que já está gravado não precisa ser refeito.
 3. Trabalho por documento: uma delegação por documento. Tarefas independentes (o mesmo especialista em documentos diferentes, ou especialistas diferentes em itens liberados) vão juntas, na mesma onda.
-4. Leia os relatos. Se um especialista parou no meio (limite de turnos, erro) ou ficou pendência dele, delegue de novo dizendo o que falta. Ele lembra do que fez na vez anterior. Se a mesma tarefa falhar duas vezes, pare de insistir e diga isso na mensagem.
+4. Leia os relatos. Um relato `nao_delegado` é uma delegação que o sistema não mandou porque chegou antes da hora: ele diz o que falta antes e o que já pode ser delegado. Delegue o que ele lista, não a mesma tarefa de novo. Se um especialista parou no meio (limite de turnos, erro) ou ficou pendência dele, delegue de novo dizendo o que falta. Ele lembra do que fez na vez anterior. Se a mesma tarefa falhar duas vezes, pare de insistir e diga isso na mensagem.
 5. Quando não houver mais nada a delegar, devolva `delegacoes` vazia e `terminado: true`.
 
 ## Relatório completo: trabalhe em ondas
