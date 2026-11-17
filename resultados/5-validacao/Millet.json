@@ -1,0 +1,45 @@
+{
+  "arquivo": "Millet.pdf",
+  "empresa": "Millet Participações S.A.",
+  "alertas": [
+    {
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
+      "severidade": "atencao",
+      "campo": null,
+      "mensagem": "O texto afirma que o quadro reflete os fluxos em 31 de dezembro de 2021, porém o quadro apresenta a coluna de 2022 (no título do próprio quadro).",
+      "detalhes": {
+        "pagina": 41,
+        "chunk_index": 115,
+        "secao": "22. Gestão de risco > 22.1. Fatores de risco financeiro > b) Risco de liquidez",
+        "citacao": "O quadro a seguir demonstra os riscos de liquidez por faixa de vencimento e refletem o fluxo financeiro da Companhia e suas controladas em 31 de dezembro de 2021: | 2022 | Valor contábil | Fluxo financeiro projetado | Até 12 meses | De 13 a 24 meses | De 25 a 36 meses |"
+      },
+      "registrado_por": "validador"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
+      "severidade": "atencao",
+      "campo": null,
+      "mensagem": "No quadro, duas colunas têm o mesmo título \"Controladora - 31/12/2021\", o que indica cabeçalho duplicado para anos distintos (e não há coluna de 31/12/2022 para a controladora).",
+      "detalhes": {
+        "pagina": 42,
+        "chunk_index": 120,
+        "secao": "22. Gestão de risco > 22.3. Instrumento financeiro por categoria",
+        "citacao": "| | Controladora - 31/12/2021 | Controladora - 31/12/2021 | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 | |----------------------------------------------------|-----------------------------|-----------------------------|----------------------------|----------------------------|"
+      },
+      "registrado_por": "validador"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "revisao_das_fontes_concluida",
+      "severidade": "informacao",
+      "campo": null,
+      "mensagem": "Fontes revisadas pelo agente validador. Revisadas as fontes e dois candidatos de inconsistência foram verificados no documento; 2 inconsistências foram registradas (datas/títulos de colunas em quadros de risco de liquidez e mensuração de instrumentos).",
+      "detalhes": {
+        "inconsistencias_registradas": 2
+      },
+      "registrado_por": "validador"
+    }
+  ]
+}

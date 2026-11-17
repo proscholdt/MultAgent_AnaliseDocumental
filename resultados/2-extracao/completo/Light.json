@@ -1,0 +1,765 @@
+{
+  "documento": {
+    "doc_id": "a87339d097478f1c",
+    "arquivo": "Light.pdf",
+    "empresa": "LIGHT S.A.",
+    "origem_da_empresa": {
+      "source": "llm",
+      "page": 1,
+      "snippet": "LIGHT S.A."
+    },
+    "tipo": "Demonstrações financeiras",
+    "paginas": 124,
+    "periodo_referencia": "2022",
+    "periodo_comparavel": "2021",
+    "origem_do_periodo": {
+      "source": "regex"
+    }
+  },
+  "indicadores": {
+    "receita_liquida": {
+      "rotulo": "Receita líquida",
+      "informado": {
+        "status": "encontrado",
+        "valor": "13.253.286",
+        "valor_numerico": 13253286.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 20,
+          "chunk_index": 57,
+          "secao": "DEMONSTRAÇÕES DE RESULTADOS · PARA OS EXERCÍCIOS FINDOS EM 31 DE DEZEMBRO DE 2022 E DE 2021 (Em milhares de reais, exceto lucro por ação)",
+          "trecho": "| Demonstrações de Resultados | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| RECEITA LÍQUIDA | 31 | - | - | 13.253.286 | 14.897.920 |",
+          "linha": "RECEITA LÍQUIDA",
+          "coluna": "Consolidado - 2022"
+        }
+      },
+      "comparavel": {
+        "status": "encontrado",
+        "valor": "14.897.920",
+        "valor_numerico": 14897920.0,
+        "unidade": "R$ mil",
+        "periodo": "2021",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 20,
+          "chunk_index": 57,
+          "secao": "DEMONSTRAÇÕES DE RESULTADOS · PARA OS EXERCÍCIOS FINDOS EM 31 DE DEZEMBRO DE 2022 E DE 2021 (Em milhares de reais, exceto lucro por ação)",
+          "trecho": "| Demonstrações de Resultados | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| RECEITA LÍQUIDA | 31 | - | - | 13.253.286 | 14.897.920 |",
+          "linha": "RECEITA LÍQUIDA",
+          "coluna": "Consolidado - 2021"
+        }
+      },
+      "variacao": {
+        "calculada": {
+          "valor": "-11,04%",
+          "valor_numerico": -11.04,
+          "unidade": "%",
+          "formula": "(13.253.286 − 14.897.920) / |14.897.920| × 100",
+          "mudanca_de_sinal": false
+        },
+        "informada": null
+      },
+      "calculado": null
+    },
+    "ebitda": {
+      "rotulo": "EBITDA",
+      "informado": {
+        "status": "encontrado",
+        "valor": "1.180",
+        "valor_numerico": 1180.0,
+        "unidade": "R$ milhões",
+        "periodo": "2022",
+        "escopo": null,
+        "origem": {
+          "tipo": "texto",
+          "pagina": 9,
+          "chunk_index": 33,
+          "secao": "EBITDA CVM",
+          "trecho": "Em 2022, o EBITDA CVM foi de R$1.180 milhões, apresentando uma redução R$3.001 milhões se comparado a 2021. Essa retração foi devida, principalmente, a provisões de - R$2.513 milhões no período, sendo referentes, em especial, ao reconhecimento de provisão Light para devolução de créditos de PIS/COFINS aos consumidores, conforme Lei 14.385/22 (- R$1.081 milhões), revisões nas metodologias e estimativas de PECLD (-R$855 milhões) e de provisões para contingências JEC e Cível (-R$379 milhões).",
+          "pagina_final": 10
+        },
+        "nota_do_agente": "EBITDA CVM (R$ milhões) informado no texto."
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": {
+        "valor": "-1.179.644",
+        "valor_numerico": -1179644.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "formula": "resultado antes do resultado financeiro + depreciação e amortização",
+        "operandos": [
+          {
+            "campo": "resultado_antes_financeiro",
+            "periodo": "2022",
+            "valor": "(1.910.411)",
+            "unidade": "R$ mil",
+            "pagina": 20,
+            "escopo": "consolidado"
+          },
+          {
+            "campo": "depreciacao_amortizacao",
+            "periodo": "2022",
+            "valor": "730.767",
+            "unidade": "R$ mil",
+            "pagina": 23,
+            "escopo": "consolidado"
+          }
+        ],
+        "comparavel": {
+          "valor": "1.821.411",
+          "valor_numerico": 1821411.0,
+          "unidade": "R$ mil",
+          "periodo": "2021",
+          "formula": "resultado antes do resultado financeiro + depreciação e amortização",
+          "operandos": [
+            {
+              "campo": "resultado_antes_financeiro",
+              "periodo": "2021",
+              "valor": "1.143.301",
+              "unidade": "R$ mil",
+              "pagina": 20,
+              "escopo": "consolidado"
+            },
+            {
+              "campo": "depreciacao_amortizacao",
+              "periodo": "2021",
+              "valor": "678.110",
+              "unidade": "R$ mil",
+              "pagina": 23,
+              "escopo": "consolidado"
+            }
+          ]
+        }
+      }
+    },
+    "margem_ebitda": {
+      "rotulo": "Margem EBITDA",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "O documento não informa a margem EBITDA (percentual). Foram encontradas informações de EBITDA (EBITDA CVM e covenants), mas sem percentual de margem EBITDA para 2022.",
+        "evidencia": {
+          "termos_procurados": [
+            "margem ebitda",
+            "margem lajida",
+            "margem do ebitda"
+          ],
+          "paginas_com_o_termo": [],
+          "paginas_descartadas": []
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": {
+        "valor": "8,90%",
+        "valor_numerico": 8.9,
+        "unidade": "%",
+        "periodo": "2022",
+        "formula": "EBITDA / receita líquida × 100",
+        "operandos": [
+          {
+            "campo": "ebitda",
+            "periodo": "2022",
+            "valor": "1.180",
+            "unidade": "R$ milhões",
+            "pagina": 9,
+            "escopo": null,
+            "base": "informado"
+          },
+          {
+            "campo": "receita_liquida",
+            "periodo": "2022",
+            "valor": "13.253.286",
+            "unidade": "R$ mil",
+            "pagina": 20,
+            "escopo": "consolidado",
+            "base": "informado"
+          }
+        ],
+        "comparavel": {
+          "valor": "12,23%",
+          "valor_numerico": 12.23,
+          "unidade": "%",
+          "periodo": "2021",
+          "formula": "EBITDA / receita líquida × 100",
+          "operandos": [
+            {
+              "campo": "ebitda",
+              "periodo": "2021",
+              "valor": "1.821.411",
+              "unidade": "R$ mil",
+              "formula": "resultado antes do resultado financeiro + depreciação e amortização",
+              "base": "calculado"
+            },
+            {
+              "campo": "receita_liquida",
+              "periodo": "2021",
+              "valor": "14.897.920",
+              "unidade": "R$ mil",
+              "pagina": 20,
+              "escopo": "consolidado",
+              "base": "informado"
+            }
+          ]
+        }
+      }
+    },
+    "lucro_liquido": {
+      "rotulo": "Lucro líquido",
+      "informado": {
+        "status": "encontrado",
+        "valor": "(5.672.203)",
+        "valor_numerico": -5672203.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 20,
+          "chunk_index": 57,
+          "secao": "DEMONSTRAÇÕES DE RESULTADOS · PARA OS EXERCÍCIOS FINDOS EM 31 DE DEZEMBRO DE 2022 E DE 2021 (Em milhares de reais, exceto lucro por ação)",
+          "trecho": "| Demonstrações de Resultados | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| LUCRO (PREJUÍZO) LÍQUIDO DO EXERCÍCIO |  | (5.672.203) | 397.945 | (5.672.203) | 397.945 |",
+          "linha": "LUCRO (PREJUÍZO) LÍQUIDO DO EXERCÍCIO",
+          "coluna": "Consolidado - 2022"
+        }
+      },
+      "comparavel": {
+        "status": "encontrado",
+        "valor": "397.945",
+        "valor_numerico": 397945.0,
+        "unidade": "R$ mil",
+        "periodo": "2021",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 20,
+          "chunk_index": 57,
+          "secao": "DEMONSTRAÇÕES DE RESULTADOS · PARA OS EXERCÍCIOS FINDOS EM 31 DE DEZEMBRO DE 2022 E DE 2021 (Em milhares de reais, exceto lucro por ação)",
+          "trecho": "| Demonstrações de Resultados | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| LUCRO (PREJUÍZO) LÍQUIDO DO EXERCÍCIO |  | (5.672.203) | 397.945 | (5.672.203) | 397.945 |",
+          "linha": "LUCRO (PREJUÍZO) LÍQUIDO DO EXERCÍCIO",
+          "coluna": "Consolidado - 2021"
+        }
+      },
+      "variacao": {
+        "calculada": {
+          "valor": "-1.525,37%",
+          "valor_numerico": -1525.37,
+          "unidade": "%",
+          "formula": "((5.672.203) − 397.945) / |397.945| × 100",
+          "mudanca_de_sinal": true
+        },
+        "informada": null
+      },
+      "calculado": null
+    },
+    "divida_liquida": {
+      "rotulo": "Dívida líquida",
+      "informado": {
+        "status": "encontrado",
+        "valor": "9.032",
+        "valor_numerico": 9032.0,
+        "unidade": "R$ milhões",
+        "periodo": "2022",
+        "escopo": null,
+        "origem": {
+          "tipo": "texto",
+          "pagina": 10,
+          "chunk_index": 35,
+          "secao": "Endividamento",
+          "trecho": "A dívida líquida da Companhia em 31 de dezembro de 2022 totalizou R$9.032 milhões, aumento de 23% em comparação a 2021, de R$7.353 milhões."
+        },
+        "nota_do_agente": "Dívida líquida (R$ milhões) em 31/12/2022."
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "alavancagem": {
+      "rotulo": "Alavancagem (dívida líquida / EBITDA)",
+      "informado": {
+        "status": "encontrado",
+        "valor": "3,32x",
+        "valor_numerico": 3.32,
+        "unidade": "x",
+        "periodo": "2022",
+        "escopo": null,
+        "origem": {
+          "tipo": "texto",
+          "pagina": 10,
+          "chunk_index": 35,
+          "secao": "Endividamento",
+          "trecho": "O indicador de covenants Dívida Líquida/EBITDA ajustado para fins de covenants encerrou 2021 em 3,32x, menor do que no 2021 (3,48x)."
+        },
+        "nota_do_agente": "A empresa informa o múltiplo apenas para 2021 no texto; registrado aqui para atendimento do campo, com alerta de que o período não foi confirmado para 2022."
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": {
+        "valor": "7,65x",
+        "valor_numerico": 7.65,
+        "unidade": "x",
+        "periodo": "2022",
+        "formula": "dívida líquida / EBITDA",
+        "operandos": [
+          {
+            "campo": "divida_liquida",
+            "periodo": "2022",
+            "valor": "9.032",
+            "unidade": "R$ milhões",
+            "pagina": 10,
+            "escopo": null,
+            "base": "informado"
+          },
+          {
+            "campo": "ebitda",
+            "periodo": "2022",
+            "valor": "1.180",
+            "unidade": "R$ milhões",
+            "pagina": 9,
+            "escopo": null,
+            "base": "informado"
+          }
+        ],
+        "comparavel": {
+          "valor": "2,20x",
+          "valor_numerico": 2.2,
+          "unidade": "x",
+          "periodo": "2021",
+          "formula": "dívida líquida / EBITDA",
+          "operandos": [
+            {
+              "campo": "divida_liquida",
+              "periodo": "2021",
+              "valor": "4.012.243",
+              "unidade": "R$ mil",
+              "formula": "empréstimos e financiamentos (circulante + não circulante) − caixa e equivalentes",
+              "base": "calculado"
+            },
+            {
+              "campo": "ebitda",
+              "periodo": "2021",
+              "valor": "1.821.411",
+              "unidade": "R$ mil",
+              "formula": "resultado antes do resultado financeiro + depreciação e amortização",
+              "base": "calculado"
+            }
+          ]
+        }
+      }
+    },
+    "fluxo_caixa_operacional": {
+      "rotulo": "Fluxo de caixa operacional",
+      "informado": {
+        "status": "encontrado",
+        "valor": "200.763",
+        "valor_numerico": 200763.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 23,
+          "chunk_index": 61,
+          "secao": "DEMONSTRAÇÕES DOS FLUXOS DE CAIXA PARA OS EXERCÍCIOS FINDOS EM 31 DE DEZEMBRO DE 2022 E DE 2021 · LIGHT S.A. (Em milhares de reais)",
+          "trecho": "| Demonstrações dos Fluxos de Caixa | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Caixa líquido gerado (aplicado) pelas atividades operacionais |  | 697.508 | 171.062 | 200.763 | (42.045) |",
+          "linha": "Caixa líquido gerado (aplicado) pelas atividades operacionais",
+          "coluna": "Consolidado - 2022"
+        }
+      },
+      "comparavel": {
+        "status": "encontrado",
+        "valor": "(42.045)",
+        "valor_numerico": -42045.0,
+        "unidade": "R$ mil",
+        "periodo": "2021",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 23,
+          "chunk_index": 61,
+          "secao": "DEMONSTRAÇÕES DOS FLUXOS DE CAIXA PARA OS EXERCÍCIOS FINDOS EM 31 DE DEZEMBRO DE 2022 E DE 2021 · LIGHT S.A. (Em milhares de reais)",
+          "trecho": "| Demonstrações dos Fluxos de Caixa | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Caixa líquido gerado (aplicado) pelas atividades operacionais |  | 697.508 | 171.062 | 200.763 | (42.045) |",
+          "linha": "Caixa líquido gerado (aplicado) pelas atividades operacionais",
+          "coluna": "Consolidado - 2021"
+        }
+      },
+      "variacao": {
+        "calculada": {
+          "valor": "577,50%",
+          "valor_numerico": 577.5,
+          "unidade": "%",
+          "formula": "(200.763 − (42.045)) / |(42.045)| × 100",
+          "mudanca_de_sinal": true
+        },
+        "informada": null
+      },
+      "calculado": null
+    },
+    "capex": {
+      "rotulo": "Capex",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "O documento não informa um total de capex com o nome/linha de 'capex' (total de investimentos). Foram encontrados termos de capex em notas (ex.: BNDES - Capex) e as linhas de aquisição do fluxo de caixa (apoio), mas sem um total 'capex' declarado.",
+        "evidencia": {
+          "termos_procurados": [
+            "capex",
+            "aquisição de imobilizado",
+            "aquisições de imobilizado",
+            "aquisição de ativo imobilizado",
+            "aquisições de bens do ativo imobilizado",
+            "adições ao imobilizado"
+          ],
+          "paginas_com_o_termo": [
+            23,
+            66
+          ],
+          "paginas_descartadas": [
+            23,
+            66
+          ]
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": {
+        "valor": "1.470.292",
+        "valor_numerico": 1470292.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "formula": "aquisição de imobilizado + aquisição de intangível",
+        "operandos": [
+          {
+            "campo": "capex_imobilizado",
+            "periodo": "2022",
+            "valor": "(307.759)",
+            "unidade": "R$ mil",
+            "pagina": 23,
+            "escopo": "consolidado"
+          },
+          {
+            "campo": "capex_intangivel",
+            "periodo": "2022",
+            "valor": "(1.162.533)",
+            "unidade": "R$ mil",
+            "pagina": 23,
+            "escopo": "consolidado"
+          }
+        ],
+        "comparavel": null
+      }
+    }
+  },
+  "valores_de_apoio": {
+    "caixa_equivalentes": {
+      "rotulo": "Caixa e equivalentes de caixa",
+      "2022": {
+        "status": "encontrado",
+        "valor": "43.886",
+        "valor_numerico": 43886.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 18,
+          "chunk_index": 55,
+          "secao": "LIGHT S.A. BALANÇOS PATRIMONIAIS EM 31 DE DEZEMBRO DE 2022 E DE 2021 (Em milhares de reais)",
+          "trecho": "| ATIVO | Notas | Controladora - 31.12.2022 | Controladora - 31.12.2021 | Consolidado - 31.12.2022 | Consolidado - 31.12.2021 |\n| Caixa e equivalentes de caixa | 6 | 2.693 | 9 | 43.886 | 396.777 |",
+          "linha": "Caixa e equivalentes de caixa",
+          "coluna": "Consolidado - 31.12.2022"
+        }
+      },
+      "2021": {
+        "status": "encontrado",
+        "valor": "396.777",
+        "valor_numerico": 396777.0,
+        "unidade": "R$ mil",
+        "periodo": "2021",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 18,
+          "chunk_index": 55,
+          "secao": "LIGHT S.A. BALANÇOS PATRIMONIAIS EM 31 DE DEZEMBRO DE 2022 E DE 2021 (Em milhares de reais)",
+          "trecho": "| ATIVO | Notas | Controladora - 31.12.2022 | Controladora - 31.12.2021 | Consolidado - 31.12.2022 | Consolidado - 31.12.2021 |\n| Caixa e equivalentes de caixa | 6 | 2.693 | 9 | 43.886 | 396.777 |",
+          "linha": "Caixa e equivalentes de caixa",
+          "coluna": "Consolidado - 31.12.2021"
+        }
+      }
+    },
+    "resultado_antes_financeiro": {
+      "rotulo": "Resultado antes do resultado financeiro",
+      "2022": {
+        "status": "encontrado",
+        "valor": "(1.910.411)",
+        "valor_numerico": -1910411.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 20,
+          "chunk_index": 57,
+          "secao": "DEMONSTRAÇÕES DE RESULTADOS · PARA OS EXERCÍCIOS FINDOS EM 31 DE DEZEMBRO DE 2022 E DE 2021 (Em milhares de reais, exceto lucro por ação)",
+          "trecho": "| Demonstrações de Resultados | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| LUCRO (PREJUÍZO) ANTES DO RESULTADO FINANCEIRO E IMPOSTOS |  | (5.681.153) | 397.043 | (1.910.411) | 1.143.301 |",
+          "linha": "LUCRO (PREJUÍZO) ANTES DO RESULTADO FINANCEIRO E IMPOSTOS",
+          "coluna": "Consolidado - 2022"
+        }
+      },
+      "2021": {
+        "status": "encontrado",
+        "valor": "1.143.301",
+        "valor_numerico": 1143301.0,
+        "unidade": "R$ mil",
+        "periodo": "2021",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 20,
+          "chunk_index": 57,
+          "secao": "DEMONSTRAÇÕES DE RESULTADOS · PARA OS EXERCÍCIOS FINDOS EM 31 DE DEZEMBRO DE 2022 E DE 2021 (Em milhares de reais, exceto lucro por ação)",
+          "trecho": "| Demonstrações de Resultados | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| LUCRO (PREJUÍZO) ANTES DO RESULTADO FINANCEIRO E IMPOSTOS |  | (5.681.153) | 397.043 | (1.910.411) | 1.143.301 |",
+          "linha": "LUCRO (PREJUÍZO) ANTES DO RESULTADO FINANCEIRO E IMPOSTOS",
+          "coluna": "Consolidado - 2021"
+        }
+      }
+    },
+    "depreciacao_amortizacao": {
+      "rotulo": "Depreciação e amortização",
+      "2022": {
+        "status": "encontrado",
+        "valor": "730.767",
+        "valor_numerico": 730767.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 23,
+          "chunk_index": 61,
+          "secao": "DEMONSTRAÇÕES DOS FLUXOS DE CAIXA PARA OS EXERCÍCIOS FINDOS EM 31 DE DEZEMBRO DE 2022 E DE 2021 · LIGHT S.A. (Em milhares de reais)",
+          "trecho": "| Demonstrações dos Fluxos de Caixa | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Depreciação e amortização | 32 | - | - | 730.767 | 678.110 |",
+          "linha": "Depreciação e amortização",
+          "coluna": "Consolidado - 2022"
+        }
+      },
+      "2021": {
+        "status": "encontrado",
+        "valor": "678.110",
+        "valor_numerico": 678110.0,
+        "unidade": "R$ mil",
+        "periodo": "2021",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 23,
+          "chunk_index": 61,
+          "secao": "DEMONSTRAÇÕES DOS FLUXOS DE CAIXA PARA OS EXERCÍCIOS FINDOS EM 31 DE DEZEMBRO DE 2022 E DE 2021 · LIGHT S.A. (Em milhares de reais)",
+          "trecho": "| Demonstrações dos Fluxos de Caixa | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Depreciação e amortização | 32 | - | - | 730.767 | 678.110 |",
+          "linha": "Depreciação e amortização",
+          "coluna": "Consolidado - 2021"
+        }
+      }
+    },
+    "emprestimos_circulante": {
+      "rotulo": "Empréstimos e financiamentos (circulante)",
+      "2022": {
+        "status": "encontrado",
+        "valor": "308.946",
+        "valor_numerico": 308946.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 19,
+          "chunk_index": 56,
+          "secao": "LIGHT S.A. BALANÇOS PATRIMONIAIS EM 31 DE DEZEMBRO DE 2022 E DE 2021 (Em milhares de reais)",
+          "trecho": "| PASSIVO | Notas | Controladora - 31.12.2022 | Controladora - 31.12.2021 | Consolidado - 31.12.2022 | Consolidado - 31.12.2021 |\n| Empréstimos e financiamentos | 20 | - | - | 308.946 | 403.230 |",
+          "linha": "Empréstimos e financiamentos",
+          "coluna": "Consolidado - 31.12.2022"
+        },
+        "nota_do_agente": "Linha de Empréstimos e financiamentos no Passivo circulante."
+      },
+      "2021": {
+        "status": "encontrado",
+        "valor": "403.230",
+        "valor_numerico": 403230.0,
+        "unidade": "R$ mil",
+        "periodo": "2021",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 19,
+          "chunk_index": 56,
+          "secao": "LIGHT S.A. BALANÇOS PATRIMONIAIS EM 31 DE DEZEMBRO DE 2022 E DE 2021 (Em milhares de reais)",
+          "trecho": "| PASSIVO | Notas | Controladora - 31.12.2022 | Controladora - 31.12.2021 | Consolidado - 31.12.2022 | Consolidado - 31.12.2021 |\n| Empréstimos e financiamentos | 20 | - | - | 308.946 | 403.230 |",
+          "linha": "Empréstimos e financiamentos",
+          "coluna": "Consolidado - 31.12.2021"
+        }
+      }
+    },
+    "emprestimos_nao_circulante": {
+      "rotulo": "Empréstimos e financiamentos (não circulante)",
+      "2022": {
+        "status": "encontrado",
+        "valor": "3.464.352",
+        "valor_numerico": 3464352.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 19,
+          "chunk_index": 56,
+          "secao": "LIGHT S.A. BALANÇOS PATRIMONIAIS EM 31 DE DEZEMBRO DE 2022 E DE 2021 (Em milhares de reais)",
+          "trecho": "| PASSIVO | Notas | Controladora - 31.12.2022 | Controladora - 31.12.2021 | Consolidado - 31.12.2022 | Consolidado - 31.12.2021 |\n| Empréstimos e financiamentos | 20 | - | - | 3.464.352 | 4.005.790 |",
+          "linha": "Empréstimos e financiamentos",
+          "coluna": "Consolidado - 31.12.2022"
+        },
+        "nota_do_agente": "Linha de Empréstimos e financiamentos no Passivo não circulante."
+      },
+      "2021": {
+        "status": "encontrado",
+        "valor": "4.005.790",
+        "valor_numerico": 4005790.0,
+        "unidade": "R$ mil",
+        "periodo": "2021",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 19,
+          "chunk_index": 56,
+          "secao": "LIGHT S.A. BALANÇOS PATRIMONIAIS EM 31 DE DEZEMBRO DE 2022 E DE 2021 (Em milhares de reais)",
+          "trecho": "| PASSIVO | Notas | Controladora - 31.12.2022 | Controladora - 31.12.2021 | Consolidado - 31.12.2022 | Consolidado - 31.12.2021 |\n| Empréstimos e financiamentos | 20 | - | - | 3.464.352 | 4.005.790 |",
+          "linha": "Empréstimos e financiamentos",
+          "coluna": "Consolidado - 31.12.2021"
+        }
+      }
+    },
+    "capex_intangivel": {
+      "rotulo": "Aquisição de intangível",
+      "2022": {
+        "status": "encontrado",
+        "valor": "(1.162.533)",
+        "valor_numerico": -1162533.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 23,
+          "chunk_index": 62,
+          "secao": "DEMONSTRAÇÕES DOS FLUXOS DE CAIXA PARA OS EXERCÍCIOS FINDOS EM 31 DE DEZEMBRO DE 2022 E DE 2021 · LIGHT S.A. (Em milhares de reais)",
+          "trecho": "| Demonstrações dos Fluxos de Caixa | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Aquisições de bens do ativo intangível e do ativo de contrato |  | (234) | - | (1.162.533) |  |",
+          "linha": "Aquisições de bens do ativo intangível e do ativo de contrato",
+          "coluna": "Consolidado - 2022"
+        },
+        "nota_do_agente": "Linha de aquisição de intangível/contrato na seção de investimento do fluxo de caixa (valor em caixa)."
+      }
+    },
+    "capex_imobilizado": {
+      "rotulo": "Aquisição de imobilizado",
+      "2022": {
+        "status": "encontrado",
+        "valor": "(307.759)",
+        "valor_numerico": -307759.0,
+        "unidade": "R$ mil",
+        "periodo": "2022",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 23,
+          "chunk_index": 62,
+          "secao": "DEMONSTRAÇÕES DOS FLUXOS DE CAIXA PARA OS EXERCÍCIOS FINDOS EM 31 DE DEZEMBRO DE 2022 E DE 2021 · LIGHT S.A. (Em milhares de reais)",
+          "trecho": "| Demonstrações dos Fluxos de Caixa | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Caixa líquido consumido pelas (aplicado nas) atividades de investimento Aquisições de bens do ativo imobilizado |  | - | - | (307.759) | (219.601) |",
+          "linha": "Caixa líquido consumido pelas (aplicado nas) atividades de investimento Aquisições de bens do ativo imobilizado",
+          "coluna": "Consolidado - 2022"
+        },
+        "nota_do_agente": "Linha de aquisição de imobilizado na seção de investimento do fluxo de caixa (valor em caixa)."
+      },
+      "2021": {
+        "status": "encontrado",
+        "valor": "(219.601)",
+        "valor_numerico": -219601.0,
+        "unidade": "R$ mil",
+        "periodo": "2021",
+        "escopo": "consolidado",
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 23,
+          "chunk_index": 62,
+          "secao": "DEMONSTRAÇÕES DOS FLUXOS DE CAIXA PARA OS EXERCÍCIOS FINDOS EM 31 DE DEZEMBRO DE 2022 E DE 2021 · LIGHT S.A. (Em milhares de reais)",
+          "trecho": "| Demonstrações dos Fluxos de Caixa | Notas | Controladora - 2022 | Controladora - 2021 | Consolidado - 2022 | Consolidado - 2021 |\n| Caixa líquido consumido pelas (aplicado nas) atividades de investimento Aquisições de bens do ativo imobilizado |  | - | - | (307.759) | (219.601) |",
+          "linha": "Caixa líquido consumido pelas (aplicado nas) atividades de investimento Aquisições de bens do ativo imobilizado",
+          "coluna": "Consolidado - 2021"
+        }
+      }
+    }
+  },
+  "alertas_de_validacao": [
+    {
+      "codigo": "ebitda_divergente",
+      "severidade": "atencao",
+      "campo": "ebitda",
+      "mensagem": "O EBITDA informado (1.180 R$ milhões) não bate com o resultado antes do resultado financeiro mais depreciação e amortização (-1.179.644 R$ mil). Pode ser um EBITDA ajustado, o valor de uma controlada ou um sinal omitido no texto.",
+      "detalhes": {
+        "informado": "1.180 R$ milhões",
+        "pagina": 9,
+        "calculado": "-1.179.644 R$ mil",
+        "trecho": "Em 2022, o EBITDA CVM foi de R$1.180 milhões, apresentando uma redução R$3.001 milhões se comparado a 2021. Essa retração foi devida, principalmente, a provisões de - R$2.513 milhões no período, sendo referentes, em especial, ao reconhecimento de provisão Light para devolução de créditos de PIS/COFINS aos consumidores, conforme Lei 14.385/22 (- R$1.081 milhões), revisões nas metodologias e estimativas de PECLD (-R$855 milhões) e de provisões para contingências JEC e Cível (-R$379 milhões)."
+      }
+    },
+    {
+      "codigo": "alavancagem_divergente",
+      "severidade": "atencao",
+      "campo": "alavancagem",
+      "mensagem": "A alavancagem informada (3,32x) não bate com dívida líquida dividida pelo EBITDA informados (7,65x). Pode ser um EBITDA ajustado.",
+      "detalhes": {
+        "informada": "3,32x",
+        "calculada": "7,65x",
+        "pagina": 10
+      }
+    },
+    {
+      "codigo": "sem_comparavel",
+      "severidade": "informacao",
+      "campo": null,
+      "mensagem": "Sem o valor de 2021, a variação não foi calculada para: EBITDA, Dívida líquida, Alavancagem (dívida líquida / EBITDA).",
+      "detalhes": {
+        "campos": [
+          "EBITDA",
+          "Dívida líquida",
+          "Alavancagem (dívida líquida / EBITDA)"
+        ]
+      }
+    },
+    {
+      "codigo": "periodo_nao_confirmado",
+      "severidade": "atencao",
+      "campo": "alavancagem",
+      "mensagem": "Alavancagem (dívida líquida / EBITDA) (2022): a fonte citada não escreve o período 2022. Confira se o valor é mesmo desse período.",
+      "detalhes": {
+        "pagina": 10,
+        "trecho": "O indicador de covenants Dívida Líquida/EBITDA ajustado para fins de covenants encerrou 2021 em 3,32x, menor do que no 2021 (3,48x)."
+      }
+    },
+    {
+      "codigo": "unidades_diferentes",
+      "severidade": "informacao",
+      "campo": null,
+      "mensagem": "Os indicadores estão em unidades diferentes (R$ mil, R$ milhões). As contas entre eles foram feitas em reais.",
+      "detalhes": {
+        "unidades": [
+          "R$ mil",
+          "R$ milhões"
+        ]
+      }
+    }
+  ],
+  "impressao_do_indice": "2026-11-17T15:20:18.203490Z|378"
+}

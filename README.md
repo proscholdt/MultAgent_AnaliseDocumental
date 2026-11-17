@@ -26,6 +26,13 @@ flowchart LR
 | [`observability/`](observability/README.md) | Tempo, Prometheus, Loki e Grafana, com o Alloy como coletor: um trace atravessa os quatro serviços, e os painéis mostram custo, tokens e portões dos agentes |
 | [`sala/`](sala/README.md) | Sala dos agentes: a execução em tempo real como um escritório em pixel art (quem trabalha, com qual tool, o que o portão barrou) e uma aba de logs |
 
+**Resultados entregues** em [`resultados/`](resultados/LEIAME.md), gerados por um relatório completo
+do zero nos três PDFs (lidos pelo Docling): a extração de cada documento em JSON, com página e
+trecho de cada valor (item 2), a análise qualitativa (3), as respostas às 5 perguntas (4), as
+inconsistências e os não encontrados (5), o [relatório consolidado](resultados/6-relatorio/relatorio.md)
+(6), a nota contra o gabarito e o tempo, os tokens e o custo da execução. Para gerar de novo:
+`make resultados USUARIO=... SENHA=... RODAR=sim`.
+
 [Arquitetura](#arquitetura) · [Decisões e trade-offs](#decisões-e-trade-offs) ·
 [Combate à alucinação](#combate-à-alucinação) · [Avaliação de qualidade](#avaliação-de-qualidade) ·
 [Custo e desempenho](#custo-e-desempenho) · [Segurança](#segurança) ·

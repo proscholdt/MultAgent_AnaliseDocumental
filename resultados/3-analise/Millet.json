@@ -1,0 +1,106 @@
+{
+  "arquivo": "Millet.pdf",
+  "empresa": "Millet Participações S.A.",
+  "analise": {
+    "motivo_resultado": [
+      {
+        "afirmacao": "O aumento contínuo do custo de matérias-primas (especialmente derivados lácteos) e a necessidade de repasse no preço de venda não permitiram recuperar o mesmo nível de margem antes da pandemia.",
+        "citacao": "verificou-se a continuidade de aumento no custo de matérias primas principalmente dos derivados lácteos, com necessidade de repasse no preço de venda. Apesar desses repasses, em termos percentuais, não foi possível recuperar o mesmo nível de margem antes da pandemia.",
+        "pagina": 11,
+        "chunk_index": 15,
+        "secao": "1. Contexto operacional > 1.1. COVID-19",
+        "fonte": "nota explicativa",
+        "tom": null
+      },
+      {
+        "afirmacao": "A administração atribui parte do desempenho à demanda mais fraca do que o previsto, mantendo a performance das vendas em linha com projeções, porém com margem pressionada.",
+        "citacao": "A performance das vendas atendeu às projeções e expectativas, mesmo com uma demanda mais fraca do que era previsto para o ano.",
+        "pagina": 11,
+        "chunk_index": 15,
+        "secao": "1. Contexto operacional > 1.1. COVID-19",
+        "fonte": "nota explicativa",
+        "tom": null
+      }
+    ],
+    "risco": [
+      {
+        "afirmacao": "Em liquidez, há risco de dificuldades para cumprir obrigações associadas a passivos financeiros, inclusive em cenários normais e de estresse, com impacto potencial em perdas e reputação.",
+        "citacao": "Risco de liquidez é o risco em que a Companhia irá encontrar dificuldades em cumprir com as obrigações associadas com seus passivos financeiros que são liquidados com pagamentos à vista ou com outro ativo financeiro.",
+        "pagina": 41,
+        "chunk_index": 114,
+        "secao": "22. Gestão de risco > 22.1. Fatores de risco financeiro > b) Risco de liquidez",
+        "fonte": "nota explicativa",
+        "tom": null
+      },
+      {
+        "afirmacao": "A Companhia declara exposição a risco de crédito, risco de liquidez e risco de mercado como principais categorias de risco financeiro.",
+        "citacao": "A companhia está exposta aos seguintes riscos: Risco de Crédito; Risco de Liquidez; e Risco de Mercado",
+        "pagina": 40,
+        "chunk_index": 112,
+        "secao": "22. Gestão de risco > 22.1. Fatores de risco financeiro",
+        "fonte": "nota explicativa",
+        "tom": null
+      },
+      {
+        "afirmacao": "Para risco de crédito, o documento descreve que perdas podem ocorrer por falhas de clientes/contrapartes em cumprir obrigações contratuais.",
+        "citacao": "Risco de crédito é o risco de a Companhia incorrer em perdas decorrentes de um cliente ou de uma contraparte em um instrumento financeiro, decorrente de falhas destes em cumprir com suas obrigações contratuais.",
+        "pagina": 40,
+        "chunk_index": 113,
+        "secao": "22. Gestão de risco > 22.1. Fatores de risco financeiro > a) Riscos de Crédito",
+        "fonte": "nota explicativa",
+        "tom": null
+      }
+    ],
+    "guidance": [
+      {
+        "afirmacao": "A Companhia indica que continuará monitorando os efeitos da crise e os impactos nas suas operações e nas demonstrações financeiras.",
+        "citacao": "A Companhia continuará monitorando os efeitos da crise e os impactos nas suas operações e nas demonstrações financeiras.",
+        "pagina": 11,
+        "chunk_index": 15,
+        "secao": "1. Contexto operacional > 1.1. COVID-19",
+        "fonte": "nota explicativa",
+        "tom": null
+      }
+    ],
+    "evento_relevante": [
+      {
+        "afirmacao": "O documento registra a aquisição de 85% de participação na Alibra Ingredientes S.A (Alibra) pela Millet Participações S/A.",
+        "citacao": "Em junho de 2021 a Millet Participações S/A adquiriu 85% de participação na Alibra Ingredientes S.A (\"Alibra\")",
+        "pagina": 27,
+        "chunk_index": 74,
+        "secao": "7. Investimentos",
+        "fonte": "nota explicativa",
+        "tom": null
+      },
+      {
+        "afirmacao": "A transação é descrita como concluída em 18 de junho de 2021, com benefícios estratégicos atribuídos pela Administração para a Adquirente no Brasil.",
+        "citacao": "A Transação foi concluída em 18 de junho de 2021, em continuidade à celebração de contrato de compra e venda assinado anteriormente entre as partes (Sales and Purchase Agreement - \"SPA\"). Segundo a Administração, a Transação oferece benefícios estratégicos atraentes para os negócios da Adquirente no Brasil:",
+        "pagina": 27,
+        "chunk_index": 75,
+        "secao": "7. Investimentos",
+        "fonte": "nota explicativa",
+        "tom": null
+      },
+      {
+        "afirmacao": "O documento informa que o preço pago pelos alienantes por 85% das quotas da Alibra foi de R$ 179.350 mil, conforme o SPA e ajustes previstos no contrato.",
+        "citacao": "Nos termos do SPA assinado entre Adquirente e os alienantes e com base em informações fornecidas pela Administração, o preço pago aos Alienante por 85% das quotas da Empresa foi de R$ 179.350 mil (cento e setenta e nove milhões, trezentos e cinquenta mil reais).",
+        "pagina": 27,
+        "chunk_index": 76,
+        "secao": "7. Investimentos",
+        "fonte": "nota explicativa",
+        "tom": null
+      }
+    ],
+    "tom": [
+      {
+        "afirmacao": "O tom da administração é relativamente positivo, ao afirmar que não houve impacto direto da pandemia e que a performance de vendas atendeu às projeções e expectativas.",
+        "citacao": "No ano de 2022 não fomos impactados por nenhum efeito direto decorrente da pandemia do COVID. A performance das vendas atendeu às projeções e expectativas,",
+        "pagina": 11,
+        "chunk_index": 15,
+        "secao": "1. Contexto operacional > 1.1. COVID-19",
+        "fonte": "nota explicativa",
+        "tom": "positivo"
+      }
+    ]
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "arquivo": "Light.pdf",
+  "empresa": "LIGHT S.A.",
+  "alertas": [
+    {
+      "tipo": "validacao",
+      "codigo": "ebitda_divergente",
+      "severidade": "atencao",
+      "campo": "ebitda",
+      "mensagem": "O EBITDA informado (1.180 R$ milhões) não bate com o resultado antes do resultado financeiro mais depreciação e amortização (-1.179.644 R$ mil). Pode ser um EBITDA ajustado, o valor de uma controlada ou um sinal omitido no texto.",
+      "detalhes": {
+        "informado": "1.180 R$ milhões",
+        "pagina": 9,
+        "calculado": "-1.179.644 R$ mil",
+        "trecho": "Em 2022, o EBITDA CVM foi de R$1.180 milhões, apresentando uma redução R$3.001 milhões se comparado a 2021. Essa retração foi devida, principalmente, a provisões de - R$2.513 milhões no período, sendo referentes, em especial, ao reconhecimento de provisão Light para devolução de créditos de PIS/COFINS aos consumidores, conforme Lei 14.385/22 (- R$1.081 milhões), revisões nas metodologias e estimativas de PECLD (-R$855 milhões) e de provisões para contingências JEC e Cível (-R$379 milhões)."
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "validacao",
+      "codigo": "alavancagem_divergente",
+      "severidade": "atencao",
+      "campo": "alavancagem",
+      "mensagem": "A alavancagem informada (3,32x) não bate com dívida líquida dividida pelo EBITDA informados (7,65x). Pode ser um EBITDA ajustado.",
+      "detalhes": {
+        "informada": "3,32x",
+        "calculada": "7,65x",
+        "pagina": 10
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "validacao",
+      "codigo": "sem_comparavel",
+      "severidade": "informacao",
+      "campo": null,
+      "mensagem": "Sem o valor de 2021, a variação não foi calculada para: EBITDA, Dívida líquida, Alavancagem (dívida líquida / EBITDA).",
+      "detalhes": {
+        "campos": [
+          "EBITDA",
+          "Dívida líquida",
+          "Alavancagem (dívida líquida / EBITDA)"
+        ]
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "validacao",
+      "codigo": "periodo_nao_confirmado",
+      "severidade": "atencao",
+      "campo": "alavancagem",
+      "mensagem": "Alavancagem (dívida líquida / EBITDA) (2022): a fonte citada não escreve o período 2022. Confira se o valor é mesmo desse período.",
+      "detalhes": {
+        "pagina": 10,
+        "trecho": "O indicador de covenants Dívida Líquida/EBITDA ajustado para fins de covenants encerrou 2021 em 3,32x, menor do que no 2021 (3,48x)."
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "validacao",
+      "codigo": "unidades_diferentes",
+      "severidade": "informacao",
+      "campo": null,
+      "mensagem": "Os indicadores estão em unidades diferentes (R$ mil, R$ milhões). As contas entre eles foram feitas em reais.",
+      "detalhes": {
+        "unidades": [
+          "R$ mil",
+          "R$ milhões"
+        ]
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
+      "severidade": "atencao",
+      "campo": null,
+      "mensagem": "A redução informada na comparação entre 2022 e 2021 não fecha com os dois valores apresentados na mesma frase para o EBITDA CVM.",
+      "detalhes": {
+        "pagina": 9,
+        "chunk_index": 33,
+        "secao": "EBITDA CVM",
+        "citacao": "Em 2022, o EBITDA CVM foi de R$1.180 milhões, apresentando uma redução R$3.001 milhões se comparado a 2021."
+      },
+      "registrado_por": "validador"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
+      "severidade": "atencao",
+      "campo": null,
+      "mensagem": "No quadro, há duplicidade de colunas com o mesmo título “Consolidado - 2021”, o que indica possível erro de ano/coluna no demonstrativo.",
+      "detalhes": {
+        "pagina": 21,
+        "chunk_index": 58,
+        "secao": "LIGHT S.A. DEMONSTRAÇÕES DE RESULTADOS ABRANGENTES PARA OS EXERCÍCIOS FINDOS EM 31 DE DEZEMBRO DE 2022 E DE 2021 (Em milhares de reais)",
+        "citacao": "| Demonstrações de Resultados Abrangentes | Controladora - 2022 | Controladora - 2021 | Consolidado - 2021 | Consolidado - 2021 |"
+      },
+      "registrado_por": "validador"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
+      "severidade": "atencao",
+      "campo": null,
+      "mensagem": "O texto compara o indicador de 2021 com ele mesmo (mesmo ano citado nos dois lados da comparação), tornando a variação sem sentido.",
+      "detalhes": {
+        "pagina": 10,
+        "chunk_index": 35,
+        "secao": "Endividamento",
+        "citacao": "O indicador de covenants Dívida Líquida/EBITDA ajustado para fins de covenants encerrou 2021 em 3,32x, menor do que no 2021 (3,48x)."
+      },
+      "registrado_por": "validador"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
+      "severidade": "atencao",
+      "campo": null,
+      "mensagem": "A redução informada não fecha com os dois valores de EBITDA CVM apresentados na mesma frase (2022 vs 2021).",
+      "detalhes": {
+        "pagina": 8,
+        "chunk_index": 24,
+        "secao": "Desempenho Financeiro",
+        "citacao": "Em 2022, o EBITDA CVM 1 da distribuidora foi de R$1.817 milhões, uma redução de R$2.996 milhões em relação aos R$1.179 milhões apurados em 2021."
+      },
+      "registrado_por": "validador"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "revisao_das_fontes_concluida",
+      "severidade": "informacao",
+      "campo": null,
+      "mensagem": "Fontes revisadas pelo agente validador. Foram conferidos os trechos do relatório da administração sobre EBITDA e Dívida Líquida/EBITDA e os candidatos de inconsistência; foram registrados 3 problemas de consistência na fonte.",
+      "detalhes": {
+        "inconsistencias_registradas": 4
+      },
+      "registrado_por": "validador"
+    }
+  ]
+}
