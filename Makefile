@@ -50,6 +50,7 @@ urls:
 	@echo Sala dos agentes ........ http://localhost:3300
 	@echo Grafana ................. http://localhost:3001
 	@echo Kafka UI ................ http://localhost:8080
+	@echo Qdrant, painel .......... http://localhost:6333/dashboard
 	@echo Indexador, API .......... http://localhost:8000/docs
 	@echo Servidor MCP ............ http://localhost:8100/health
 	@echo Orquestrador ............ http://localhost:8200/docs
