@@ -327,6 +327,8 @@ funciona no Git Bash e no PowerShell):
 | `make zerar CONFIRMA=sim` | Apaga tudo: documentos, usuários, base, memória e traces |
 | `make zerar-base CONFIRMA=sim` | Apaga só a base do MCP e a memória dos agentes; os PDFs indexados ficam |
 | `make testes`, `make lint`, `make validar-agentes` | Os testes dos quatro sistemas (sem rede e sem custo), o ruff e os arquivos dos agentes |
+| `make pergunta USUARIO=u SENHA=s TEXTO="..." [CONVERSA=conv-...]` | Uma mensagem no chat pelo terminal, pelo mesmo caminho do frontend: quem decidiu a intenção, as ondas, a resposta com as fontes, o tempo e o custo; com `CONVERSA`, continua a conversa ("e a menor?") |
+| `make avaliar-intencao` | O roteador de intenção contra as 52 mensagens rotuladas (só embeddings, frações de centavo) |
 | `make inconsistencias USUARIO=u SENHA=s DOC=Millet` | Os candidatos a inconsistência da fonte de um PDF, por regra: sem modelo e sem custo |
 | `make resultados USUARIO=u SENHA=s` | Os resultados de todos os itens em `resultados/`, lidos da base, sem custo: `2-extracao/` (um JSON por documento, com página e trecho), `3-analise/`, `4-perguntas/`, `5-validacao/`, `6-relatorio/` e um `LEIAME.md` que diz o que faltou |
 | `make extracao`, `analise`, `perguntas`, `validacao`, `relatorio` (com `USUARIO` e `SENHA`) | Só um item, na mesma pasta |

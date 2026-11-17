@@ -4,19 +4,27 @@
 # isso as receitas são comandos simples, uma linha por sistema.
 #
 # Usuário e senha: os comandos que falam com o sistema pedem USUARIO e SENHA (a do indexador).
-#   make inconsistencias USUARIO=avaliacao SENHA=xxx DOC=Millet
-# Também valem as variáveis de ambiente AVALIACAO_USUARIO e AVALIACAO_SENHA.
+#   make pergunta USUARIO=avaliacao SENHA=xxx TEXTO="Qual empresa teve a maior margem EBITDA?"
+#   make resultados USUARIO=avaliacao SENHA=xxx
+# Também valem as variáveis de ambiente AVALIACAO_USUARIO e AVALIACAO_SENHA: definidas uma vez no
+# terminal, os comandos dispensam USUARIO e SENHA.
 
 USUARIO ?= $(AVALIACAO_USUARIO)
 SENHA ?= $(AVALIACAO_SENHA)
 DOC ?=
 S ?= agents
 RODAR ?=
+TEXTO ?=
+CONVERSA ?=
+
+# Cada sistema Python tem o próprio ambiente (uv). Um VIRTUAL_ENV herdado do terminal (o do indexador,
+# ativado pelo editor) faz o uv avisar a cada comando nos outros sistemas: o make não o repassa.
+unexport VIRTUAL_ENV
 
 .DEFAULT_GOAL := ajuda
 .PHONY: ajuda urls bancos subir reconstruir descer status logs zerar zerar-base testes testes-indexer testes-mcp \
-        testes-agentes testes-frontend lint validar-agentes inconsistencias resultados extracao analise perguntas \
-        validacao relatorio avaliar pendencias
+        testes-agentes testes-frontend lint validar-agentes avaliar-intencao inconsistencias resultados extracao \
+        analise perguntas validacao relatorio avaliar pendencias pergunta
 
 # Para quem pede login: para com a mensagem se faltar usuário ou senha.
 precisa_login = $(if $(and $(USUARIO),$(SENHA)),,$(error Informe USUARIO=... e SENHA=..., a conta do indexador))
@@ -41,7 +49,10 @@ ajuda:
 	@echo testes-indexer, testes-mcp ....... um sistema so; tambem testes-agentes e testes-frontend
 	@echo lint ............................. ruff nos tres sistemas Python
 	@echo validar-agentes .................. confere os arquivos dos agentes
+	@echo avaliar-intencao ................. o roteador de intencao contra 52 mensagens rotuladas, centesimos de centavo
 	@echo ---------------------------------------------------------------------------------------
+	@echo pergunta USUARIO SENHA TEXTO ..... uma mensagem no chat pelo terminal, com a resposta e as fontes
+	@echo .                                  CONVERSA=conv-... continua uma conversa: e a menor?
 	@echo inconsistencias USUARIO SENHA DOC  candidatos por regra, sem modelo, gratis; DOC e opcional
 	@echo avaliar USUARIO SENHA ............ nota da base contra o gabarito, sem modelo
 	@echo pendencias USUARIO SENHA DOC ..... o que falta na base, a lista do orquestrador; DOC e opcional
@@ -54,6 +65,7 @@ ajuda:
 	@echo validacao USUARIO SENHA .......... item 5: inconsistencias e nao encontrados
 	@echo relatorio USUARIO SENHA .......... item 6: o relatorio consolidado e a nota contra o gabarito
 	@echo ---------------------------------------------------------------------------------------
+	@echo Exemplo: make pergunta USUARIO=avaliacao SENHA=xxx TEXTO="Qual empresa teve a maior margem EBITDA?"
 	@echo Exemplo: make resultados USUARIO=avaliacao SENHA=xxx
 	@echo Exemplo: make relatorio USUARIO=avaliacao SENHA=xxx RODAR=sim
 
@@ -61,11 +73,16 @@ urls:
 	@echo Chat e envio de PDFs .... http://localhost:3000
 	@echo Sala dos agentes ........ http://localhost:3300
 	@echo Grafana ................. http://localhost:3001
+	@echo Prometheus .............. http://localhost:9090
 	@echo Kafka UI ................ http://localhost:8080
 	@echo Qdrant, painel .......... http://localhost:6333/dashboard
 	@echo Indexador, API .......... http://localhost:8000/docs
 	@echo Servidor MCP ............ http://localhost:8100/health
 	@echo Orquestrador ............ http://localhost:8200/docs
+	@echo Agent Card, extrator .... http://localhost:8201/agentes/extrator/.well-known/agent-card.json
+	@echo .                         os outros: 8202 validador, 8203 analista, 8204 pesquisador, 8205 redator
+	@echo Postgres do indexador ... localhost:5432, banco, usuario e senha: indexer
+	@echo SQLite do MCP e agentes . make bancos, para abrir no DBeaver
 
 # --- ligar e desligar -------------------------------------------------------------------------
 # A ordem importa: o indexador cria a rede que os outros usam, e a sala usa a da observabilidade.
@@ -86,6 +103,7 @@ reconstruir:
 	cd agents && docker compose up -d --build --remove-orphans
 	cd frontend && docker compose up -d --build
 	cd sala && docker compose up -d --build
+	@echo Pronto. Veja os enderecos com: make urls
 
 descer:
 	cd sala && docker compose down
@@ -145,6 +163,9 @@ lint:
 validar-agentes:
 	cd agents && uv run python -m app.ferramentas.cli validar
 
+avaliar-intencao:
+	cd agents && uv run python scripts/avaliar_intencao.py
+
 # --- usar o sistema ---------------------------------------------------------------------------
 
 # Os SQLite ficam dentro dos volumes Docker. A cópia usa o backup do próprio SQLite, que leva junto
@@ -194,6 +215,11 @@ validacao:
 relatorio:
 	$(precisa_login)
 	@$(call gerar_resultados,relatorio)
+
+pergunta:
+	$(precisa_login)
+	$(if $(TEXTO),,$(error Informe TEXTO="a mensagem"))
+	@cd agents && uv run python scripts/perguntar.py --usuario $(USUARIO) --senha $(SENHA) --texto "$(TEXTO)" $(if $(CONVERSA),--conversa $(CONVERSA),)
 
 pendencias:
 	$(precisa_login)

@@ -285,7 +285,7 @@ app/
    ├─ retrato.py            o retrato da base, lido pelo servidor MCP como "sistema"
    └─ avaliacao_automatica.py  a nota ao fim de cada relatório e as métricas dela
 
-scripts/                    avaliar.py, gerar_entrega.py, avaliar_intencao.py, pendencias.py
+scripts/                    avaliar.py, gerar_entrega.py, avaliar_intencao.py, pendencias.py, perguntar.py
 ```
 
 Para criar um agente: `python -m app.ferramentas.cli novo-agente <nome> --descricao "..."` cria
