@@ -1,2 +1,3 @@
 # Cópias dos bancos SQLite feitas por `make bancos`, para abrir no DBeaver: são dados do usuário.
 /bancos/
+__pycache__/
