@@ -84,7 +84,7 @@ flowchart TB
 | **Servidor MCP como porta única** | Regras, permissões e conferências num lugar só, testável, fora do prompt. Qualquer cliente MCP lê os dados extraídos | Um salto a mais e mais código no servidor |
 | **Orquestrador em grafo** (LangGraph) **com especialistas PydanticAI** | O modelo decide; o grafo executa em paralelo, guarda a conversa (checkpoint) e confere no fim por código. PydanticAI dá saída tipada e troca de provedor | Duas bibliotecas |
 | **A2A, um serviço por especialista** | Cada especialista escala e cai sozinho: um fora do ar tira só ele da execução | Um salto de rede por delegação |
-| **`gpt-5.4-nano` em todos os agentes** | Mesma nota do `gpt-5.4-mini` nos indicadores, por 1/7 do custo | Sozinho, achava menos inconsistências da fonte (2 de 6 contra 4 de 6 do `gpt-5.4`); com os candidatos por regra, abaixo, achou 6 e depois 7 de 7. O modelo é por agente |
+| **`gpt-5.4-nano` nos agentes, `gpt-5.4-mini` no pesquisador** | O nano tem a mesma nota do mini nos indicadores, por 1/7 do custo: o que ele grava passa por portão. O pesquisador escreve o texto que o analista lê, e ali o nano tomava o primeiro item da análise como o principal (o custo de energia de uma controlada como "motivo da receita" da Light, em 3 de 3 rodadas); o mini custa ~US$ 0,03 a mais por relatório (US$ 0,046 no pesquisador) | Sozinho, o nano achava menos inconsistências da fonte (2 de 6 contra 4 de 6 do `gpt-5.4`); com os candidatos por regra, abaixo, achou 7 de 7. O modelo é por agente, no cabeçalho do arquivo dele |
 | **Inconsistências da fonte: a regra acha, o modelo julga** | O servidor MCP varre todos os trechos com regras (conta que não fecha, ano trocado, data do quadro) e entrega a lista ao validador, que lê e decide. O modelo não precisa "enxergar" o erro no meio de 120 páginas | As regras foram desenhadas olhando estes documentos; o modelo ainda pode descartar um erro real |
 | **`gpt-4o-mini` para gráficos e metadados** no indexador | Barato e com visão | A transcrição só vale se conferida (abaixo) |
 | **Prompts curtos, um arquivo por agente** | O prompt diz o que fazer; o portão garante. Mudar o prompt não abre brecha | — |
@@ -140,19 +140,34 @@ Resultado do relatório completo dos três documentos:
 
 | Modelos | Indicadores certos | Inconsistências da fonte | Invenções | Perguntas | Calculados e citações |
 |---|---|---|---|---|---|
-| `gpt-5.4-nano` em todos, candidatos com prova e descarte com motivo (atual) | 24 de 24 | **7 de 7** | 0 | 5 de 5 | todos certos |
+| `gpt-5.4-nano`, `gpt-5.4-mini` no pesquisador, a pergunta do relatório pelo enunciado oficial (atual) | 24 de 24 | **7 de 7** | 0 | **5 de 5** | todos certos |
+| `gpt-5.4-nano` em todos, candidatos com prova e descarte com motivo | 24 de 24 | 7 de 7 | 0 | 5 de 5 numa execução, 3 de 5 em outra | todos certos |
 | `gpt-5.4-nano` em todos, candidatos sem prova (duas execuções) | 24 de 24 | 6 de 7 | 0 | 5 de 5 e 4 de 5 | todos certos |
 | `gpt-5.4-nano` em todos, sem candidatos | 24 de 24 | 2 de 6 | 0 | 5 de 5 | todos certos |
 | `gpt-5.4-mini` + `gpt-5.4` no validador, sem candidatos | 24 de 24 | 4 de 6 | 0 | 5 de 5 | todos certos |
 
 A sétima inconsistência (Light, p. 21 do arquivo: o consolidado diz 2021 nas duas colunas) foi
-achada pelas regras e entrou no gabarito depois de conferida no PDF. A pergunta que falhou numa
-das execuções é do pesquisador (faltou um motivo da receita da Light) e saiu certa na outra. Detalhes em [agents/README.md](agents/README.md#nota-contra-o-gabarito).
+achada pelas regras e entrou no gabarito depois de conferida no PDF. Detalhes em [agents/README.md](agents/README.md#nota-contra-o-gabarito).
 
-No teste do sistema inteiro pelo chat (base zerada, seis mensagens e o relatório consolidado), a
-base ficou com 24 de 24 indicadores, 7 de 7 inconsistências, nenhuma invenção, 31 de 31 citações
-e 3 de 5 perguntas: a p2 perdeu o motivo da receita da Light de novo, e a p5 citou a continuidade
-operacional da Light em vez da renovação da concessão.
+**As perguntas 2 e 5**, que erravam de uma execução para outra, tinham três causas, e cada uma
+virou código:
+
+- **p5:** a declaração de continuidade operacional da Light ("condições de dar continuidade a suas
+  operações pelos próximos 12 meses") estava gravada como guidance e tomava o lugar da perspectiva
+  de verdade. Ela é a conclusão sobre um risco: o MCP recusa gravá-la como guidance e mostra em
+  risco a que já estava gravada.
+- **p2:** a análise listava primeiro o motivo de uma controlada (Light Energia, custo de energia), e
+  o modelo tomava o primeiro como o principal. Na leitura, os motivos sob um título de receita
+  vêm primeiro; e o pesquisador passou para o `gpt-5.4-mini`.
+- **As duas:** o orquestrador chegou a delegar "pergunta_id: p2. Responda: qual a maior margem
+  EBITDA?", e o pesquisador respondeu à margem com o enunciado da p2 no campo `pergunta`. Uma
+  pergunta do relatório agora é definida pelo id: o grafo troca a tarefa pelo enunciado oficial.
+
+Medido refazendo só as duas perguntas várias vezes (centavos cada): a p5 acertou 10 de 10 desde
+a reclassificação; a p2, 0 de 3 com o nano, 2 de 3 com o mini, e 4 de 4 com o mini e a ordem
+(3 rodadas e um relatório completo do zero, com 5 de 5 perguntas e 7 de 7 inconsistências: 102 s,
+US$ 0,11, numa base com a extração já feita). É pouca rodada para chamar de taxa: mostra que as
+causas foram tiradas, não que a p2 nunca mais erra.
 
 ## Custo e desempenho
 

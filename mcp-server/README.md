@@ -32,6 +32,7 @@ flowchart LR
 | `salvar_nao_encontrado` | O servidor procura os termos no documento; se aparecem com valor, recusa mostrando a página. A busca vira evidência |
 | `fechar_extracao` | Os 8 indicadores com valor ou ausência; valores de apoio para calcular o que falta; validações automáticas |
 | análise, alertas, respostas | Citação literal no chunk; números só por marcador (`{{doc.campo}}`) ou dentro de trecho citado |
+| guidance | A declaração de continuidade operacional não entra como guidance (é conclusão sobre um risco): recusada na gravação, e mostrada em `risco` na leitura quando foi gravada antes da regra. Na leitura, os motivos do resultado sob um título de receita vêm primeiro |
 
 Inconsistências do próprio documento: `candidatos_inconsistencia` varre todos os chunks com regras
 ([app/regras/inconsistencias.py](app/regras/inconsistencias.py)) e devolve ao validador os trechos

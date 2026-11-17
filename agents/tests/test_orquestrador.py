@@ -450,6 +450,27 @@ async def test_in_a_question_the_report_writing_is_held_and_the_researcher_is_to
     assert "grave com pergunta_id 'livre'" in model.first_input("pesquisador")
 
 
+async def test_a_report_question_goes_to_the_researcher_with_its_official_statement(http, world, model, agents_dir):
+    """Visto numa execução real: "pergunta_id: p2. Responda: qual empresa apresentou a MAIOR margem
+    EBITDA?". A pergunta do relatório é definida pelo id: o pesquisador recebe o enunciado oficial."""
+    answering_researcher(world, agents_dir, "A Light explica pela CVA.")
+    official = "O que a administração de cada empresa apontou como principal motivo da variação da receita?"
+    world.on("ler_respostas", lambda _: {"respostas": [], "perguntas_do_relatorio": [
+        {"pergunta_id": "p1", "pergunta": "Qual empresa teve a maior margem EBITDA no período?", "respondida": True},
+        {"pergunta_id": "p2", "pergunta": official, "respondida": True}]})
+    world.pending, world.report = [], "# Relatório"
+    model.scripts["pesquisador"] = [[say("Gravada.")]]
+    model.scripts["orquestrador"] = [
+        [decide(delegation("pesquisador", "pergunta_id: p2. Responda: qual empresa teve a MAIOR margem EBITDA?"))],
+        [decide(terminado=True)]]
+    run = (await http.post("/api/relatorios", json={"aguardar": True}, headers=auth())).json()
+
+    told = model.first_input("pesquisador")
+    assert f"«{official}»" in told and "pergunta_id 'p2'" in told and "MAIOR margem" not in told
+    sent = next(s for s in run["passos"] if s["tipo"] == "delegando")
+    assert "MAIOR margem" in sent["tarefa_do_orquestrador"] and official in sent["tarefa"]
+
+
 async def test_run_does_not_start_with_an_agent_that_has_no_policy_entry(http, world, model, agents_dir):
     write_agent(agents_dir, "tradutor")  # arquivo criado, política não
     run = (await http.post("/api/relatorios", json={"aguardar": True}, headers=auth())).json()

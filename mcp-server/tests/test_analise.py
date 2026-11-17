@@ -45,6 +45,44 @@ async def test_numbers_in_the_statement_must_be_written_in_the_quote(governance)
     assert invented.is_error and "35, 1.200" in payload(invented)["erro"]
 
 
+def test_going_concern_is_not_guidance():
+    """A conclusão de continuidade operacional (Light, p. 3) não entra como guidance; um plano que
+    "dá continuidade" a algo entra."""
+    from app.regras.texto import GOING_CONCERN as _GOING_CONCERN
+
+    for text in ["a Companhia possui condições de dar continuidade a suas operações para os próximos 12 meses",
+                 "não há incerteza relevante sobre a continuidade operacional da Companhia",
+                 "capacidade de continuidade das operações", "a Companhia tem condições de continuar operando"]:
+        assert _GOING_CONCERN.search(text), text
+    for text in ["a Companhia dará continuidade ao plano de investimentos em 2023",
+                 "a Administração perseguirá e envidará os melhores esforços nas diversas estratégias",
+                 "antecipar a renovação da concessão"]:
+        assert not _GOING_CONCERN.search(text), text
+
+
+def test_reading_puts_the_revenue_reason_first_and_going_concern_under_risk():
+    """Como a Light ficou gravada: o motivo de uma controlada (custo de energia) antes do da receita
+    da companhia, e a continuidade operacional como guidance. A leitura corrige as duas coisas."""
+    from app.dados.modelos import AnalysisItem
+    from app.dados.visoes import analysis_view
+
+    def row(categoria, citacao, secao):
+        return AnalysisItem(categoria=categoria, status="encontrado", afirmacao="…", citacao=citacao, pagina=9,
+                            chunk_index=1, secao=secao, fonte="relatório", tom=None)
+
+    view = analysis_view([
+        row("motivo_resultado", "Essa variação pode ser explicada pela melhora do cenário hidrológico",
+            "Desempenho Financeiro"),
+        row("motivo_resultado", "Essa redução foi influenciada pelos estornos de faturamento",
+            "Holding (Light S.A.) > Desempenho Financeiro > Receita Operacional Líquida"),
+        row("guidance", "possui condições de dar continuidade a suas operações para os próximos 12 meses", ""),
+        row("guidance", "perseguirá e envidará os melhores esforços nas diversas estratégias", ""),
+    ])
+    assert [entry["citacao"][:14] for entry in view["motivo_resultado"]] == ["Essa redução f", "Essa variação "]
+    assert [entry["citacao"][:9] for entry in view["guidance"]] == ["perseguir"]
+    assert [entry["citacao"][:9] for entry in view["risco"]] == ["possui co"]
+
+
 async def test_tone_needs_a_classification_and_is_one_per_document(governance):
     missing = await call(governance, "analista", "salvar_item_analise", item(
         "tom", "A administração fala em recuperação e em metas para o ano seguinte.", MESSAGE, OUTLOOK))

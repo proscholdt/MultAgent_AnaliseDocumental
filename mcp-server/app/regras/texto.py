@@ -23,6 +23,14 @@ _DENIAL = re.compile(
     r"detalha|há|(?:foi|foram)\s+(?:identificad|encontrad|localizad))", re.IGNORECASE)
 _OTHER_LETTERS = "ªºµ"  # letras que não são do alfabeto latino e são normais em português
 
+# A declaração de continuidade operacional ("condições de dar continuidade a suas operações pelos
+# próximos 12 meses") é a conclusão da administração sobre um risco, exigida pela norma contábil,
+# não um plano. Gravada como guidance, ela tomava o lugar da perspectiva de verdade na resposta à
+# pergunta do guidance (visto na Light, p. 3, em duas execuções). A gravação recusa; a leitura
+# mostra em risco o que foi gravado como guidance antes da regra.
+GOING_CONCERN = re.compile(r"continuidade (?:operacional|d[ea]s? (?:suas )?opera[çc][õo]es|a (?:suas )?opera[çc][õo]es)"
+                           r"|continuar (?:operando|suas opera[çc][õo]es)", re.IGNORECASE)
+
 
 def squash(text: str) -> str:
     return " ".join(text.split())

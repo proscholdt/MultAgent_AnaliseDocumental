@@ -22,6 +22,7 @@ sabe qual foi a anterior. O token do usuário e os objetos da execução não en
 import dataclasses
 import json
 import operator
+import re
 import time
 import unicodedata
 from collections.abc import Awaitable, Callable
@@ -116,6 +117,11 @@ ANSWERED = "Pergunta respondida, com as fontes."
 # A pergunta do chat igual a uma das cinco (a p1 é "qual a maior margem EBITDA?") ia gravada como
 # p1, e a p1 só é aceita com a extração e a análise de todos os documentos: a recusa puxava a
 # análise inteira para responder a um número.
+# Uma das cinco perguntas do relatório é definida pelo id, não pelo texto que o orquestrador
+# escreve. Numa execução real ele delegou "pergunta_id: p2. Responda: qual empresa apresentou a
+# MAIOR margem EBITDA...": o pesquisador respondeu à margem, pôs o enunciado oficial da p2 no campo
+# `pergunta`, e o servidor gravou (ele confere o campo, não o assunto da resposta).
+_REPORT_QUESTION = re.compile(r"\bp([1-5])\b", re.IGNORECASE)
 FOR_THE_CHAT = ("\n\nÉ uma pergunta do usuário, não do relatório: grave com pergunta_id 'livre', mesmo que o texto "
                 "seja igual ao de uma das cinco perguntas do relatório.")
 
@@ -325,6 +331,7 @@ class Execution:
         self.client = deps.specialists(self.identity)
         self.spec: AgentFile | None = None
         self.team: set[str] = set()
+        self._questions: dict[str, str] | None = None
 
     # --- registro ---------------------------------------------------------------------------
 
@@ -511,11 +518,42 @@ class Execution:
             return "orquestrador"  # só houve delegação inválida: o orquestrador vê o erro e decide de novo
         return "conferencia"
 
+    async def report_questions(self) -> dict[str, str]:
+        """Os enunciados oficiais das cinco perguntas, do servidor MCP (uma vez por execução)."""
+        if self._questions is None:
+            try:
+                async with self.deps.engine.connect(mcp.SYSTEM, self.identity) as session:
+                    listed = (await session.call("ler_respostas")).get("perguntas_do_relatorio") or []
+                self._questions = {entry["pergunta_id"]: entry["pergunta"] for entry in listed}
+            except mcp.McpError:
+                return {}  # sem os enunciados, a tarefa segue como o orquestrador escreveu
+        return self._questions
+
+    async def official_task(self, item: dict) -> dict:
+        """A tarefa do pesquisador que cita uma das cinco perguntas passa a ser o enunciado oficial
+        dela. Com mais de uma citada, os enunciados vão junto da tarefa."""
+        ids = list(dict.fromkeys(f"p{number}" for number in _REPORT_QUESTION.findall(item["tarefa"])))
+        questions = await self.report_questions() if ids else {}
+        known = [(question_id, questions[question_id]) for question_id in ids if question_id in questions]
+        if not known:
+            return item
+        if len(known) == 1:
+            question_id, text = known[0]
+            task = (f"Responda à pergunta {question_id} do relatório, com pergunta_id '{question_id}'. Enunciado "
+                    f"oficial: «{text}». Responda exatamente a este enunciado.")
+        else:
+            task = (item["tarefa"] + "\n\nEnunciados oficiais (responda a eles, não a outra formulação): "
+                    + "; ".join(f"{question_id}: «{text}»" for question_id, text in known))
+        return {**item, "tarefa": task, "tarefa_do_orquestrador": item["tarefa"]}
+
     async def delegar(self, item: dict) -> dict:
-        if self.run.tipo == "pergunta" and item["agente"] == "pesquisador":
-            item = {**item, "tarefa": item["tarefa"] + FOR_THE_CHAT}
+        if item["agente"] == "pesquisador":
+            item = ({**item, "tarefa": item["tarefa"] + FOR_THE_CHAT} if self.run.tipo == "pergunta"
+                    else await self.official_task(item))
         # Quem está trabalhando agora: o especialista só entra de novo no trace quando termina.
-        self.trace.add("delegando", agente=item["agente"], doc_id=item.get("doc_id"), tarefa=item["tarefa"])
+        self.trace.add("delegando", agente=item["agente"], doc_id=item.get("doc_id"), tarefa=item["tarefa"],
+                       **({"tarefa_do_orquestrador": item["tarefa_do_orquestrador"]}
+                          if "tarefa_do_orquestrador" in item else {}))
         report = await delegate(self.client, item["agente"], item["tarefa"], item.get("doc_id"), self.budget,
                                 self.run.conversa_id or None)
         detail = report.get("execucao") or {}

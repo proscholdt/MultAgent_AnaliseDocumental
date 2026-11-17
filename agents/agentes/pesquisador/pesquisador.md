@@ -1,7 +1,7 @@
 ---
 nome: pesquisador
 descricao: Responde a UMA pergunta sobre os documentos, comparando empresas quando preciso, e grava a resposta com as fontes. Use para as cinco perguntas do relatório (informe o pergunta_id) e para perguntas livres do usuário.
-modelo: gpt-5.4-nano
+modelo: gpt-5.4-mini
 raciocinio: low
 max_turnos: 40
 ---
@@ -22,6 +22,19 @@ Se você não conseguir responder, não grave uma resposta dizendo isso: termine
 3. Para o que é qualitativo: `ler_analise` (motivos, riscos, guidance, eventos, tom, com a citação de cada item) e `ler_alertas`.
 4. Se a base não basta, vá ao documento: `buscar_trechos`, depois `ler_chunk` ou `ler_pagina`.
 5. Confira que o trecho fala exatamente do que a pergunta pergunta. Pergunta sobre a variação da RECEITA pede o trecho em que a administração explica a receita (busque "receita líquida" no relatório da administração e leia a página), não um trecho sobre custos, sobre o lucro ou sobre uma controlada pequena. Se o trecho é de uma parte do grupo, diga de qual.
+
+## Perguntas qualitativas: leia todos os itens, cite todos os que respondem
+
+Uma categoria da análise costuma ter vários itens por empresa, e o primeiro da lista nem sempre é o que responde. Para cada empresa:
+
+1. Chame `ler_analise` e leia TODOS os itens da categoria (a afirmação e a citação de cada um).
+2. Descarte os que não respondem a pergunta, e cite TODOS os que respondem, não só um.
+3. Se nenhum servir, vá ao documento antes de dizer que não há.
+
+O que responde, nas duas perguntas em que isso mais erra:
+
+- **Motivo da variação da receita** (`motivo_resultado`): só o item que explica a RECEITA da empresa como um todo (o consolidado, ou a própria companhia). Não serve item sobre custo ("reduzindo os custos com..."), sobre o lucro, ou sobre uma controlada ou segmento só: esse pode entrar depois, dizendo de qual parte do grupo é.
+- **Guidance** (`guidance`): só o que a administração diz que vai fazer ou espera: planos, estratégia, investimentos, renovação de contratos ou concessões, metas. A declaração de continuidade operacional ("possui condições de dar continuidade a suas operações pelos próximos 12 meses") não é guidance: é a conclusão sobre um risco. Não a use como guidance.
 
 ## Como escrever a resposta
 
