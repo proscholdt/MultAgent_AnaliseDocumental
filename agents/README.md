@@ -24,6 +24,8 @@ flowchart LR
 - **Ordem**: num relatório, antes de cada onda o código consulta `pendencias`; a delegação que
   chega antes da hora (perguntas sem análise, resumo sem revisão) não sai e volta ao orquestrador
   como relato `nao_delegado`, dizendo o que delegar no lugar.
+- **Pergunta**: termina assim que a resposta está gravada, sem chamar o orquestrador de novo; o
+  redator não é delegado, e o pesquisador grava como `livre` (veja [Perguntas](#perguntas)).
 - **Intenção**: no chat, cada mensagem é `pergunta`, `relatorio`, `relatorio_empresa` ou
   `fora_do_escopo`, e o tipo decide o que a conferência cobra: `pergunta` exige resposta gravada
   com fonte; `relatorio`, o consolidado montado; `relatorio_empresa`, as pendências e o relatório
@@ -111,6 +113,29 @@ margem (0,03) foram escolhidos no de ajuste, antes de medir no de teste:
 As mensagens foram escritas por quem fez o sistema: o número mede as regras, não o uso real. Com
 mensagens reais, o próximo passo seria um classificador treinado nelas (SetFit, por exemplo)
 comparado com este.
+
+## Perguntas
+
+Uma pergunta numa base vazia mostrou o problema: "Qual empresa teve a maior margem EBITDA?"
+levou 422 s e US$ 0,21 em 11 ondas. O texto é o da p1 do relatório, e o pesquisador gravou como
+`p1`; o MCP recusou, porque a p1 só é aceita com a análise de todos os documentos; o orquestrador
+mandou fazer a análise; a resposta foi gravada na 5ª onda, e ele seguiu por mais seis (as outras
+quatro perguntas, os resumos, a montagem). Três travas, pelo código ([app/orquestrador/grafo.py](app/orquestrador/grafo.py)):
+
+| Trava | Como |
+|---|---|
+| **Para na resposta** | Depois de uma onda em que o pesquisador concluiu, roda a mesma conferência do fim. Com a resposta deste pedido na base, a execução termina sem chamar o orquestrador de novo (passo `respondida` no trace) |
+| **Só o que é da pergunta** | O redator (resumos e montagem) não sai: volta ao orquestrador como relato `nao_delegado` (passo `barrada`). Extrator, validador e analista seguem liberados, porque podem servir à pergunta ("a Light tem inconsistências?", "quais riscos...") |
+| **Pergunta do usuário é `livre`** | O código acrescenta à tarefa do pesquisador que é pergunta do usuário e grava com `pergunta_id` `livre`, mesmo com o texto de uma das cinco. O prompt do pesquisador e a recusa do MCP para `p1` a `p5` dizem o mesmo |
+
+| A mesma pergunta, base vazia | Ondas | Tempo | Custo |
+|---|---|---|---|
+| Antes | 11 (extração, revisão, pesquisador, análise, mais cinco do pesquisador, resumos, montagem) | 422 s | US$ 0,21 |
+| Depois | 2 (extração dos três, pesquisador) | 125 s | US$ 0,10 |
+| "e a menor?", em seguida | 1 (pesquisador) | 50 s | US$ 0,02 |
+
+A resposta saiu certa nas duas (Brasal, 16,74%, calculado). O que delegar antes da resposta
+continua sendo decisão do orquestrador: numa base vazia, a extração é necessária para um número.
 
 ## Estado e memória
 

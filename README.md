@@ -67,7 +67,8 @@ flowchart TB
    valor contra o documento.
 4. **Conferência.** O "terminei" do modelo não encerra: o código pergunta ao MCP o que falta
    e devolve ao orquestrador, até 2 rodadas. Antes de cada onda, o código também barra a
-   delegação que chega antes da hora (perguntas antes da análise, por exemplo).
+   delegação que chega antes da hora (perguntas antes da análise, por exemplo). Numa pergunta,
+   a execução termina assim que a resposta está gravada, e o que é só do relatório não sai.
 5. **Relatório.** O MCP monta o Markdown a partir da base: resumo por empresa, tabela
    comparativa, análise, as 5 perguntas, alertas e "não encontrado". Ao fim, a nota contra o
    gabarito.
@@ -173,7 +174,8 @@ Docling, o parse é de graça e leva 26 min para os três.
 |---|---|---|---|
 | Relatório consolidado dos 3 documentos (`gpt-5.4-nano`, raciocínio ligado) | 151 a 311 s | 1,9 a 2,8 milhões em 133 a 200 chamadas, ~80% em cache | US$ 0,14 a 0,20 |
 | O mesmo com `gpt-5.4-mini` + `gpt-5.4` no validador | 332 s | 3,0 milhões em 160 chamadas, 87% em cache | US$ 1,02 |
-| Uma pergunta | 15 a 30 s | — | US$ 0,01 a 0,03 |
+| Uma pergunta, com a base já extraída | 15 a 50 s | — | US$ 0,01 a 0,03 |
+| A primeira pergunta numa base vazia (extrai os 3 documentos antes) | 125 s | — | US$ 0,10 |
 
 **Por documento**, somando tudo: cerca de 1,5 a 2 min e US$ 0,80, dos quais mais de 90% são o
 parse da Azure (US$ 0,01 por página). O tempo de cada relatório e o custo em tokens de cada agente
@@ -244,11 +246,12 @@ aparecem no Grafana.
 - **Intenção medida com mensagens escritas por mim**, não colhidas de usuários. O roteador não
   reconhece uma empresa que não está na base ("relatório da Vale" vira o consolidado), e uma
   mensagem de seguimento que não começa como continuação é lida sozinha.
-- **A primeira pergunta numa base vazia roda quase o pipeline inteiro.** No teste pelo chat,
-  "Qual empresa teve a maior margem EBITDA?" levou 422 s e US$ 0,21: o orquestrador mandou
-  extrair os três documentos (necessário para a margem), mas também respondeu as 5 perguntas do
-  relatório e montou o relatório, que ninguém pediu. A trava de ordem só vale para relatório; numa
-  pergunta, o que delegar ainda é decisão do LLM.
+- **Numa pergunta, o que delegar antes da resposta ainda é decisão do LLM.** O código para a
+  execução quando a resposta está gravada e não deixa sair o redator, mas extração, revisão e
+  análise ficam a critério do orquestrador, porque podem servir à pergunta. Antes dessas travas,
+  "Qual empresa teve a maior margem EBITDA?" numa base vazia levou 422 s e US$ 0,21 em 11 ondas
+  (a resposta gravada na 5ª, e depois as outras perguntas, os resumos e a montagem); depois,
+  125 s e US$ 0,10 em 2 ondas (veja [agents/README.md](agents/README.md#perguntas)).
 - **Escala de uma máquina**: base do MCP e memória dos agentes em SQLite, um contêiner de cada,
   tudo em Docker Compose. O Docling em CPU leva 26 min para 218 páginas.
 - **Sem reranker** na busca, e o relatório leva ~3 min.
