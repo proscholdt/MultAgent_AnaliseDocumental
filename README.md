@@ -77,14 +77,14 @@ flowchart TB
 
 | Decisão | Por quê | O que custa |
 |---|---|---|
-| **Parse com Azure Document Intelligence** (padrão), Docling como alternativa | Tabelas bem estruturadas e rápido: 218 páginas em 86 s. O Docling roda local e de graça | ~US$ 10 por mil páginas; o Docling leva 26 min em CPU e 4 GB de RAM. Troca por `parser` no `ajustes.yaml` |
+| **Parse trocável: Docling (padrão) ou Azure Document Intelligence** | O Docling roda local e de graça; a Azure é rápida (218 páginas em 86 s). Os dois chegam à mesma nota no gabarito (abaixo). O parse fica em cache por hash do PDF: reenviar não paga de novo | O Docling leva 31 min para os três PDFs em CPU (até 2 GB de RAM); a Azure, ~US$ 10 por mil páginas. Troca por `parser` no `indexer/config/ajustes.yaml`, sem reiniciar |
 | **Chunk pela estrutura**, não por tamanho fixo | Os números moram em tabelas: a tabela vai inteira, com título e nota de rodapé; o texto, por parágrafos da mesma seção (~450 tokens). Detalhes em [indexer/README.md](indexer/README.md#chunks) | Chunks de tamanhos diferentes; tabela grande é dividida repetindo o cabeçalho |
 | **Prefixo de contexto só no vetor** | Empresa, período, unidade e seção ajudam a busca; o texto guardado fica literal, e a citação bate com o PDF | Dois textos por chunk |
 | **Busca híbrida** (`text-embedding-3-small` + BM25 em português, RRF) | Termos exatos ("EBITDA ajustado", "nota 21") e números escapam da busca densa | Sem reranker; 6 trechos por busca |
 | **Servidor MCP como porta única** | Regras, permissões e conferências num lugar só, testável, fora do prompt. Qualquer cliente MCP lê os dados extraídos | Um salto a mais e mais código no servidor |
 | **Orquestrador em grafo** (LangGraph) **com especialistas PydanticAI** | O modelo decide; o grafo executa em paralelo, guarda a conversa (checkpoint) e confere no fim por código. PydanticAI dá saída tipada e troca de provedor | Duas bibliotecas |
 | **A2A, um serviço por especialista** | Cada especialista escala e cai sozinho: um fora do ar tira só ele da execução | Um salto de rede por delegação |
-| **`gpt-5.4-nano` nos agentes, `gpt-5.4-mini` no pesquisador** | O nano tem a mesma nota do mini nos indicadores, por 1/7 do custo: o que ele grava passa por portão. O pesquisador escreve o texto que o analista lê, e ali o nano tomava o primeiro item da análise como o principal (o custo de energia de uma controlada como "motivo da receita" da Light, em 3 de 3 rodadas); o mini custa ~US$ 0,03 a mais por relatório (US$ 0,046 no pesquisador) | Sozinho, o nano achava menos inconsistências da fonte (2 de 6 contra 4 de 6 do `gpt-5.4`); com os candidatos por regra, abaixo, achou 7 de 7. O modelo é por agente, no cabeçalho do arquivo dele |
+| **`gpt-5.4-nano` nos agentes, `gpt-5.4-mini` no pesquisador** | O nano tem a mesma nota do mini nos indicadores, por 1/7 do custo: o que ele grava passa por portão. O pesquisador escreve o texto que o analista lê, e ali o nano tomava o primeiro item da análise como o principal (o custo de energia de uma controlada como "motivo da receita" da Light, em 3 de 3 rodadas); o mini leva o relatório de ~US$ 0,15 a ~US$ 0,28 (US$ 0,12 no pesquisador) | Sozinho, o nano achava menos inconsistências da fonte (2 de 6 contra 4 de 6 do `gpt-5.4`); com os candidatos por regra, abaixo, achou 7 de 7. O modelo é por agente, no cabeçalho do arquivo dele |
 | **Inconsistências da fonte: a regra acha, o modelo julga** | O servidor MCP varre todos os trechos com regras (conta que não fecha, ano trocado, data do quadro) e entrega a lista ao validador, que lê e decide. O modelo não precisa "enxergar" o erro no meio de 120 páginas | As regras foram desenhadas olhando estes documentos; o modelo ainda pode descartar um erro real |
 | **`gpt-4o-mini` para gráficos e metadados** no indexador | Barato e com visão | A transcrição só vale se conferida (abaixo) |
 | **Prompts curtos, um arquivo por agente** | O prompt diz o que fazer; o portão garante. Mudar o prompt não abre brecha | — |
@@ -140,7 +140,8 @@ Resultado do relatório completo dos três documentos:
 
 | Modelos | Indicadores certos | Inconsistências da fonte | Invenções | Perguntas | Calculados e citações |
 |---|---|---|---|---|---|
-| `gpt-5.4-nano`, `gpt-5.4-mini` no pesquisador, a pergunta do relatório pelo enunciado oficial (atual) | 24 de 24 | **7 de 7** | 0 | **5 de 5** | todos certos |
+| `gpt-5.4-nano`, `gpt-5.4-mini` no pesquisador, pergunta do relatório pelo enunciado oficial, prova forte (atual; tudo do zero, com o Docling) | 24 de 24 | **7 de 7** | 0 | **5 de 5** | 35 de 35 citações |
+| o mesmo sem a prova forte (Docling, do zero) | 24 de 24 | 6 de 7 | 0 | 4 de 5 | todos certos |
 | `gpt-5.4-nano` em todos, candidatos com prova e descarte com motivo | 24 de 24 | 7 de 7 | 0 | 5 de 5 numa execução, 3 de 5 em outra | todos certos |
 | `gpt-5.4-nano` em todos, candidatos sem prova (duas execuções) | 24 de 24 | 6 de 7 | 0 | 5 de 5 e 4 de 5 | todos certos |
 | `gpt-5.4-nano` em todos, sem candidatos | 24 de 24 | 2 de 6 | 0 | 5 de 5 | todos certos |
@@ -157,21 +158,30 @@ virou código:
   de verdade. Ela é a conclusão sobre um risco: o MCP recusa gravá-la como guidance e mostra em
   risco a que já estava gravada.
 - **p2:** a análise listava primeiro o motivo de uma controlada (Light Energia, custo de energia), e
-  o modelo tomava o primeiro como o principal. Na leitura, os motivos sob um título de receita
-  vêm primeiro; e o pesquisador passou para o `gpt-5.4-mini`.
+  o modelo tomava o primeiro como o principal. Na leitura, os motivos sob um **título** de receita
+  vêm primeiro, depois os que só falam de receita no texto (com o Docling, a citação da controlada
+  também dizia "receita líquida da Light Energia", e uma ordem só pelo texto empatava); o
+  pesquisador passou para o `gpt-5.4-mini`, e o prompt diz que o primeiro item é a resposta.
 - **As duas:** o orquestrador chegou a delegar "pergunta_id: p2. Responda: qual a maior margem
   EBITDA?", e o pesquisador respondeu à margem com o enunciado da p2 no campo `pergunta`. Uma
   pergunta do relatório agora é definida pelo id: o grafo troca a tarefa pelo enunciado oficial.
 
+**A inconsistência da Millet (p. 41)** chegou a ser descartada pelo validador com a prova na mão:
+o texto diz "31 de dezembro de 2021", 24.176 e 18.115 aparecem como "Consolidado - 31/12/2022" em
+outros quadros, e o modelo justificou que "2022 é o ano da projeção". Agora, candidato com **prova
+forte** (dois valores ou mais em colunas de outro ano que não o do texto) não pode ser descartado:
+o servidor recusa e manda registrar.
+
 Medido refazendo só as duas perguntas várias vezes (centavos cada): a p5 acertou 10 de 10 desde
-a reclassificação; a p2, 0 de 3 com o nano, 2 de 3 com o mini, e 4 de 4 com o mini e a ordem
-(3 rodadas e um relatório completo do zero, com 5 de 5 perguntas e 7 de 7 inconsistências: 102 s,
-US$ 0,11, numa base com a extração já feita). É pouca rodada para chamar de taxa: mostra que as
-causas foram tiradas, não que a p2 nunca mais erra.
+a reclassificação; a p2, 0 de 3 com o nano, 2 de 3 com o mini, e 4 de 4 com o mini e a ordem. Com
+o Docling, do zero, a ordem só pelo texto falhou (a citação da controlada também fala de receita);
+com a ordem pelo título e a prova forte, o relatório completo do zero deu nota máxima em tudo
+(288 s, US$ 0,28). É pouca rodada para chamar de taxa: mostra que as causas foram tiradas, não que
+nunca mais erra.
 
 ## Custo e desempenho
 
-**Ingestão**, medida nos três documentos (Azure Document Intelligence):
+**Ingestão com a Azure Document Intelligence**, medida nos três documentos:
 
 | Documento | Páginas | Chunks | Parse | Indexação | Custo do parse | Custo OpenAI |
 |---|---|---|---|---|---|---|
@@ -181,20 +191,23 @@ causas foram tiradas, não que a p2 nunca mais erra.
 
 Os embeddings são 37 a 129 mil tokens por documento (US$ 0,02 por milhão). O custo OpenAI do
 Light é quase todo dos 8 gráficos lidos pelo modelo de visão (~100 mil tokens de entrada). Com o
-Docling, o parse é de graça e leva 26 min para os três.
+Docling (o padrão), o parse é de graça e leva 31 min para os três (Brasal 7 min, Light 20, Millet
+3,5), com 139, 378 e 124 chunks.
 
 **Agentes:**
 
 | Pedido | Tempo | Tokens | Custo |
 |---|---|---|---|
-| Relatório consolidado dos 3 documentos (`gpt-5.4-nano`, raciocínio ligado) | 151 a 311 s | 1,9 a 2,8 milhões em 133 a 200 chamadas, ~80% em cache | US$ 0,14 a 0,20 |
+| Relatório consolidado dos 3 documentos, do zero (`gpt-5.4-nano`, `gpt-5.4-mini` no pesquisador; atual) | 288 s | 2,9 milhões em 155 chamadas | US$ 0,28 (US$ 0,12 do pesquisador) |
+| O mesmo com `gpt-5.4-nano` em todos | 151 a 311 s | 1,9 a 2,8 milhões em 133 a 200 chamadas, ~80% em cache | US$ 0,14 a 0,20 |
 | O mesmo com `gpt-5.4-mini` + `gpt-5.4` no validador | 332 s | 3,0 milhões em 160 chamadas, 87% em cache | US$ 1,02 |
 | Uma pergunta, com a base já extraída | 15 a 50 s | — | US$ 0,01 a 0,03 |
 | A primeira pergunta numa base vazia (extrai os 3 documentos antes) | 125 s | — | US$ 0,10 |
 
-**Por documento**, somando tudo: cerca de 1,5 a 2 min e US$ 0,80, dos quais mais de 90% são o
-parse da Azure (US$ 0,01 por página). O tempo de cada relatório e o custo em tokens de cada agente
-aparecem no Grafana.
+**Por documento**, somando tudo: com o Docling, de 3,5 a 20 min de parse e cerca de US$ 0,10 (só
+OpenAI: embeddings, metadados, gráficos e a parte do relatório); com a Azure, 1,5 a 2 min e cerca
+de US$ 0,80, dos quais mais de 90% são o parse (US$ 0,01 por página). O tempo de cada relatório e
+o custo em tokens de cada agente aparecem no Grafana.
 
 ## Segurança
 
@@ -238,15 +251,17 @@ aparecem no Grafana.
   mesma empresa (2022 e 2023) aparecem no relatório como duas empresas, e as perguntas
   "no período" misturariam os anos. O que falta está em
   [Caminho para produção](#caminho-para-produção-no-azure).
-- **Inconsistências da fonte**: as regras acham as 7 conhecidas, e o validador registrou as 7 na
-  última execução (6 de 7 nas duas anteriores, antes da prova). As regras foram desenhadas olhando
-  estes três documentos; num PDF novo, um tipo de erro que elas não cobrem depende do olho do
-  modelo, e o julgamento de cada candidato continua sendo do modelo.
+- **Inconsistências da fonte**: as regras acham as 7 conhecidas, com a Azure e com o Docling, e o
+  validador registrou as 7 nas últimas execuções. As regras foram desenhadas olhando estes três
+  documentos; num PDF novo, um tipo de erro que elas não cobrem depende do olho do modelo, e o
+  julgamento de cada candidato continua sendo do modelo, exceto o de prova forte, que o servidor
+  não deixa descartar.
 - **Página**: "p." é a página do arquivo PDF, contada da primeira folha, não a numeração impressa
   (que na Light recomeça nas demonstrações: a folha impressa 21 é a p. 38 do arquivo). O
   relatório diz isso no início.
-- **Variação entre execuções**: o mesmo modelo, nos mesmos documentos, às vezes deixa de fora
-  um motivo numa resposta (a pergunta 2 saiu certa em umas execuções e não em outras).
+- **Variação entre execuções**: o mesmo modelo, nos mesmos documentos, não escreve a mesma coisa
+  duas vezes. As causas conhecidas da variação das perguntas 2 e 5 viraram código (acima), mas um
+  texto de resposta ainda pode deixar de fora um motivo que a análise tem.
 - **Gabarito só para os três documentos.** Documento novo é processado, mas fica sem nota
   (`sem_gabarito`).
 - **A marca de injeção é por padrão de texto.** Um ataque reescrito passa sem a marca; o que
@@ -268,8 +283,8 @@ aparecem no Grafana.
   (a resposta gravada na 5ª, e depois as outras perguntas, os resumos e a montagem); depois,
   125 s e US$ 0,10 em 2 ondas (veja [agents/README.md](agents/README.md#perguntas)).
 - **Escala de uma máquina**: base do MCP e memória dos agentes em SQLite, um contêiner de cada,
-  tudo em Docker Compose. O Docling em CPU leva 26 min para 218 páginas.
-- **Sem reranker** na busca, e o relatório leva ~3 min.
+  tudo em Docker Compose. O Docling em CPU leva 31 min para 218 páginas.
+- **Sem reranker** na busca, e o relatório leva ~5 min.
 - **Login próprio** do indexador, sem SSO.
 
 ## Caminho para produção no Azure

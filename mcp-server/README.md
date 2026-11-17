@@ -40,7 +40,10 @@ suspeitos, cada um com o motivo. A regra acha; o validador lê e decide: registr
 (`registrar_alerta`) ou descarta dizendo por quê (`descartar_candidato`: o motivo fica guardado e
 na auditoria, fora do relatório). `concluir_revisao` recusa enquanto houver candidato sem
 julgamento. Nos quadros, o candidato traz uma `prova`: os mesmos números (com separador de
-milhar) achados em outro quadro do documento, com a coluna e o ano de lá.
+milhar) achados em outro quadro do documento, com a coluna e o ano de lá. Quando dois valores ou
+mais aparecem em colunas de outro ano que não o que o texto dá ao quadro, a prova é **forte**
+(`prova_forte`): o candidato deixa de ser suspeita e `descartar_candidato` recusa. Na Millet
+(p. 41), o modelo descartou um assim, com a prova na mão, dizendo que "2022 é o ano da projeção".
 
 | Regra | Marca |
 |---|---|

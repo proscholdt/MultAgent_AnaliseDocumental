@@ -25,9 +25,14 @@ def analysis_view(items: list[AnalysisItem]) -> dict[str, list[dict[str, Any]]]:
         else:
             grouped[item.categoria].append({"status": "nao_encontrado", "motivo": item.motivo,
                                             "evidencia": item.evidencia})
-    # Os motivos que estão sob um título de receita (ou cuja citação fala de receita) vêm primeiro:
-    # são a resposta a "o que explicou a variação da receita". Na Light, o primeiro item era o de uma
-    # controlada, sobre custo de energia, e os modelos tomavam o primeiro como o principal.
-    grouped["motivo_resultado"].sort(key=lambda entry: 0 if "receita" in
-                                     f"{entry.get('secao') or ''} {entry.get('citacao') or ''}".casefold() else 1)
+    # Os motivos sob um título de receita vêm primeiro, depois os que só falam de receita no texto: o
+    # primeiro é a resposta a "o que explicou a variação da receita". Na Light, o primeiro item era o
+    # de uma controlada (custo de energia), e os modelos tomavam o primeiro como o principal. Só o
+    # texto não basta: a citação da controlada também diz "a receita líquida da Light Energia".
+    def revenue_first(entry: dict[str, Any]) -> int:
+        if "receita" in (entry.get("secao") or "").casefold():
+            return 0
+        return 1 if "receita" in (entry.get("citacao") or "").casefold() else 2
+
+    grouped["motivo_resultado"].sort(key=revenue_first)
     return grouped

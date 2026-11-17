@@ -103,6 +103,20 @@ def test_a_table_candidate_brings_the_same_numbers_found_in_another_table_with_t
     assert alone[0].prova is None and "prova" not in alone[0].view()
 
 
+def test_two_values_under_another_year_make_a_strong_proof_that_cannot_be_discarded():
+    """Millet, p. 41: o texto diz 2021, e 24.176 e 18.115 aparecem como 31/12/2022 em outros quadros.
+    Numa execução real, o modelo descartou mesmo assim; com dois valores, a prova é forte."""
+    header = "|  | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 |\n|---|---|---|\n"
+    loans = ("table", header + "| Empréstimos e financiamentos | 24.176 | 25.075 |")
+    current = ("table", header + "| Passivo circulante | 18.115 | 9.870 |")
+    strong = find(chunks_of(("table", MILLET_P41), loans, current), "2022")
+    assert strong[0].prova_forte and "Não pode ser descartado" in strong[0].view()["prova_forte"]
+    # Um valor só pode ser coincidência; e um valor no ano que o próprio texto diz não contradiz nada.
+    assert not find(chunks_of(("table", MILLET_P41), loans), "2022")[0].prova_forte
+    same_year = ("table", current[1].replace("31/12/2022", "31/12/2021", 1))
+    assert not find(chunks_of(("table", MILLET_P41), loans, same_year), "2022")[0].prova_forte
+
+
 def test_the_year_of_the_document_comes_from_the_period():
     assert (year_of("2022"), year_of("3T25"), year_of("4T 24"), year_of(None), year_of("anual")) == \
         (2022, 2025, 2024, None, None)

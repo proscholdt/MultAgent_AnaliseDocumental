@@ -66,7 +66,8 @@ async def run(user: str, password: str, wanted: str | None) -> int:
             print(f"\n{document.company or document.file_name} ({document.file_name}, {document.doc_id}): "
                   f"{len(found)} candidato(s); extração na base: {'sim' if rows else 'não'}")
             for candidate in found:
-                print(f"\n  p. {candidate.pagina} · chunk {candidate.chunk_index} · {candidate.regra}")
+                strong = " · PROVA FORTE: não pode ser descartado" if candidate.prova_forte else ""
+                print(f"\n  p. {candidate.pagina} · chunk {candidate.chunk_index} · {candidate.regra}{strong}")
                 for label, text in (("motivo", candidate.motivo), ("prova", candidate.prova),
                                     ("trecho", candidate.trecho[:300])):
                     if text:

@@ -64,12 +64,19 @@ class Candidate:
     trecho: str  # copiado do chunk (espaços normalizados): serve de citação
     # Nos quadros: os mesmos números em outro quadro do documento, com a coluna (e o ano) de lá.
     prova: str | None = None
+    # A prova contradiz o ano que o texto dá ao quadro, com dois valores ou mais: não é suspeita, é
+    # fato do documento. Na Millet (p. 41), com a prova na mão, o modelo descartou dizendo que "2022"
+    # era o ano da projeção; o descarte de um candidato assim é recusado (descartar_candidato).
+    prova_forte: bool = False
 
     def view(self) -> dict:
         out = {"chunk_index": self.chunk_index, "pagina": self.pagina, "regra": self.regra,
                "motivo": self.motivo, "trecho": self.trecho}
         if self.prova:
             out["prova"] = self.prova
+        if self.prova_forte:
+            out["prova_forte"] = ("Pelo menos dois valores deste quadro aparecem em outro quadro na coluna de outro "
+                                  "ano que não o do texto: registre com registrar_alerta. Não pode ser descartado.")
         return out
 
 
@@ -242,8 +249,9 @@ def _table_rows(text: str) -> tuple[list[str], str, list[str]]:
     return [line for line in lines[:first] if line.strip()], lines[first], header
 
 
-def _table_dates(text: str) -> list[str]:
-    """Os problemas de data no cabeçalho de um quadro."""
+def _table_dates(text: str) -> list[tuple[str, str | None]]:
+    """Os problemas de data no cabeçalho de um quadro: (motivo, o ano que o texto dá ao quadro, se
+    o problema é esse)."""
     preamble, _, header = _table_rows(text)
     if not header:
         return []
@@ -255,8 +263,9 @@ def _table_dates(text: str) -> list[str]:
     lead = preamble[-1] if preamble else ""
     stated = {m.group(1) for m in _ANY_YEAR.finditer(lead)} if _DATE_YEAR.search(lead) else set()
     if len(stated) == 1 and header_years and not stated & header_years:
-        problems.append(f"O texto apresenta o quadro em {', '.join(sorted(stated))}, e as colunas são de "
-                        f"{', '.join(sorted(header_years))}.")
+        reason = (f"O texto apresenta o quadro em {', '.join(sorted(stated))}, e as colunas são de "
+                  f"{', '.join(sorted(header_years))}.")
+        problems.append((reason, next(iter(stated))))
     seen: dict[str, int] = {}
     for cell in header:
         if cell and _ANY_YEAR.search(cell):
@@ -264,7 +273,7 @@ def _table_dates(text: str) -> list[str]:
     # Exatamente duas: célula mesclada sobre três ou mais colunas o parser repete em todas.
     repeated = [cell for cell, count in seen.items() if count == 2]
     if repeated:
-        problems.append(f"Duas colunas do quadro com o mesmo título: \"{repeated[0]}\".")
+        problems.append((f"Duas colunas do quadro com o mesmo título: \"{repeated[0]}\".", None))
     return problems
 
 
@@ -297,12 +306,14 @@ def _numbers_by_column(chunks: list[dict]) -> dict[str, list[tuple[int, int, str
     return index
 
 
-def _proof(chunk: dict, index: dict[str, list[tuple[int, int, str]]]) -> str | None:
-    """Os números deste quadro que aparecem em outro quadro, com a coluna (e o ano) de lá."""
+def _proof(chunk: dict, index: dict[str, list[tuple[int, int, str]]]) -> tuple[str | None, list[str]]:
+    """Os números deste quadro que aparecem em outro quadro, com a coluna (e o ano) de lá; e os
+    títulos dessas colunas, para saber se a prova contradiz o ano do texto."""
     table = parse_table(chunk.get("text") or "")
     if table is None:
-        return None
+        return None, []
     found: list[str] = []
+    titles: list[str] = []
     for row in table.rows:
         for cell in row:
             match = _BIG_NUMBER.fullmatch(cell.strip())
@@ -313,10 +324,17 @@ def _proof(chunk: dict, index: dict[str, list[tuple[int, int, str]]]) -> str | N
                     line = f"{match.group(1)} aparece na coluna \"{title}\" do quadro da p. {page} (chunk {other})"
                     if line not in found:
                         found.append(line)
+                        titles.append(title)
                     break
             if len(found) >= _PROOF_MAX:
-                return "Os mesmos valores em outro quadro: " + "; ".join(found) + "."
-    return "Os mesmos valores em outro quadro: " + "; ".join(found) + "." if found else None
+                return "Os mesmos valores em outro quadro: " + "; ".join(found) + ".", titles
+    return ("Os mesmos valores em outro quadro: " + "; ".join(found) + "." if found else None), titles
+
+
+def _contradicts(stated: str | None, titles: list[str]) -> bool:
+    """Prova forte: dois valores ou mais em colunas com ano, nenhuma delas do ano que o texto afirma."""
+    dated = [title for title in titles if _ANY_YEAR.search(title)]
+    return stated is not None and len(dated) >= _PROOF_MAX and not any(stated in title for title in dated)
 
 
 def find(chunks: Iterable[dict], period: str | None, indicators: Iterable[Indicator] = ()) -> list[Candidate]:
@@ -342,7 +360,8 @@ def find(chunks: Iterable[dict], period: str | None, indicators: Iterable[Indica
                     break
         if chunk.get("chunk_type") == "table" or "\n|" in text:
             problems = _table_dates(text)
-            proof = _proof(chunk, by_column) if problems else None
-            for reason in problems:
-                out.append(Candidate(index, page, "data_do_quadro", reason, _quote_for_table(text), proof))
+            proof, titles = _proof(chunk, by_column) if problems else (None, [])
+            for reason, stated in problems:
+                out.append(Candidate(index, page, "data_do_quadro", reason, _quote_for_table(text), proof,
+                                     prova_forte=_contradicts(stated, titles)))
     return out[:MAX_CANDIDATES]

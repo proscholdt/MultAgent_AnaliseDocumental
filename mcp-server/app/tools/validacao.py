@@ -109,6 +109,11 @@ async def descartar_candidato(call: Call, args: DescartarCandidato) -> dict[str,
     if candidate is None:
         raise ToolRejected(f"Não há candidato da regra '{args.regra}' no chunk {args.chunk_index}.",
                            opcoes=[f"chunk {c.chunk_index}, regra {c.regra}" for c in found])
+    if candidate.prova_forte:
+        raise ToolRejected("Este candidato não pode ser descartado: pelo menos dois valores do quadro aparecem em "
+                           "outro quadro na coluna de outro ano, e isso contradiz o ano que o texto dá ao quadro. "
+                           "Registre com registrar_alerta, citando o trecho; a prova vai na descrição.",
+                           prova=candidate.prova)
     reason = squash(args.motivo)
     check_script(reason, "O motivo")
     _numbers_backed(reason, _chunk(document, args.chunk_index)["text"], "O motivo")

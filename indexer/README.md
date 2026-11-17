@@ -28,11 +28,13 @@ flowchart LR
    BM25 em português.
 4. **Busca**: `POST /api/search`, híbrida com RRF, filtrada sempre pelo usuário.
 
-| | Docling | Azure Document Intelligence |
+| | Docling (padrão) | Azure Document Intelligence |
 |---|---|---|
-| 3 PDFs, 218 páginas | 26 min em CPU | 86 s |
+| 3 PDFs, 218 páginas | 31 min em CPU (Brasal 7, Light 20, Millet 3,5) | 86 s |
+| Chunks (Brasal, Light, Millet) | 139, 378, 124 | 136, 381, 121 |
 | Custo | zero | ~US$ 10 por mil páginas |
-| Worker | 4,3 GB, pico de 4 GB de RAM | 825 MB |
+| Worker | 4,3 GB, de 2 a 4 GB de RAM | 825 MB |
+| Nota no gabarito, relatório do zero | máxima em tudo | máxima em tudo |
 
 ## Chunks
 

@@ -9,7 +9,7 @@
 # docling: local, sem custo por página, minutos por documento em CPU.
 # azure:   Azure Document Intelligence, pago por página; exige AZURE_DI_ENDPOINT e AZURE_DI_KEY no .env.
 # A troca vale no próximo PDF. Cada parser guarda o próprio cache: voltar ao anterior não refaz o parse.
-parser: azure            # sem conta na Azure, use docling
+parser: docling          # azure com AZURE_DI_ENDPOINT e AZURE_DI_KEY no .env
 
 # Docling. O modo e as threads são lidos ao carregar: mudar recarrega o parser no próximo PDF.
 table_mode: accurate      # accurate | fast

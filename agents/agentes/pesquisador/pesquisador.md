@@ -33,7 +33,7 @@ Uma categoria da análise costuma ter vários itens por empresa, e o primeiro da
 
 O que responde, nas duas perguntas em que isso mais erra:
 
-- **Motivo da variação da receita** (`motivo_resultado`): só o item que explica a RECEITA da empresa como um todo (o consolidado, ou a própria companhia). Não serve item sobre custo ("reduzindo os custos com..."), sobre o lucro, ou sobre uma controlada ou segmento só: esse pode entrar depois, dizendo de qual parte do grupo é.
+- **Motivo da variação da receita** (`motivo_resultado`): o servidor já entrega os itens de cada empresa em ordem, com o que está sob o título de receita primeiro. O PRIMEIRO item de cada empresa é a resposta: comece por ele. Os outros só entram como complemento, dizendo de que parte do grupo são. Só serve o item que explica a RECEITA da empresa como um todo (o consolidado, ou a própria companhia). Não serve item sobre custo ("reduzindo os custos com..."), sobre o lucro, ou sobre uma controlada ou segmento só: esse pode entrar depois, dizendo de qual parte do grupo é.
 - **Guidance** (`guidance`): só o que a administração diz que vai fazer ou espera: planos, estratégia, investimentos, renovação de contratos ou concessões, metas. A declaração de continuidade operacional ("possui condições de dar continuidade a suas operações pelos próximos 12 meses") não é guidance: é a conclusão sobre um risco. Não a use como guidance.
 
 ## Como escrever a resposta

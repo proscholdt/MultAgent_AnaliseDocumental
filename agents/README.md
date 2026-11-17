@@ -210,7 +210,9 @@ Relatório completo dos três documentos, com raciocínio ligado:
 
 | Modelos | Tempo | Custo | Indicadores certos | Inconsistências da fonte | Perguntas |
 |---|---|---|---|---|---|
-| `gpt-5.4-nano`, `gpt-5.4-mini` no pesquisador, pergunta do relatório pelo enunciado oficial (atual; base com a extração pronta) | 102 s | US$ 0,11 | 24 de 24 | **7 de 7** | **5 de 5** |
+| `gpt-5.4-nano`, `gpt-5.4-mini` no pesquisador, pergunta pelo enunciado oficial, prova forte (atual; tudo do zero, PDFs lidos pelo Docling) | 288 s | US$ 0,28 | 24 de 24 | **7 de 7** | **5 de 5** |
+| o mesmo, sem a prova forte e com a ordem dos motivos só pelo texto (Docling, do zero) | 233 s | — | 24 de 24 | 6 de 7 | 4 de 5 |
+| o mesmo, com a extração pronta (Azure) | 102 s | US$ 0,11 | 24 de 24 | 7 de 7 | 5 de 5 |
 | `gpt-5.4-nano` em todos, com candidatos com prova, descarte com motivo e a trava de ordem | 151 s | US$ 0,15 | 24 de 24 | 7 de 7 | 5 de 5; 3 de 5 em outra |
 | o mesmo, sem a prova e o descarte | 231 s | US$ 0,14 | 24 de 24 | 6 de 7 | 5 de 5 |
 | o mesmo, antes da trava de ordem | 311 s | US$ 0,20 | 24 de 24 | 6 de 7 | 4 de 5 |
@@ -231,7 +233,12 @@ uma `prova`: os mesmos números achados em outro quadro do documento, com a colu
   quadro é de 2022) estava na lista, e o modelo julgou que não era erro, sem deixar o motivo.
 - Com a prova e o descarte: 7 de 7, nenhum descarte. A prova da Millet dizia que 24.176 aparece
   como "Consolidado - 31/12/2022" no quadro da p. 32, e a descrição registrada cita os valores
-  de 2022. É uma execução: mostra o caminho, não a taxa.
+  de 2022.
+- Com o Docling, do zero: o validador descartou a da Millet com a prova na mão ("2022 é o ano da
+  projeção"). Desde então, candidato com **prova forte** (dois valores ou mais em colunas de outro
+  ano que não o do texto) não pode ser descartado: `descartar_candidato` recusa, e o candidato
+  chega ao validador com `prova_forte`. Na execução seguinte, 7 de 7, e o validador registrou
+  direto.
 
 A sétima (Light, p. 21 do arquivo: o consolidado diz 2021 nas duas colunas) foi achada pelas regras
 e entrou no gabarito depois de conferida no PDF. As regras foram desenhadas olhando estes
@@ -243,12 +250,13 @@ causas diferentes:
 | Causa | Correção (código) |
 |---|---|
 | A continuidade operacional ("condições de dar continuidade a suas operações pelos próximos 12 meses") gravada como guidance tomava o lugar do plano (p5) | O MCP recusa gravá-la como `guidance` (é conclusão sobre um risco) e, na leitura, mostra em `risco` a que já estava gravada (`GOING_CONCERN`, `app/regras/texto.py`) |
-| O primeiro motivo da Light era o de uma controlada (Light Energia), sobre custo de energia, e o modelo tomava o primeiro como o principal (p2) | Na leitura, os motivos sob um título de receita vêm primeiro (`app/dados/visoes.py`); o pesquisador passou para `gpt-5.4-mini`, e o prompt dele manda ler todos os itens e citar todos os que respondem |
+| O primeiro motivo da Light era o de uma controlada (Light Energia), sobre custo de energia, e o modelo tomava o primeiro como o principal (p2) | Na leitura, os motivos sob um **título** de receita vêm primeiro, depois os que só falam de receita no texto (`app/dados/visoes.py`; com o Docling, a citação da controlada também dizia "receita líquida da Light Energia"); o pesquisador passou para `gpt-5.4-mini`, e o prompt dele diz que o primeiro item de cada empresa é a resposta |
 | O orquestrador delegou "pergunta_id: p2. Responda: qual a maior margem EBITDA?", e o pesquisador respondeu à margem com o enunciado da p2 em `pergunta`: o MCP confere o campo, não o assunto | A pergunta do relatório é definida pelo id: quando a tarefa do pesquisador cita `p1` a `p5`, o grafo troca o texto pelo enunciado oficial (lido de `ler_respostas`); o original fica no trace, em `tarefa_do_orquestrador` |
 
 Refazendo só a p2 e a p5 (centavos por rodada): a p5 acertou 10 de 10 depois da primeira
 correção; a p2, 0 de 3 com o nano, 2 de 3 com o mini e 4 de 4 com o mini e a ordem (contando um
-relatório completo do zero). São poucas rodadas: mostram que as causas saíram, não uma taxa.
+relatório completo do zero). Com o Docling, do zero, a ordem só pelo texto falhou uma vez; com a
+ordem pelo título, 5 de 5. São poucas rodadas: mostram que as causas saíram, não uma taxa.
 
 **Ordem do trabalho.** Na execução de 311 s, o orquestrador pediu as cinco perguntas antes da
 análise qualitativa; o MCP recusou as gravações 13 vezes, e ele repetiu o pedido em mais três
