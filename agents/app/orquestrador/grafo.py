@@ -108,6 +108,17 @@ INTENT_TYPE = {"pergunta": "pergunta", "relatorio": "relatorio", "relatorio_empr
                "fora_do_escopo": "fora_do_escopo"}
 REPORT_TYPES = ("relatorio", "relatorio_empresa")
 
+# Numa pergunta, o que é só do relatório: o texto que vem depois de tudo pronto. Validador e
+# analista podem servir a uma pergunta ("a Light tem inconsistências?", "quais riscos..."), e
+# ficam a critério do orquestrador.
+_REPORT_ONLY = {"redator": "os resumos e a montagem do relatório"}
+ANSWERED = "Pergunta respondida, com as fontes."
+# A pergunta do chat igual a uma das cinco (a p1 é "qual a maior margem EBITDA?") ia gravada como
+# p1, e a p1 só é aceita com a extração e a análise de todos os documentos: a recusa puxava a
+# análise inteira para responder a um número.
+FOR_THE_CHAT = ("\n\nÉ uma pergunta do usuário, não do relatório: grave com pergunta_id 'livre', mesmo que o texto "
+                "seja igual ao de uma das cinco perguntas do relatório.")
+
 OUT_OF_SCOPE = ("Isso está fora do escopo deste sistema. Ele responde perguntas sobre as demonstrações financeiras "
                 "enviadas, sempre com a página de origem, e gera relatórios: o consolidado ou o de uma empresa. "
                 "Escolha uma das opções ou escreva a sua pergunta.")
@@ -377,6 +388,13 @@ class Execution:
             return {"historico": [], "entrada": None, "ondas": state.get("ondas", 0) + 1,
                     "relatos": {"substituir": []}, "mensagem": OUT_OF_SCOPE,
                     "decisao": {"delegacoes": [], "terminado": True}}
+        if await self.answered(state):
+            # A resposta já está na base: o resto da lista do relatório não é deste pedido. Sem
+            # isto, numa execução real o orquestrador seguiu por mais sete ondas depois da resposta
+            # gravada (as outras quatro perguntas, os resumos, a montagem): 422 s em vez de ~170.
+            self.trace.add("respondida", onda=state.get("ondas", 0))
+            return {"entrada": None, "relatos": {"substituir": []}, "mensagem": ANSWERED,
+                    "decisao": {"delegacoes": [], "terminado": True}}
         prompt = state.get("entrada") or reports_input(state.get("relatos") or [])
         outcome: AgentRun = await run_agent(self.spec, prompt, identity=self.identity, engine=self.deps.engine,
                                             budget=self.budget, output_type=Decisao, history=state.get("historico"))
@@ -416,6 +434,32 @@ class Execution:
         return {**update, "relatos": {"substituir": unknown + early}, "mensagem": latin_only(decision.mensagem),
                 "decisao": {"delegacoes": valid, "terminado": decision.terminado}}
 
+    async def answered(self, state: Estado) -> bool:
+        """Numa pergunta, depois de uma onda em que o pesquisador concluiu: a resposta deste pedido
+        já está gravada? Quem confere é a mesma conferência do fim, pelo servidor MCP."""
+        if self.run.tipo != "pergunta" or not any(
+                report.get("agente") == "pesquisador" and report.get("estado") == "concluido"
+                for report in state.get("relatos") or []):
+            return False
+        try:
+            complete, _, _ = await check(self.run, self.identity, self.deps, finished=False)
+        except mcp.McpError:
+            return False  # sem a conferência agora, o orquestrador decide, e a do fim confere
+        return complete
+
+    def in_scope(self, delegations: list[dict]) -> tuple[list[dict], list[dict]]:
+        """Numa pergunta, o que é só do relatório não sai: volta ao orquestrador como relato."""
+        go, held = [], []
+        for delegation in delegations:
+            what = _REPORT_ONLY.get(delegation["agente"])
+            if what is None:
+                go.append(delegation)
+                continue
+            held.append({"agente": delegation["agente"], "estado": "nao_delegado", "doc_id": delegation.get("doc_id"),
+                         "erro": f"não delegado: o pedido é uma pergunta, e {what} são do relatório. A pergunta "
+                                 "termina quando o pesquisador grava a resposta."})
+        return go, held
+
     async def in_order(self, delegations: list[dict]) -> tuple[list[dict], list[dict]]:
         """Separa as delegações que chegam antes da hora. No relatório, a ordem do trabalho é do
         servidor MCP (`pendencias`: cada item diz se está liberado ou o que aguarda), e as tools de
@@ -423,9 +467,19 @@ class Execution:
         trabalha, a gravação é recusada, e o orquestrador repete (visto numa execução real: as cinco
         perguntas pedidas quatro vezes antes da análise). A delegação cujos itens estão todos
         aguardando não sai: volta ao orquestrador como relato, com o que falta antes e o que já pode
-        ser feito. Delegação sem item na lista (refazer algo, uma pergunta livre) segue."""
-        if not delegations or self.run.tipo not in REPORT_TYPES:
+        ser feito. Delegação sem item na lista (refazer algo, uma pergunta livre) segue.
+        Numa pergunta, a lista do relatório não manda: só o que é do relatório fica (`in_scope`)."""
+        if delegations and self.run.tipo == "pergunta":
+            go, held = self.in_scope(delegations)
+        elif not delegations or self.run.tipo not in REPORT_TYPES:
             return delegations, []
+        else:
+            go, held = await self._ready_now(delegations)
+        for report in held:
+            self.trace.add("barrada", agente=report["agente"], doc_id=report["doc_id"], motivo=report["erro"])
+        return go, held
+
+    async def _ready_now(self, delegations: list[dict]) -> tuple[list[dict], list[dict]]:
         arguments = {"doc_id": self.run.doc_id} if self.run.tipo == "relatorio_empresa" and self.run.doc_id else {}
         try:
             async with self.deps.engine.connect(mcp.SYSTEM, self.identity) as session:
@@ -442,8 +496,6 @@ class Execution:
                              "erro": _held_reason(mine, ready)})
             else:
                 go.append(delegation)
-        for report in held:
-            self.trace.add("barrada", agente=report["agente"], doc_id=report["doc_id"], motivo=report["erro"])
         return go, held
 
     def after_orchestrator(self, state: Estado) -> list[Send] | str:
@@ -460,6 +512,8 @@ class Execution:
         return "conferencia"
 
     async def delegar(self, item: dict) -> dict:
+        if self.run.tipo == "pergunta" and item["agente"] == "pesquisador":
+            item = {**item, "tarefa": item["tarefa"] + FOR_THE_CHAT}
         # Quem está trabalhando agora: o especialista só entra de novo no trace quando termina.
         self.trace.add("delegando", agente=item["agente"], doc_id=item.get("doc_id"), tarefa=item["tarefa"])
         report = await delegate(self.client, item["agente"], item["tarefa"], item.get("doc_id"), self.budget,

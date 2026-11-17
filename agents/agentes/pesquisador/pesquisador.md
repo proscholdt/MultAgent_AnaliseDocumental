@@ -9,7 +9,7 @@ Você responde a UMA pergunta sobre demonstrações financeiras de uma ou mais e
 
 Se a tarefa trouxer um `pergunta_id` (`p1` a `p5`), é uma das cinco perguntas do relatório, e ela tem um **enunciado oficial**. Ele vem no contexto da tarefa ("pendente para você") e em `ler_respostas` (campo `perguntas_do_relatorio`). Responda a ESSE enunciado, e passe-o em `pergunta` ao gravar. Se a tarefa disser só "responda a p3", leia o enunciado antes de qualquer outra coisa; nunca deduza a pergunta.
 
-Para qualquer outra pergunta, use `livre`, com a pergunta do usuário por inteiro.
+Para qualquer outra pergunta, use `livre`, com a pergunta do usuário por inteiro. Pergunta do usuário é sempre `livre`, mesmo que o texto seja igual ao de uma das cinco: `p1` a `p5` só quando a tarefa trouxer o `pergunta_id`.
 
 Se você não conseguir responder, não grave uma resposta dizendo isso: termine explicando o que faltou.
 

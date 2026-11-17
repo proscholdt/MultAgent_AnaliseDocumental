@@ -197,7 +197,9 @@ async def test_follow_up_question_knows_the_previous_turn(http, world, model, ag
     second = (await http.post(f"/api/conversas/{conversation}/mensagens", json={"texto": "E a menor?"},
                               headers=auth())).json()
     assert second["estado"] == "completa"
-    prompt = model.first_input("orquestrador", turn=2)
+    # Uma chamada ao orquestrador por turno: com a resposta gravada, a pergunta termina ali.
+    assert len(model.prompts["orquestrador"]) == 2
+    prompt = model.first_input("orquestrador", turn=1)
     assert "## A conversa até aqui" in prompt and "Pedido: Qual empresa teve a maior margem EBITDA?" in prompt
     assert "Resposta: A maior margem é a da Brasal, 16,74% (calculado)." in prompt
     assert prompt.endswith("## Pedido atual\nMensagem do usuário (diga em `intencao` o que ela pede): «E a menor?»")
@@ -221,7 +223,7 @@ async def test_follow_up_question_knows_the_previous_turn(http, world, model, ag
     # Um pedido sem conversa abre uma nova, e não vê os turnos desta.
     model.scripts["orquestrador"] = [[decide(terminado=True)]]
     alone = (await http.post("/api/perguntas", json={"pergunta": "E a menor?", "aguardar": True}, headers=auth())).json()
-    assert alone["conversa_id"] != conversation and "A conversa até aqui" not in model.first_input("orquestrador", 3)
+    assert alone["conversa_id"] != conversation and "A conversa até aqui" not in model.first_input("orquestrador", 2)
 
 
 async def test_a_chat_message_asking_for_the_report_becomes_a_report_run(http, world, model):
@@ -398,6 +400,54 @@ async def test_outside_the_report_nothing_is_held(http, world, model, agents_dir
                            headers=auth())).json()
     assert run["estado"] == "completa" and asked == ["Qual a maior margem?"]
     assert not [s for s in run["passos"] if s["tipo"] == "barrada"]
+
+
+async def test_a_question_ends_as_soon_as_its_answer_is_saved(http, world, model, agents_dir):
+    """Visto numa execução real: a resposta gravada na onda 5 e mais sete ondas depois (as outras
+    perguntas, os resumos, a montagem). Com a resposta na base, o orquestrador não é chamado de novo."""
+    asked = answering_researcher(world, agents_dir, "A Brasal (Brasal.pdf, p. 49).")
+    model.scripts["pesquisador"] = [[call("salvar_resposta", pergunta_id="livre", pergunta="Maior margem EBITDA?")],
+                                    [say("Gravada.")]]
+    model.scripts["orquestrador"] = [[decide(delegation("pesquisador", "Responda: qual a maior margem EBITDA?"))],
+                                     [decide(delegation("pesquisador", "Responda a p2."))]]
+    run = (await http.post("/api/perguntas", json={"pergunta": "Qual empresa teve a maior margem EBITDA?",
+                                                   "aguardar": True}, headers=auth())).json()
+
+    assert (run["estado"], run["mensagem"]) == ("completa", "Pergunta respondida, com as fontes.")
+    assert len(model.prompts["orquestrador"]) == 1 and asked == ["Maior margem EBITDA?"]
+    assert [s["onda"] for s in run["passos"] if s["tipo"] == "respondida"] == [1]
+
+
+async def test_a_question_that_was_not_answered_goes_back_to_the_orchestrator(http, world, model, agents_dir):
+    """O pesquisador concluiu sem gravar (a gravação foi recusada): o orquestrador decide de novo."""
+    answering_researcher(world, agents_dir, "nunca gravada")
+    model.scripts["pesquisador"] = [[say("Não consegui gravar.")]]
+    model.scripts["orquestrador"] = [[decide(delegation("pesquisador", "Responda: qual a maior margem?"))],
+                                     [decide(terminado=True, mensagem="Não respondida.")]]
+    run = (await http.post("/api/perguntas", json={"pergunta": "Qual a maior margem?", "aguardar": True},
+                           headers=auth())).json()
+    assert run["estado"] == "incompleta" and len(model.prompts["orquestrador"]) >= 2
+    assert not [s for s in run["passos"] if s["tipo"] == "respondida"]
+
+
+async def test_in_a_question_the_report_writing_is_held_and_the_researcher_is_told_to_save_it_as_free(
+        http, world, model, agents_dir):
+    """Numa pergunta, resumos e montagem não saem; o pesquisador recebe, pelo código, que a pergunta
+    é do usuário (grava como 'livre', mesmo igual à p1)."""
+    working_team(world, model)
+    answering_researcher(world, agents_dir, "A Brasal.")
+    model.scripts["pesquisador"] = [[call("salvar_resposta", pergunta_id="livre", pergunta="Maior margem EBITDA?")],
+                                    [say("Gravada.")]]
+    model.scripts["orquestrador"] = [
+        [decide(delegation("redator", "Salve o resumo.", DOC), delegation("pesquisador", "Responda a pergunta."))]]
+    run = (await http.post("/api/perguntas", json={"pergunta": "Qual a maior margem EBITDA?", "aguardar": True},
+                           headers=auth())).json()
+
+    assert run["estado"] == "completa" and "redator" not in model.prompts
+    held = [s for s in run["passos"] if s["tipo"] == "barrada"]
+    assert [(s["agente"], s["doc_id"]) for s in held] == [("redator", DOC)]
+    assert "o pedido é uma pergunta" in held[0]["motivo"]
+    assert "grave com pergunta_id 'livre'" in model.first_input("pesquisador")
 
 
 async def test_run_does_not_start_with_an_agent_that_has_no_policy_entry(http, world, model, agents_dir):

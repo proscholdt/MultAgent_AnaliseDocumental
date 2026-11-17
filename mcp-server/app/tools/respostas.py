@@ -128,7 +128,9 @@ async def salvar_resposta(call: Call, args: SalvarResposta) -> dict[str, Any]:
         blockers = question_blockers(states)
         if blockers:
             raise ToolRejected("As perguntas do relatório só podem ser respondidas com a extração e a análise de "
-                               "todos os documentos. Ainda falta o que está na lista. Termine sem gravar e diga isso.",
+                               "todos os documentos. Ainda falta o que está na lista. Se a tarefa é uma pergunta do "
+                               "usuário (não traz o pergunta_id do relatório), grave com pergunta_id 'livre'; se é "
+                               "uma das cinco do relatório, termine sem gravar e diga isso.",
                                problemas=blockers)
 
     # 1. Cada citação tem de apontar para um chunk que existe para este usuário.
