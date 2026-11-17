@@ -16,7 +16,7 @@ RODAR ?=
 .DEFAULT_GOAL := ajuda
 .PHONY: ajuda urls bancos subir reconstruir descer status logs zerar zerar-base testes testes-indexer testes-mcp \
         testes-agentes testes-frontend lint validar-agentes inconsistencias resultados extracao analise perguntas \
-        validacao relatorio avaliar
+        validacao relatorio avaliar pendencias
 
 # Para quem pede login: para com a mensagem se faltar usuário ou senha.
 precisa_login = $(if $(and $(USUARIO),$(SENHA)),,$(error Informe USUARIO=... e SENHA=..., a conta do indexador))
@@ -44,6 +44,7 @@ ajuda:
 	@echo ---------------------------------------------------------------------------------------
 	@echo inconsistencias USUARIO SENHA DOC  candidatos por regra, sem modelo, gratis; DOC e opcional
 	@echo avaliar USUARIO SENHA ............ nota da base contra o gabarito, sem modelo
+	@echo pendencias USUARIO SENHA DOC ..... o que falta na base, a lista do orquestrador; DOC e opcional
 	@echo ---------------------------------------------------------------------------------------
 	@echo Resultados em resultados/, lidos da base, gratis. Com RODAR=sim os agentes geram tudo antes, US$$ 0,15
 	@echo resultados USUARIO SENHA ......... todos os itens abaixo de uma vez
@@ -193,6 +194,10 @@ validacao:
 relatorio:
 	$(precisa_login)
 	@$(call gerar_resultados,relatorio)
+
+pendencias:
+	$(precisa_login)
+	@cd agents && uv run python scripts/pendencias.py --usuario $(USUARIO) --senha $(SENHA) $(if $(DOC),--doc $(DOC),)
 
 avaliar:
 	$(precisa_login)

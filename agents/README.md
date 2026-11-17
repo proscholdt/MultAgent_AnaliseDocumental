@@ -176,6 +176,7 @@ uv run pytest                 # sem rede: modelo com roteiro, MCP em memória, A
 uv run python scripts/gerar_entrega.py --usuario <u> --senha <s> [--rodar] # itens 2 a 6 em ../resultados/
                               # --partes extracao,analise,perguntas,validacao,relatorio; --saida <pasta>
 uv run python scripts/avaliar.py --usuario <u> --senha <s>                 # contra avaliacao/gabarito.json
+uv run python scripts/pendencias.py --usuario <u> --senha <s> [--doc Millet] [--json]  # o que falta na base
 uv run python scripts/avaliar_intencao.py [--com-llm] [--varrer]          # intenção contra avaliacao/intencoes.yaml
 ```
 
@@ -284,7 +285,7 @@ app/
    ├─ retrato.py            o retrato da base, lido pelo servidor MCP como "sistema"
    └─ avaliacao_automatica.py  a nota ao fim de cada relatório e as métricas dela
 
-scripts/                    avaliar.py, gerar_entrega.py, avaliar_intencao.py
+scripts/                    avaliar.py, gerar_entrega.py, avaliar_intencao.py, pendencias.py
 ```
 
 Para criar um agente: `python -m app.ferramentas.cli novo-agente <nome> --descricao "..."` cria

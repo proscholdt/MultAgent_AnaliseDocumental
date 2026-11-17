@@ -332,6 +332,7 @@ funciona no Git Bash e no PowerShell):
 | `make extracao`, `analise`, `perguntas`, `validacao`, `relatorio` (com `USUARIO` e `SENHA`) | Só um item, na mesma pasta |
 | o mesmo com `RODAR=sim` | Antes de exportar, os agentes geram o relatório completo (cerca de US$ 0,15) |
 | `make avaliar USUARIO=u SENHA=s` | A nota da base contra o gabarito, sem modelo |
+| `make pendencias USUARIO=u SENHA=s [DOC=Millet]` | O que falta na base: a lista que o orquestrador e a conferência usam, calculada na hora pelo MCP (não fica gravada), separada em liberado e aguardando |
 
 `USUARIO` e `SENHA` também podem vir de `AVALIACAO_USUARIO` e `AVALIACAO_SENHA` no ambiente.
 
