@@ -13,7 +13,7 @@ DOC ?=
 S ?= agents
 
 .DEFAULT_GOAL := ajuda
-.PHONY: ajuda urls subir reconstruir descer status logs zerar zerar-base testes testes-indexer testes-mcp \
+.PHONY: ajuda urls bancos subir reconstruir descer status logs zerar zerar-base testes testes-indexer testes-mcp \
         testes-agentes testes-frontend lint validar-agentes inconsistencias relatorio avaliar
 
 # Para quem pede login: para com a mensagem se faltar usuário ou senha.
@@ -30,6 +30,7 @@ ajuda:
 	@echo status ........................... o que esta rodando
 	@echo logs S=agents .................... logs de um sistema: indexer, mcp-server, agents, frontend, sala
 	@echo urls ............................. os enderecos de cada tela
+	@echo bancos ........................... copia os SQLite para bancos/, para abrir no DBeaver
 	@echo ---------------------------------------------------------------------------------------
 	@echo zerar CONFIRMA=sim ............... apaga TUDO: documentos, usuarios, base, memoria, traces
 	@echo zerar-base CONFIRMA=sim .......... apaga so a base do MCP e a memoria dos agentes, mantem os PDFs
@@ -134,6 +135,22 @@ validar-agentes:
 	cd agents && uv run python -m app.ferramentas.cli validar
 
 # --- usar o sistema ---------------------------------------------------------------------------
+
+# Os SQLite ficam dentro dos volumes Docker. A cópia usa o backup do próprio SQLite, que leva junto
+# o que ainda está no arquivo -wal; copiar o .db com o serviço gravando pode dar um arquivo pela metade.
+copiar_sqlite = docker exec $(1) python -c "import sqlite3; sqlite3.connect('$(2)').backup(sqlite3.connect('/tmp/copia.db'))" && docker cp $(1):/tmp/copia.db bancos/$(3) && docker exec $(1) rm -f /tmp/copia.db
+
+bancos:
+	@python -c "import os; os.makedirs('bancos', exist_ok=True)"
+	@$(call copiar_sqlite,mcp-server-mcp-server-1,/data/mcp.db,mcp.db)
+	@$(call copiar_sqlite,agents-orquestrador-1,/data/conversas.db,agentes-conversas.db)
+	@$(call copiar_sqlite,agents-extrator-1,/data/memoria.db,memoria-extrator.db)
+	@$(call copiar_sqlite,agents-validador-1,/data/memoria.db,memoria-validador.db)
+	@$(call copiar_sqlite,agents-analista-1,/data/memoria.db,memoria-analista.db)
+	@$(call copiar_sqlite,agents-pesquisador-1,/data/memoria.db,memoria-pesquisador.db)
+	@$(call copiar_sqlite,agents-redator-1,/data/memoria.db,memoria-redator.db)
+	@echo Copias em bancos/ - abra no DBeaver como SQLite. Rode de novo para atualizar.
+	@echo Postgres do indexador, direto: localhost:5432, banco indexer, usuario indexer, senha indexer
 
 inconsistencias:
 	$(precisa_login)

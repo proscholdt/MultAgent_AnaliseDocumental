@@ -323,6 +323,7 @@ funciona no Git Bash e no PowerShell):
 |---|---|
 | `make subir` / `make reconstruir` / `make descer` | Liga tudo na ordem certa (com `--build` no segundo) e desliga |
 | `make status`, `make logs S=agents`, `make urls` | O que está rodando, os logs de um sistema e os endereços |
+| `make bancos` | Copia os SQLite (base do MCP, conversas e memória dos agentes) para `bancos/`, para abrir no DBeaver; o Postgres do indexador abre direto em `localhost:5432` (banco, usuário e senha `indexer`) |
 | `make zerar CONFIRMA=sim` | Apaga tudo: documentos, usuários, base, memória e traces |
 | `make zerar-base CONFIRMA=sim` | Apaga só a base do MCP e a memória dos agentes; os PDFs indexados ficam |
 | `make testes`, `make lint`, `make validar-agentes` | Os testes dos quatro sistemas (sem rede e sem custo), o ruff e os arquivos dos agentes |
