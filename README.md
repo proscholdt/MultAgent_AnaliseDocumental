@@ -328,7 +328,9 @@ funciona no Git Bash e no PowerShell):
 | `make zerar-base CONFIRMA=sim` | Apaga só a base do MCP e a memória dos agentes; os PDFs indexados ficam |
 | `make testes`, `make lint`, `make validar-agentes` | Os testes dos quatro sistemas (sem rede e sem custo), o ruff e os arquivos dos agentes |
 | `make inconsistencias USUARIO=u SENHA=s DOC=Millet` | Os candidatos a inconsistência da fonte de um PDF, por regra: sem modelo e sem custo |
-| `make relatorio USUARIO=u SENHA=s` | O relatório completo pelos agentes (cerca de US$ 0,15) |
+| `make resultados USUARIO=u SENHA=s` | Os resultados de todos os itens em `resultados/`, lidos da base, sem custo: `2-extracao/` (um JSON por documento, com página e trecho), `3-analise/`, `4-perguntas/`, `5-validacao/`, `6-relatorio/` e um `LEIAME.md` que diz o que faltou |
+| `make extracao`, `analise`, `perguntas`, `validacao`, `relatorio` (com `USUARIO` e `SENHA`) | Só um item, na mesma pasta |
+| o mesmo com `RODAR=sim` | Antes de exportar, os agentes geram o relatório completo (cerca de US$ 0,15) |
 | `make avaliar USUARIO=u SENHA=s` | A nota da base contra o gabarito, sem modelo |
 
 `USUARIO` e `SENHA` também podem vir de `AVALIACAO_USUARIO` e `AVALIACAO_SENHA` no ambiente.

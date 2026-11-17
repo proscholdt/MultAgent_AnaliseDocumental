@@ -173,7 +173,8 @@ cp .env.example .env          # só chaves: OPENAI_API_KEY, MCP_AGENT_SECRET (o 
 docker compose up -d --build --remove-orphans  # orquestrador :8200, especialistas :8201 a :8205
 uv run pytest                 # sem rede: modelo com roteiro, MCP em memória, A2A por ASGI
 
-uv run python scripts/gerar_entrega.py --usuario <u> --senha <s> --rodar   # relatório + JSON em entrega/
+uv run python scripts/gerar_entrega.py --usuario <u> --senha <s> [--rodar] # itens 2 a 6 em ../resultados/
+                              # --partes extracao,analise,perguntas,validacao,relatorio; --saida <pasta>
 uv run python scripts/avaliar.py --usuario <u> --senha <s>                 # contra avaliacao/gabarito.json
 uv run python scripts/avaliar_intencao.py [--com-llm] [--varrer]          # intenção contra avaliacao/intencoes.yaml
 ```

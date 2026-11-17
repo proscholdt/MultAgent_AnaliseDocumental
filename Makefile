@@ -11,10 +11,12 @@ USUARIO ?= $(AVALIACAO_USUARIO)
 SENHA ?= $(AVALIACAO_SENHA)
 DOC ?=
 S ?= agents
+RODAR ?=
 
 .DEFAULT_GOAL := ajuda
 .PHONY: ajuda urls bancos subir reconstruir descer status logs zerar zerar-base testes testes-indexer testes-mcp \
-        testes-agentes testes-frontend lint validar-agentes inconsistencias relatorio avaliar
+        testes-agentes testes-frontend lint validar-agentes inconsistencias resultados extracao analise perguntas \
+        validacao relatorio avaliar
 
 # Para quem pede login: para com a mensagem se faltar usuário ou senha.
 precisa_login = $(if $(and $(USUARIO),$(SENHA)),,$(error Informe USUARIO=... e SENHA=..., a conta do indexador))
@@ -41,10 +43,18 @@ ajuda:
 	@echo validar-agentes .................. confere os arquivos dos agentes
 	@echo ---------------------------------------------------------------------------------------
 	@echo inconsistencias USUARIO SENHA DOC  candidatos por regra, sem modelo, gratis; DOC e opcional
-	@echo relatorio USUARIO SENHA .......... relatorio completo pelos agentes, custa cerca de US$$ 0,15
 	@echo avaliar USUARIO SENHA ............ nota da base contra o gabarito, sem modelo
 	@echo ---------------------------------------------------------------------------------------
-	@echo Exemplo: make inconsistencias USUARIO=avaliacao SENHA=xxx DOC=Millet
+	@echo Resultados em resultados/, lidos da base, gratis. Com RODAR=sim os agentes geram tudo antes, US$$ 0,15
+	@echo resultados USUARIO SENHA ......... todos os itens abaixo de uma vez
+	@echo extracao USUARIO SENHA ........... item 2: um JSON por documento, com pagina e trecho
+	@echo analise USUARIO SENHA ............ item 3: motivos, riscos, guidance, eventos e tom
+	@echo perguntas USUARIO SENHA .......... item 4: as 5 perguntas, com as fontes
+	@echo validacao USUARIO SENHA .......... item 5: inconsistencias e nao encontrados
+	@echo relatorio USUARIO SENHA .......... item 6: o relatorio consolidado e a nota contra o gabarito
+	@echo ---------------------------------------------------------------------------------------
+	@echo Exemplo: make resultados USUARIO=avaliacao SENHA=xxx
+	@echo Exemplo: make relatorio USUARIO=avaliacao SENHA=xxx RODAR=sim
 
 urls:
 	@echo Chat e envio de PDFs .... http://localhost:3000
@@ -156,9 +166,33 @@ inconsistencias:
 	$(precisa_login)
 	@cd mcp-server && docker compose exec -T mcp-server python -m app.ferramentas.candidatos --usuario $(USUARIO) --senha $(SENHA) $(if $(DOC),--doc $(DOC),)
 
+# Os resultados de cada item vão para resultados/, lidos da base. Com RODAR=sim, o relatório completo
+# é pedido aos agentes antes (gera todos os itens de uma vez).
+gerar_resultados = cd agents && uv run python scripts/gerar_entrega.py --usuario $(USUARIO) --senha $(SENHA) --saida ../resultados $(if $(1),--partes $(1),) $(if $(filter sim,$(RODAR)),--rodar,)
+
+resultados:
+	$(precisa_login)
+	@$(call gerar_resultados,)
+
+extracao:
+	$(precisa_login)
+	@$(call gerar_resultados,extracao)
+
+analise:
+	$(precisa_login)
+	@$(call gerar_resultados,analise)
+
+perguntas:
+	$(precisa_login)
+	@$(call gerar_resultados,perguntas)
+
+validacao:
+	$(precisa_login)
+	@$(call gerar_resultados,validacao)
+
 relatorio:
 	$(precisa_login)
-	@cd agents && uv run python scripts/gerar_entrega.py --usuario $(USUARIO) --senha $(SENHA) --rodar
+	@$(call gerar_resultados,relatorio)
 
 avaliar:
 	$(precisa_login)
