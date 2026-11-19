@@ -1,0 +1,57 @@
+# Testes e lint de cada sistema a cada push e PR: sem rede externa e sem custo de modelo
+# (os testes usam modelo com roteiro, MCP em memória e A2A por ASGI).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: ${{ matrix.sistema }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - sistema: indexer
+            # Docling e torch só no parse-worker; os testes não precisam deles.
+            sync: --no-group parse
+          - sistema: mcp-server
+            sync: ""
+          - sistema: agents
+            sync: ""
+    defaults:
+      run:
+        working-directory: ${{ matrix.sistema }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: ${{ matrix.sistema }}/uv.lock
+      - run: uv sync --locked ${{ matrix.sync }}
+      - name: Lint
+        run: uv run --no-sync ruff check .
+      - name: Testes
+        run: uv run --no-sync pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm test

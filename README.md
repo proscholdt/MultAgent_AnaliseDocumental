@@ -136,6 +136,10 @@ sem uma fonte que o código verifique.
   com teste, em vez de mais uma linha no prompt.
 - **Testes automatizados** em cada serviço, sem rede: modelo com roteiro, MCP em memória, A2A
   por ASGI.
+- **CI** (`.github/workflows/ci.yml`): lint e testes dos quatro sistemas a cada push e PR. Testes
+  de arquitetura impedem as regras (`mcp-server/app/regras`, `agents/app/dominio`) de importar
+  banco, HTTP, MCP ou LangGraph, e o contrato das tools fica congelado em
+  `mcp-server/tests/contratos/tools.json` (mudou de propósito: `ATUALIZAR_CONTRATOS=1`).
 - **Intenção do chat** ([agents/avaliacao/intencoes.yaml](agents/avaliacao/intencoes.yaml)): 52
   mensagens rotuladas, nenhuma igual às frases de exemplo do roteador, em ajuste (para escolher
   o limiar) e teste (para medir). No teste, 37 mensagens: o roteador decide 30 e acerta as 30; o
@@ -225,6 +229,10 @@ o custo em tokens de cada agente aparecem no Grafana.
   `SameSite=Strict`; o frontend repassa só uma lista fechada de rotas.
 - Cada agente chega ao MCP com um token próprio, curto, além do JWT do usuário; os dois têm de
   ser do mesmo usuário. Cada chamada A2A leva um token assinado para aquele destino e execução.
+- **Chave própria por serviço** (`make chaves`): cada serviço assina com a própria chave Ed25519, a
+  privada montada só no contêiner dele. O MCP confere pelo `kid` e só aceita que o serviço fale pelo
+  próprio agente; o especialista só aceita o orquestrador pela chave pública dele. Assim, um
+  contêiner comprometido não se passa por outro agente. Sem chaves, valem os segredos HS256 do `.env`.
 - Isolamento por usuário em três camadas: Postgres, pasta e filtro obrigatório no Qdrant. Recurso
   de outro usuário responde 404.
 - Os traces não levam o texto dos documentos, a menos que `traces_com_conteudo` seja ligado.
