@@ -1,0 +1,234 @@
+# O domínio do relatório: os indicadores extraídos, as categorias da análise qualitativa e as
+# perguntas do relatório. Lido na subida do servidor (mudou aqui: reinicie o contêiner), porque o
+# esquema das tools que os agentes veem sai daqui. Arquivo inválido impede a subida, com o motivo.
+#
+# Para um indicador novo (ex.: patrimônio líquido): uma entrada em `campos`, a linha no prompt do
+# extrator (agents/agentes/extrator/extrator.md) e o valor no gabarito. Sem Python.
+#
+# campos:
+#   nome        identificador (minúsculas e _), o que os agentes usam em salvar_indicador
+#   rotulo      como aparece no relatório
+#   tipo        valor (dinheiro) | percentual | multiplo
+#   principal   true: um dos indicadores do relatório; false: valor de apoio das fórmulas
+#   termos      procurados no documento quando o agente diz que o campo não existe; se algum
+#               aparece, ele tem de dizer por que aquelas páginas não servem
+#   secao       palavra que a seção de origem deve ter quando o valor vem de tabela (outra seção
+#               entra, mas gera alerta)
+#   mencao      o que a linha (ou o trecho) de origem tem de mencionar, sem acento; "a+b" exige
+#               as duas partes
+#   demonstracao  true: o valor vem da tabela da demonstração, nunca de uma frase do relatório
+#
+# Os campos usados pelas fórmulas (EBITDA, dívida líquida, alavancagem, capex) são obrigatórios;
+# a fórmula fica em app/regras/formulas.py.
+#
+# perguntas: as do relatório, na ordem em que aparecem. O id é o que o orquestrador cita (p1...).
+campos:
+- nome: receita_liquida
+  rotulo: Receita líquida
+  tipo: valor
+  principal: true
+  termos:
+  - receita líquida
+  - receita operacional líquida
+  secao: resultado
+  mencao:
+  - receita
+  demonstracao: true
+- nome: ebitda
+  rotulo: EBITDA
+  tipo: valor
+  principal: true
+  termos:
+  - ebitda
+  - lajida
+  mencao:
+  - ebitda
+  - lajida
+- nome: margem_ebitda
+  rotulo: Margem EBITDA
+  tipo: percentual
+  principal: true
+  termos:
+  - margem ebitda
+  - margem lajida
+  - margem do ebitda
+  mencao:
+  - ebitda
+  - lajida
+- nome: lucro_liquido
+  rotulo: Lucro líquido
+  tipo: valor
+  principal: true
+  termos:
+  - lucro líquido
+  - prejuízo líquido
+  - resultado líquido
+  - prejuízo do exercício
+  secao: resultado
+  mencao:
+  - lucro
+  - prejuizo
+  - resultado liquido
+  - resultado do exercicio
+  - resultado do periodo
+  demonstracao: true
+- nome: divida_liquida
+  rotulo: Dívida líquida
+  tipo: valor
+  principal: true
+  termos:
+  - dívida líquida
+  - endividamento líquido
+  mencao:
+  - divida liquida
+  - endividamento liquido
+
+# "Alavancagem" e "índice de endividamento" nomeiam contas diferentes em cada empresa; o campo
+# daqui é dívida líquida / EBITDA, então a fonte tem de falar em EBITDA.
+- nome: alavancagem
+  rotulo: Alavancagem (dívida líquida / EBITDA)
+  tipo: multiplo
+  principal: true
+  termos:
+  - alavancagem
+  - dívida líquida/ebitda
+  - dívida líquida / ebitda
+  - dívida líquida sobre ebitda
+  mencao:
+  - ebitda
+  - lajida
+- nome: fluxo_caixa_operacional
+  rotulo: Fluxo de caixa operacional
+  tipo: valor
+  principal: true
+  termos:
+  - atividades operacionais
+  secao: fluxo
+  mencao:
+  - caixa+operacionais
+  - caixa+operacoes
+  demonstracao: true
+
+# O capex informado é um total de investimentos que a empresa declara. As linhas de aquisição do
+# fluxo de caixa são valores de apoio (campos capex_*), e o servidor soma.
+- nome: capex
+  rotulo: Capex
+  tipo: valor
+  principal: true
+  termos:
+  - capex
+  - aquisição de imobilizado
+  - aquisições de imobilizado
+  - aquisição de ativo imobilizado
+  - aquisições de bens do ativo imobilizado
+  - adições ao imobilizado
+  secao: fluxo
+  mencao:
+  - capex
+  - total de investimento
+  - investimentos totais
+  - investimentos realizados
+- nome: resultado_antes_financeiro
+  rotulo: Resultado antes do resultado financeiro
+  tipo: valor
+  principal: false
+  secao: resultado
+  mencao:
+  - antes+financeir
+  - lucro operacional
+  - resultado operacional
+- nome: depreciacao_amortizacao
+  rotulo: Depreciação e amortização
+  tipo: valor
+  principal: false
+  mencao:
+  - deprecia
+- nome: emprestimos_circulante
+  rotulo: Empréstimos e financiamentos (circulante)
+  tipo: valor
+  principal: false
+  secao: balanço
+  mencao:
+  - emprestimo
+  - financiamento
+- nome: emprestimos_nao_circulante
+  rotulo: Empréstimos e financiamentos (não circulante)
+  tipo: valor
+  principal: false
+  secao: balanço
+  mencao:
+  - emprestimo
+  - financiamento
+
+# Na nota de caixa, "Caixa e bancos" é um componente; o valor é o da linha do total.
+- nome: caixa_equivalentes
+  rotulo: Caixa e equivalentes de caixa
+  tipo: valor
+  principal: false
+  secao: balanço
+  mencao:
+  - caixa e equivalente
+- nome: capex_imobilizado
+  rotulo: Aquisição de imobilizado
+  tipo: valor
+  principal: false
+  secao: fluxo
+  mencao:
+  - imobilizado
+- nome: capex_intangivel
+  rotulo: Aquisição de intangível
+  tipo: valor
+  principal: false
+  secao: fluxo
+  mencao:
+  - intangivel
+
+# Algumas empresas têm uma linha só no fluxo de caixa ("Imobilizado e intangível"). Ela entra
+# aqui, e não nos dois campos de capex acima: gravada duas vezes, o capex sairia dobrado.
+- nome: capex_imobilizado_e_intangivel
+  rotulo: Aquisição de imobilizado e intangível (linha única)
+  tipo: valor
+  principal: false
+  secao: fluxo
+  mencao:
+  - imobilizado+intangivel
+
+categorias:
+- nome: motivo_resultado
+  rotulo: Principais motivos do resultado
+- nome: risco
+  rotulo: Riscos e pontos de atenção
+  termos:
+  - risco
+- nome: guidance
+  rotulo: Guidance e perspectivas
+  termos:
+  - guidance
+  - perspectiva
+  - projeç
+  - expectativa
+
+# Termos específicos: "aquisição" sozinha casaria com a linha de capex do fluxo de caixa, e
+# "contingência", com a nota de provisões de qualquer demonstração.
+- nome: evento_relevante
+  rotulo: Eventos relevantes
+  termos:
+  - evento subsequente
+  - eventos subsequentes
+  - combinação de negócios
+  - reestruturaç
+  - recuperação judicial
+- nome: tom
+  rotulo: Tom geral da administração
+
+perguntas:
+- id: p1
+  enunciado: Qual empresa teve a maior margem EBITDA no período?
+- id: p2
+  enunciado: O que a administração de cada empresa apontou como principal motivo da variação da receita?
+- id: p3
+  enunciado: Alguma das empresas está com alavancagem acima de 3x? Qual?
+- id: p4
+  enunciado: Quais riscos são citados por mais de uma empresa?
+- id: p5
+  enunciado: Qual é o guidance de cada empresa para o próximo ano?

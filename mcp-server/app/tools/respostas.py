@@ -22,7 +22,7 @@ from app.casos_de_uso.pendencias import gather
 from app.dados.modelos import Answer
 from app.governanca.catalogo import Args, Call, tool
 from app.governanca.erros import ToolRejected
-from app.regras.campos import FIELDS, QUESTIONS, CampoPrincipal
+from app.regras.campos import FIELDS, QUESTIONS, CampoPrincipal, PerguntaId
 from app.regras.marcadores import MARKER, Markers, render_amount
 from app.regras.numeros import in_reais
 from app.regras.pendencias import DocState, question_blockers
@@ -93,7 +93,7 @@ async def comparar_indicadores(call: Call, args: CompararIndicadores) -> dict[st
 
 
 class SalvarResposta(Args):
-    pergunta_id: Literal["p1", "p2", "p3", "p4", "p5", "livre"] = Field(
+    pergunta_id: PerguntaId = Field(
         description="p1 a p5: as cinco perguntas do relatório. 'livre': outra pergunta do usuário.")
     pergunta: str = Field(min_length=1, max_length=500, description="A pergunta respondida. Para p1 a p5, o "
                           "enunciado oficial (ler_respostas mostra os cinco).")

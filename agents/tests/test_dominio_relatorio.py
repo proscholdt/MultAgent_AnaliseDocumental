@@ -60,9 +60,14 @@ def test_tarefa_com_varias_perguntas_leva_os_enunciados_juntos():
 
 
 def test_tarefa_sem_pergunta_conhecida_fica_como_esta():
-    item = {"tarefa": "Responda p9"}
+    item = {"tarefa": "Responda p9 e p12"}
     assert official_task(item, PERGUNTAS) is item
 
 
 def test_palavra_em_outro_alfabeto_sai_da_mensagem():
     assert latin_only("Não մնou pendência") == "Não pendência"
+
+
+def test_pergunta_nova_do_dominio_e_reconhecida_sem_mudar_codigo():
+    item = official_task({"tarefa": "Responda a p6"}, {**PERGUNTAS, "p6": "Qual o maior patrimônio líquido?"})
+    assert "pergunta_id 'p6'" in item["tarefa"]

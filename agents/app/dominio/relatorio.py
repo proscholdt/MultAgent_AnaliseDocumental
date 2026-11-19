@@ -26,7 +26,9 @@ ANSWERED = "Pergunta respondida, com as fontes."
 # escreve: com o texto livre, o pesquisador chegou a responder a outra pergunta e gravar com o id
 # de uma das cinco. Uma pergunta do chat igual a uma das cinco é gravada como 'livre', para não
 # puxar a análise inteira (a p1 só é aceita com a extração e a análise de todos os documentos).
-REPORT_QUESTION = re.compile(r"\bp([1-5])\b", re.IGNORECASE)
+# Quais ids existem vem do servidor MCP (`ler_respostas`, que lê o config/dominio.yaml dele):
+# aqui só se reconhece a forma "p<número>", e `official_task` descarta o id que não existe.
+REPORT_QUESTION = re.compile(r"\bp(\d{1,2})\b", re.IGNORECASE)
 FOR_THE_CHAT = ("\n\nÉ uma pergunta do usuário, não do relatório: grave com pergunta_id 'livre', mesmo que o texto "
                 "seja igual ao de uma das cinco perguntas do relatório.")
 
@@ -102,7 +104,7 @@ def hold_early(delegations: list[dict[str, Any]], pending: list[dict[str, Any]]
 
 
 def report_question_ids(task: str) -> list[str]:
-    """As perguntas do relatório (p1 a p5) citadas numa tarefa, na ordem, sem repetir."""
+    """As perguntas do relatório (p1, p2...) citadas numa tarefa, na ordem, sem repetir."""
     return list(dict.fromkeys(f"p{number}" for number in REPORT_QUESTION.findall(task)))
 
 

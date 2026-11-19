@@ -1,19 +1,28 @@
-"""Os campos da extração: os 8 que o teste pede e os valores de apoio que servem de operando
-para o que o servidor calcula (EBITDA, dívida líquida, capex)."""
-from dataclasses import dataclass
-from typing import Literal
+"""O domínio do relatório lido de `config/dominio.yaml`: os campos da extração (os indicadores do
+relatório e os valores de apoio das fórmulas), as categorias da análise e as perguntas.
 
-Campo = Literal[
+O arquivo é lido uma vez, na importação: o esquema das tools (os `Literal` abaixo) sai dele, e
+o modelo vê esse esquema. Outro arquivo: variável de ambiente `DOMINIO_PATH`.
+"""
+import os
+import re
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Literal
+
+import yaml
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
+
+DOMINIO_PATH = Path(os.environ.get("DOMINIO_PATH") or Path(__file__).resolve().parents[2] / "config" / "dominio.yaml")
+
+# Os operandos e resultados de app/regras/formulas.py: sem eles, as fórmulas não fecham.
+CAMPOS_DAS_FORMULAS = frozenset({
     "receita_liquida", "ebitda", "margem_ebitda", "lucro_liquido", "divida_liquida", "alavancagem",
-    "fluxo_caixa_operacional", "capex",
-    "resultado_antes_financeiro", "depreciacao_amortizacao", "emprestimos_circulante",
-    "emprestimos_nao_circulante", "caixa_equivalentes", "capex_imobilizado", "capex_intangivel",
-    "capex_imobilizado_e_intangivel",
-]
-CampoPrincipal = Literal[
-    "receita_liquida", "ebitda", "margem_ebitda", "lucro_liquido", "divida_liquida", "alavancagem",
-    "fluxo_caixa_operacional", "capex",
-]
+    "fluxo_caixa_operacional", "capex", "resultado_antes_financeiro", "depreciacao_amortizacao",
+    "emprestimos_circulante", "emprestimos_nao_circulante", "caixa_equivalentes", "capex_imobilizado",
+    "capex_intangivel", "capex_imobilizado_e_intangivel",
+})
+_NOME = r"^[a-z][a-z0-9_]{1,39}$"
 
 
 @dataclass(frozen=True)
@@ -22,86 +31,96 @@ class Field:
     label: str
     kind: str  # "valor" (dinheiro) | "percentual" | "multiplo"
     main: bool
-    # Termos procurados no documento quando o agente diz que o campo não existe. Se algum
-    # aparecer, ele tem de dizer por que aquelas páginas não servem.
     terms: tuple[str, ...] = ()
-    # Palavra que a seção de origem deve ter quando o valor vem de tabela (resultado, fluxo,
-    # balanço). Valor de outra seção entra, mas gera alerta.
     section: str | None = None
-    # O que a linha da tabela (ou o trecho) de origem tem de mencionar. "Alavancagem" e "índice de
-    # endividamento" nomeiam contas diferentes em cada empresa; o campo deste sistema é dívida
-    # líquida / EBITDA, então a fonte tem de falar em EBITDA. Comparação sem acento.
-    # Um termo com "+" exige todas as partes ("antes+financeir").
     mention: tuple[str, ...] = ()
-    # Valor de demonstração: vem da tabela da demonstração, não de uma frase. O texto do
-    # relatório da administração arredonda e, às vezes, perde o sinal.
     statement: bool = False
 
 
-_FIELDS = [
-    Field("receita_liquida", "Receita líquida", "valor", True,
-          ("receita líquida", "receita operacional líquida"), "resultado", statement=True, mention=("receita",)),
-    Field("ebitda", "EBITDA", "valor", True, ("ebitda", "lajida"), mention=("ebitda", "lajida")),
-    Field("margem_ebitda", "Margem EBITDA", "percentual", True,
-          ("margem ebitda", "margem lajida", "margem do ebitda"), mention=("ebitda", "lajida")),
-    Field("lucro_liquido", "Lucro líquido", "valor", True,
-          ("lucro líquido", "prejuízo líquido", "resultado líquido", "prejuízo do exercício"), "resultado",
-          statement=True, mention=("lucro", "prejuizo", "resultado liquido", "resultado do exercicio",
-                                   "resultado do periodo")),
-    Field("divida_liquida", "Dívida líquida", "valor", True, ("dívida líquida", "endividamento líquido"),
-          mention=("divida liquida", "endividamento liquido")),
-    Field("alavancagem", "Alavancagem (dívida líquida / EBITDA)", "multiplo", True,
-          ("alavancagem", "dívida líquida/ebitda", "dívida líquida / ebitda", "dívida líquida sobre ebitda"),
-          mention=("ebitda", "lajida")),
-    Field("fluxo_caixa_operacional", "Fluxo de caixa operacional", "valor", True,
-          ("atividades operacionais",), "fluxo", statement=True,
-          mention=("caixa+operacionais", "caixa+operacoes")),
-    # O capex informado é um total de investimentos que a empresa declara. As linhas de aquisição do
-    # fluxo de caixa são valores de apoio (campos capex_*), e o servidor soma.
-    Field("capex", "Capex", "valor", True,
-          ("capex", "aquisição de imobilizado", "aquisições de imobilizado", "aquisição de ativo imobilizado",
-           "aquisições de bens do ativo imobilizado", "adições ao imobilizado"), "fluxo",
-          mention=("capex", "total de investimento", "investimentos totais", "investimentos realizados")),
-    Field("resultado_antes_financeiro", "Resultado antes do resultado financeiro", "valor", False,
-          section="resultado", mention=("antes+financeir", "lucro operacional", "resultado operacional")),
-    Field("depreciacao_amortizacao", "Depreciação e amortização", "valor", False, mention=("deprecia",)),
-    Field("emprestimos_circulante", "Empréstimos e financiamentos (circulante)", "valor", False, section="balanço",
-          mention=("emprestimo", "financiamento")),
-    Field("emprestimos_nao_circulante", "Empréstimos e financiamentos (não circulante)", "valor", False,
-          section="balanço", mention=("emprestimo", "financiamento")),
-    # Na nota de caixa, "Caixa e bancos" é um componente; o valor é o da linha do total.
-    Field("caixa_equivalentes", "Caixa e equivalentes de caixa", "valor", False, section="balanço",
-          mention=("caixa e equivalente",)),
-    Field("capex_imobilizado", "Aquisição de imobilizado", "valor", False, section="fluxo", mention=("imobilizado",)),
-    Field("capex_intangivel", "Aquisição de intangível", "valor", False, section="fluxo", mention=("intangivel",)),
-    # Algumas empresas têm uma linha só no fluxo de caixa ("Imobilizado e intangível"). Ela entra
-    # aqui, e não nos dois campos acima: gravada duas vezes, o capex sairia dobrado.
-    Field("capex_imobilizado_e_intangivel", "Aquisição de imobilizado e intangível (linha única)", "valor", False,
-          section="fluxo", mention=("imobilizado+intangivel",)),
-]
+class _Bloco(BaseModel):
+    model_config = ConfigDict(extra="forbid")  # chave com erro de digitação é erro, não silêncio
+
+
+class _Campo(_Bloco):
+    nome: str
+    rotulo: str
+    tipo: Literal["valor", "percentual", "multiplo"]
+    principal: bool
+    termos: list[str] = []
+    secao: str | None = None
+    mencao: list[str] = []
+    demonstracao: bool = False
+
+    @field_validator("nome")
+    @classmethod
+    def _nome(cls, value: str) -> str:
+        if not re.fullmatch(_NOME, value):
+            raise ValueError(f"nome inválido: {value!r} (minúsculas, números e _)")
+        return value
+
+
+class _Categoria(_Bloco):
+    nome: str
+    rotulo: str
+    termos: list[str] = []
+
+
+class _Pergunta(_Bloco):
+    id: str
+    enunciado: str
+
+    @field_validator("id")
+    @classmethod
+    def _id(cls, value: str) -> str:
+        if value == "livre" or not value[:1].isalpha():
+            raise ValueError(f"id de pergunta inválido: {value!r}")
+        return value
+
+
+class Dominio(_Bloco):
+    campos: list[_Campo]
+    categorias: list[_Categoria]
+    perguntas: list[_Pergunta]
+
+    @model_validator(mode="after")
+    def _coerente(self) -> "Dominio":
+        for rotulo, nomes in (("campo", [c.nome for c in self.campos]), ("categoria", [c.nome for c in self.categorias]),
+                              ("pergunta", [p.id for p in self.perguntas])):
+            repetidos = sorted({nome for nome in nomes if nomes.count(nome) > 1})
+            if repetidos:
+                raise ValueError(f"{rotulo} repetido: {', '.join(repetidos)}")
+        faltam = sorted(CAMPOS_DAS_FORMULAS - {c.nome for c in self.campos})
+        if faltam:
+            raise ValueError(f"faltam os campos usados pelas fórmulas: {', '.join(faltam)}")
+        if not any(c.principal for c in self.campos) or not self.categorias:
+            raise ValueError("é preciso ao menos um campo principal e uma categoria")
+        return self
+
+
+def carregar(path: Path = DOMINIO_PATH) -> Dominio:
+    try:
+        bruto: Any = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as error:
+        raise RuntimeError(f"{path}: {error}") from error
+    return Dominio.model_validate(bruto)
+
+
+DOMINIO = carregar()
+
+_FIELDS = [Field(name=c.nome, label=c.rotulo, kind=c.tipo, main=c.principal, terms=tuple(c.termos), section=c.secao,
+                 mention=tuple(c.mencao), statement=c.demonstracao) for c in DOMINIO.campos]
 FIELDS: dict[str, Field] = {field.name: field for field in _FIELDS}
 MAIN_FIELDS: tuple[str, ...] = tuple(field.name for field in _FIELDS if field.main)
 
-# Categorias da análise qualitativa (item 3 do teste) e os termos procurados quando o agente
-# diz que o documento não traz aquela informação.
-CATEGORIES: dict[str, tuple[str, tuple[str, ...]]] = {
-    "motivo_resultado": ("Principais motivos do resultado", ()),
-    "risco": ("Riscos e pontos de atenção", ("risco",)),
-    "guidance": ("Guidance e perspectivas", ("guidance", "perspectiva", "projeç", "expectativa")),
-    # Termos específicos: "aquisição" sozinha casaria com a linha de capex do fluxo de caixa, e
-    # "contingência", com a nota de provisões de qualquer demonstração.
-    "evento_relevante": ("Eventos relevantes", ("evento subsequente", "eventos subsequentes",
-                                                "combinação de negócios", "reestruturaç",
-                                                "recuperação judicial")),
-    "tom": ("Tom geral da administração", ()),
-}
-Categoria = Literal["motivo_resultado", "risco", "guidance", "evento_relevante", "tom"]
+# Categorias da análise qualitativa e os termos procurados quando o agente diz que o documento não
+# traz aquela informação.
+CATEGORIES: dict[str, tuple[str, tuple[str, ...]]] = {c.nome: (c.rotulo, tuple(c.termos)) for c in DOMINIO.categorias}
 
-# As 5 perguntas que o teste manda rodar e entregar. As respostas a elas entram no relatório.
-QUESTIONS: dict[str, str] = {
-    "p1": "Qual empresa teve a maior margem EBITDA no período?",
-    "p2": "O que a administração de cada empresa apontou como principal motivo da variação da receita?",
-    "p3": "Alguma das empresas está com alavancagem acima de 3x? Qual?",
-    "p4": "Quais riscos são citados por mais de uma empresa?",
-    "p5": "Qual é o guidance de cada empresa para o próximo ano?",
-}
+# As perguntas do relatório. As respostas a elas entram no relatório.
+QUESTIONS: dict[str, str] = {p.id: p.enunciado for p in DOMINIO.perguntas}
+
+# Os tipos dos argumentos das tools: o que o modelo pode escolher.
+Campo = Literal[tuple(FIELDS)]  # type: ignore[valid-type]
+CampoPrincipal = Literal[MAIN_FIELDS]  # type: ignore[valid-type]
+Categoria = Literal[tuple(CATEGORIES)]  # type: ignore[valid-type]
+PerguntaId = Literal[(*QUESTIONS, "livre")]  # type: ignore[valid-type]
