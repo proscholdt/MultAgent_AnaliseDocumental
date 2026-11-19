@@ -19,6 +19,8 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi>=0.66b2",
     "opentelemetry-instrumentation-httpx>=0.66b2",
     "opentelemetry-instrumentation-logging>=0.66b2",
+    "asyncpg>=0.30",
+    "alembic>=1.14",
 ]
 
 [dependency-groups]

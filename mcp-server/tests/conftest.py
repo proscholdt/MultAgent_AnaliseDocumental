@@ -1,7 +1,9 @@
 """Apoio dos testes: um indexador falso (em memória, atrás de um transporte do httpx), tokens
 de agente e as peças do servidor montadas sem rede."""
 import json
+import os
 import time
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -268,11 +270,20 @@ def policy_file(tmp_path: Path) -> Path:
     return path
 
 
+def _database_url(tmp_path: Path) -> str:
+    """SQLite por teste; com MCP_TEST_DATABASE_URL (um Postgres), um banco novo por teste, criado
+    pelas migrações do Alembic, como em produção."""
+    base = os.environ.get("MCP_TEST_DATABASE_URL")
+    if not base:
+        return f"sqlite+aiosqlite:///{(tmp_path / 'mcp.db').as_posix()}"
+    return base.rsplit("/", 1)[0] + f"/teste_{uuid.uuid4().hex[:12]}"
+
+
 @pytest.fixture
 def settings(tmp_path: Path, policy_file: Path) -> Settings:
     return Settings(_env_file=None, mcp_agent_secret=SECRET, admin_key=ADMIN_KEY, policy_path=policy_file,
                     config_path=tmp_path / "ajustes-de-teste.yaml",
-                    database_url=f"sqlite+aiosqlite:///{(tmp_path / 'mcp.db').as_posix()}",
+                    database_url=_database_url(tmp_path),
                     indexer_url="http://indexador.teste", search_text_chars=120,
                     chaves_publicas_dir=tmp_path / "sem-chaves")
 
@@ -292,6 +303,21 @@ async def deps(settings: Settings, indexer: FakeIndexer):
                database=database, documents=Documents(client), store=Store(database))
     await client.close()
     await database.close()
+    if not settings.database_url.startswith("sqlite"):
+        await _drop_database(settings.database_url)
+
+
+async def _drop_database(url: str) -> None:
+    import asyncpg
+    from sqlalchemy.engine import make_url
+
+    parsed = make_url(url)
+    connection = await asyncpg.connect(parsed.set(drivername="postgresql", database="postgres")
+                                       .render_as_string(hide_password=False))
+    try:
+        await connection.execute(f'DROP DATABASE IF EXISTS "{parsed.database}" WITH (FORCE)')
+    finally:
+        await connection.close()
 
 
 @pytest.fixture
@@ -302,3 +328,27 @@ def governance(deps: Deps) -> Governance:
 def payload(result: Any) -> Any:
     """O conteúdo JSON de um resultado de tool."""
     return json.loads(result.content[0].text)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _limpa_bancos_de_teste():
+    """Com Postgres, apaga no fim os bancos de teste que algum teste criou pela aplicação."""
+    yield
+    base = os.environ.get("MCP_TEST_DATABASE_URL")
+    if not base:
+        return
+    import asyncio
+
+    import asyncpg
+    from sqlalchemy.engine import make_url
+
+    async def limpar() -> None:
+        dsn = make_url(base).set(drivername="postgresql", database="postgres").render_as_string(hide_password=False)
+        connection = await asyncpg.connect(dsn)
+        try:
+            for (name,) in await connection.fetch("SELECT datname FROM pg_database WHERE datname LIKE 'teste_%'"):
+                await connection.execute(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)')
+        finally:
+            await connection.close()
+
+    asyncio.run(limpar())

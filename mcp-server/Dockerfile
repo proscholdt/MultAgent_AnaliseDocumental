@@ -10,6 +10,9 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-default-groups
 COPY app ./app
+# Migrações do Alembic: aplicadas na subida quando a base é Postgres.
+COPY alembic.ini ./
+COPY migracoes ./migracoes
 # A política e os ajustes vão na imagem como padrão; o compose monta a pasta config por cima,
 # para que editar valha na hora, sem reconstruir.
 COPY config ./config

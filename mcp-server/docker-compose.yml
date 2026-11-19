@@ -19,7 +19,9 @@ services:
         required: false
     environment:
       INDEXER_URL: ${INDEXER_URL:-http://api:8000}
-      DATABASE_URL: sqlite+aiosqlite:////data/mcp.db
+      # SQLite no volume (padrão, uma réplica). Para várias réplicas, Postgres (o do indexador serve;
+      # o banco é criado e migrado na subida): MCP_DATABASE_URL=postgresql+asyncpg://indexer:indexer@postgres:5432/mcp
+      DATABASE_URL: ${MCP_DATABASE_URL:-sqlite+aiosqlite:////data/mcp.db}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT-http://alloy:4318} # observabilidade; vazio desliga
     networks:
       - default
