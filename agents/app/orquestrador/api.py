@@ -28,9 +28,11 @@ from app.nucleo.banco import is_postgres, preparar, psycopg_dsn
 from app.nucleo.executar import Engine, default_engine, instrumentar_agentes
 from app.nucleo.tokens import Identity
 from app.orquestrador.especialistas_a2a import SpecialistClient
+from app.orquestrador.estado import Deps
+from app.orquestrador.execucao import execute
 from app.orquestrador.execucoes import RUNNING, Run, open_store
-from app.orquestrador.grafo import Deps, execute, zerar_metricas
 from app.orquestrador.intencao import Roteador, embedder_openai
+from app.orquestrador.metricas import zerar_metricas
 from app.orquestrador.usuario import Users
 
 _bearer = HTTPBearer(description="O access_token devolvido por POST /auth/login do indexador.")

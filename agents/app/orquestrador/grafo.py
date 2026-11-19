@@ -19,27 +19,17 @@ ficam no estado e entram no pedido do orquestrador: uma pergunta de seguimento (
 sabe qual foi a anterior. O token do usuário e os objetos da execução não entram no estado
 (que é gravado em disco): ficam no contexto do grafo, montado a cada execução.
 """
-import dataclasses
-import json
-import operator
-import time
-from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
-from datetime import UTC, datetime
-from typing import Annotated, Any, Literal, TypedDict
+from collections.abc import Callable
+from typing import Any
 
-from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
-from pydantic import BaseModel, Field
 
 from app import telemetria
-from app.config import Settings
 from app.dominio.relatorio import (
     ANSWERED,
     FOR_THE_CHAT,
     INTENT_TYPE,
-    OPTIONS,
     OUT_OF_SCOPE,
     REPORT_TYPES,
     hold_early,
@@ -49,223 +39,26 @@ from app.dominio.relatorio import (
     report_question_ids,
 )
 from app.nucleo import mcp
-from app.nucleo.agentes import ORCHESTRATOR, AgentFile, Registry, agent_file
+from app.nucleo.agentes import ORCHESTRATOR, AgentFile
 from app.nucleo.custos import Ledger, cost_usd
-from app.nucleo.executar import AgentRun, Budget, Engine, atualizar_instrumentacao, run_agent
+from app.nucleo.executar import AgentRun, Budget, atualizar_instrumentacao, run_agent
 from app.nucleo.tokens import Identity
-from app.orquestrador.especialistas_a2a import SpecialistClient, delegate, for_the_model
-from app.orquestrador.execucoes import Run, Runs, Trace, now
-from app.orquestrador.intencao import Roteador
-
-_medidor = telemetria.medidor()
-_TOKENS = _medidor.create_counter("agentes.tokens", description="Tokens por agente, modelo e tipo")
-_CUSTO = _medidor.create_counter("agentes.custo_usd", description="Custo em US$ por agente e modelo")
-_DELEGACOES = _medidor.create_counter("agentes.delegacoes", description="Delegações por especialista e estado")
-_ESPECIALISTA_S = _medidor.create_histogram("agentes.especialista.duracao", unit="s",
-                                            description="Duração de cada chamada a um especialista")
-_EXECUCOES = _medidor.create_counter("agentes.execucoes", description="Execuções por tipo e estado")
-_EXECUCAO_S = _medidor.create_histogram("agentes.execucao.duracao", unit="s", description="Duração das execuções")
-_INTENCOES = _medidor.create_counter("agentes.intencoes", description="Intenção das mensagens do chat, por quem decidiu")
-
-def zerar_metricas(agentes: list[str], modelos: list[str]) -> None:
-    """Cria as séries dos contadores em zero, na subida. Um contador do OpenTelemetry só passa a
-    existir no primeiro incremento, e o Prometheus nunca vê o zero de antes: increase() perde o
-    primeiro evento. Com as séries conhecidas já em zero, a conta fecha."""
-    for tipo in ("pergunta", "relatorio", "relatorio_empresa", "livre", "fora_do_escopo"):
-        for estado in ("completa", "incompleta", "falhou"):
-            _EXECUCOES.add(0, {"tipo": tipo, "estado": estado})
-    for agente in agentes:
-        for modelo in modelos:
-            _CUSTO.add(0, {"agente": agente, "modelo": modelo})
-            for tipo in ("entrada", "cache", "saida"):
-                _TOKENS.add(0, {"agente": agente, "modelo": modelo, "tipo": tipo})
-        if agente != ORCHESTRATOR:
-            for estado in ("concluido", "limite_de_turnos", "orcamento_esgotado", "tempo_esgotado", "sem_permissao",
-                           "erro"):
-                _DELEGACOES.add(0, {"agente": agente, "estado": estado})
-
-
-_STOPPED = ("limite_de_turnos", "orcamento_esgotado", "tempo_esgotado")
-_TURNS_IN_PROMPT = 6
-_TURN_CHARS = 900
-
-
-class Delegacao(BaseModel):
-    agente: str = Field(description="Nome do especialista, como está na lista de especialistas.")
-    tarefa: str = Field(description="O que ele deve fazer, em uma ou duas frases.")
-    doc_id: str | None = Field(description="Documento em que ele deve trabalhar; null se a tarefa não é sobre um "
-                               "documento só.")
-
-
-class Decisao(BaseModel):
-    delegacoes: list[Delegacao] = Field(description="As delegações desta onda, executadas em paralelo. Vazia quando "
-                                        "não há mais o que delegar.")
-    terminado: bool = Field(description="true quando o pedido está atendido (ou não há mais o que fazer).")
-    mensagem: str = Field(description="Para o usuário, em duas ou três frases: o que foi feito e o que ficou pendente. "
-                          "Sem valores dos documentos.")
-    intencao: Literal["pergunta", "relatorio", "relatorio_empresa", "fora_do_escopo"] = Field(
-        description="O que o pedido atual do usuário é: 'pergunta' (quer saber algo do conteúdo dos documentos), "
-                    "'relatorio' (quer o relatório consolidado, de todas as empresas), 'relatorio_empresa' (quer o "
-                    "relatório ou a análise completa de UMA empresa) ou 'fora_do_escopo' (qualquer outra coisa).")
-    empresa: str | None = Field(
-        description="Só em 'relatorio_empresa': o doc_id da empresa pedida, como vem em listar_documentos. "
-                    "null nas outras intenções.")
-
-
-@dataclass
-class Deps:
-    settings: Settings
-    registry: Registry
-    engine: Engine
-    runs: Runs
-    specialists: Callable[[Identity], SpecialistClient]
-    checkpointer: BaseCheckpointSaver | None = None
-    # A nota ao fim de um relatório (app/ferramentas/avaliacao_automatica.py). Os testes trocam.
-    avaliar: Callable[[Settings, Identity, str, str | None], Awaitable[dict | None]] | None = None
-    # A intenção das mensagens do chat por roteamento semântico (intencao.py). Sem ele, o LLM decide.
-    roteador: Roteador | None = None
-
-
-class RunFailed(Exception):
-    pass
-
-
-def _relatos(old: list[dict], new: Any) -> list[dict]:
-    """Os relatos da onda atual. O orquestrador zera a lista ao ler (`{"substituir": [...]}`); cada
-    delegação acrescenta o seu."""
-    if isinstance(new, dict) and "substituir" in new:
-        return list(new["substituir"])
-    return (old or []) + list(new or [])
-
-
-class Estado(TypedDict, total=False):
-    # Da conversa: fica no checkpoint de um turno para o outro.
-    turnos: Annotated[list[dict], operator.add]
-    # Da execução atual: o pedido de cada turno zera estes campos.
-    execucao_id: str
-    entrada: str | None  # o próximo pedido ao orquestrador; None = os relatos da onda
-    historico: list[dict]  # as mensagens do orquestrador nesta rodada
-    relatos: Annotated[list[dict], _relatos]
-    decisao: dict | None
-    ondas: int
-    rodada: int
-    parada: str | None  # um freio parou o orquestrador
-    falha: str | None
-    completo: bool
-    pendencias: list[dict]
-    resultado: dict
-    mensagem: str
-
-
-def conversation_so_far(turns: list[dict]) -> str:
-    """Os turnos anteriores da conversa, para o orquestrador: o pedido e o que foi respondido."""
-    if not turns:
-        return ""
-    lines = ["## A conversa até aqui (turnos anteriores, do mais antigo ao mais novo)"]
-    for turn in turns[-_TURNS_IN_PROMPT:]:
-        answer = turn.get("resposta") or ""
-        if len(answer) > _TURN_CHARS:
-            answer = answer[:_TURN_CHARS] + "…"
-        lines += [f"- Pedido: {turn['pedido']}", f"  Resposta: {answer or '(sem resposta)'} [{turn.get('estado')}]"]
-    return "\n".join(lines)
-
-
-def first_input(run: Run, turns: list[dict] | None = None) -> str:
-    if run.tipo == "relatorio":
-        text = ("Produza o relatório consolidado completo dos documentos do usuário: extração, revisão das "
-                "fontes, análise qualitativa, as cinco perguntas, os resumos e a montagem do relatório.")
-    elif run.tipo == "relatorio_empresa":
-        text = (f"Produza o relatório de UMA empresa, como o usuário pediu: «{run.pedido}». Empresa: "
-                f"{run.doc_id or 'diga em `empresa` o doc_id dela'}. Use `pendencias` com esse doc_id.")
-    elif run.tipo == "pergunta":
-        text = f"Responda à pergunta do usuário, com as fontes. Pergunta: «{run.pedido}»"
-    elif run.tipo == "auto":
-        text = f"Mensagem do usuário (diga em `intencao` o que ela pede): «{run.pedido}»"
-    else:
-        text = run.pedido
-    history = conversation_so_far(turns or [])
-    return f"{history}\n\n## Pedido atual\n{text}" if history else text
-
-
-def retry_input(run: Run, pending: list[dict[str, Any]], reason: str | None, turns: list[dict] | None = None) -> str:
-    lines = [first_input(run, turns), "", "Uma rodada anterior deste pedido terminou sem concluir."]
-    if reason:
-        lines.append(f"Motivo: {reason}.")
-    if pending:
-        lines += ["O que ainda falta, segundo a base:", json.dumps(pending, ensure_ascii=False, indent=1)]
-    lines.append("O que já foi feito está gravado e não precisa ser refeito. Resolva só o que falta.")
-    return "\n".join(lines)
-
-
-def reports_input(reports: list[dict]) -> str:
-    return ("Relatos da onda que terminou (montados pelo sistema, não pelos especialistas):\n"
-            + json.dumps(reports, ensure_ascii=False, indent=1)
-            + "\n\nDecida a próxima onda. Chame `pendencias` se o pedido envolve o relatório.")
-
-
-def with_team(spec: AgentFile, catalog: dict[str, Any]) -> AgentFile:
-    """O prompt do orquestrador mais a lista dos especialistas no ar, com a descrição de cada um
-    (vem do arquivo do agente, pelo catálogo A2A)."""
-    team = "\n".join(f"- `{entry['nome']}`: {entry['descricao']}" for entry in catalog["agentes"])
-    return dataclasses.replace(spec, prompt=f"{spec.prompt}\n\n## Especialistas disponíveis\n\n{team}")
-
-
-def _after(stamp: str | None, start: str) -> bool:
-    if not stamp:
-        return False
-    moment = datetime.fromisoformat(stamp)
-    return (moment if moment.tzinfo else moment.replace(tzinfo=UTC)) >= datetime.fromisoformat(start)
-
-
-async def check(run: Run, identity: Identity, deps: Deps, finished: bool) -> tuple[bool, list[dict[str, Any]], dict]:
-    """A conferência final, feita pelo código com as tools de leitura do "sistema". Devolve se
-    o pedido está completo, o que falta e o resultado para o usuário."""
-    if run.tipo == "fora_do_escopo":
-        return True, [], {"fora_do_escopo": True, "opcoes": OPTIONS}
-    if run.tipo == "relatorio_empresa":
-        return await check_company_report(run, identity, deps)
-    async with deps.engine.connect(mcp.SYSTEM, identity) as session:
-        pending = (await session.call("pendencias"))["pendencias"]
-        if run.tipo == "relatorio":
-            report = await session.call("ler_relatorio") if not pending else {}
-            return not pending, pending, {"relatorio": report.get("relatorio"), "gerado_em": report.get("gerado_em")}
-        answers = (await session.call("ler_respostas"))["respostas"]
-    new = [answer for answer in answers if _after(answer.get("gravada_em"), run.iniciada_em or run.criada_em)]
-    if run.tipo == "pergunta":
-        missing = [] if new else [{"o_que_falta": "resposta à pergunta do usuário, gravada com salvar_resposta "
-                                   "(pergunta_id 'livre')", "agente": "pesquisador", "pergunta": run.pedido}]
-        return bool(new), missing, {"respostas": new}
-    # Pedido livre: não há o que conferir além de o orquestrador ter chegado ao fim. As respostas
-    # gravadas neste pedido e as pendências do relatório vão junto, como informação.
-    return finished, pending, {"respostas": new} if new else {}
-
-
-async def check_company_report(run: Run, identity: Identity, deps: Deps) -> tuple[bool, list[dict[str, Any]], dict]:
-    """O relatório de uma empresa: as pendências DELA vazias e o relatório dela montado."""
-    if not run.doc_id:
-        return False, [{"o_que_falta": "dizer de qual empresa é o relatório: o doc_id em `empresa`, de "
-                                       "listar_documentos", "agente": ORCHESTRATOR}], {}
-    async with deps.engine.connect(mcp.SYSTEM, identity) as session:
-        try:
-            pending = (await session.call("pendencias", {"doc_id": run.doc_id}))["pendencias"]
-        except mcp.McpError as error:  # doc_id que não existe: o orquestrador escolhe de novo
-            run.doc_id = None
-            return False, [{"o_que_falta": f"escolher a empresa de novo: {error}", "agente": ORCHESTRATOR}], {}
-        report = await session.call("ler_relatorio_empresa", {"doc_id": run.doc_id}) if not pending else {}
-    return not pending, pending, {"relatorio": report.get("relatorio"), "gerado_em": report.get("gerado_em"),
-                                  "doc_id": run.doc_id}
-
-
-def turn_answer(run: Run, state: Estado) -> str:
-    """O que este turno respondeu, para os turnos seguintes da conversa lembrarem."""
-    answers = (state.get("resultado") or {}).get("respostas") or []
-    if answers:
-        return " ".join(answer["resposta"] for answer in answers)
-    if run.tipo == "relatorio" and state.get("completo"):
-        return "Relatório consolidado montado."
-    if run.tipo == "relatorio_empresa" and state.get("completo"):
-        return f"Relatório da empresa {run.doc_id} montado."
-    return state.get("mensagem") or ""
+from app.orquestrador.conferencia import check
+from app.orquestrador.entradas import (
+    reports_input,
+    retry_input,
+    turn_answer,
+)
+from app.orquestrador.especialistas_a2a import delegate, for_the_model
+from app.orquestrador.estado import Decisao, Deps, Estado
+from app.orquestrador.execucoes import Run, Trace, now
+from app.orquestrador.metricas import (
+    _DELEGACOES,
+    _ESPECIALISTA_S,
+    _INTENCOES,
+    _STOPPED,
+    registrar_uso,
+)
 
 
 class Execution:
@@ -288,24 +81,13 @@ class Execution:
 
     def record(self, agente: str, doc_id: str | None, modelo: str, uso: dict, passos: list[dict],
                mensagens: list[dict]) -> None:
+        """O gasto de uma chamada de agente: no custo da execução, nas métricas e no trace."""
         self.ledger.add(agente, modelo, uso, doc_id)
-        for tipo, chave in (("entrada", "entrada"), ("cache", "entrada_cache"), ("saida", "saida")):
-            if uso.get(chave):
-                _TOKENS.add(int(uso[chave]), {"agente": agente, "modelo": modelo or "?", "tipo": tipo})
-        custo = cost_usd(modelo, uso, self.ledger.prices) if modelo else None
-        if custo:
-            _CUSTO.add(custo, {"agente": agente, "modelo": modelo})
-        # O mesmo no span do nó (grafo.orquestrador, grafo.delegar): o Grafana soma por conversa.
-        entrada, saida = int(uso.get("entrada") or 0), int(uso.get("saida") or 0)
-        telemetria.trace.get_current_span().set_attributes({
-            "agente": agente, "agente.modelo": modelo or "?", "agente.custo_usd": float(custo or 0.0),
-            "agente.tokens": entrada + saida, "agente.tokens_entrada": entrada,
-            "agente.tokens_cache": int(uso.get("entrada_cache") or 0), "agente.tokens_saida": saida})
+        registrar_uso(agente, modelo, uso, cost_usd(modelo, uso, self.ledger.prices) if modelo else None)
         for step in passos:
-            if "raciocinio" in step:
-                self.trace.add("raciocinio", agente=agente, doc_id=doc_id, texto=step["raciocinio"])
-            else:
-                self.trace.add("tool", agente=agente, doc_id=doc_id, **step)
+            kind = "raciocinio" if "raciocinio" in step else "tool"
+            fields = {"texto": step["raciocinio"]} if kind == "raciocinio" else step
+            self.trace.add(kind, agente=agente, doc_id=doc_id, **fields)
         if mensagens:
             self.deps.runs.save_messages(self.run.id, agente, doc_id, mensagens)
 
@@ -536,100 +318,3 @@ class Execution:
         graph.add_conditional_edges("conferencia", self.after_check, ["orquestrador", "fim"])
         graph.add_edge("fim", END)
         return graph.compile(checkpointer=self.deps.checkpointer)
-
-
-def _resumo_da_nota(nota: dict) -> dict:
-    """O passo "avaliacao" do trace: o essencial, sem a tabela inteira."""
-    if not nota.get("avaliado"):
-        return {"avaliado": False, "motivo": nota.get("motivo"), "sem_gabarito": nota.get("sem_gabarito")}
-    resumo = nota["resumo"]
-    return {"avaliado": True, "documentos": nota["avaliados"], "sem_gabarito": nota["sem_gabarito"],
-            "status_certo": f"{resumo['status_certo']['acertos']}/{resumo['status_certo']['de']}",
-            "invencoes": f"{resumo['invencao']['inventados']}/{resumo['invencao']['de']}",
-            "perguntas": f"{resumo['perguntas_certas']['acertos']}/{resumo['perguntas_certas']['de']}"}
-
-
-def _rotulo_da_conversa(run: Run, deps: Deps) -> str:
-    """"<primeira mensagem> (conv-…)": a lista de conversas da visão geral no Grafana."""
-    turnos = deps.runs.of_conversation(run.conversa_id)
-    titulo = " ".join((turnos[0].pedido if turnos else run.pedido).split())
-    return f"{titulo[:60]}{'…' if len(titulo) > 60 else ''} ({run.conversa_id})"
-
-
-async def execute(run: Run, user_token: str, deps: Deps) -> Run:
-    atributos = {"execucao.id": run.id}
-    if run.conversa_id:
-        atributos |= {"conversa.id": run.conversa_id, "conversa.rotulo": _rotulo_da_conversa(run, deps)}
-    # Com a conversa no baggage, os spans e os logs de todos os serviços desta execução levam o id dela.
-    with telemetria.conversa(run.conversa_id), \
-            telemetria.tracer().start_as_current_span("execucao", attributes=atributos) as span:
-        inicio = time.monotonic()
-        try:
-            return await _execute(run, user_token, deps)
-        finally:
-            total = (run.uso or {}).get("total") or {}
-            span.set_attributes({"execucao.tipo": run.tipo, "execucao.estado": run.estado,
-                                 "execucao.custo_usd": float(total.get("custo_usd") or 0.0),
-                                 "execucao.tokens": int((total.get("uso") or {}).get("total") or 0)})
-            span.update_name(f"execucao {run.tipo}")
-            _EXECUCOES.add(1, {"tipo": run.tipo, "estado": run.estado})
-            _EXECUCAO_S.record(time.monotonic() - inicio, {"tipo": run.tipo})
-
-
-async def _execute(run: Run, user_token: str, deps: Deps) -> Run:
-    execution = Execution(run, user_token, deps)
-    trace, settings = execution.trace, deps.settings
-    run.estado, run.iniciada_em = "em_andamento", now()
-    try:
-        deps.runs.save(run)
-        trace.add("inicio", execucao=run.id, pedido_tipo=run.tipo, pedido=run.pedido, conversa=run.conversa_id)
-        snapshot = deps.registry.current()
-        run.agentes_digest = snapshot.digest
-        if snapshot.orchestrator is None:
-            problem = snapshot.errors.get(agent_file(ORCHESTRATOR), "o arquivo não existe")
-            raise RunFailed(f"Não há orquestrador: agentes/{agent_file(ORCHESTRATOR)} ({problem}).")
-        catalog = await execution.client.catalog()
-        if any(entry["tools"] is None for entry in catalog["agentes"]):
-            raise RunFailed("Um serviço de especialista não conseguiu falar com o servidor MCP.")
-        locked = [entry["nome"] for entry in catalog["agentes"] if not entry["tools"]]
-        if locked:
-            raise RunFailed("Agente sem entrada na política do servidor MCP (policy.yaml): " + ", ".join(locked)
-                            + ". Acrescente a entrada ou remova o arquivo do agente.")
-        trace.add("especialistas", agentes=[entry["nome"] for entry in catalog["agentes"]], digest=catalog["digest"],
-                  **({"fora_do_ar": catalog["fora_do_ar"]} if catalog.get("fora_do_ar") else {}))
-        execution.spec = with_team(snapshot.orchestrator, catalog)
-        execution.team = {entry["nome"] for entry in catalog["agentes"]}
-
-        config = {"configurable": {"thread_id": run.conversa_id or run.id},
-                  "recursion_limit": 4 * settings.max_ondas * (settings.rodadas_pendencias + 1) + 10}
-        graph = execution.graph()
-        # Os turnos anteriores da conversa, recuperados do checkpoint.
-        turns = list((await graph.aget_state(config)).values.get("turnos") or []) if deps.checkpointer else []
-        if turns:
-            trace.add("conversa", turnos_anteriores=len(turns))
-        await execution.rotear(turns)
-        start: Estado = {"execucao_id": run.id, "entrada": first_input(run, turns), "historico": [],
-                         "relatos": {"substituir": []}, "decisao": None, "ondas": 0, "rodada": 1, "parada": None,
-                         "falha": None, "completo": False, "pendencias": [], "resultado": {}, "mensagem": ""}
-        final = await graph.ainvoke(start, config)
-
-        run.rodadas, run.mensagem = final.get("rodada", 1), final.get("mensagem", "")
-        run.pendencias, run.resultado = final.get("pendencias") or [], final.get("resultado") or {}
-        if final.get("falha"):
-            raise RunFailed(final["falha"])
-        run.estado = "completa" if final.get("completo") else "incompleta"
-        if run.estado == "completa" and run.tipo in REPORT_TYPES and deps.avaliar:
-            run.avaliacao = await deps.avaliar(settings, execution.identity, run.tipo, run.doc_id)
-            if run.avaliacao is not None:
-                trace.add("avaliacao", **_resumo_da_nota(run.avaliacao))
-        if not final.get("completo"):
-            run.erro = final.get("parada") or f"terminou com pendências depois de {run.rodadas} rodada(s) do orquestrador"
-    except RunFailed as error:
-        run.estado, run.erro = "falhou", str(error)
-    except Exception as error:  # noqa: BLE001 - a execução roda em segundo plano: a falha tem de ficar no estado
-        run.estado, run.erro = "falhou", f"{type(error).__name__}: {error}"[:500]
-    finally:
-        run.uso, run.terminada_em = execution.ledger.summary(), now()
-        trace.add("fim", estado=run.estado, erro=run.erro, uso=run.uso["total"])
-        deps.runs.save(run)
-    return run
