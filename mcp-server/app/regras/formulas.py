@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any
 
+from app.dominio.periodo import Periodo
 from app.regras.campos import FIELDS, MAIN_FIELDS
 from app.regras.numeros import format_br, in_reais
 
@@ -169,6 +170,10 @@ class Extraction:
         if campo == "margem_ebitda":
             return self._ratio(campo, periodo, "ebitda", "receita_liquida", "EBITDA / receita líquida × 100", 100, "%")
         if campo == "alavancagem":
+            # O múltiplo sobre o EBITDA de um trimestre sai umas quatro vezes maior: só com 12 meses.
+            period = Periodo.parse(periodo)
+            if period is not None and not period.doze_meses:
+                return None
             return self._ratio(campo, periodo, "divida_liquida", "ebitda", "dívida líquida / EBITDA", 1, "x")
         return None
 

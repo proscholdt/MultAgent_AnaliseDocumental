@@ -21,6 +21,8 @@ from pydantic import Field
 
 from app.dados.modelos import StoredValue
 from app.dominio.documento import IndexedDocument
+from app.dominio.periodo import PADRAO as PADRAO_PERIODO
+from app.dominio.periodo import Periodo
 from app.governanca.catalogo import Args, Call, tool
 from app.governanca.erros import ToolRejected
 from app.regras.campos import FIELDS, MAIN_FIELDS, Campo, CampoPrincipal
@@ -46,7 +48,6 @@ from app.regras.numeros import (
 from app.regras.tabelas import normalize, parse_table, read_cell, scope_of, sibling_column
 from app.regras.texto import check_script, plain
 
-_YEAR = re.compile(r"(?:19|20)\d{2}")
 _MINUS_BEFORE = r"[-−–]\s*R\$\s*"  # "-R$5.673 milhões": o sinal vem antes da moeda, não do número
 # Palavras que indicam o valor de uma parte do grupo, e não o da companhia (sem acento).
 _PARTS = ("distribuidora", "geradora", "comercializadora", "controlada", "subsidiaria", "segmento",
@@ -61,11 +62,12 @@ _CAPEX_SINGLE, _CAPEX_SPLIT = "capex_imobilizado_e_intangivel", ("capex_imobiliz
 
 
 def periods(document: IndexedDocument) -> tuple[str, str | None]:
-    """Período de referência do documento e o comparável (o ano anterior)."""
-    reference = (document.period or "").strip()
-    if _YEAR.fullmatch(reference):
-        return reference, str(int(reference) - 1)
-    return reference, None
+    """Período de referência do documento e o comparável (o mesmo período do ano anterior), nos
+    rótulos canônicos de `Periodo` ("2022", "3T2025", "9M2025")."""
+    reference = Periodo.parse(document.period)
+    if reference is None:
+        return (document.period or "").strip(), None
+    return reference.rotulo, reference.comparavel.rotulo
 
 
 def to_value(row: StoredValue) -> Value:
@@ -84,7 +86,8 @@ class SalvarIndicador(Args):
     campo: Campo = Field(description="Qual indicador. Os 8 primeiros são os do relatório; os demais são valores "
                          "de apoio, usados pelo servidor para calcular EBITDA, dívida líquida e capex quando a "
                          "empresa não os informa.")
-    periodo: str = Field(pattern=r"^(19|20)\d{2}$", description="Ano do valor, com 4 dígitos (ex.: 2022).")
+    periodo: str = Field(pattern=PADRAO_PERIODO, description="Período do valor: o ano com 4 dígitos (ex.: 2022) num "
+                         "documento anual; o trimestre (3T2025) ou o acumulado do ano (9M2025) num trimestral.")
     medida: Literal["valor", "variacao_informada"] = Field(
         default="valor", description="'valor': o indicador em si. 'variacao_informada': a variação percentual "
         "contra o período anterior que a própria empresa escreveu (o servidor também calcula a variação e "
@@ -122,14 +125,14 @@ def _from_table(args: SalvarIndicador, chunk: dict[str, Any]) -> dict[str, Any]:
         raise ToolRejected(f"A célula ({cell.row_label} × {cell.column_label}) não tem um número: está escrito "
                            f"'{cell.text or 'vazio'}'. Escolha outra linha ou coluna, ou registre o campo como não "
                            "encontrado.")
-    years = _YEAR.findall(cell.column_label)
-    if years and args.periodo not in years:
-        raise ToolRejected(f"A coluna '{cell.column_label}' é de {', '.join(years)}, não de {args.periodo}.")
+    confirmed, refusal = Periodo.parse(args.periodo).confere_coluna(cell.column_label)
+    if refusal:
+        raise ToolRejected(refusal)
     table = parse_table(chunk["text"])
     scope = scope_of(cell.column_label)
     return {
         "number": number, "trecho": f"{cell.header_text}\n{cell.row_text}", "linha": cell.row_label,
-        "coluna": cell.column_label, "escopo": scope, "periodo_confirmado": bool(years),
+        "coluna": cell.column_label, "escopo": scope, "periodo_confirmado": confirmed,
         "alternativa_consolidada": scope == "controladora" and any(
             scope_of(label) == "consolidado" for label in table.header),
         "unidade": chunk.get("unit"), "unidade_origem": chunk.get("unit_source"),
@@ -179,6 +182,7 @@ def _from_text(args: SalvarIndicador, chunk: dict[str, Any]) -> dict[str, Any]:
     do ano anterior, lido da coluna irmã da mesma linha, quando ela existe.""")
 async def salvar_indicador(call: Call, args: SalvarIndicador) -> dict[str, Any]:
     document = await call.deps.documents.get(call.caller, args.doc_id)
+    args = args.model_copy(update={"periodo": Periodo.parse(args.periodo).rotulo})  # "3T25" vira "3T2025"
     reference, comparable = periods(document)
     if comparable is not None and args.periodo not in (reference, comparable):
         raise ToolRejected(f"Este documento é de {reference}. São aceitos valores de {reference} e, para "
@@ -350,7 +354,12 @@ async def _save_comparable(call: Call, row: StoredValue, found: dict[str, Any], 
     """Grava o valor do ano anterior, lido da coluna irmã da mesma linha. O agente não precisa
     apontar duas vezes, e a variação deixa de depender de ele lembrar."""
     table = found["table"]
-    column = sibling_column(table.header, found["column_index"], reference, comparable)
+    # A coluna irmã troca o ano ("30/09/2025" -> "30/09/2024", "2022" -> "2021"): vale para o anual e
+    # para o trimestral escrito com o ano inteiro.
+    current, previous = Periodo.parse(reference), Periodo.parse(comparable)
+    if current is None or previous is None:
+        return None
+    column = sibling_column(table.header, found["column_index"], str(current.ano), str(previous.ano))
     if column is None:
         return None
     number = parse_number(table.rows[found["row_index"]][column])

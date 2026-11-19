@@ -72,3 +72,15 @@ def test_documento_desconhecido_e_recusado_com_as_opcoes():
     with pytest.raises(ToolRejected) as erro:
         select_states([_pronto("a", "Alfa")], "zzz")
     assert erro.value.opcoes == ["a (Alfa)"]
+
+
+def test_mesma_empresa_em_dois_periodos_nao_vira_duas_empresas():
+    from dataclasses import replace
+
+    from app.regras.pendencias import label_periods
+
+    a2022 = _pronto("a", "Alfa S.A.")
+    a2023 = replace(_pronto("b", "Alfa  S.A."), document=replace(_doc("b", "Alfa  S.A."), period="2023"))
+    beta = _pronto("c", "Beta")
+    nomes = [state.name for state in label_periods([a2023, beta, a2022])]
+    assert nomes == ["Alfa S.A. (2022)", "Alfa  S.A. (2023)", "Beta"]

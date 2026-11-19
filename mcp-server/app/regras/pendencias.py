@@ -47,10 +47,12 @@ class DocState:
     analysis_at: datetime | None = None  # o item de análise mais novo
     alerts_at: datetime | None = None  # o alerta mais novo (a conclusão da revisão é um deles)
     summary_at: datetime | None = None
+    # Com dois documentos da mesma empresa (2022 e 2023), o nome leva o período: "Alfa S.A. (2023)".
+    label: str | None = None
 
     @property
     def name(self) -> str:
-        return self.document.company or self.document.file_name
+        return self.label or self.document.company or self.document.file_name
 
     @property
     def reviewed(self) -> bool:
@@ -176,3 +178,21 @@ def report_pending(states: list[DocState], answers: dict[str, Any], report: Any 
 def _unknown(doc_id: str, states: list[DocState]) -> list[DocState]:
     raise ToolRejected(f"Não existe o documento '{doc_id}' indexado para este usuário.",
                        opcoes=[f"{state.document.doc_id} ({state.name})" for state in states])
+
+
+def _company_key(state: DocState) -> str:
+    return " ".join((state.document.company or state.document.file_name).casefold().split())
+
+
+def label_periods(states: list[DocState]) -> list[DocState]:
+    """A empresa é uma, o documento é de um período: quando a mesma empresa tem mais de um
+    documento, cada um aparece como "Empresa (período)", e o relatório não as toma por duas
+    empresas diferentes. Volta ordenado por empresa e, dentro dela, por período."""
+    counts: dict[str, int] = {}
+    for state in states:
+        counts[_company_key(state)] = counts.get(_company_key(state), 0) + 1
+    for state in states:
+        if counts[_company_key(state)] > 1:
+            base = state.document.company or state.document.file_name
+            state.label = f"{base} ({state.document.period or state.document.file_name})"
+    return sorted(states, key=lambda state: (_company_key(state), state.document.period or ""))

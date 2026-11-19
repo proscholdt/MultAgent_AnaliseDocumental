@@ -12,6 +12,7 @@ from app.portas import Repositorio
 from app.regras.pendencias import (
     DocState,
     company_report_pending,
+    label_periods,
     latest,
     pending_work,
     report_pending,
@@ -40,7 +41,7 @@ async def gather(call: Call) -> list[DocState]:
             alerts=[alert_view(alert) for alert in alerts], summary=summary.renderizado if summary else None,
             extraction_at=published.at if current else None, analysis_at=latest(*(item.at for item in items)),
             alerts_at=latest(*(alert.at for alert in alerts)), summary_at=summary.at if summary else None))
-    return sorted(states, key=lambda state: state.name.casefold())
+    return label_periods(states)
 
 
 async def pending(call: Call, *, include_report: bool = True, doc_id: str | None = None) -> list[dict[str, Any]]:

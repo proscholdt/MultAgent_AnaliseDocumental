@@ -600,7 +600,7 @@
           "type": "string"
         },
         "periodo": {
-          "description": "Ano do valor, com 4 dígitos (ex.: 2022).",
+          "description": "Período do valor: o ano com 4 dígitos (ex.: 2022) num documento anual; o trimestre (3T2025) ou o acumulado do ano (9M2025) num trimestral.",
           "type": "string"
         },
         "rotulo_coluna": {
