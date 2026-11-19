@@ -1,0 +1,14 @@
+# Modo dev: sem Kafka, sem workers separados e sem observabilidade. A API roda o parse e a
+# indexação no mesmo processo, com a fila local (uma réplica). Use pelo Makefile da raiz:
+#   make subir-dev
+# ou aqui:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --no-deps postgres qdrant api
+services:
+  api:
+    build:
+      context: .
+      target: parse # o parse roda aqui dentro: a imagem precisa do Docling
+    environment:
+      FILA: local
+      OTEL_EXPORTER_OTLP_ENDPOINT: ""
+    restart: on-failure # com --no-deps, a API pode subir antes do Postgres: tenta de novo

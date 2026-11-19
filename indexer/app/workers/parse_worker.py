@@ -142,33 +142,42 @@ class ParserSlot:
         return self._parser
 
 
+async def build(settings: Settings, publisher: Publisher):
+    """O handler do parse. Falta configuração do parser: ParserError aqui, antes de abrir a fila."""
+    parsers = ParserSlot(settings)
+    await parsers.current()
+
+    async def handler(message: ParseRequested) -> None:
+        await handle_parse(message, parser=await parsers.current(), publisher=publisher, settings=settings)
+
+    return handler
+
+
+def metricas() -> None:
+    zerar_metricas("parse")
+    for nome in ("docling", "azure"):
+        for cache in ("true", "false"):
+            _PAGINAS.add(0, {"parser": nome, "cache": cache})
+
+
 async def main() -> None:
     if telemetria.configurar("indexer-parse-worker"):  # antes do log: as linhas ganham o trace_id
-        zerar_metricas("parse")
-        for nome in ("docling", "azure"):
-            for cache in ("true", "false"):
-                _PAGINAS.add(0, {"parser": nome, "cache": cache})
+        metricas()
     setup_logging()
     settings = get_settings()
     # Antes de abrir qualquer conexão: se faltar configuração do parser, o worker sai aqui com
     # uma linha dizendo o que falta, e não com um job preso na fila.
-    parsers = ParserSlot(settings)
+    publisher = KafkaPublisher(settings)
     try:
-        await parsers.current()
+        handler = await build(settings, publisher)
     except ParserError as exc:
         log.error("parse-worker não pode subir: %s", exc)
         raise SystemExit(1) from None
 
     await db.init_db()
     await wait_for_kafka(settings)
-    publisher = KafkaPublisher(settings)
     await publisher.start()
-
     on_retry, on_dead = make_callbacks("parse", publisher, settings)
-
-    async def handler(message: ParseRequested) -> None:
-        await handle_parse(message, parser=await parsers.current(), publisher=publisher, settings=settings)
-
     try:
         await run_consumer(
             topic=settings.kafka_topic_parse, group_id=settings.kafka_group_parse, model=ParseRequested,

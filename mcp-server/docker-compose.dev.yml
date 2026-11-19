@@ -1,0 +1,5 @@
+# Modo dev (make subir-dev): sem a pilha de observabilidade.
+services:
+  mcp-server:
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: ""

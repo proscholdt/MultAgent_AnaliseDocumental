@@ -101,19 +101,9 @@ async def handle_index(message: IndexRequested, *, store: VectorStore, dense: De
              message.doc_id, parser, result.chunk_count, result.usage["cost_usd"])
 
 
-async def main() -> None:
-    if telemetria.configurar("indexer-index-worker"):  # antes do log: as linhas ganham o trace_id
-        zerar_metricas("index")
-        for nome in ("docling", "azure"):
-            _CHUNKS.add(0, {"parser": nome})
-            _CUSTO.add(0, {"parser": nome})
-    setup_logging()
-    settings = get_settings()
-    await db.init_db()
-    await wait_for_kafka(settings)
-    publisher = KafkaPublisher(settings)
-    await publisher.start()
-
+async def build(settings: Settings, publisher: Publisher):
+    """O handler da indexação e o que fechar no fim. Usado pelo worker (Kafka) e pela API com a
+    fila local."""
     store = VectorStore.from_settings(settings)
     await store.ensure_collection()
     dense = build_dense_embedder(settings)
@@ -122,12 +112,31 @@ async def main() -> None:
         log.warning("LLM desligado (EMBEDDING_PROVIDER=fake ou sem OPENAI_API_KEY): "
                     "gráficos não serão transcritos e os metadados virão só de regex.")
 
-    on_retry, on_dead = make_callbacks("index", publisher, settings)
-
     async def handler(message: IndexRequested) -> None:
         await handle_index(message, store=store, dense=dense, sparse=sparse,
                            publisher=publisher, settings=settings)
 
+    return handler, store.close
+
+
+def metricas() -> None:
+    zerar_metricas("index")
+    for nome in ("docling", "azure"):
+        _CHUNKS.add(0, {"parser": nome})
+        _CUSTO.add(0, {"parser": nome})
+
+
+async def main() -> None:
+    if telemetria.configurar("indexer-index-worker"):  # antes do log: as linhas ganham o trace_id
+        metricas()
+    setup_logging()
+    settings = get_settings()
+    await db.init_db()
+    await wait_for_kafka(settings)
+    publisher = KafkaPublisher(settings)
+    await publisher.start()
+    handler, close = await build(settings, publisher)
+    on_retry, on_dead = make_callbacks("index", publisher, settings)
     try:
         await run_consumer(
             topic=settings.kafka_topic_index, group_id=settings.kafka_group_index, model=IndexRequested,
@@ -136,7 +145,7 @@ async def main() -> None:
         )
     finally:
         await publisher.stop()
-        await store.close()
+        await close()
         await db.dispose()
 
 

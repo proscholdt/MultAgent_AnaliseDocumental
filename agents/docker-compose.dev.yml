@@ -1,0 +1,37 @@
+# Modo dev (make subir-dev): os cinco especialistas num serviço só, na mesma imagem, e o
+# orquestrador apontando para ele; sem observabilidade. Isolamento entre agentes continua no
+# servidor MCP (política por agente). Use:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --no-deps especialistas orquestrador
+services:
+  especialistas:
+    build: { context: ., dockerfile: agentes/especialistas.Dockerfile }
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      MCP_URL: ${MCP_URL_DOCKER:-http://mcp-server:8100/mcp}
+      INDEXER_URL: ${INDEXER_URL_DOCKER:-http://api:8000}
+      AGENTES_DIR: /app/agentes
+      DATA_DIR: /data
+      OTEL_EXPORTER_OTLP_ENDPOINT: ""
+      ESPECIALISTA: "" # atende todos os arquivos de agentes/
+      ESPECIALISTAS_URL: http://especialistas:8201
+    ports:
+      - "8201:8201"
+    networks:
+      - default
+      - indexer
+    volumes:
+      - ./agentes:/app/agentes:ro
+      - ./config:/app/config:ro
+      - memoria-especialistas:/data
+
+  orquestrador:
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: ""
+      ESPECIALISTAS_URL: http://especialistas:8201
+      ESPECIALISTAS_ENDERECOS: "{}"
+    depends_on: !override [especialistas]
+
+volumes:
+  memoria-especialistas:

@@ -22,7 +22,7 @@ CONVERSA ?=
 unexport VIRTUAL_ENV
 
 .DEFAULT_GOAL := ajuda
-.PHONY: ajuda urls bancos subir reconstruir descer status logs zerar zerar-base testes testes-indexer testes-mcp \
+.PHONY: ajuda urls bancos subir subir-dev descer-dev reconstruir descer status logs zerar zerar-base testes testes-indexer testes-mcp \
         testes-agentes testes-frontend lint chaves validar-agentes avaliar-intencao inconsistencias resultados extracao \
         analise perguntas validacao relatorio avaliar pendencias pergunta
 
@@ -36,6 +36,7 @@ ajuda:
 	@echo ---------------------------------------------------------------------------------------
 	@echo subir ............................ liga tudo: indexador, observabilidade, MCP, agentes, frontend, sala
 	@echo reconstruir ...................... o mesmo, refazendo as imagens: use depois de mudar codigo
+	@echo subir-dev / descer-dev ........... metade dos conteineres: sem Kafka, um servico de especialistas, sem paineis
 	@echo descer ........................... desliga tudo, sem apagar nada
 	@echo status ........................... o que esta rodando
 	@echo logs S=agents .................... logs de um sistema: indexer, mcp-server, agents, frontend, sala
@@ -96,6 +97,24 @@ subir:
 	cd frontend && docker compose up -d
 	cd sala && docker compose up -d
 	@echo Pronto. Veja os enderecos com: make urls
+
+# Modo dev: metade dos contêineres. Sem Kafka (fila local dentro da API do indexador), um serviço só
+# para os cinco especialistas e sem observabilidade nem sala. Os arquivos docker-compose.dev.yml de
+# cada sistema dizem o que muda.
+DEV = -f docker-compose.yml -f docker-compose.dev.yml
+
+subir-dev:
+	cd indexer && docker compose $(DEV) up -d --build --no-deps postgres qdrant api
+	cd mcp-server && docker compose $(DEV) up -d --build
+	cd agents && docker compose $(DEV) up -d --build --no-deps especialistas orquestrador
+	cd frontend && docker compose up -d --build
+	@echo Pronto, no modo dev. Veja os enderecos com: make urls
+
+descer-dev:
+	cd frontend && docker compose down
+	cd agents && docker compose $(DEV) down
+	cd mcp-server && docker compose $(DEV) down
+	cd indexer && docker compose $(DEV) down
 
 reconstruir:
 	cd indexer && docker compose up -d --build

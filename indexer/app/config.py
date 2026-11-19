@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     # --- PostgreSQL ---
     database_url: str = "postgresql+asyncpg://indexer:indexer@localhost:5432/indexer"
 
+    # --- Fila ---
+    # kafka: API e workers separados, com retry e DLQ no Kafka (o padrão). local: uma fila em
+    # processo, a API roda as duas etapas junto (desenvolvimento, uma réplica, sem Kafka no ar).
+    fila: Literal["kafka", "local"] = "kafka"
+
     # --- Kafka ---
     kafka_bootstrap_servers: str = "localhost:29092"
     kafka_topic_parse: str = "indexer.parse"

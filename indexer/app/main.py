@@ -1,4 +1,5 @@
 """API do indexador. Suba com: uvicorn app.main:app --port 8000 e abra /docs."""
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -51,9 +52,14 @@ async def lifespan(app: FastAPI):
         log.warning("JWT_SECRET está com o valor padrão. Defina um segredo próprio no .env.")
 
     await db.init_db()
-    await wait_for_kafka(settings)
-    publisher = KafkaPublisher(settings)
-    await publisher.start()
+    workers: list[asyncio.Task] = []
+    closers: list = []
+    if settings.fila == "local":
+        publisher, workers, closers = await _fila_local(settings)
+    else:
+        await wait_for_kafka(settings)
+        publisher = KafkaPublisher(settings)
+        await publisher.start()
     store = VectorStore.from_settings(settings)
     await store.ensure_collection()
 
@@ -63,9 +69,36 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
+        for task in workers:
+            task.cancel()
+        await asyncio.gather(*workers, return_exceptions=True)
+        for close in closers:
+            await close()
         await publisher.stop()
         await store.close()
         await db.dispose()
+
+
+async def _fila_local(settings):
+    """Sem Kafka: a fila em processo e as duas etapas como tarefas desta API (uma réplica)."""
+    from app.infra.fila_local import LocalBus, LocalPublisher, run_local_consumer
+    from app.schemas import IndexRequested, ParseRequested
+    from app.workers import index_worker, parse_worker
+    from app.workers.common import make_callbacks
+
+    log.warning("fila: local. Parse e indexação rodam dentro da API, sem Kafka: só para uma réplica.")
+    bus = LocalBus()
+    publisher = LocalPublisher(bus)
+    parse = await parse_worker.build(settings, publisher)
+    index, close_index = await index_worker.build(settings, publisher)
+    workers = []
+    for etapa, topic, model, handler in (("parse", settings.kafka_topic_parse, ParseRequested, parse),
+                                         ("index", settings.kafka_topic_index, IndexRequested, index)):
+        on_retry, on_dead = make_callbacks(etapa, publisher, settings)
+        workers.append(asyncio.create_task(run_local_consumer(
+            bus=bus, topic=topic, model=model, handler=handler, publisher=publisher, on_retry=on_retry,
+            on_dead=on_dead, settings=settings)))
+    return publisher, workers, [close_index]
 
 
 def create_app(with_lifespan: bool = True) -> FastAPI:
