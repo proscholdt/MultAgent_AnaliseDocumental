@@ -10,7 +10,7 @@ import re
 import unicodedata
 from dataclasses import dataclass
 
-from app.governanca.erros import ToolRejected
+from app.dominio.erros import ToolRejected
 
 _SEPARATOR = re.compile(r"^\s*\|?\s*:?-{2,}")
 _CELL_BREAK = re.compile(r"(?<!\\)\|")

@@ -16,7 +16,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from app.governanca.erros import ToolRejected
+from app.dominio.erros import ToolRejected
 from app.regras.campos import FIELDS, MAIN_FIELDS
 
 MARKER = re.compile(r"\{\{\s*([A-Za-z0-9_.]+)\s*\}\}")

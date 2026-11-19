@@ -64,7 +64,7 @@ def test_reading_puts_the_revenue_reason_first_and_going_concern_under_risk():
     """Como a Light ficou gravada: o motivo de uma controlada (custo de energia) antes do da receita
     da companhia, e a continuidade operacional como guidance. A leitura corrige as duas coisas."""
     from app.dados.modelos import AnalysisItem
-    from app.dados.visoes import analysis_view
+    from app.regras.visoes import analysis_view
 
     def row(categoria, citacao, secao):
         return AnalysisItem(categoria=categoria, status="encontrado", afirmacao="…", citacao=citacao, pagina=9,

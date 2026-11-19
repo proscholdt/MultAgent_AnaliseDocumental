@@ -1,7 +1,9 @@
-"""Como as linhas do banco aparecem para os agentes: os alertas e a análise em dicionários."""
+"""Como os registros da base aparecem para os agentes: os alertas e a análise em dicionários.
+
+Regra pura: recebe qualquer objeto com os atributos (a linha do banco ou um dublê de teste).
+"""
 from typing import Any
 
-from app.dados.modelos import AnalysisItem
 from app.regras.campos import CATEGORIES
 from app.regras.texto import GOING_CONCERN
 
@@ -11,7 +13,7 @@ def alert_view(alert: Any) -> dict[str, Any]:
             "mensagem": alert.mensagem, "detalhes": alert.detalhes, "registrado_por": alert.agent}
 
 
-def analysis_view(items: list[AnalysisItem]) -> dict[str, list[dict[str, Any]]]:
+def analysis_view(items: list[Any]) -> dict[str, list[dict[str, Any]]]:
     """Os itens em vigor, por categoria, na ordem das categorias."""
     grouped: dict[str, list[dict[str, Any]]] = {categoria: [] for categoria in CATEGORIES}
     for item in items:

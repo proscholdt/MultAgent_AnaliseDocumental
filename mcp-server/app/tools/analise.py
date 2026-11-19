@@ -9,7 +9,6 @@ from typing import Any, Literal
 from pydantic import Field
 
 from app.dados.modelos import AnalysisItem
-from app.dados.visoes import analysis_view
 from app.governanca.catalogo import Args, Call, tool
 from app.governanca.erros import ToolRejected
 from app.regras.campos import CATEGORIES, Categoria
@@ -23,6 +22,7 @@ from app.regras.texto import (
     squash,
     unbacked_numbers,
 )
+from app.regras.visoes import analysis_view
 
 _QUOTE_MIN = 40
 

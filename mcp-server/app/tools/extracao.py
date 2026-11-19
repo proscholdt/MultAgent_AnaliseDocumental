@@ -19,8 +19,8 @@ from typing import Any, Literal
 
 from pydantic import Field
 
-from app.dados.documentos import IndexedDocument
 from app.dados.modelos import StoredValue
+from app.dominio.documento import IndexedDocument
 from app.governanca.catalogo import Args, Call, tool
 from app.governanca.erros import ToolRejected
 from app.regras.campos import FIELDS, MAIN_FIELDS, Campo, CampoPrincipal

@@ -18,13 +18,14 @@ from typing import Any, Literal
 
 from pydantic import Field
 
+from app.casos_de_uso.pendencias import gather
 from app.dados.modelos import Answer
 from app.governanca.catalogo import Args, Call, tool
 from app.governanca.erros import ToolRejected
 from app.regras.campos import FIELDS, QUESTIONS, CampoPrincipal
 from app.regras.marcadores import MARKER, Markers, render_amount
 from app.regras.numeros import in_reais
-from app.regras.pendencias import DocState, gather, question_blockers
+from app.regras.pendencias import DocState, question_blockers
 from app.regras.texto import check_script, plain, squash, unbacked_numbers
 
 CITATION = re.compile(r"\[\[\s*([0-9a-f]{8,32})\s*:\s*(\d+)\s*\]\]")

@@ -3,8 +3,7 @@ from typing import Any
 
 from pydantic import Field
 
-from app.dados.documentos import IndexedDocument
-from app.dados.visoes import alert_view
+from app.dominio.documento import IndexedDocument
 from app.governanca.catalogo import Args, Call, tool
 from app.governanca.erros import ToolRejected
 from app.regras.formulas import AlertDraft
@@ -16,6 +15,7 @@ from app.regras.texto import (
     squash,
     unbacked_numbers,
 )
+from app.regras.visoes import alert_view
 from app.tools.analise import _QUOTE_MIN, _chunk, _numbers_backed
 from app.tools.extracao import build_extraction
 

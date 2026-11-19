@@ -1,6 +1,6 @@
 """O que já existe na base para um usuário e o que ainda falta para o relatório.
 
-A lista de pendências é uma função só, usada em três lugares: pelo orquestrador durante a
+A lista de pendências é uma regra só, usada em três lugares: pelo orquestrador durante a
 execução (para saber o que delegar), pelo sistema dos agentes no fim (para conferir se nada
 ficou para trás) e pelo `montar_relatorio` (que não monta relatório incompleto).
 
@@ -13,15 +13,16 @@ duas extrações ainda rodavam, e as respostas saíram dizendo "sem extração p
 
 O que foi escrito antes de a base mudar volta para a lista: resposta ou resumo mais antigo que
 a extração ou a análise de que depende está desatualizado.
+
+Este módulo é puro: recebe o estado já lido. Quem lê a base e o indexador é
+`app.casos_de_uso.pendencias`.
 """
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from app.dados.documentos import IndexedDocument
-from app.dados.visoes import alert_view, analysis_view
-from app.governanca.catalogo import Call
-from app.governanca.erros import ToolRejected
+from app.dominio.documento import IndexedDocument
+from app.dominio.erros import ToolRejected
 from app.regras.campos import CATEGORIES, QUESTIONS
 
 REVIEW_DONE = "revisao_das_fontes_concluida"
@@ -31,7 +32,7 @@ DISCARDED = "candidato_descartado"
 INTERNAL_ALERTS = (REVIEW_DONE, DISCARDED)
 
 
-def _latest(*moments: datetime | None) -> datetime | None:
+def latest(*moments: datetime | None) -> datetime | None:
     return max((moment for moment in moments if moment is not None), default=None)
 
 
@@ -62,34 +63,12 @@ class DocState:
     @property
     def newest(self) -> datetime | None:
         """O que foi gravado por último sobre este documento."""
-        return _latest(self.extraction_at, self.analysis_at, self.alerts_at, self.summary_at)
+        return latest(self.extraction_at, self.analysis_at, self.alerts_at, self.summary_at)
 
     @property
     def summary_is_stale(self) -> bool:
-        base = _latest(self.extraction_at, self.analysis_at, self.alerts_at)
+        base = latest(self.extraction_at, self.analysis_at, self.alerts_at)
         return self.summary_at is not None and base is not None and self.summary_at < base
-
-
-async def gather(call: Call) -> list[DocState]:
-    """O estado de cada documento indexado do usuário, em ordem de nome."""
-    store, user_id = call.deps.store, call.caller.user_id
-    listed = await call.deps.indexer.documents(call.caller.user_token)
-    states = []
-    for meta in listed:
-        if meta.get("status") != "indexed":
-            continue
-        document = await call.deps.documents.get(call.caller, meta["doc_id"])
-        published = await store.extraction(user_id, document.doc_id)
-        current = published is not None and published.fingerprint == document.fingerprint
-        items = await store.analysis(user_id, document.doc_id, document.fingerprint)
-        alerts = await store.alerts(user_id, document.doc_id, document.fingerprint)
-        summary = await store.summary(user_id, document.doc_id, document.fingerprint)
-        states.append(DocState(
-            document=document, extraction=published.payload if current else None, analysis=analysis_view(items),
-            alerts=[alert_view(alert) for alert in alerts], summary=summary.renderizado if summary else None,
-            extraction_at=published.at if current else None, analysis_at=_latest(*(item.at for item in items)),
-            alerts_at=_latest(*(alert.at for alert in alerts)), summary_at=summary.at if summary else None))
-    return sorted(states, key=lambda state: state.name.casefold())
 
 
 def question_blockers(states: list[DocState]) -> list[str]:
@@ -115,72 +94,83 @@ def summary_blockers(state: DocState) -> list[str]:
     return blockers
 
 
-async def pending(call: Call, *, include_report: bool = True, doc_id: str | None = None) -> list[dict[str, Any]]:
-    """O que falta, em ordem de execução. Cada item diz qual agente costuma resolver e se já
-    pode ser feito. Com `doc_id`, é o que falta para o relatório daquela empresa: a extração, a
-    revisão, a análise e o resumo dela, sem as perguntas comparativas."""
-    states = await gather(call)
-    if doc_id is not None:
-        states = [state for state in states if state.document.doc_id == doc_id] or _unknown(doc_id, states)
+def _item(what: str, agent: str, state: DocState | None = None, waits: list[str] | None = None,
+          **extra: Any) -> dict[str, Any]:
+    entry: dict[str, Any] = {"o_que_falta": what, "agente": agent, "liberada": not waits, **extra}
+    if waits:
+        entry["aguarda"] = "; ".join(waits)
+    if state is not None:
+        entry.update(doc_id=state.document.doc_id, empresa=state.name)
+    return entry
+
+
+def select_states(states: list[DocState], doc_id: str | None) -> list[DocState]:
+    """Os estados que contam: todos, ou só o do documento pedido (que tem de existir)."""
+    if doc_id is None:
+        return states
+    return [state for state in states if state.document.doc_id == doc_id] or _unknown(doc_id, states)
+
+
+def pending_work(states: list[DocState], answers: dict[str, Any], *, doc_id: str | None = None) -> list[dict[str, Any]]:
+    """O que falta antes do relatório, em ordem de execução. Cada item diz qual agente costuma
+    resolver e se já pode ser feito. Com `doc_id`, é o que falta para o relatório daquela empresa:
+    a extração, a revisão, a análise e o resumo dela, sem as perguntas comparativas.
+
+    `answers` é pergunta_id → resposta gravada (com o atributo `at`)."""
     items: list[dict[str, Any]] = []
-
-    def add(what: str, agent: str, state: DocState | None = None, waits: list[str] | None = None,
-            **extra: Any) -> None:
-        entry: dict[str, Any] = {"o_que_falta": what, "agente": agent, "liberada": not waits, **extra}
-        if waits:
-            entry["aguarda"] = "; ".join(waits)
-        if state is not None:
-            entry.update(doc_id=state.document.doc_id, empresa=state.name)
-        items.append(entry)
-
     for state in states:
         if state.extraction is None:
-            add("extração dos indicadores (fechar_extracao)", "extrator", state)
+            items.append(_item("extração dos indicadores (fechar_extracao)", "extrator", state))
     for state in states:
         if not state.reviewed:
             waits = [f"extração dos indicadores de {state.name}"] if state.extraction is None else None
-            add("revisão das fontes em busca de inconsistências (concluir_revisao)", "validador", state, waits)
+            items.append(_item("revisão das fontes em busca de inconsistências (concluir_revisao)", "validador",
+                               state, waits))
     for state in states:
         if state.missing_categories:
-            add("análise qualitativa", "analista", state, categorias=state.missing_categories)
+            items.append(_item("análise qualitativa", "analista", state, categorias=state.missing_categories))
 
-    answers = {answer.pergunta_id: answer for answer in await call.deps.store.answers(call.caller.user_id)}
     blockers = question_blockers(states)
-    base_changed = _latest(*(moment for state in states for moment in (state.extraction_at, state.analysis_at)))
+    base_changed = latest(*(moment for state in states for moment in (state.extraction_at, state.analysis_at)))
     for question_id, question in QUESTIONS.items() if doc_id is None else ():
         answer = answers.get(question_id)
         if answer is None:
-            add("resposta à pergunta", "pesquisador", waits=blockers, pergunta_id=question_id, pergunta=question)
+            items.append(_item("resposta à pergunta", "pesquisador", waits=blockers, pergunta_id=question_id,
+                               pergunta=question))
         elif blockers or (base_changed is not None and answer.at < base_changed):
-            add("refazer a resposta: a extração ou a análise mudou depois dela", "pesquisador", waits=blockers,
-                pergunta_id=question_id, pergunta=question)
+            items.append(_item("refazer a resposta: a extração ou a análise mudou depois dela", "pesquisador",
+                               waits=blockers, pergunta_id=question_id, pergunta=question))
 
     for state in states:
         if state.summary is None:
-            add("resumo executivo (salvar_resumo)", "redator", state, summary_blockers(state))
+            items.append(_item("resumo executivo (salvar_resumo)", "redator", state, summary_blockers(state)))
         elif state.summary_is_stale:
-            add("refazer o resumo executivo: a base da empresa mudou depois dele (salvar_resumo)", "redator", state,
-                summary_blockers(state))
-
-    if include_report and not items and doc_id is not None:
-        state = states[0]
-        report = await call.deps.store.company_report(call.caller.user_id, doc_id)
-        if report is None or report.fingerprint != state.document.fingerprint:
-            add("montagem do relatório da empresa (montar_relatorio_empresa)", "redator", state)
-        elif state.newest is not None and report.at < state.newest:
-            add("remontar o relatório da empresa: há dados mais novos que ele (montar_relatorio_empresa)", "redator",
-                state)
-    elif include_report and not items:
-        report = await call.deps.store.report(call.caller.user_id)
-        # Só as cinco perguntas entram no relatório: uma pergunta livre do usuário respondida depois
-        # não o deixa desatualizado (antes, cada pergunta de conversa fazia remontar o relatório).
-        newest = _latest(*(state.newest for state in states),
-                         *(answer.at for question_id, answer in answers.items() if question_id in QUESTIONS))
-        if report is None:
-            add("montagem do relatório (montar_relatorio)", "redator")
-        elif newest is not None and report.at < newest:
-            add("remontar o relatório: há dados mais novos que ele (montar_relatorio)", "redator")
+            items.append(_item("refazer o resumo executivo: a base da empresa mudou depois dele (salvar_resumo)",
+                               "redator", state, summary_blockers(state)))
     return items
+
+
+def company_report_pending(state: DocState, report: Any | None) -> list[dict[str, Any]]:
+    """Com o resto pronto: falta montar (ou remontar) o relatório de uma empresa?"""
+    if report is None or report.fingerprint != state.document.fingerprint:
+        return [_item("montagem do relatório da empresa (montar_relatorio_empresa)", "redator", state)]
+    if state.newest is not None and report.at < state.newest:
+        return [_item("remontar o relatório da empresa: há dados mais novos que ele (montar_relatorio_empresa)",
+                      "redator", state)]
+    return []
+
+
+def report_pending(states: list[DocState], answers: dict[str, Any], report: Any | None) -> list[dict[str, Any]]:
+    """Com o resto pronto: falta montar (ou remontar) o relatório consolidado?"""
+    # Só as cinco perguntas entram no relatório: uma pergunta livre do usuário respondida depois
+    # não o deixa desatualizado (antes, cada pergunta de conversa fazia remontar o relatório).
+    newest = latest(*(state.newest for state in states),
+                     *(answer.at for question_id, answer in answers.items() if question_id in QUESTIONS))
+    if report is None:
+        return [_item("montagem do relatório (montar_relatorio)", "redator")]
+    if newest is not None and report.at < newest:
+        return [_item("remontar o relatório: há dados mais novos que ele (montar_relatorio)", "redator")]
+    return []
 
 
 def _unknown(doc_id: str, states: list[DocState]) -> list[DocState]:

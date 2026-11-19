@@ -7,7 +7,7 @@ número do texto está escrito numa citação ou veio de um marcador preenchido 
 import re
 import unicodedata
 
-from app.governanca.erros import ToolRejected
+from app.dominio.erros import ToolRejected
 from app.regras.numeros import contains_number, number_tokens, to_decimal
 
 _YEAR = re.compile(r"(?:19|20)\d{2}")

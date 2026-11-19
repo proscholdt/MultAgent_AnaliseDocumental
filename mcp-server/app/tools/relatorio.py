@@ -4,11 +4,12 @@ from typing import Any
 
 from pydantic import Field
 
+from app.casos_de_uso.pendencias import gather, pending
 from app.dados.modelos import Summary
 from app.governanca.catalogo import Args, Call, tool
 from app.governanca.erros import ToolRejected
 from app.regras.marcadores import MARKER
-from app.regras.pendencias import INTERNAL_ALERTS, gather, pending, summary_blockers
+from app.regras.pendencias import INTERNAL_ALERTS, summary_blockers
 from app.regras.relatorios import build_company_report, build_report
 from app.regras.texto import check_script, squash, unbacked_numbers
 from app.tools.respostas import markers_for

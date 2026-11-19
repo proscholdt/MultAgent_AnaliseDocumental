@@ -3,7 +3,7 @@ import re
 from decimal import Decimal
 from typing import Any
 
-from app.dados.documentos import IndexedDocument
+from app.dominio.documento import IndexedDocument
 from app.regras.campos import FIELDS
 from app.regras.formulas import Extraction
 from app.regras.numeros import (
