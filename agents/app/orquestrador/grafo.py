@@ -22,9 +22,7 @@ sabe qual foi a anterior. O token do usuário e os objetos da execução não en
 import dataclasses
 import json
 import operator
-import re
 import time
-import unicodedata
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -37,6 +35,19 @@ from pydantic import BaseModel, Field
 
 from app import telemetria
 from app.config import Settings
+from app.dominio.relatorio import (
+    ANSWERED,
+    FOR_THE_CHAT,
+    INTENT_TYPE,
+    OPTIONS,
+    OUT_OF_SCOPE,
+    REPORT_TYPES,
+    hold_early,
+    hold_report_only,
+    latin_only,
+    official_task,
+    report_question_ids,
+)
 from app.nucleo import mcp
 from app.nucleo.agentes import ORCHESTRATOR, AgentFile, Registry, agent_file
 from app.nucleo.custos import Ledger, cost_usd
@@ -101,42 +112,6 @@ class Decisao(BaseModel):
                     "null nas outras intenções.")
 
 
-# A intenção que o orquestrador dá a uma mensagem de conversa vira o tipo da execução, e o tipo
-# diz o que a conferência final cobra: pergunta exige resposta gravada com fonte; relatório exige
-# o relatório montado. O resto está fora do escopo: o código não executa nada e responde com um
-# texto fixo e as opções. Nenhum texto livre do orquestrador chega ao usuário como resposta.
-INTENT_TYPE = {"pergunta": "pergunta", "relatorio": "relatorio", "relatorio_empresa": "relatorio_empresa",
-               "fora_do_escopo": "fora_do_escopo"}
-REPORT_TYPES = ("relatorio", "relatorio_empresa")
-
-# Numa pergunta, o que é só do relatório: o texto que vem depois de tudo pronto. Validador e
-# analista podem servir a uma pergunta ("a Light tem inconsistências?", "quais riscos..."), e
-# ficam a critério do orquestrador.
-_REPORT_ONLY = {"redator": "os resumos e a montagem do relatório"}
-ANSWERED = "Pergunta respondida, com as fontes."
-# A pergunta do chat igual a uma das cinco (a p1 é "qual a maior margem EBITDA?") ia gravada como
-# p1, e a p1 só é aceita com a extração e a análise de todos os documentos: a recusa puxava a
-# análise inteira para responder a um número.
-# Uma das cinco perguntas do relatório é definida pelo id, não pelo texto que o orquestrador
-# escreve. Numa execução real ele delegou "pergunta_id: p2. Responda: qual empresa apresentou a
-# MAIOR margem EBITDA...": o pesquisador respondeu à margem, pôs o enunciado oficial da p2 no campo
-# `pergunta`, e o servidor gravou (ele confere o campo, não o assunto da resposta).
-_REPORT_QUESTION = re.compile(r"\bp([1-5])\b", re.IGNORECASE)
-FOR_THE_CHAT = ("\n\nÉ uma pergunta do usuário, não do relatório: grave com pergunta_id 'livre', mesmo que o texto "
-                "seja igual ao de uma das cinco perguntas do relatório.")
-
-OUT_OF_SCOPE = ("Isso está fora do escopo deste sistema. Ele responde perguntas sobre as demonstrações financeiras "
-                "enviadas, sempre com a página de origem, e gera relatórios: o consolidado ou o de uma empresa. "
-                "Escolha uma das opções ou escreva a sua pergunta.")
-OPTIONS = [
-    {"titulo": "Perguntar sobre um indicador", "exemplo": "Qual empresa teve a maior margem EBITDA?"},
-    {"titulo": "Comparar as empresas", "exemplo": "Compare o lucro líquido das empresas"},
-    {"titulo": "Entender o resultado", "exemplo": "Quais riscos as empresas destacam?"},
-    {"titulo": "Gerar o relatório de uma empresa", "exemplo": "Gere o relatório da Brasal"},
-    {"titulo": "Gerar o relatório consolidado", "exemplo": "Gere o relatório consolidado completo"},
-]
-
-
 @dataclass
 class Deps:
     settings: Settings
@@ -180,16 +155,6 @@ class Estado(TypedDict, total=False):
     pendencias: list[dict]
     resultado: dict
     mensagem: str
-
-
-def latin_only(text: str) -> str:
-    """A mensagem final do orquestrador sem as palavras em outro alfabeto. O modelo pequeno solta
-    uma de vez em quando ("Não մնou pendência"); no servidor MCP isso é recusado na gravação, mas a
-    mensagem de estado não passa por lá."""
-    def foreign(word: str) -> bool:
-        return any(ch.isalpha() and ch not in "ªºµ" and "LATIN" not in unicodedata.name(ch, "") for ch in word)
-
-    return " ".join(word for word in text.split(" ") if not foreign(word))
 
 
 def conversation_so_far(turns: list[dict]) -> str:
@@ -289,20 +254,6 @@ async def check_company_report(run: Run, identity: Identity, deps: Deps) -> tupl
         report = await session.call("ler_relatorio_empresa", {"doc_id": run.doc_id}) if not pending else {}
     return not pending, pending, {"relatorio": report.get("relatorio"), "gerado_em": report.get("gerado_em"),
                                   "doc_id": run.doc_id}
-
-
-_READY_IN_REASON = 6
-
-
-def _held_reason(mine: list[dict[str, Any]], ready: list[dict[str, Any]]) -> str:
-    """Por que a delegação não saiu e o que delegar no lugar dela."""
-    waits = list(dict.fromkeys(item["aguarda"] for item in mine if item.get("aguarda")))
-    text = "não delegado: chegou antes da hora. Antes disso falta: " + "; ".join(waits) + "."
-    if ready:
-        options = [f"{item['agente']}: {item['o_que_falta']}" + (f" ({item['empresa']})" if item.get("empresa") else "")
-                   for item in ready[:_READY_IN_REASON]]
-        text += " O que já pode ser delegado: " + "; ".join(options) + "."
-    return text
 
 
 def turn_answer(run: Run, state: Estado) -> str:
@@ -454,19 +405,6 @@ class Execution:
             return False  # sem a conferência agora, o orquestrador decide, e a do fim confere
         return complete
 
-    def in_scope(self, delegations: list[dict]) -> tuple[list[dict], list[dict]]:
-        """Numa pergunta, o que é só do relatório não sai: volta ao orquestrador como relato."""
-        go, held = [], []
-        for delegation in delegations:
-            what = _REPORT_ONLY.get(delegation["agente"])
-            if what is None:
-                go.append(delegation)
-                continue
-            held.append({"agente": delegation["agente"], "estado": "nao_delegado", "doc_id": delegation.get("doc_id"),
-                         "erro": f"não delegado: o pedido é uma pergunta, e {what} são do relatório. A pergunta "
-                                 "termina quando o pesquisador grava a resposta."})
-        return go, held
-
     async def in_order(self, delegations: list[dict]) -> tuple[list[dict], list[dict]]:
         """Separa as delegações que chegam antes da hora. No relatório, a ordem do trabalho é do
         servidor MCP (`pendencias`: cada item diz se está liberado ou o que aguarda), e as tools de
@@ -477,7 +415,7 @@ class Execution:
         ser feito. Delegação sem item na lista (refazer algo, uma pergunta livre) segue.
         Numa pergunta, a lista do relatório não manda: só o que é do relatório fica (`in_scope`)."""
         if delegations and self.run.tipo == "pergunta":
-            go, held = self.in_scope(delegations)
+            go, held = hold_report_only(delegations)
         elif not delegations or self.run.tipo not in REPORT_TYPES:
             return delegations, []
         else:
@@ -493,17 +431,7 @@ class Execution:
                 pending = (await session.call("pendencias", arguments))["pendencias"]
         except mcp.McpError:
             return delegations, []  # sem a lista, quem confere é a tool de gravação, como antes
-        ready = [item for item in pending if item.get("liberada", True)]
-        go, held = [], []
-        for delegation in delegations:
-            mine = [item for item in pending if item.get("agente") == delegation["agente"]
-                    and (delegation.get("doc_id") is None or item.get("doc_id") in (None, delegation.get("doc_id")))]
-            if mine and not any(item.get("liberada", True) for item in mine):
-                held.append({"agente": delegation["agente"], "estado": "nao_delegado", "doc_id": delegation.get("doc_id"),
-                             "erro": _held_reason(mine, ready)})
-            else:
-                go.append(delegation)
-        return go, held
+        return hold_early(delegations, pending)
 
     def after_orchestrator(self, state: Estado) -> list[Send] | str:
         if state.get("falha"):
@@ -530,21 +458,9 @@ class Execution:
         return self._questions
 
     async def official_task(self, item: dict) -> dict:
-        """A tarefa do pesquisador que cita uma das cinco perguntas passa a ser o enunciado oficial
-        dela. Com mais de uma citada, os enunciados vão junto da tarefa."""
-        ids = list(dict.fromkeys(f"p{number}" for number in _REPORT_QUESTION.findall(item["tarefa"])))
-        questions = await self.report_questions() if ids else {}
-        known = [(question_id, questions[question_id]) for question_id in ids if question_id in questions]
-        if not known:
-            return item
-        if len(known) == 1:
-            question_id, text = known[0]
-            task = (f"Responda à pergunta {question_id} do relatório, com pergunta_id '{question_id}'. Enunciado "
-                    f"oficial: «{text}». Responda exatamente a este enunciado.")
-        else:
-            task = (item["tarefa"] + "\n\nEnunciados oficiais (responda a eles, não a outra formulação): "
-                    + "; ".join(f"{question_id}: «{text}»" for question_id, text in known))
-        return {**item, "tarefa": task, "tarefa_do_orquestrador": item["tarefa"]}
+        """A tarefa do pesquisador com o enunciado oficial da pergunta citada (veja o domínio)."""
+        questions = await self.report_questions() if report_question_ids(item["tarefa"]) else {}
+        return official_task(item, questions)
 
     async def delegar(self, item: dict) -> dict:
         if item["agente"] == "pesquisador":
