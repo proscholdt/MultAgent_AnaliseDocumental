@@ -81,6 +81,11 @@ class Settings(BaseSettings):
 
     agentes_dir: Path = Path("agentes")
     data_dir: Path = Path("data")
+    # Onde ficam o checkpoint das conversas, as execuções, o trace, a memória dos especialistas e as
+    # tarefas A2A. Vazio: arquivos e SQLite na pasta de dados (uma réplica de cada serviço). Com
+    # Postgres (postgresql://...), os serviços podem ter várias réplicas; o banco e as tabelas são
+    # criados na subida.
+    database_url: str = ""
 
     # Freios de uma execução inteira (orquestrador + especialistas).
     execucao_max_segundos: int = 2400

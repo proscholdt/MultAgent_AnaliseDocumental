@@ -170,3 +170,138 @@ class Conversations:
     def of(self, user_id: str) -> list[Conversation]:
         found = [Conversation(**json.loads(path.read_text(encoding="utf-8"))) for path in self.folder.glob("conv-*.json")]
         return sorted((c for c in found if c.user_id == user_id), key=lambda c: c.criada_em, reverse=True)
+
+
+# --- Postgres: o mesmo, para várias réplicas do orquestrador ------------------------------------
+# Com `DATABASE_URL` de Postgres, execuções, trace, mensagens e conversas ficam no banco: qualquer
+# réplica responde a GET /execucoes/<id> e continua uma conversa começada em outra.
+
+
+def _json(value: Any) -> Any:
+    from psycopg.types.json import Jsonb
+
+    return Jsonb(value)
+
+
+class PostgresTrace(Trace):
+    def __init__(self, url: str, run_id: str) -> None:
+        self._url, self._run_id = url, run_id
+        self.path = Path(run_id)  # o log usa o nome da execução, como no arquivo
+
+    def add(self, tipo: str, **fields: Any) -> None:
+        from app.nucleo.banco import conexao
+
+        entry = {"em": now(), "tipo": tipo, **fields}
+        with conexao(self._url) as connection:
+            connection.execute("INSERT INTO passos (execucao_id, dados) VALUES (%s, %s)",
+                               (self._run_id, _json(json.loads(json.dumps(entry, default=str)))))
+        detalhes = " ".join(f"{key}={_curto(value)}" for key, value in fields.items() if value not in (None, "", [], {}))
+        log.info("passo=%s execucao=%s %s", tipo, self._run_id, detalhes)
+
+    def read(self) -> list[dict[str, Any]]:
+        from app.nucleo.banco import conexao
+
+        with conexao(self._url) as connection:
+            rows = connection.execute("SELECT dados FROM passos WHERE execucao_id=%s ORDER BY id",
+                                      (self._run_id,)).fetchall()
+        return [row[0] for row in rows]
+
+
+class PostgresRuns(Runs):
+    """As execuções no banco. Diferente dos arquivos, a subida não marca como interrompidas as que
+    estão rodando: com várias réplicas, podem estar rodando em outra."""
+
+    def __init__(self, url: str) -> None:
+        self._url = url
+        self._runs = {}
+
+    def _write(self, run: Run) -> None:
+        from app.nucleo.banco import conexao
+
+        with conexao(self._url) as connection:
+            connection.execute(
+                "INSERT INTO execucoes (id, user_id, conversa_id, criada_em, estado, dados) VALUES (%s,%s,%s,%s,%s,%s) "
+                "ON CONFLICT (id) DO UPDATE SET estado=excluded.estado, dados=excluded.dados",
+                (run.id, run.user_id, run.conversa_id, run.criada_em, run.estado, _json(asdict(run))))
+
+    def _select(self, where: str, args: tuple, order: str = "criada_em") -> list[Run]:
+        from app.nucleo.banco import conexao
+
+        with conexao(self._url) as connection:
+            rows = connection.execute(f"SELECT dados FROM execucoes WHERE {where} ORDER BY {order}", args).fetchall()
+        return [Run(**row[0]) for row in rows]
+
+    def create(self, user_id: str, tipo: str, pedido: str, conversa_id: str = "") -> Run:
+        run = Run(id=f"exec-{uuid.uuid4().hex[:12]}", user_id=user_id, tipo=tipo, pedido=pedido,
+                  conversa_id=conversa_id)
+        self._write(run)
+        return run
+
+    def get(self, run_id: str, user_id: str) -> Run | None:
+        found = self._select("id=%s AND user_id=%s", (run_id, user_id))
+        return found[0] if found else None
+
+    def of(self, user_id: str) -> list[Run]:
+        return self._select("user_id=%s", (user_id,), "criada_em DESC")
+
+    def of_conversation(self, conversa_id: str) -> list[Run]:
+        return self._select("conversa_id=%s", (conversa_id,))
+
+    def trace(self, run_id: str) -> Trace:
+        return PostgresTrace(self._url, run_id)
+
+    def save_messages(self, run_id: str, agente: str, doc_id: str | None, mensagens: list[dict[str, Any]]) -> None:
+        from app.nucleo.banco import conexao
+
+        entry = {"agente": agente, "doc_id": doc_id, "em": now(), "mensagens": mensagens}
+        with conexao(self._url) as connection:
+            connection.execute("INSERT INTO mensagens_agentes (execucao_id, agente, doc_id, dados) VALUES (%s,%s,%s,%s)",
+                               (run_id, agente, doc_id, _json(json.loads(json.dumps(entry, default=str)))))
+
+    def messages(self, run_id: str, agente: str | None = None) -> list[dict[str, Any]]:
+        from app.nucleo.banco import conexao
+
+        with conexao(self._url) as connection:
+            rows = connection.execute(
+                "SELECT dados FROM mensagens_agentes WHERE execucao_id=%s AND (%s::text IS NULL OR agente=%s) "
+                "ORDER BY id", (run_id, agente, agente)).fetchall()
+        return [row[0] for row in rows]
+
+
+class PostgresConversations(Conversations):
+    def __init__(self, url: str) -> None:
+        self._url = url
+
+    def create(self, user_id: str) -> Conversation:
+        from app.nucleo.banco import conexao
+
+        conversation = Conversation(id=f"conv-{uuid.uuid4().hex[:12]}", user_id=user_id)
+        with conexao(self._url) as connection:
+            connection.execute("INSERT INTO conversas VALUES (%s, %s, %s)",
+                               (conversation.id, conversation.user_id, conversation.criada_em))
+        return conversation
+
+    def get(self, conversa_id: str, user_id: str) -> Conversation | None:
+        from app.nucleo.banco import conexao
+
+        with conexao(self._url) as connection:
+            row = connection.execute("SELECT id, user_id, criada_em FROM conversas WHERE id=%s AND user_id=%s",
+                                     (conversa_id, user_id)).fetchone()
+        return Conversation(*row) if row else None
+
+    def of(self, user_id: str) -> list[Conversation]:
+        from app.nucleo.banco import conexao
+
+        with conexao(self._url) as connection:
+            rows = connection.execute("SELECT id, user_id, criada_em FROM conversas WHERE user_id=%s "
+                                      "ORDER BY criada_em DESC", (user_id,)).fetchall()
+        return [Conversation(*row) for row in rows]
+
+
+def open_store(settings: Any) -> tuple[Runs, Conversations]:
+    """Execuções e conversas: Postgres com `DATABASE_URL`, senão arquivos na pasta de dados."""
+    from app.nucleo.banco import is_postgres
+
+    if is_postgres(settings.database_url):
+        return PostgresRuns(settings.database_url), PostgresConversations(settings.database_url)
+    return Runs(settings.data_dir), Conversations(settings.data_dir)

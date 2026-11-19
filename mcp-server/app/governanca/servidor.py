@@ -91,7 +91,7 @@ class Governance:
             message = f"A tool '{name}' não está liberada para o agente '{caller.agent}'."
             return await finish("recusada", {"erro": message}, "fora da política")
         limit = policy.calls_per_run(caller.agent)
-        if limit is not None and await self._deps.audit.calls_in_run(caller.run_id, caller.agent) >= limit:
+        if limit is not None and await self._deps.audit.reserve_call(caller.run_id, caller.agent) > limit:
             message = (f"O agente '{caller.agent}' atingiu o limite de {limit} chamadas nesta execução. "
                        "Encerre com o que já foi feito.")
             return await finish("recusada", {"erro": message}, "limite de chamadas")

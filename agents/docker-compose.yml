@@ -21,6 +21,9 @@ x-ambiente: &ambiente
   AGENTES_DIR: /app/agentes
   DATA_DIR: /data
   OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT-http://alloy:4318} # observabilidade; vazio desliga
+  # Vazio: arquivos e SQLite nos volumes (uma réplica de cada). Para várias réplicas, Postgres (o do
+  # indexador serve; banco e tabelas criados na subida): AGENTS_DATABASE_URL=postgresql://indexer:indexer@postgres:5432/agentes
+  DATABASE_URL: ${AGENTS_DATABASE_URL:-}
 
 x-especialista: &especialista
   env_file:

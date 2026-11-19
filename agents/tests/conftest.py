@@ -2,6 +2,7 @@
 indexador de mentira. O A2A roda de verdade, em memória (cliente e servidor do SDK, por ASGI), e o
 grafo usa checkpoint em memória."""
 import json
+import os
 import re
 import time
 from collections.abc import Callable
@@ -219,9 +220,44 @@ def agents_dir(tmp_path) -> Path:
     return folder
 
 
+def _novo_banco(url_base: str):
+    """Um banco Postgres novo para um teste; devolve o endereço e a função que o apaga."""
+    import uuid
+
+    import psycopg
+    from psycopg.conninfo import conninfo_to_dict, make_conninfo
+
+    from app.nucleo.banco import preparar, psycopg_dsn
+
+    nome = f"agentes_teste_{uuid.uuid4().hex[:8]}"
+    dsn = psycopg_dsn(url_base)
+    partes = {"port": 5432, "password": "", **conninfo_to_dict(make_conninfo(dsn, dbname=nome))}
+    url = "postgresql://{user}:{password}@{host}:{port}/{dbname}".format(**partes)
+    preparar(url)
+
+    def apagar() -> None:
+        with psycopg.connect(make_conninfo(dsn, dbname="postgres"), autocommit=True) as connection:
+            connection.execute(f'DROP DATABASE "{nome}" WITH (FORCE)')
+
+    return url, apagar
+
+
 @pytest.fixture
-def settings(tmp_path, agents_dir) -> Settings:
-    return Settings(_env_file=None, openai_api_key="sk-teste", mcp_agent_secret=SECRET_MCP, a2a_secret=SECRET_A2A,
+def database_url():
+    """Vazio (arquivos e SQLite, o padrão) ou, com AGENTS_TEST_DATABASE_URL, um Postgres novo por
+    teste: a suíte inteira roda contra o banco das réplicas."""
+    base = os.environ.get("AGENTS_TEST_DATABASE_URL", "")
+    if not base:
+        yield ""
+        return
+    url, apagar = _novo_banco(base)
+    yield url
+    apagar()
+
+
+@pytest.fixture
+def settings(tmp_path, agents_dir, database_url) -> Settings:
+    return Settings(_env_file=None, database_url=database_url, openai_api_key="sk-teste", mcp_agent_secret=SECRET_MCP, a2a_secret=SECRET_A2A,
                     agentes_dir=agents_dir, data_dir=tmp_path / "data", config_path=tmp_path / "ajustes.yaml",
                     precos={MODEL_NAME: {"entrada": 2.0, "entrada_cache": 1.0, "saida": 10.0}},
                     especialistas_url="http://especialistas.teste", indexer_url="http://indexador.teste",

@@ -24,10 +24,11 @@ from app.config import Settings, get_settings
 from app.ferramentas.avaliacao_automatica import avaliar as avaliar_relatorio
 from app.ferramentas.avaliacao_automatica import zerar_metricas as zerar_metricas_avaliacao
 from app.nucleo.agentes import ORCHESTRATOR, Registry
+from app.nucleo.banco import is_postgres, preparar, psycopg_dsn
 from app.nucleo.executar import Engine, default_engine, instrumentar_agentes
 from app.nucleo.tokens import Identity
 from app.orquestrador.especialistas_a2a import SpecialistClient
-from app.orquestrador.execucoes import RUNNING, Conversations, Run, Runs
+from app.orquestrador.execucoes import RUNNING, Run, open_store
 from app.orquestrador.grafo import Deps, execute, zerar_metricas
 from app.orquestrador.intencao import Roteador, embedder_openai
 from app.orquestrador.usuario import Users
@@ -87,10 +88,12 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
                roteador: Roteador | None = None,
                ) -> FastAPI:
     settings = settings or get_settings()
+    if is_postgres(settings.database_url):
+        preparar(settings.database_url)
+    runs, conversations = open_store(settings)
     deps = Deps(settings=settings, registry=Registry(settings.agentes_dir), engine=engine or default_engine(settings),
-                runs=Runs(settings.data_dir), checkpointer=checkpointer, avaliar=avaliar, roteador=roteador,
+                runs=runs, checkpointer=checkpointer, avaliar=avaliar, roteador=roteador,
                 specialists=lambda identity: SpecialistClient(settings, identity, specialists_transport))
-    conversations = Conversations(settings.data_dir)
     users = Users(settings, indexer_transport)
     running: set[asyncio.Task] = set()
 
@@ -98,6 +101,14 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
     async def lifespan(_app: FastAPI):
         if deps.checkpointer is not None:  # dado de fora (testes)
             yield
+        elif is_postgres(settings.database_url):
+            # Com Postgres, o checkpoint fica no banco: qualquer réplica continua a conversa.
+            from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+
+            async with AsyncPostgresSaver.from_conn_string(psycopg_dsn(settings.database_url)) as saver:
+                await saver.setup()
+                deps.checkpointer = saver
+                yield
         else:
             # O checkpoint das conversas: o estado do grafo por conversa, em SQLite no volume de dados.
             from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver

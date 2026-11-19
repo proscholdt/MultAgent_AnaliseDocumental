@@ -24,7 +24,7 @@ from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
 from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.routes import DefaultServerCallContextBuilder, create_agent_card_routes, create_jsonrpc_routes
-from a2a.server.tasks import InMemoryTaskStore, TaskUpdater
+from a2a.server.tasks import DatabaseTaskStore, InMemoryTaskStore, TaskStore, TaskUpdater
 from a2a.types import (
     AgentCapabilities,
     AgentCard,
@@ -44,9 +44,10 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app import telemetria
 from app.config import Settings, get_settings
-from app.especialistas.memoria import Memory, compact, split_runs
+from app.especialistas.memoria import Memory, PostgresMemory, compact, open_memory, split_runs
 from app.nucleo import mcp
 from app.nucleo.agentes import AgentFile, Registry, agent_file
+from app.nucleo.banco import asyncpg_url, is_postgres, preparar
 from app.nucleo.executar import (
     AgentRun,
     Budget,
@@ -154,9 +155,24 @@ class SpecialistExecutor(AgentExecutor):
 class Specialists:
     """Aplicação ASGI montada em /agentes: escolhe o especialista pelo primeiro trecho do caminho."""
 
-    def __init__(self, settings: Settings, registry: Registry, engine: Engine, memory: Memory) -> None:
+    def __init__(self, settings: Settings, registry: Registry, engine: Engine,
+                 memory: Memory | PostgresMemory) -> None:
         self.settings, self.registry, self.engine, self.memory = settings, registry, engine, memory
         self._apps: dict[str, tuple[str, ASGIApp]] = {}
+        self._tasks: TaskStore | None = None
+
+    def task_store(self) -> TaskStore:
+        """As tarefas A2A. Com Postgres, ficam no banco: uma réplica que cai não leva junto o estado
+        das tarefas, e outra réplica responde à consulta. Sem ele, em memória, como antes."""
+        if not is_postgres(self.settings.database_url):
+            return InMemoryTaskStore()
+        if self._tasks is None:
+            from sqlalchemy.ext.asyncio import create_async_engine
+
+            # A tabela padrão do SDK ("tasks"): com outro nome, o SDK define a classe de novo a cada
+            # instância, e a segunda instância no mesmo processo falha.
+            self._tasks = DatabaseTaskStore(create_async_engine(asyncpg_url(self.settings.database_url)))
+        return self._tasks
 
     # --- quem este serviço atende -------------------------------------------------------------
 
@@ -265,7 +281,7 @@ class Specialists:
         if cached is None or cached[0] != spec.digest:
             card = agent_card(spec, self.settings)
             handler = DefaultRequestHandler(agent_executor=SpecialistExecutor(spec.nome, self),
-                                            task_store=InMemoryTaskStore(), agent_card=card)
+                                            task_store=self.task_store(), agent_card=card)
             app = Starlette(routes=[*create_agent_card_routes(card),
                                     *create_jsonrpc_routes(handler, "/", context_builder=_ClaimsContext())])
             cached = self._apps[spec.nome] = (spec.digest, app)
@@ -294,8 +310,10 @@ class Specialists:
 
 def create_app(settings: Settings | None = None, engine: Engine | None = None) -> FastAPI:
     settings = settings or get_settings()
+    if is_postgres(settings.database_url):
+        preparar(settings.database_url)
     service = Specialists(settings, Registry(settings.agentes_dir), engine or default_engine(settings),
-                          Memory(settings.data_dir / "memoria.db"))
+                          open_memory(settings))
     app = FastAPI(
         title="Especialistas (A2A)",
         description="Agentes especialistas servidos pelo protocolo A2A. Só o orquestrador os chama.")

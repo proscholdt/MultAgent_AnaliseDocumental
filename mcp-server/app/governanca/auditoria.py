@@ -4,7 +4,7 @@ from typing import Any
 from sqlalchemy import func, select
 
 from app.dados.banco import Database
-from app.dados.modelos import AuditRow
+from app.dados.modelos import AuditRow, CallCounter
 from app.governanca.identidade import Caller
 
 _VALUE_CHARS = 300  # argumento longo (um trecho de documento) é cortado na trilha
@@ -28,6 +28,21 @@ class Audit:
             session.add(AuditRow(run_id=caller.run_id, agent=caller.agent, user_id=caller.user_id, kind=kind,
                                  tool=tool, outcome=outcome, detail=detail[:1000], arguments=_preview(arguments),
                                  duration_ms=duration_ms, policy_digest=policy_digest))
+
+    async def reserve_call(self, run_id: str, agent: str) -> int:
+        """Conta esta chamada e devolve quantas o agente fez na execução, contando esta. Um upsert
+        só: duas réplicas que recebem chamadas ao mesmo tempo não leem a mesma contagem."""
+        dialect = self._db.engine.dialect.name
+        if dialect == "postgresql":
+            from sqlalchemy.dialects.postgresql import insert
+        else:
+            from sqlalchemy.dialects.sqlite import insert
+        statement = insert(CallCounter).values(run_id=run_id, agent=agent, chamadas=1)
+        statement = statement.on_conflict_do_update(
+            index_elements=[CallCounter.run_id, CallCounter.agent],
+            set_={"chamadas": CallCounter.chamadas + 1}).returning(CallCounter.chamadas)
+        async with self._db.session() as session:
+            return (await session.execute(statement)).scalar_one()
 
     async def calls_in_run(self, run_id: str, agent: str) -> int:
         """Chamadas de tool que o agente já fez nesta execução (qualquer resultado)."""

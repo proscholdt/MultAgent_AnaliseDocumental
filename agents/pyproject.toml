@@ -21,6 +21,10 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi>=0.66b2",
     "opentelemetry-instrumentation-httpx>=0.66b2",
     "opentelemetry-instrumentation-logging>=0.66b2",
+    "langgraph-checkpoint-postgres>=3,<4",
+    "psycopg[binary]>=3.2",
+    "sqlalchemy[asyncio]>=2.0.30",
+    "asyncpg>=0.30",
 ]
 
 [dependency-groups]

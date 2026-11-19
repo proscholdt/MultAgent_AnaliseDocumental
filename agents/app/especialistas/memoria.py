@@ -128,3 +128,45 @@ class Memory:
                 (user_id, conversa, agente, doc_id or "", json.dumps(messages, ensure_ascii=False),
                  len(split_runs(messages)), datetime.now(UTC).isoformat(timespec="seconds")))
             self._db.commit()
+
+
+class PostgresMemory:
+    """A mesma memória no Postgres (`DATABASE_URL`): várias réplicas de um especialista leem e
+    gravam o mesmo histórico."""
+
+    def __init__(self, url: str) -> None:
+        self._url = url
+
+    def load(self, user_id: str, conversa: str, agente: str, doc_id: str | None) -> list[dict[str, Any]]:
+        from app.nucleo.banco import conexao
+
+        with conexao(self._url) as connection:
+            row = connection.execute(
+                "SELECT mensagens FROM memoria WHERE usuario=%s AND conversa=%s AND agente=%s AND documento=%s",
+                (user_id, conversa, agente, doc_id or "")).fetchone()
+        return row[0] if row else []
+
+    def append(self, user_id: str, conversa: str, agente: str, doc_id: str | None,
+               previous: list[dict[str, Any]], new: list[dict[str, Any]]) -> None:
+        from psycopg.types.json import Jsonb
+
+        from app.nucleo.banco import conexao
+
+        messages = previous + new
+        with conexao(self._url) as connection:
+            connection.execute(
+                "INSERT INTO memoria VALUES (%s, %s, %s, %s, %s, %s, %s) "
+                "ON CONFLICT (usuario, conversa, agente, documento) DO UPDATE SET mensagens=excluded.mensagens, "
+                "chamadas=excluded.chamadas, atualizada=excluded.atualizada",
+                (user_id, conversa, agente, doc_id or "", Jsonb(messages), len(split_runs(messages)),
+                 datetime.now(UTC).isoformat(timespec="seconds")))
+
+
+def open_memory(settings: Any) -> "Memory | PostgresMemory":
+    """A memória dos especialistas: Postgres com `DATABASE_URL`, senão SQLite na pasta de dados."""
+    from app.nucleo.banco import is_postgres
+
+    if is_postgres(settings.database_url):
+        return PostgresMemory(settings.database_url)
+    return Memory(settings.data_dir / "memoria.db")
+

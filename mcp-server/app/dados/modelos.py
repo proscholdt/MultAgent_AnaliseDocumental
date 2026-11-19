@@ -209,3 +209,14 @@ class AuditRow(Base):
     policy_digest: Mapped[str] = mapped_column(String(16))
 
     __table_args__ = (Index("ix_auditoria_run_agent", "run_id", "agent"),)
+
+
+class CallCounter(Base):
+    """Chamadas de tool de um agente numa execução. O incremento é um só comando (upsert), então o
+    limite vale mesmo com várias réplicas do servidor atendendo o mesmo agente ao mesmo tempo."""
+
+    __tablename__ = "contagem_chamadas"
+
+    run_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    agent: Mapped[str] = mapped_column(String(40), primary_key=True)
+    chamadas: Mapped[int] = mapped_column(Integer, default=0)

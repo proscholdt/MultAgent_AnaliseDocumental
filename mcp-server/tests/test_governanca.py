@@ -195,3 +195,16 @@ def test_adjustments_apply_when_the_file_changes_and_a_bad_file_keeps_the_last_g
     shipped = Settings(_env_file=None)  # config/ajustes.yaml, na pasta do projeto
     shipped.reload()
     assert shipped.config_error is None
+
+
+async def test_limite_de_chamadas_vale_com_chamadas_simultaneas(deps):
+    """Com várias réplicas, duas chamadas ao mesmo tempo não podem ler a mesma contagem: o
+    incremento é um upsert só. Aqui, 20 reservas simultâneas dão 1..20, sem repetir."""
+    import asyncio
+
+    from app.governanca.identidade import Caller
+
+    caller = Caller(agent="extrator", run_id="exec-concorrente", user_id="ana", user_token="tok")
+    vistos = await asyncio.gather(*(deps.audit.reserve_call(caller.run_id, caller.agent) for _ in range(20)))
+    assert sorted(vistos) == list(range(1, 21))
+    assert await deps.audit.reserve_call(caller.run_id, "validador") == 1
