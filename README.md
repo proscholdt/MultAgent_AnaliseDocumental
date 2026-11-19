@@ -297,8 +297,11 @@ o custo em tokens de cada agente aparecem no Grafana.
   "Qual empresa teve a maior margem EBITDA?" numa base vazia levou 422 s e US$ 0,21 em 11 ondas
   (a resposta gravada na 5ª, e depois as outras perguntas, os resumos e a montagem); depois,
   125 s e US$ 0,10 em 2 ondas (veja [agents/README.md](agents/README.md#perguntas)).
-- **Escala de uma máquina**: base do MCP e memória dos agentes em SQLite, um contêiner de cada,
-  tudo em Docker Compose. O Docling em CPU leva 31 min para 218 páginas.
+- **Escala**: por padrão, SQLite e arquivos nos volumes, uma réplica de cada serviço. Com
+  `MCP_DATABASE_URL` e `AGENTS_DATABASE_URL` de Postgres, a base do MCP (com migrações do Alembic),
+  o checkpoint, as execuções, a memória e as tarefas A2A vão para o banco, e os serviços aceitam
+  várias réplicas ([ADR 0005](docs/decisoes/0005-postgres-para-replicas.md)). Ainda não houve teste
+  de carga com réplicas de verdade. O Docling em CPU leva 31 min para 218 páginas.
 - **Sem reranker** na busca, e o relatório leva ~5 min.
 - **Login próprio** do indexador, sem SSO.
 
@@ -348,6 +351,10 @@ e o parse fica em cache), mandar ao parse só as páginas com demonstrações e 
 modelo forte só no validador.
 
 ## Como subir
+
+**Modo dev** (7 contêineres, sem Kafka, sem painéis): depois dos `.env`, `make subir-dev`. O
+indexador usa uma fila em processo, e os cinco especialistas rodam num serviço só
+([ADR 0006](docs/decisoes/0006-modo-dev.md)). O modo completo, abaixo, continua o padrão.
 
 ```bash
 cd indexer    && cp .env.example .env && docker compose up -d --build   # :8000
@@ -403,6 +410,8 @@ valendo a versão anterior, e o motivo aparece no `/health` do serviço.
 
 Páginas HTML com os fluxos desenhados (abrem direto no navegador, sem internet):
 
+- [Registros de decisão](docs/decisoes/README.md): o contexto, a decisão e o custo de cada mudança
+  de arquitetura
 - [Visão geral](docs/visao-geral.html): arquitetura, fluxo completo passo a passo, fluxo de uma pergunta,
   fluxo do relatório (quem faz o quê e em que ordem), identidade
 - [Indexador](indexer/docs/fluxos.html) · [Servidor MCP](mcp-server/docs/fluxos.html) ·
