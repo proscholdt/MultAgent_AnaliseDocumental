@@ -23,7 +23,7 @@ unexport VIRTUAL_ENV
 
 .DEFAULT_GOAL := ajuda
 .PHONY: ajuda urls bancos subir subir-dev descer-dev reconstruir descer status logs zerar zerar-base testes testes-indexer testes-mcp \
-        testes-agentes testes-frontend lint chaves validar-agentes avaliar-intencao inconsistencias resultados extracao \
+        testes-agentes testes-frontend lint comum chaves validar-agentes avaliar-intencao inconsistencias resultados extracao \
         analise perguntas validacao relatorio avaliar pendencias pergunta
 
 # Para quem pede login: para com a mensagem se faltar usuário ou senha.
@@ -50,6 +50,7 @@ ajuda:
 	@echo testes-indexer, testes-mcp ....... um sistema so; tambem testes-agentes e testes-frontend
 	@echo lint ............................. ruff nos tres sistemas Python
 	@echo validar-agentes .................. confere os arquivos dos agentes
+	@echo comum ............................ copia o codigo de comum/ (telemetria) para os sistemas
 	@echo chaves ........................... uma chave Ed25519 por servico, no lugar do segredo compartilhado
 	@echo avaliar-intencao ................. o roteador de intencao contra 52 mensagens rotuladas, centesimos de centavo
 	@echo ---------------------------------------------------------------------------------------
@@ -179,6 +180,9 @@ lint:
 	cd indexer && uv run ruff check .
 	cd mcp-server && uv run ruff check .
 	cd agents && uv run ruff check . ../ferramentas
+
+comum:
+	python ferramentas/comum.py
 
 chaves:
 	cd agents && uv run python -m app.ferramentas.cli gerar-chaves --pasta ../chaves

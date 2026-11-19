@@ -12,6 +12,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  comum:
+    name: código comum
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 ferramentas/comum.py --conferir
+
   python:
     name: ${{ matrix.sistema }}
     runs-on: ubuntu-latest
