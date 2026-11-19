@@ -27,6 +27,7 @@ services:
     volumes:
       - mcp-data:/data # base dos dados extraídos e da auditoria
       - ./config:/app/config:ro # policy.yaml e ajustes.yaml: editar vale na hora
+      - ../chaves/publicas:/run/chaves/publicas:ro # com chaves, só tokens EdDSA do próprio serviço
 
 networks:
   indexer:

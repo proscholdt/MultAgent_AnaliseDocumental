@@ -224,7 +224,8 @@ def settings(tmp_path, agents_dir) -> Settings:
     return Settings(_env_file=None, openai_api_key="sk-teste", mcp_agent_secret=SECRET_MCP, a2a_secret=SECRET_A2A,
                     agentes_dir=agents_dir, data_dir=tmp_path / "data", config_path=tmp_path / "ajustes.yaml",
                     precos={MODEL_NAME: {"entrada": 2.0, "entrada_cache": 1.0, "saida": 10.0}},
-                    especialistas_url="http://especialistas.teste", indexer_url="http://indexador.teste")
+                    especialistas_url="http://especialistas.teste", indexer_url="http://indexador.teste",
+                    chaves_dir=tmp_path / "sem-chaves")
 
 
 @pytest.fixture

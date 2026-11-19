@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     # agentes. O LLM nunca vê o token; ele só chega aqui no cabeçalho Authorization.
     mcp_agent_secret: str = ""
     mcp_audience: str = "mcp-server"
+    # Chaves públicas dos serviços dos agentes (`<servico>.pem`, Ed25519). Com a pasta preenchida,
+    # só valem tokens EdDSA, e cada serviço só assina pelo próprio agente: um especialista
+    # comprometido não se passa por outro. Vazia ou ausente: vale o segredo HS256 (modo antigo).
+    chaves_publicas_dir: Path = Path("/run/chaves/publicas")
     admin_key: str = ""  # rotas /governanca e /auditoria
 
     indexer_url: str = "http://localhost:8000"
@@ -79,6 +83,8 @@ class Settings(BaseSettings):
     @property
     def problem(self) -> str | None:
         """O que falta para o servidor poder subir, ou None."""
+        if any(self.chaves_publicas_dir.glob("*.pem")):
+            return None
         if len(self.mcp_agent_secret) < 32:
             return "MCP_AGENT_SECRET ausente ou curto: precisa de pelo menos 32 caracteres."
         return None

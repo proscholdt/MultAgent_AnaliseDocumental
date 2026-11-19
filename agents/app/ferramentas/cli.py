@@ -133,6 +133,39 @@ def validate(folder: Path) -> int:
     return 1 if snapshot.errors or snapshot.orchestrator is None else 0
 
 
+SERVICOS = ("orquestrador", "extrator", "validador", "analista", "pesquisador", "redator")
+
+
+def generate_keys(folder: Path, services: list[str]) -> int:
+    """Uma chave Ed25519 por serviço: `<pasta>/<servico>/<servico>.pem` (a privada, montada só no
+    contêiner dele como /run/chaves/propria) e `<pasta>/publicas/<servico>.pem` (as públicas, montadas
+    no MCP e nos especialistas). Chave que já existe não é trocada."""
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    publicas = folder / "publicas"
+    publicas.mkdir(parents=True, exist_ok=True)
+    for service in services:
+        if not NAME.fullmatch(service):
+            print(f"ERRO  nome de serviço inválido: {service}")
+            return 1
+        private_file = folder / service / f"{service}.pem"
+        if private_file.exists():
+            print(f"mantida  {private_file}")
+            key = serialization.load_pem_private_key(private_file.read_bytes(), password=None)
+        else:
+            private_file.parent.mkdir(parents=True, exist_ok=True)
+            key = Ed25519PrivateKey.generate()
+            private_file.write_bytes(key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
+                                                       serialization.NoEncryption()))
+            private_file.chmod(0o600)
+            print(f"criada   {private_file}")
+        (publicas / f"{service}.pem").write_bytes(key.public_key().public_bytes(
+            serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo))
+    print(f"públicas em {publicas}. Recrie os contêineres (make reconstruir) para valer.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m app.ferramentas.cli", description="Apoio ao sistema dos agentes.")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -142,7 +175,12 @@ def main(argv: list[str] | None = None) -> int:
     new.add_argument("--tools", default=DEFAULT_TOOLS, help="tools do servidor MCP, separadas por vírgula")
     new.add_argument("--porta", type=int, help="porta do serviço dele (padrão: a seguinte à do último especialista)")
     commands.add_parser("validar", help="confere os arquivos de agente da pasta")
+    keys = commands.add_parser("gerar-chaves", help="gera a chave Ed25519 de cada serviço (fim do segredo compartilhado)")
+    keys.add_argument("--pasta", type=Path, default=Path("../chaves"), help="onde gravar (padrão: ../chaves)")
+    keys.add_argument("servicos", nargs="*", default=list(SERVICOS))
     args = parser.parse_args(argv)
+    if args.command == "gerar-chaves":
+        return generate_keys(args.pasta, args.servicos)
     folder = get_settings().agentes_dir
     if args.command == "novo-agente":
         return new_agent(folder, args.nome, args.descricao.strip(), args.tools, args.porta)

@@ -54,6 +54,11 @@ class Settings(BaseSettings):
 
     # A2A: o orquestrador assina um token para cada chamada a um especialista.
     a2a_secret: str = ""
+    # Chave própria do serviço (Ed25519): `propria/<servico>.pem` (privada, só deste contêiner) e
+    # `publicas/<servico>.pem` (as dos outros). Com a chave própria, os tokens saem EdDSA com o nome
+    # do serviço no `kid`, e o MCP só aceita que o serviço fale pelo próprio agente. Sem ela, vale o
+    # segredo compartilhado (HS256), como antes. Gerar: python -m app.ferramentas.cli gerar-chaves
+    chaves_dir: Path = Path("/run/chaves")
     # Onde os especialistas atendem (A2A). Cada especialista pode ter o seu serviço:
     # - no orquestrador, `especialistas_enderecos` diz o endereço de cada um ({"extrator":
     #   "http://extrator:8201", ...}); quem não está ali é procurado em `especialistas_url`, onde
@@ -127,6 +132,10 @@ class Settings(BaseSettings):
     @property
     def problem(self) -> str | None:
         """O que falta para o serviço funcionar; aparece em /health."""
+        from app.nucleo.tokens import chave_propria  # evita import circular
+
+        if chave_propria(self) is not None:
+            return None if self.openai_api_key else "Faltam no .env: OPENAI_API_KEY"
         missing = [name for name, value in (("OPENAI_API_KEY", self.openai_api_key),
                                             ("MCP_AGENT_SECRET", self.mcp_agent_secret),
                                             ("A2A_SECRET", self.a2a_secret)) if not value]

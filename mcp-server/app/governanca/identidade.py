@@ -19,6 +19,7 @@ import jwt
 
 from app.config import Settings
 from app.dados.indexador import IndexerClient
+from app.governanca import chaves
 from app.governanca.erros import AuthError
 
 AGENT_NAME = re.compile(r"[a-z][a-z0-9_-]{1,39}")
@@ -39,7 +40,13 @@ def bearer(headers: Mapping[str, str]) -> str | None:
 
 
 def verify_agent_token(token: str, settings: Settings) -> dict:
-    """Confere assinatura, validade e destinatário do token do agente e devolve o conteúdo."""
+    """Confere assinatura, validade e destinatário do token do agente e devolve o conteúdo.
+    Com chaves públicas configuradas, só EdDSA com a chave do serviço (`chaves.py`)."""
+    if chaves.ativas(settings.chaves_publicas_dir):
+        claims = chaves.decodificar(token, settings.chaves_publicas_dir, settings.mcp_audience, _REQUIRED_CLAIMS)
+        if not AGENT_NAME.fullmatch(claims["agent"]):
+            raise AuthError(401, "Token do agente com nome de agente inválido.")
+        return claims
     try:
         claims = jwt.decode(token, settings.mcp_agent_secret, algorithms=["HS256"],
                             audience=settings.mcp_audience, options={"require": _REQUIRED_CLAIMS})

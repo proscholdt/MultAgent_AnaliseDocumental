@@ -9,6 +9,8 @@ Os dois levam a execução (`run_id`) e o usuário (`usr`), e valem pouco tempo.
 """
 import time
 from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
 
 import jwt
 
@@ -32,12 +34,43 @@ class Identity:
     user_token: str
 
 
-def _sign(claims: dict, secret: str, ttl: int) -> str:
-    return jwt.encode({**claims, "exp": int(time.time()) + ttl}, secret, algorithm="HS256")
+@dataclass(frozen=True)
+class ChavePropria:
+    servico: str
+    pem: bytes
+
+
+@lru_cache(maxsize=8)
+def _ler_propria(pasta: str, _mtime: float) -> ChavePropria | None:
+    arquivos = sorted(Path(pasta).glob("*.pem"))
+    if len(arquivos) != 1:
+        return None  # nenhuma ou ambígua: modo antigo (segredo compartilhado)
+    return ChavePropria(servico=arquivos[0].stem, pem=arquivos[0].read_bytes())
+
+
+def chave_propria(settings: Settings) -> ChavePropria | None:
+    """A chave privada deste serviço, se configurada (`<chaves_dir>/propria/<servico>.pem`)."""
+    pasta = Path(settings.chaves_dir) / "propria"
+    if not pasta.is_dir():
+        return None
+    return _ler_propria(str(pasta), pasta.stat().st_mtime)
+
+
+def chave_publica(settings: Settings, servico: str) -> bytes | None:
+    arquivo = Path(settings.chaves_dir) / "publicas" / f"{servico}.pem"
+    return arquivo.read_bytes() if arquivo.is_file() else None
+
+
+def _sign(settings: Settings, claims: dict, secret: str, ttl: int) -> str:
+    claims = {**claims, "exp": int(time.time()) + ttl}
+    propria = chave_propria(settings)
+    if propria is not None:
+        return jwt.encode(claims, propria.pem, algorithm="EdDSA", headers={"kid": propria.servico})
+    return jwt.encode(claims, secret, algorithm="HS256")
 
 
 def mcp_token(settings: Settings, agent: str, identity: Identity) -> str:
-    return _sign({"agent": agent, "run_id": identity.run_id, "usr": identity.user_id, "aud": settings.mcp_audience},
+    return _sign(settings, {"agent": agent, "run_id": identity.run_id, "usr": identity.user_id, "aud": settings.mcp_audience},
                  settings.mcp_agent_secret, settings.execucao_max_segundos + 300)
 
 
@@ -46,7 +79,7 @@ def mcp_headers(settings: Settings, agent: str, identity: Identity) -> dict[str,
 
 
 def a2a_token(settings: Settings, target: str, identity: Identity) -> str:
-    return _sign({"agent": ORCHESTRATOR, "run_id": identity.run_id, "usr": identity.user_id, "aud": f"a2a:{target}"},
+    return _sign(settings, {"agent": ORCHESTRATOR, "run_id": identity.run_id, "usr": identity.user_id, "aud": f"a2a:{target}"},
                  settings.a2a_secret, settings.execucao_max_segundos + 300)
 
 
@@ -59,8 +92,12 @@ def verify_a2a_token(settings: Settings, authorization: str | None, target: str)
     scheme, _, token = (authorization or "").partition(" ")
     if scheme.lower() != "bearer" or not token:
         raise AuthError("Falta o token do orquestrador (Authorization: Bearer).")
+    # Com a chave pública do orquestrador presente, só vale a assinatura dele (EdDSA); o segredo
+    # compartilhado deixa de abrir a porta.
+    publica = chave_publica(settings, ORCHESTRATOR)
+    key, algorithm = (publica, "EdDSA") if publica is not None else (settings.a2a_secret, "HS256")
     try:
-        claims = jwt.decode(token, settings.a2a_secret, algorithms=["HS256"], audience=f"a2a:{target}",
+        claims = jwt.decode(token, key, algorithms=[algorithm], audience=f"a2a:{target}",
                             options={"require": ["exp", "aud", "agent", "run_id", "usr"]})
     except jwt.ExpiredSignatureError as error:
         raise AuthError("Token do orquestrador expirado.") from error

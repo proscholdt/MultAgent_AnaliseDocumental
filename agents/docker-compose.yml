@@ -9,6 +9,9 @@ name: agents
 # Os sistemas se falam pela rede Docker do indexador, pelo nome do serviço, sem passar pela
 # máquina hospedeira. Se a rede tiver outro nome, defina INDEXER_NETWORK no .env.
 #
+# Chaves: `python -m app.ferramentas.cli gerar-chaves` cria ../chaves/<servico>/ (privada) e
+# ../chaves/publicas/. Sem elas, vale o segredo compartilhado do .env, como antes.
+#
 # Especialista novo: `python -m app.ferramentas.cli novo-agente <nome> --descricao "..."` cria
 # agentes/<nome>/ (arquivo e Dockerfile) e mostra o que colar aqui e no policy.yaml do MCP.
 
@@ -43,6 +46,8 @@ services:
       - ./agentes:/app/agentes:ro
       - ./config:/app/config:ro
       - memoria-extrator:/data
+      - ../chaves/extrator:/run/chaves/propria:ro # a chave privada dele, só dele (gerar-chaves)
+      - ../chaves/publicas:/run/chaves/publicas:ro
 
   validador:
     <<: *especialista
@@ -57,6 +62,8 @@ services:
       - ./agentes:/app/agentes:ro
       - ./config:/app/config:ro
       - memoria-validador:/data
+      - ../chaves/validador:/run/chaves/propria:ro # a chave privada dele, só dele (gerar-chaves)
+      - ../chaves/publicas:/run/chaves/publicas:ro
 
   analista:
     <<: *especialista
@@ -71,6 +78,8 @@ services:
       - ./agentes:/app/agentes:ro
       - ./config:/app/config:ro
       - memoria-analista:/data
+      - ../chaves/analista:/run/chaves/propria:ro # a chave privada dele, só dele (gerar-chaves)
+      - ../chaves/publicas:/run/chaves/publicas:ro
 
   pesquisador:
     <<: *especialista
@@ -85,6 +94,8 @@ services:
       - ./agentes:/app/agentes:ro
       - ./config:/app/config:ro
       - memoria-pesquisador:/data
+      - ../chaves/pesquisador:/run/chaves/propria:ro # a chave privada dele, só dele (gerar-chaves)
+      - ../chaves/publicas:/run/chaves/publicas:ro
 
   redator:
     <<: *especialista
@@ -99,6 +110,8 @@ services:
       - ./agentes:/app/agentes:ro
       - ./config:/app/config:ro
       - memoria-redator:/data
+      - ../chaves/redator:/run/chaves/propria:ro # a chave privada dele, só dele (gerar-chaves)
+      - ../chaves/publicas:/run/chaves/publicas:ro
 
   orquestrador:
     build: { context: ., dockerfile: agentes/orquestrador/Dockerfile }
@@ -124,6 +137,8 @@ services:
       - ./config:/app/config:ro
       - ./avaliacao:/app/avaliacao:ro # o gabarito da nota ao fim de cada relatório
       - agents-data:/data # execuções, traces, mensagens dos agentes e o checkpoint das conversas
+      - ../chaves/orquestrador:/run/chaves/propria:ro
+      - ../chaves/publicas:/run/chaves/publicas:ro
 
 networks:
   indexer:
