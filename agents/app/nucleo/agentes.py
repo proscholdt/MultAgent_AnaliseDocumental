@@ -56,6 +56,9 @@ class AgentFile:
     digest: str
     # Esforço de raciocínio deste agente: None = o padrão do ajustes.yaml; "" = sem raciocínio.
     raciocinio: str | None = None
+    # O pacote do domínio já entrou no prompt (with_domain): aplicar de novo duplicaria o complemento
+    # e, no modo substitui, apagaria o que veio depois (a lista de especialistas do orquestrador).
+    com_dominio: bool = False
 
 
 def with_domain(spec: AgentFile, dominio: str | None) -> AgentFile:
@@ -66,10 +69,12 @@ def with_domain(spec: AgentFile, dominio: str | None) -> AgentFile:
     - `substitui`: o texto é o prompt deste agente neste domínio (modelo, turnos e raciocínio
       continuam os do arquivo do agente). É o que um domínio muito diferente usa quando o prompt
       base fala do domínio padrão.
-    Sem arquivo no pacote, o agente fica como está."""
-    path = pacotes.arquivo_do_pacote(dominio, f"prompts/{spec.nome}.md") if dominio else None
-    if path is None:
+    Sem domínio, vale o padrão. Sem arquivo no pacote, o agente fica como está."""
+    if spec.com_dominio:
         return spec
+    path = pacotes.arquivo_do_pacote(dominio or pacotes.PADRAO, f"prompts/{spec.nome}.md")
+    if path is None:
+        return dataclasses.replace(spec, com_dominio=True)
     text = path.read_text(encoding="utf-8").lstrip(_BOM)
     mode, body = "complemento", text
     if match := _HEADER.match(text):
@@ -78,7 +83,7 @@ def with_domain(spec: AgentFile, dominio: str | None) -> AgentFile:
     if mode not in ("complemento", "substitui"):
         raise AgentFileError(f"{path}: modo {mode!r} desconhecido (use complemento ou substitui)")
     prompt = body.strip() if mode == "substitui" else f"{spec.prompt.rstrip()}\n\n{body.strip()}"
-    return dataclasses.replace(spec, prompt=prompt)
+    return dataclasses.replace(spec, prompt=prompt, com_dominio=True)
 
 
 _BOM = "\N{ZERO WIDTH NO-BREAK SPACE}"  # arquivo salvo no Windows pode começar com ele

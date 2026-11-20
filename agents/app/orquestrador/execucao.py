@@ -5,7 +5,7 @@ from app import telemetria
 from app.dominio.relatorio import (
     REPORT_TYPES,
 )
-from app.nucleo.agentes import ORCHESTRATOR, agent_file
+from app.nucleo.agentes import ORCHESTRATOR, agent_file, with_domain
 from app.orquestrador.entradas import (
     first_input,
     with_team,
@@ -75,7 +75,8 @@ async def _execute(run: Run, user_token: str, deps: Deps) -> Run:
                             + ". Acrescente a entrada ou remova o arquivo do agente.")
         trace.add("especialistas", agentes=[entry["nome"] for entry in catalog["agentes"]], digest=catalog["digest"],
                   **({"fora_do_ar": catalog["fora_do_ar"]} if catalog.get("fora_do_ar") else {}))
-        execution.spec = with_team(snapshot.orchestrator, catalog)
+        # O domínio primeiro: o prompt do pacote (até no modo substitui) e depois a lista da equipe.
+        execution.spec = with_team(with_domain(snapshot.orchestrator, execution.identity.dominio), catalog)
         execution.team = {entry["nome"] for entry in catalog["agentes"]}
 
         config = {"configurable": {"thread_id": run.conversa_id or run.id},

@@ -9,6 +9,7 @@ from app import pacotes
 from app.dominio.relatorio import OUT_OF_SCOPE, out_of_scope
 from app.nucleo.agentes import AgentFileError, parse_agent, with_domain
 from app.nucleo.tokens import Identity, a2a_token, mcp_token
+from app.orquestrador.entradas import with_team
 from tests.conftest import ANA, BRUNO, auth, decide
 
 
@@ -55,6 +56,26 @@ def test_the_package_completes_or_replaces_the_prompt_of_an_agent(dominios):
     (dominios / "redator.md").write_text("---\nmodo: troca\n---\nx\n", encoding="utf-8")
     with pytest.raises(AgentFileError, match="troca"):
         with_domain(_agent("redator"), "laudos")
+
+
+def test_without_domain_the_default_package_speaks(dominios):
+    padrao = dominios.parent.parent / pacotes.PADRAO / "prompts"
+    padrao.mkdir(exist_ok=True)
+    (padrao / "validador.md").write_text("No domínio padrão, confira as contas.\n", encoding="utf-8")
+    assert with_domain(_agent("validador"), None).prompt.endswith("No domínio padrão, confira as contas.")
+
+
+def test_the_team_list_survives_a_replaced_orchestrator_prompt(dominios):
+    # O orquestrador recebe o pacote e depois a lista da equipe; o run_agent aplica o domínio de novo
+    # e não pode apagar a lista (modo substitui) nem repetir o complemento.
+    (dominios / "orquestrador.md").write_text("---\nmodo: substitui\n---\nVocê coordena laudos.\n", encoding="utf-8")
+    catalog = {"agentes": [{"nome": "extrator", "descricao": "Extrai os exames."}]}
+    spec = with_team(with_domain(_agent("orquestrador"), "laudos"), catalog)
+    again = with_domain(spec, "laudos")
+    assert again.prompt.startswith("Você coordena laudos.") and "- `extrator`: Extrai os exames." in again.prompt
+    (dominios / "validador.md").write_text("Confira a faixa de referência.\n", encoding="utf-8")
+    twice = with_domain(with_domain(_agent("validador"), "laudos"), "laudos")
+    assert twice.prompt.count("Confira a faixa de referência.") == 1
 
 
 def test_out_of_scope_speaks_the_domain():

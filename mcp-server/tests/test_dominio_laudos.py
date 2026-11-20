@@ -20,6 +20,8 @@ def laudo(indexer):
         chunk(1, "table", 1, ["Bioquímica"], LAUDO, unit=None, unit_source=None),
         chunk(2, "text", 1, ["Observações"], "Observação: amostra levemente lipêmica; recomenda-se repetir o "
               "colesterol em jejum de 12 horas.", unit=None, unit_source=None),
+        chunk(3, "text", 1, ["Creatinina"], "Material: soro. Método: enzimático. Resultado: 0,92 mg/dL "
+              "Valores de referência: 0,6 a 1,1 mg/dL", unit=None, unit_source=None),
     ]
     doc = document(DOC_LAUDO, ANA, "laudo-maria.pdf", "Maria Souza", chunks)
     doc["meta"].update(period="12/03/2024", doc_type=None, collection_id=COLECAO, dominio="laudos",
@@ -57,6 +59,15 @@ async def test_a_lab_result_is_read_from_the_cell_with_the_unit_of_the_package(g
     # Sem período contábil: o valor é do recorte do documento (a data da coleta), sem ano anterior.
     assert saved["salvo"]["periodo"] == "12/03/2024" and saved["ano_anterior_gravado_pelo_servidor"] is None
     assert not [aviso for aviso in saved["avisos"] if "mil, milhões" in aviso or "controladora" in aviso]
+
+
+async def test_a_result_in_running_text_does_not_ask_for_the_period(governance, laudo):
+    # A data do laudo não está na frase do resultado, e não precisa: o valor é do documento.
+    saved = payload(await call(governance, "salvar_indicador", {
+        "doc_id": DOC_LAUDO, "campo": "creatinina", "origem": "texto", "chunk_index": 3,
+        "trecho": "Resultado: 0,92 mg/dL Valores de referência", "valor": "0,92"}))
+    assert saved["salvo"]["valor_numerico"] == 0.92 and saved["salvo"]["unidade"] == "mg/dL"
+    assert not [aviso for aviso in saved["avisos"] if "período" in aviso], saved["avisos"]
 
 
 async def test_a_field_of_another_domain_is_refused_with_the_options(governance, laudo):

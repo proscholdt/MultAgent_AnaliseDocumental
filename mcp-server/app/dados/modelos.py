@@ -26,7 +26,7 @@ class StoredValue(Base):
     run_id: Mapped[str] = mapped_column(String(64))
     agent: Mapped[str] = mapped_column(String(40))
     campo: Mapped[str] = mapped_column(String(40))
-    periodo: Mapped[str] = mapped_column(String(8))
+    periodo: Mapped[str] = mapped_column(String(32))  # 2022, 3T2025; num laudo, a data (12/03/2024)
     medida: Mapped[str] = mapped_column(String(20))  # "valor" | "variacao_informada"
     status: Mapped[str] = mapped_column(String(16))  # "encontrado" | "nao_encontrado"
     origem: Mapped[str | None] = mapped_column(String(8), nullable=True)  # "tabela" | "texto"
@@ -37,10 +37,10 @@ class StoredValue(Base):
     linha: Mapped[str | None] = mapped_column(Text, nullable=True)
     coluna: Mapped[str | None] = mapped_column(Text, nullable=True)
     trecho: Mapped[str | None] = mapped_column(Text, nullable=True)  # o que está escrito na fonte
-    texto_valor: Mapped[str | None] = mapped_column(String(64), nullable=True)  # o número como escrito
+    texto_valor: Mapped[str | None] = mapped_column(Text, nullable=True)  # o valor como escrito (número ou texto)
     valor: Mapped[str | None] = mapped_column(String(64), nullable=True)  # o número lido (Decimal em texto)
     tipo: Mapped[str | None] = mapped_column(String(12), nullable=True)  # valor | percentual | multiplo
-    unidade: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    unidade: Mapped[str | None] = mapped_column(String(32), nullable=True)
     unidade_origem: Mapped[str | None] = mapped_column(String(16), nullable=True)
     escopo: Mapped[str | None] = mapped_column(String(16), nullable=True)  # consolidado | controladora
     alternativa_consolidada: Mapped[bool] = mapped_column(default=False)  # a tabela tinha coluna consolidada?

@@ -210,7 +210,10 @@ def _from_text(args: SalvarIndicador, chunk: dict[str, Any]) -> dict[str, Any]:
     return {
         "number": number, "trecho": snippet, "linha": None, "coluna": None,
         "escopo": "consolidado" if "consolidad" in folded else "controladora" if "controladora" in folded else None,
-        "periodo_confirmado": args.periodo in number_tokens(snippet), "alternativa_consolidada": False,
+        # Só o recorte por período tem o que conferir no trecho (o ano). Num laudo, o valor é do
+        # documento, e a data dele não costuma estar na frase do resultado.
+        "periodo_confirmado": args.periodo in number_tokens(snippet) if _por_periodo() else True,
+        "alternativa_consolidada": False,
         "unidade": unit or chunk.get("unit"), "unidade_origem": "trecho" if unit else chunk.get("unit_source"),
         # "prejuízo de R$ 5.672 milhões" e "-R$5.673 milhões": o número vem positivo, e o valor é negativo.
         "loss": (args.campo == "lucro_liquido" and "prejuízo" in folded and "lucro" not in folded)
