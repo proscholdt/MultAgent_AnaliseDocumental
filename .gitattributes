@@ -1,0 +1,8 @@
+# Arquivos binários: o Git não troca fim de linha dentro deles. Um PDF gerado só com bytes ASCII
+# (os laudos fictícios, do reportlab) seria tratado como texto e, com core.autocrlf no Windows,
+# ganharia CR no checkout: as posições do índice interno do PDF deixariam de bater.
+*.pdf binary
+*.png binary
+*.webp binary
+*.jpg binary
+*.gz binary
