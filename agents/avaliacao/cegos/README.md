@@ -11,7 +11,7 @@ de desenvolvimento; os cegos só medem.
 
 1. Escolha de 5 a 10 demonstrações anuais de empresas que não estão no gabarito, de setores
    diferentes (banco e seguradora ficam de fora: o plano de contas é outro).
-2. Confira à mão, na camada de texto do PDF, os campos de `mcp-server/config/dominio.yaml` e grave
+2. Confira à mão, na camada de texto do PDF, os campos do pacote de domínio (`dominios/financeiro/dominio.yaml`) e grave
    em `gabarito.json` nesta pasta, no mesmo formato de `../gabarito.json` (copie a estrutura de
    um documento de lá). Os PDFs não vão para o Git (`*.pdf` nesta pasta está no `.gitignore`).
 3. Envie os PDFs pelo frontend com um usuário só para isso.

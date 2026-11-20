@@ -1,0 +1,51 @@
+# 0007 — Domínios plugáveis: o que muda de um tipo de documento para outro fica num pacote
+
+**Contexto.** O sistema nasceu para demonstrações financeiras, e o domínio está costurado em
+seis lugares: os metadados do indexador (empresa, período e tipo em colunas, prompt e regex), as
+unidades e os títulos de seção do corte em chunks (R$ mil, DRE, notas explicativas), os campos e
+as fórmulas do servidor MCP (o `dominio.yaml` existia, mas exigia os 16 campos das fórmulas), o
+período sempre anual com comparável, os prompts e as intenções dos agentes, e os textos da
+interface. O que é valioso já é genérico: parse, OCR, chunks por estrutura, busca híbrida, filas,
+grafo de ondas, A2A, memória, roteador semântico e, principalmente, os portões (citação literal,
+número só por marcador ou citação, ausência com prova).
+
+**Decisão.** Cada domínio é uma pasta, `dominios/<id>/`, e o núcleo não sabe qual domínio roda:
+
+```
+dominios/<id>/
+  dominio.yaml     o contrato (formato em comum/pacotes.py, validado na subida dos três sistemas):
+                     documentos aceitos e frases para reconhecê-los · a entidade (de quem é o
+                     documento) e o recorte (período, data ou nenhum) · os metadados que o
+                     indexador extrai, cada um só com o trecho que prova · os campos tipados que os
+                     agentes extraem · as categorias da análise · as perguntas padrão · os textos
+  prompts/<agente>.md   o que o agente precisa saber deste domínio (o método fica no prompt base)
+  intencoes.yaml   frases do roteador do chat
+  avaliacao/       gabarito e mensagens rotuladas
+```
+
+O que não cabe em YAML é **plugin em Python** no sistema que o usa, apontado por `plugin`: as
+fórmulas e validações (MCP), as regras de inconsistência (MCP), os títulos de seção e as unidades
+do corte em chunks (indexador). Declarar fórmulas com condições e exceções em YAML seria uma
+linguagem nova, mais difícil de testar que o Python (a mesma razão do 0003).
+
+O usuário escolhe o domínio por **coleção**: cria uma coleção com um domínio e envia os PDFs nela;
+no envio, o sistema compara o PDF com as frases `reconhecer` de cada pacote e avisa se ele parece
+de outro domínio. Relatórios e comparações acontecem dentro de uma coleção. Documento e coleção de
+antes dos pacotes são do domínio padrão, `financeiro`.
+
+**Fases**, cada uma com commit e testes, e a mesma trava: o pacote financeiro continua com nota
+máxima no gabarito.
+
+| Fase | O que muda |
+|---|---|
+| 0 | O formato do pacote (`comum/pacotes.py`, copiado aos três sistemas), o pacote `financeiro` (o antigo `mcp-server/config/dominio.yaml` mais entidade, recorte, metadados e textos), o servidor MCP lendo o pacote, `make dominios` |
+| 1 | Indexador: coleções com domínio, metadados dinâmicos (os do pacote, em vez das colunas empresa/período/tipo), prefixo e payload pelo pacote, sugestão de domínio no envio, títulos de seção e unidades pelo plugin |
+| 2 | Servidor MCP: o domínio por execução (no token do agente), o esquema das tools por domínio, campos de tipos novos (número com unidade, data, texto), recorte por data, fórmulas e inconsistências por plugin, relatório pelo pacote |
+| 3 | Agentes: o domínio da coleção na execução, o prompt base com o complemento do pacote, intenções e "entidade" genéricas, textos do pacote |
+| 4 | Frontend: coleções, escolha do domínio, textos e rótulos do pacote |
+| 5 | A prova: o pacote `laudos` (exames laboratoriais), com laudos fictícios gerados e PDFs de exemplo baixados da internet, e um gabarito |
+
+**Consequência.** Um domínio novo é uma pasta: YAML, prompts e, se precisar de conta, um plugin
+pequeno. O custo é uma camada de indireção em cada sistema (o pacote em vez de constantes) e o
+esquema das tools gerado por domínio. Laudos médicos são dado sensível: o pacote de prova usa só
+documentos fictícios ou modelos publicados por laboratórios, nunca exames de pacientes reais.

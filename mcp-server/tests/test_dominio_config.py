@@ -1,7 +1,8 @@
-"""O domínio vem de config/dominio.yaml: um indicador novo é só YAML, e um arquivo incoerente
-não sobe."""
+"""O domínio vem do pacote (dominios/<id>/dominio.yaml): um indicador novo é só YAML, um pacote
+incoerente não sobe, e um domínio que não é financeiro carrega sem as fórmulas."""
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -9,52 +10,96 @@ from pathlib import Path
 import pytest
 import yaml
 
-from app.regras.campos import CAMPOS_DAS_FORMULAS, DOMINIO_PATH, carregar
+from app import pacotes
+from app.regras.campos import CAMPOS_DAS_FORMULAS, carregar, conferir
 
 RAIZ = Path(__file__).resolve().parents[1]
 
 
-def _gravar(tmp_path: Path, dados: dict) -> Path:
-    path = tmp_path / "dominio.yaml"
-    path.write_text(yaml.safe_dump(dados, allow_unicode=True), encoding="utf-8")
-    return path
+def _copia(tmp_path: Path, mudar=None, dominio: str = "financeiro") -> Path:
+    """Uma cópia de dominios/ com o pacote alterado; devolve a pasta do pacote."""
+    destino = tmp_path / "dominios"
+    shutil.copytree(pacotes.pasta_dos_dominios(), destino)
+    arquivo = destino / dominio / "dominio.yaml"
+    dados = yaml.safe_load(arquivo.read_text(encoding="utf-8"))
+    if mudar:
+        mudar(dados)
+    arquivo.write_text(yaml.safe_dump(dados, allow_unicode=True), encoding="utf-8")
+    return destino / dominio
 
 
-def _dados() -> dict:
-    return yaml.safe_load(DOMINIO_PATH.read_text(encoding="utf-8"))
-
-
-def test_o_arquivo_do_repositorio_e_valido():
+def test_o_pacote_financeiro_do_repositorio_e_valido():
     dominio = carregar()
+    assert dominio.id == "financeiro" and dominio.plugin == "financeiro"
     assert CAMPOS_DAS_FORMULAS <= {campo.nome for campo in dominio.campos}
     assert [p.id for p in dominio.perguntas] == ["p1", "p2", "p3", "p4", "p5"]
+    assert (dominio.metadado("entidade").nome, dominio.metadado("recorte").nome) == ("empresa", "periodo")
 
 
 def test_indicador_novo_so_com_yaml_chega_ao_esquema_das_tools(tmp_path):
-    dados = _dados()
-    dados["campos"].append({"nome": "patrimonio_liquido", "rotulo": "Patrimônio líquido", "tipo": "valor",
-                            "principal": True, "termos": ["patrimônio líquido"], "secao": "balanço",
-                            "mencao": ["patrimonio liquido"], "demonstracao": True})
-    dados["perguntas"].append({"id": "p6", "enunciado": "Qual empresa tem o maior patrimônio líquido?"})
+    def mudar(dados):
+        dados["campos"].append({"nome": "patrimonio_liquido", "rotulo": "Patrimônio líquido", "tipo": "valor",
+                                "principal": True, "termos": ["patrimônio líquido"], "secao": "balanço",
+                                "mencao": ["patrimonio liquido"], "demonstracao": True})
+        dados["perguntas"].append({"id": "p6", "enunciado": "Qual empresa tem o maior patrimônio líquido?"})
+
+    pasta = _copia(tmp_path, mudar)
     codigo = ("import json; from app.governanca.catalogo import load_tools; t = load_tools(); "
               "print(json.dumps({'campo': t['salvar_indicador'].definition().input_schema['properties']['campo'], "
               "'pergunta': t['salvar_resposta'].definition().input_schema['properties']['pergunta_id']}))")
     saida = subprocess.run([sys.executable, "-c", codigo], cwd=RAIZ, capture_output=True, text=True, check=True,
-                           env={**os.environ, "DOMINIO_PATH": str(_gravar(tmp_path, dados))})
+                           env={**os.environ, "DOMINIOS_PATH": str(pasta.parent)})
     esquema = json.loads(saida.stdout.strip().splitlines()[-1])
     assert "patrimonio_liquido" in esquema["campo"]["enum"]
     assert "p6" in esquema["pergunta"]["enum"] and "livre" in esquema["pergunta"]["enum"]
 
 
 @pytest.mark.parametrize("estrago, motivo", [
-    (lambda d: d["campos"].pop(1), "fórmulas"),
     (lambda d: d["campos"].append(dict(d["campos"][0])), "repetido"),
     (lambda d: d["campos"][0].update(tipo="moeda"), "tipo"),
     (lambda d: d["campos"][0].update(rotullo="x"), "rotullo"),
     (lambda d: d["perguntas"].append({"id": "livre", "enunciado": "x"}), "livre"),
+    (lambda d: d["metadados"][0].update(papel=None), "entidade"),
+    (lambda d: d.update(id="contabil"), "nome da pasta"),
+    (lambda d: d["entidade"].update(nome="Empresa X"), "nome inválido"),
 ])
-def test_arquivo_incoerente_nao_sobe(tmp_path, estrago, motivo):
-    dados = _dados()
-    estrago(dados)
-    with pytest.raises(Exception, match=motivo):
-        carregar(_gravar(tmp_path, dados))
+def test_pacote_incoerente_nao_sobe(tmp_path, estrago, motivo):
+    with pytest.raises(pacotes.PacoteInvalido, match=motivo):
+        pacotes.ler(_copia(tmp_path, estrago))
+
+
+def test_o_plugin_financeiro_exige_os_campos_das_formulas(tmp_path):
+    pacote = pacotes.ler(_copia(tmp_path, lambda d: d["campos"].pop(1)))
+    with pytest.raises(pacotes.PacoteInvalido, match="fórmulas"):
+        conferir(pacote)
+
+
+def test_um_dominio_sem_plugin_carrega_com_campos_proprios(tmp_path):
+    """Um domínio novo é só uma pasta: sem as fórmulas financeiras, com a própria entidade."""
+    def laudo(dados):
+        dados.update(id="laudos", plugin=None, entidade={"nome": "paciente", "rotulo": "Paciente", "plural": "Pacientes"},
+                     recorte={"nome": "data_exame", "rotulo": "Data do exame", "tipo": "data"})
+        dados["metadados"] = [
+            {"nome": "paciente", "rotulo": "Paciente", "papel": "entidade", "instrucao": "nome do paciente"},
+            {"nome": "data_exame", "rotulo": "Data do exame", "papel": "recorte", "tipo": "data", "instrucao": "data"}]
+        dados["campos"] = [{"nome": "glicose", "rotulo": "Glicose", "tipo": "numero", "principal": True,
+                            "unidade": "mg/dL"}]
+
+    raiz = _copia(tmp_path).parent
+    shutil.copytree(raiz / "financeiro", raiz / "laudos")
+    arquivo = raiz / "laudos" / "dominio.yaml"
+    dados = yaml.safe_load(arquivo.read_text(encoding="utf-8"))
+    laudo(dados)
+    arquivo.write_text(yaml.safe_dump(dados, allow_unicode=True), encoding="utf-8")
+    todos = pacotes.todos.__wrapped__(raiz)  # sem o cache: outra pasta
+    assert set(todos) == {"financeiro", "laudos"}
+    laudos = conferir(todos["laudos"])
+    assert [c.nome for c in laudos.campos] == ["glicose"] and laudos.campos[0].unidade == "mg/dL"
+    assert laudos.metadado("entidade").nome == "paciente"
+
+
+def test_sem_o_pacote_padrao_nada_sobe(tmp_path):
+    vazia = tmp_path / "vazia"
+    vazia.mkdir()
+    with pytest.raises(pacotes.PacoteInvalido, match="padrão"):
+        pacotes.todos.__wrapped__(vazia)

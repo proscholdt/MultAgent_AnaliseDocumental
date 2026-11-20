@@ -11,6 +11,7 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parents[1]
 COPIAS = {
     "telemetria.py": ["indexer/app/telemetria.py", "mcp-server/app/telemetria.py", "agents/app/telemetria.py"],
+    "pacotes.py": ["indexer/app/pacotes.py", "mcp-server/app/pacotes.py", "agents/app/pacotes.py"],
 }
 
 

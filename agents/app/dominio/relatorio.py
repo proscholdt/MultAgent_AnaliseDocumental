@@ -26,7 +26,7 @@ ANSWERED = "Pergunta respondida, com as fontes."
 # escreve: com o texto livre, o pesquisador chegou a responder a outra pergunta e gravar com o id
 # de uma das cinco. Uma pergunta do chat igual a uma das cinco é gravada como 'livre', para não
 # puxar a análise inteira (a p1 só é aceita com a extração e a análise de todos os documentos).
-# Quais ids existem vem do servidor MCP (`ler_respostas`, que lê o config/dominio.yaml dele):
+# Quais ids existem vem do servidor MCP (`ler_respostas`, que lê o pacote de domínio, dominios/<id>/dominio.yaml):
 # aqui só se reconhece a forma "p<número>", e `official_task` descarta o id que não existe.
 REPORT_QUESTION = re.compile(r"\bp(\d{1,2})\b", re.IGNORECASE)
 FOR_THE_CHAT = ("\n\nÉ uma pergunta do usuário, não do relatório: grave com pergunta_id 'livre', mesmo que o texto "

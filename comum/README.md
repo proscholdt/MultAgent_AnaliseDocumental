@@ -6,6 +6,7 @@ Arquivos usados igual por mais de um sistema. A fonte é esta pasta; cada sistem
 | Arquivo | Cópias |
 |---|---|
 | `telemetria.py` | `indexer/app/`, `mcp-server/app/`, `agents/app/` |
+| `pacotes.py` | `indexer/app/`, `mcp-server/app/`, `agents/app/`: o formato do pacote de domínio (`dominios/<id>/dominio.yaml`) e a leitura dos pacotes |
 
 Mudou um arquivo daqui: `make comum` copia para os sistemas. A CI roda
 `python ferramentas/comum.py --conferir` e falha se alguma cópia divergir.

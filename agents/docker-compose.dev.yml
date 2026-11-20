@@ -24,6 +24,7 @@ services:
     volumes:
       - ./agentes:/app/agentes:ro
       - ./config:/app/config:ro
+      - ../dominios:/app/dominios:ro # pacotes de domínio (dominios/<id>/dominio.yaml)
       - memoria-especialistas:/data
 
   orquestrador:

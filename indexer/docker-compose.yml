@@ -104,6 +104,7 @@ services:
     volumes:
       - storage:/data/storage
       - ./config:/app/config:ro # ajustes.yaml: relido sem reiniciar
+      - ../dominios:/app/dominios:ro # pacotes de domínio (dominios/<id>/dominio.yaml)
     depends_on: *app-depends
 
   parse-worker:
@@ -118,6 +119,7 @@ services:
     volumes:
       - storage:/data/storage
       - ./config:/app/config:ro # ajustes.yaml: relido sem reiniciar
+      - ../dominios:/app/dominios:ro # pacotes de domínio (dominios/<id>/dominio.yaml)
     depends_on: *app-depends
 
   index-worker:
@@ -132,6 +134,7 @@ services:
     volumes:
       - storage:/data/storage
       - ./config:/app/config:ro # ajustes.yaml: relido sem reiniciar
+      - ../dominios:/app/dominios:ro # pacotes de domínio (dominios/<id>/dominio.yaml)
     depends_on: *app-depends
 
 volumes:

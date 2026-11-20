@@ -1,14 +1,90 @@
-# O domínio do relatório: os indicadores extraídos, as categorias da análise qualitativa e as
-# perguntas do relatório. Lido na subida do servidor (mudou aqui: reinicie o contêiner), porque o
-# esquema das tools que os agentes veem sai daqui. Arquivo inválido impede a subida, com o motivo.
+# Pacote de domínio: demonstrações financeiras de empresas. O primeiro pacote, e o padrão (é o
+# domínio dos documentos e das coleções de antes dos pacotes). O formato está em
+# comum/pacotes.py; como criar um domínio, em dominios/README.md.
+#
+# Lido na subida de cada sistema (mudou aqui: reinicie os contêineres), porque o esquema das tools
+# que os agentes veem sai daqui. Arquivo inválido impede a subida, com o motivo.
+
+id: financeiro
+nome: Demonstrações financeiras
+descricao: >-
+  Demonstrações financeiras de empresas (anuais, trimestrais, releases): indicadores com a origem
+  de cada valor, análise do comentário da administração, perguntas comparativas e o relatório
+  consolidado para um analista financeiro.
+# As fórmulas (EBITDA, dívida líquida, alavancagem, capex), as validações e as regras de
+# inconsistência deste domínio são código: o plugin "financeiro" de cada sistema.
+plugin: financeiro
+
+documento:
+  tipos:
+  - Demonstrações financeiras anuais
+  - Informações trimestrais
+  - Release de resultados
+  reconhecer:
+  - Balanço patrimonial
+  - Demonstração do resultado do exercício
+  - Demonstração dos fluxos de caixa
+  - Notas explicativas às demonstrações financeiras
+  - Relatório do auditor independente sobre as demonstrações financeiras individuais e consolidadas
+
+entidade:
+  nome: empresa
+  rotulo: Empresa
+  plural: Empresas
+
+recorte:
+  nome: periodo
+  rotulo: Período
+  tipo: periodo
+
+# O que o indexador extrai de cada documento. Cada valor só vale com o trecho da página que o prova.
+metadados:
+- nome: empresa
+  rotulo: Empresa
+  papel: entidade
+  instrucao: razão social da empresa que reporta (não o auditor nem uma controlada citada)
+- nome: periodo
+  rotulo: Período
+  papel: recorte
+  tipo: periodo
+  instrucao: >-
+    período de referência, '2022' para exercício anual findo em 31/12/2022 ou '3T25' para o
+    terceiro trimestre de 2025
+- nome: tipo_documento
+  rotulo: Tipo de documento
+  papel: tipo_documento
+  instrucao: >-
+    tipo do documento, por exemplo 'Demonstrações financeiras anuais', 'Informações trimestrais'
+    ou 'Release de resultados'
+
+textos:
+  titulo: Análise de Demonstrações
+  envio: Envie as demonstrações financeiras em PDF.
+  fora_do_escopo: >-
+    Isso está fora do escopo deste sistema. Ele responde perguntas sobre as demonstrações
+    financeiras enviadas, sempre com a página de origem, e gera relatórios: o consolidado ou o de
+    uma empresa. Escolha uma das opções ou escreva a sua pergunta.
+  opcoes:
+  - titulo: Perguntar sobre um indicador
+    exemplo: Qual empresa teve a maior margem EBITDA?
+  - titulo: Comparar as empresas
+    exemplo: Compare o lucro líquido das empresas
+  - titulo: Entender o resultado
+    exemplo: Quais riscos as empresas destacam?
+  - titulo: Gerar o relatório de uma empresa
+    exemplo: Gere o relatório da Brasal
+  - titulo: Gerar o relatório consolidado
+    exemplo: Gere o relatório consolidado completo
+
+# --- Campos, categorias e perguntas ----------------------------------------------------------------
 #
 # Para um indicador novo (ex.: patrimônio líquido): uma entrada em `campos`, a linha no prompt do
-# extrator (agents/agentes/extrator/extrator.md) e o valor no gabarito. Sem Python.
+# extrator e o valor no gabarito. Sem Python.
 #
 # campos:
-#   nome        identificador (minúsculas e _), o que os agentes usam em salvar_indicador
+#   nome        identificador (minúsculas e _), o que os agentes usam ao gravar
 #   rotulo      como aparece no relatório
-#   tipo        valor (dinheiro) | percentual | multiplo
+#   tipo        valor (dinheiro) | percentual | multiplo | numero | data | texto
 #   principal   true: um dos indicadores do relatório; false: valor de apoio das fórmulas
 #   termos      procurados no documento quando o agente diz que o campo não existe; se algum
 #               aparece, ele tem de dizer por que aquelas páginas não servem
@@ -18,8 +94,8 @@
 #               as duas partes
 #   demonstracao  true: o valor vem da tabela da demonstração, nunca de uma frase do relatório
 #
-# Os campos usados pelas fórmulas (EBITDA, dívida líquida, alavancagem, capex) são obrigatórios;
-# a fórmula fica em app/regras/formulas.py.
+# Os campos usados pelas fórmulas (EBITDA, dívida líquida, alavancagem, capex) são obrigatórios
+# pelo plugin financeiro do servidor MCP.
 #
 # perguntas: as do relatório, na ordem em que aparecem. O id é o que o orquestrador cita (p1...).
 campos:
