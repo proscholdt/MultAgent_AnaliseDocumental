@@ -144,6 +144,12 @@ class DocumentOut(BaseModel):
     file_name: str
     size_bytes: int
     page_count: int | None
+    collection_id: str | None = None
+    dominio: str = "financeiro"
+    metadados: dict[str, Any] = Field(default_factory=dict, description="Os metadados do pacote do domínio, por nome.")
+    dominio_sugerido: str | None = None
+    aviso_dominio: str | None = Field(default=None, description="Quando o conteúdo parece de outro domínio.")
+    # A entidade, o recorte e o tipo do documento, com os nomes de antes dos pacotes de domínio.
     company: str | None
     period: str | None
     doc_type: str | None
@@ -159,9 +165,41 @@ class DocumentOut(BaseModel):
 class DocumentPatch(BaseModel):
     """Correção manual de metadados. Dispara reindexação a partir do parse em cache."""
 
+    metadados: dict[str, str | None] | None = Field(
+        default=None, description="Por nome do metadado do domínio; valor vazio remove a correção.")
+    # Os de antes dos pacotes: a entidade, o recorte e o tipo do documento.
     company: str | None = Field(default=None, max_length=255)
     period: str | None = Field(default=None, max_length=64)
     doc_type: str | None = Field(default=None, max_length=128)
+
+
+class CollectionIn(BaseModel):
+    nome: str = Field(min_length=1, max_length=120, examples=["Exames de 2025"])
+    dominio: str = Field(description="O id de um pacote de domínio (GET /api/dominios).", examples=["financeiro"])
+
+
+class CollectionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    nome: str
+    dominio: str
+    created_at: datetime
+    documentos: int = 0
+
+
+class DomainOut(BaseModel):
+    """O que a interface precisa saber de um domínio: nome, de quem são os documentos, os
+    metadados e os textos."""
+
+    id: str
+    nome: str
+    descricao: str
+    padrao: bool
+    entidade: dict[str, Any]
+    recorte: dict[str, Any]
+    metadados: list[dict[str, Any]]
+    textos: dict[str, Any]
 
 
 class JobOut(BaseModel):
@@ -216,6 +254,7 @@ class SearchRequest(BaseModel):
                        examples=["alavancagem dívida líquida EBITDA covenants"])
     limit: int = Field(default=8, ge=1, le=50)
     doc_id: str | None = Field(default=None, description="Restringe a um documento.")
+    colecao_id: str | None = Field(default=None, description="Restringe aos documentos de uma coleção.")
     chunk_type: Literal["text", "table", "figure"] | None = Field(
         default=None, description="Restringe a um tipo de chunk: texto, tabela ou gráfico.")
     page_from: int | None = Field(default=None, ge=1, description="Primeira página do intervalo.")
@@ -230,6 +269,8 @@ class SearchHit(BaseModel):
     # empresa identificada): ausente é None, não erro.
     company: str | None = None
     period: str | None = None
+    dominio: str | None = None
+    metadados: dict[str, Any] = Field(default_factory=dict)
     page_start: int
     page_end: int
     chunk_index: int

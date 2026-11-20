@@ -61,7 +61,7 @@ async def test_reindex_is_idempotent_and_applies_overrides(store, settings, pars
     assert await store.count(USER_A, parsed_doc.doc_id) == first.chunk_count == second.chunk_count
     chunks = await store.get_chunks(USER_A, parsed_doc.doc_id, 0, 50)
     assert all(c["company"] == "Nome Corrigido S.A." for c in chunks)
-    assert second.metadata.source["company"] == {"source": "user"}
+    assert second.metadata.source["empresa"] == {"source": "user"}
 
 
 async def test_reindex_with_fewer_chunks_leaves_no_orphans(store, settings, parsed_doc, tmp_path):

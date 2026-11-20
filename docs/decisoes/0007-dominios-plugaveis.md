@@ -45,6 +45,12 @@ máxima no gabarito.
 | 4 | Frontend: coleções, escolha do domínio, textos e rótulos do pacote |
 | 5 | A prova: o pacote `laudos` (exames laboratoriais), com laudos fictícios gerados e PDFs de exemplo baixados da internet, e um gabarito |
 
+**O que ficou de fora, de propósito.** Os títulos de demonstração (balanço, DRE, DFC), o rodapé
+"as notas explicativas são parte integrante" e a detecção de R$ no corte em chunks continuam no
+código do indexador, para todo domínio: são regex que só disparam em texto financeiro. Num laudo
+ou num contrato não acham nada e não mudam nada. Levá-los para um plugin seria arrumação com risco
+de mexer no corte das demonstrações sem ganho para os outros domínios.
+
 **Consequência.** Um domínio novo é uma pasta: YAML, prompts e, se precisar de conta, um plugin
 pequeno. O custo é uma camada de indireção em cada sistema (o pacote em vez de constantes) e o
 esquema das tools gerado por domínio. Laudos médicos são dado sensível: o pacote de prova usa só

@@ -28,6 +28,19 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class Collection(Base):
+    """Uma coleção de documentos do mesmo domínio (dominios/<id>/): relatórios e comparações
+    acontecem dentro dela. O domínio é escolhido na criação e não muda."""
+
+    __tablename__ = "collections"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    nome: Mapped[str] = mapped_column(String(120))
+    dominio: Mapped[str] = mapped_column(String(40))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class Document(Base):
     """Um PDF de um usuário. A chave composta garante o isolamento: o mesmo arquivo
     enviado por dois usuários são dois documentos distintos."""
@@ -40,6 +53,17 @@ class Document(Base):
     size_bytes: Mapped[int] = mapped_column(Integer)
     page_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
+    # A coleção e o domínio dela. Documento de antes das coleções: sem coleção, domínio padrão.
+    collection_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    dominio: Mapped[str] = mapped_column(String(40), default="financeiro")
+    # Os metadados do pacote do domínio, por nome (ex.: {"paciente": ..., "data_exame": ...}).
+    metadados: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    # O domínio que o conteúdo sugere e o aviso quando ele não é o da coleção.
+    dominio_sugerido: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    aviso_dominio: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Os metadados com papel (entidade, recorte, tipo), com os nomes de antes dos pacotes: quem já
+    # lia company/period continua lendo, em qualquer domínio.
     company: Mapped[str | None] = mapped_column(String(255), nullable=True)
     period: Mapped[str | None] = mapped_column(String(64), nullable=True)
     doc_type: Mapped[str | None] = mapped_column(String(128), nullable=True)

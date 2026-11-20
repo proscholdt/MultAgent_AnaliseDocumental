@@ -25,7 +25,7 @@ from app.dominio.periodo import PADRAO as PADRAO_PERIODO
 from app.dominio.periodo import Periodo
 from app.governanca.catalogo import Args, Call, tool
 from app.governanca.erros import ToolRejected
-from app.regras.campos import FIELDS, MAIN_FIELDS, Campo, CampoPrincipal
+from app.regras.campos import DOMINIO, FIELDS, MAIN_FIELDS, Campo, CampoPrincipal
 from app.regras.evidencias import (
     _CAPEX_ROW,
     _squash,
@@ -79,6 +79,15 @@ def to_value(row: StoredValue) -> Value:
         linha=row.linha, coluna=row.coluna, trecho=row.trecho, motivo=row.motivo, evidencia=row.evidencia,
         nota=row.nota, alternativa_consolidada=row.alternativa_consolidada,
         periodo_confirmado=row.periodo_confirmado)
+
+
+def _origem(document: Any, papel: str) -> Any:
+    """De onde veio o metadado com aquele papel (entidade, recorte): o indexador guarda pelo nome do
+    metadado no pacote (empresa, periodo); documentos de antes dos pacotes, pelo nome antigo."""
+    metadado = DOMINIO.metadado(papel)
+    antigo = {"entidade": "company", "recorte": "period"}[papel]
+    source = document.metadata_source or {}
+    return source.get(metadado.nome) if metadado and metadado.nome in source else source.get(antigo)
 
 
 class SalvarIndicador(Args):
@@ -537,10 +546,10 @@ async def fechar_extracao(call: Call, args: FecharExtracao) -> dict[str, Any]:
     payload = {
         "documento": {
             "doc_id": document.doc_id, "arquivo": document.file_name, "empresa": document.company,
-            "origem_da_empresa": document.metadata_source.get("company"), "tipo": document.doc_type,
+            "origem_da_empresa": _origem(document, "entidade"), "tipo": document.doc_type,
             "paginas": document.page_count, "periodo_referencia": extraction.reference,
             "periodo_comparavel": extraction.comparable,
-            "origem_do_periodo": document.metadata_source.get("period")},
+            "origem_do_periodo": _origem(document, "recorte")},
         "indicadores": indicators,
         "valores_de_apoio": extraction.support(),
         "alertas_de_validacao": [alert.view() for alert in alerts],

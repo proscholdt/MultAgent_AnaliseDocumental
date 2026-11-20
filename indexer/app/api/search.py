@@ -23,7 +23,8 @@ async def search(body: SearchRequest, user: CurrentUser, store: StoreDep,
     )
     results = await store.hybrid_search(
         user.id, vectors[0], sparse_vector, body.limit, body.doc_id,
-        chunk_type=body.chunk_type, page_from=body.page_from, page_to=body.page_to)
+        chunk_type=body.chunk_type, page_from=body.page_from, page_to=body.page_to,
+        collection_id=body.colecao_id)
     return SearchResponse(query=body.query, hits=[to_hit(score, payload) for score, payload in results])
 
 

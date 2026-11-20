@@ -31,13 +31,16 @@ def _match(key: str, value: Any) -> models.FieldCondition:
 
 
 def tenant_filter(user_id: str, doc_id: str | None = None, *, chunk_type: str | None = None,
-                  page_from: int | None = None, page_to: int | None = None) -> models.Filter:
+                  page_from: int | None = None, page_to: int | None = None,
+                  collection_id: str | None = None) -> models.Filter:
     """Filtro de toda consulta: sempre o usuário e, se pedidos, o documento, o tipo de chunk e
     um intervalo de páginas. Um chunk entra no intervalo se cobre alguma página dele: o chunk
     das p. 27-28 aparece tanto para a página 27 quanto para a 28."""
     must = [_match("user_id", user_id)]
     if doc_id is not None:
         must.append(_match("doc_id", doc_id))
+    if collection_id is not None:
+        must.append(_match("colecao_id", collection_id))
     if chunk_type is not None:
         must.append(_match("chunk_type", chunk_type))
     if page_from is not None:
@@ -89,7 +92,7 @@ class VectorStore:
             self._collection, "user_id",
             field_schema=models.KeywordIndexParams(type=models.KeywordIndexType.KEYWORD, is_tenant=True),
         )
-        for name in ("doc_id", "company", "chunk_type", "extraction_method"):
+        for name in ("doc_id", "company", "chunk_type", "extraction_method", "dominio", "colecao_id"):
             await self._client.create_payload_index(self._collection, name,
                                                     field_schema=models.PayloadSchemaType.KEYWORD)
         await self._client.create_payload_index(self._collection, "page_start",
@@ -149,9 +152,11 @@ class VectorStore:
     async def hybrid_search(self, user_id: str, dense: list[float], sparse: SparseVec, limit: int,
                             doc_id: str | None = None, *, chunk_type: str | None = None,
                             page_from: int | None = None, page_to: int | None = None,
+                            collection_id: str | None = None,
                             ) -> list[tuple[float, dict[str, Any]]]:
         """Busca densa e busca BM25 em paralelo, fundidas por Reciprocal Rank Fusion."""
-        scope = tenant_filter(user_id, doc_id, chunk_type=chunk_type, page_from=page_from, page_to=page_to)
+        scope = tenant_filter(user_id, doc_id, chunk_type=chunk_type, page_from=page_from, page_to=page_to,
+                              collection_id=collection_id)
         candidates = max(limit * 4, 20)
         response = await self._client.query_points(
             self._collection,

@@ -3,6 +3,7 @@ import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
+from sqlalchemy import inspect, text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -50,11 +51,29 @@ async def init_db() -> None:
         try:
             async with _engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
+                await conn.run_sync(_add_missing_columns)
             return
         except Exception:
             if attempt == 10:
                 raise
             await asyncio.sleep(2)
+
+
+def _add_missing_columns(conn) -> None:
+    """`create_all` cria tabela que falta, mas não coluna nova em tabela que já existe. Uma base de
+    antes dos domínios ganha as colunas novas aqui (nulas ou com o padrão), em Postgres e SQLite."""
+    inspector = inspect(conn)
+    for table in Base.metadata.sorted_tables:
+        if not inspector.has_table(table.name):
+            continue
+        existing = {column["name"] for column in inspector.get_columns(table.name)}
+        for column in table.columns:
+            if column.name in existing:
+                continue
+            kind = column.type.compile(dialect=conn.dialect)
+            default = column.default.arg if column.default is not None and not callable(column.default.arg) else None
+            clause = f" DEFAULT '{default}'" if isinstance(default, str) else ""
+            conn.execute(text(f'ALTER TABLE {table.name} ADD COLUMN {column.name} {kind}{clause}'))
 
 
 async def dispose() -> None:

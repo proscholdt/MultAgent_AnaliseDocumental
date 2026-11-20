@@ -40,6 +40,7 @@ async def handle_index(message: IndexRequested, *, store: VectorStore, dense: De
             return
         document.status = "processing"
         file_name, overrides = document.file_name, dict(document.overrides or {})
+        dominio, collection_id = document.dominio, document.collection_id
         await repo.update_job(session, message.job_id, status="indexing", stage="index",
                               attempts=message.attempt, error=None, failed_stage=None)
 
@@ -69,6 +70,7 @@ async def handle_index(message: IndexRequested, *, store: VectorStore, dense: De
         figures_cache=storage.figures_cache_path(message.user_id, message.doc_id, parser),
         metadata_cache=storage.metadata_cache_path(message.user_id, message.doc_id),
         store=store, dense=dense, sparse=sparse, llm=llm, settings=settings, on_stage=on_stage,
+        dominio=dominio, collection_id=collection_id,
     )
 
     async with session_scope() as session:
@@ -78,7 +80,9 @@ async def handle_index(message: IndexRequested, *, store: VectorStore, dense: De
             await store.delete_document(message.user_id, message.doc_id)
             return
         meta = result.metadata
+        document.metadados = dict(meta.valores)
         document.company, document.period, document.doc_type = meta.company, meta.period, meta.doc_type
+        document.dominio_sugerido, document.aviso_dominio = result.suggested_domain, result.domain_warning
         document.default_unit = meta.default_unit
         document.metadata_source = meta.source
         document.chunk_count = result.chunk_count

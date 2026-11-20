@@ -31,11 +31,13 @@ entidade:
   nome: empresa
   rotulo: Empresa
   plural: Empresas
+  ausente: Empresa não identificada
 
 recorte:
   nome: periodo
   rotulo: Período
   tipo: periodo
+  ausente: período não identificado
 
 # O que o indexador extrai de cada documento. Cada valor só vale com o trecho da página que o prova.
 metadados:

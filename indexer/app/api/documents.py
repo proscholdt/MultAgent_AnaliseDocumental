@@ -6,6 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.concurrency import run_in_threadpool
 
+from app import pacotes
 from app.api.deps import PublisherDep, SessionDep, SettingsDep, StoreDep
 from app.infra import arquivos as storage
 from app.infra import repo
@@ -55,9 +56,12 @@ async def upload_document(
     session: SessionDep,
     publisher: PublisherDep,
     settings: SettingsDep,
-    file: Annotated[UploadFile, File(description="Demonstração financeira em PDF.")],
-    company: Annotated[str | None, Form(description="Opcional: força o nome da empresa.")] = None,
-    period: Annotated[str | None, Form(description="Opcional: força o período (ex.: 2022, 3T25).")] = None,
+    file: Annotated[UploadFile, File(description="O documento em PDF.")],
+    colecao_id: Annotated[str | None, Form(description="A coleção (e com ela o domínio). Sem ela: a primeira "
+                                           "coleção do domínio padrão, criada na hora.")] = None,
+    company: Annotated[str | None, Form(description="Opcional: força a entidade do documento (a empresa, "
+                                        "o paciente...).")] = None,
+    period: Annotated[str | None, Form(description="Opcional: força o recorte (ex.: 2022, 3T25).")] = None,
 ) -> UploadAccepted:
     """Valida o arquivo, grava no armazenamento do usuário e enfileira o processamento.
     Responde na hora; acompanhe por `GET /api/jobs/{job_id}`.
@@ -78,6 +82,14 @@ async def upload_document(
     except storage.InvalidPdf as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
+    if colecao_id:
+        collection = await repo.get_collection(session, user.id, colecao_id)
+        if collection is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Coleção não encontrada.")
+    else:
+        padrao = pacotes.pacote()
+        collection = await repo.default_collection(session, user.id, padrao.id, padrao.nome)
+
     doc_id = storage.compute_doc_id(data)
     await run_in_threadpool(storage.save_upload, user.id, doc_id, data)
     file_name = PurePath(file.filename or "documento.pdf").name[:255]
@@ -86,11 +98,13 @@ async def upload_document(
     document = await repo.get_document(session, user.id, doc_id)
     if document is None:
         document = Document(user_id=user.id, doc_id=doc_id, file_name=file_name, size_bytes=len(data),
-                            page_count=page_count, overrides=overrides, metadata_source={})
+                            page_count=page_count, overrides=overrides, metadata_source={}, metadados={})
         session.add(document)
     else:
         document.file_name = file_name
         document.overrides = {**(document.overrides or {}), **overrides}
+    # O mesmo PDF reenviado em outra coleção muda de coleção (e de domínio) e é reindexado.
+    document.collection_id, document.dominio = collection.id, collection.dominio
     document.status = "queued"
 
     job = Job(user_id=user.id, doc_id=doc_id, kind="full", progress_total=page_count,
@@ -104,8 +118,11 @@ async def upload_document(
 
 
 @router.get("", response_model=list[DocumentOut], summary="Lista os documentos do usuário")
-async def list_documents(user: CurrentUser, session: SessionDep) -> list[Document]:
-    return await repo.list_documents(session, user.id)
+async def list_documents(
+    user: CurrentUser, session: SessionDep,
+    colecao_id: Annotated[str | None, Query(description="Só os documentos desta coleção.")] = None,
+) -> list[Document]:
+    return await repo.list_documents(session, user.id, colecao_id)
 
 
 @router.get("/{doc_id}", response_model=DocumentOut, summary="Detalhe de um documento")
@@ -131,13 +148,20 @@ async def patch_document(doc_id: str, body: DocumentPatch, user: CurrentUser, se
     if not changes:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Informe ao menos um campo.")
     overrides = dict(document.overrides or {})
-    for name in _OVERRIDE_FIELDS:
-        if name in changes:
-            value = (changes[name] or "").strip()
-            if value:
-                overrides[name] = value
-            else:
-                overrides.pop(name, None)
+    pacote = pacotes.pacote(document.dominio)
+    nomes = {m.nome for m in pacote.metadados}
+    asked = {name: changes[name] for name in _OVERRIDE_FIELDS if name in changes}
+    for name, value in (changes.get("metadados") or {}).items():
+        if name not in nomes:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT,
+                                detail=f"O domínio {pacote.id} não tem o metadado {name!r}. Tem: {', '.join(sorted(nomes))}.")
+        asked[name] = value
+    for name, value in asked.items():
+        value = (value or "").strip()
+        if value:
+            overrides[name] = value
+        else:
+            overrides.pop(name, None)
     document.overrides = overrides
     document.status = "queued"
 

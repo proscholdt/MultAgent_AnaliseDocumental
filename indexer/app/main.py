@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from sqlalchemy import text
 
 from app import telemetria
-from app.api import auth, documents, jobs, search
+from app.api import auth, colecoes, documents, jobs, search
 from app.config import INSECURE_JWT_SECRET, get_settings
 from app.indexacao.qdrant import VectorStore
 from app.infra import banco as db
@@ -117,6 +117,7 @@ def create_app(with_lifespan: bool = True) -> FastAPI:
         get_settings().reload()  # um stat por pedido; o arquivo só é lido quando muda
         return await call_next(request)
     app.include_router(auth.router)
+    app.include_router(colecoes.router)
     app.include_router(documents.router)
     app.include_router(jobs.router)
     app.include_router(search.router)

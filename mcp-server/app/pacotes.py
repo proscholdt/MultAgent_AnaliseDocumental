@@ -43,6 +43,10 @@ class Rotulo(_Bloco):
     nome: Nome
     rotulo: str
     plural: str
+    ausente: str | None = None  # o que o cabeçalho de cada chunk diz sem ela (padrão: "<rotulo> não identificado")
+
+    def texto_ausente(self) -> str:
+        return self.ausente or f"{self.rotulo} não identificado"
 
 
 
@@ -52,6 +56,10 @@ class Recorte(_Bloco):
     nome: Nome
     rotulo: str
     tipo: Literal["periodo", "data", "nenhum"]
+    ausente: str | None = None  # o que o cabeçalho de cada chunk diz sem ele
+
+    def texto_ausente(self) -> str:
+        return self.ausente or f"{self.rotulo} não identificado"
 
 
 
