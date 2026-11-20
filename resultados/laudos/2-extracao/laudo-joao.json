@@ -1,0 +1,114 @@
+{
+  "empresa": "João Pereira",
+  "documento": "laudo-joao.pdf",
+  "periodo_referencia": "05/06/2024",
+  "periodo_comparavel": null,
+  "glicose": {
+    "status": "encontrado",
+    "valor": 118,
+    "valor_como_escrito": "118",
+    "unidade": "mg/dL",
+    "periodo": "05/06/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "Material: soro. Método: enzimático. Resultado: 118 mg/dL Valores de referência: 70 a 99 mg/dL",
+      "tipo": "texto"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "hemoglobina_glicada": {
+    "status": "encontrado",
+    "valor": 6.3,
+    "valor_como_escrito": "6,3",
+    "unidade": "%",
+    "periodo": "05/06/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "Material: sangue total. Método: HPLC. Resultado: 6,3 % Valores de referência: inferior a 5,7 %",
+      "tipo": "texto"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "colesterol_total": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O laudo não informa colesterol total (apenas glicose, HbA1c, triglicerídeos e creatinina).",
+    "busca": {
+      "termos_procurados": [
+        "colesterol total"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    }
+  },
+  "hdl": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O laudo não informa colesterol HDL.",
+    "busca": {
+      "termos_procurados": [
+        "hdl"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    }
+  },
+  "ldl": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O laudo não informa colesterol LDL.",
+    "busca": {
+      "termos_procurados": [
+        "ldl"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    }
+  },
+  "triglicerideos": {
+    "status": "encontrado",
+    "valor": 210,
+    "valor_como_escrito": "210",
+    "unidade": "mg/dL",
+    "periodo": "05/06/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "Material: soro. Método: enzimático. Resultado: 210 mg/dL Valores de referência: inferior a 150 mg/dL Observação: paciente informou jejum de 8 horas. Responsável técnico: Dra. Lúcia Ramos, CRBM 54321 Laudo fictício, gerado para testar o sistema. Não corresponde a nenhum paciente real.",
+      "tipo": "texto"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "creatinina": {
+    "status": "encontrado",
+    "valor": 1.05,
+    "valor_como_escrito": "1,05",
+    "unidade": "mg/dL",
+    "periodo": "05/06/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "Material: soro. Método: cinético. Resultado: 1,05 mg/dL Valores de referência: 0,70 a 1,30 mg/dL",
+      "tipo": "texto"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "hemoglobina": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O laudo não traz hemoglobina do hemograma (apenas hemoglobina glicada/HbA1c).",
+    "busca": {
+      "termos_procurados": [
+        "hemoglobina"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    }
+  }
+}

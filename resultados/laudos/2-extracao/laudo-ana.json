@@ -1,0 +1,139 @@
+{
+  "empresa": "Ana Lima",
+  "documento": "laudo-ana.pdf",
+  "periodo_referencia": "20/09/2024",
+  "periodo_comparavel": null,
+  "glicose": {
+    "status": "encontrado",
+    "valor": 85,
+    "valor_como_escrito": "85",
+    "unidade": "mg/dL",
+    "periodo": "20/09/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "| Glicose | 85 mg/dL | 70 a 99 mg/dL |",
+      "tipo": "tabela",
+      "linha": "Glicose",
+      "coluna": "Resultado"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "hemoglobina_glicada": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O laudo não apresenta o exame de hemoglobina glicada (HbA1c); a busca por 'hemoglobina glicada' e afins retornou apenas uma observação sobre hemoglobina (hemograma).",
+    "busca": {
+      "termos_procurados": [
+        "hemoglobina glicada",
+        "hba1c",
+        "glicohemoglobina"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    }
+  },
+  "colesterol_total": {
+    "status": "encontrado",
+    "valor": 178,
+    "valor_como_escrito": "178",
+    "unidade": "mg/dL",
+    "periodo": "20/09/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "| Colesterol total | 178 mg/dL | inferior a 190 mg/dL |",
+      "tipo": "tabela",
+      "linha": "Colesterol total",
+      "coluna": "Resultado"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "hdl": {
+    "status": "encontrado",
+    "valor": 62,
+    "valor_como_escrito": "62",
+    "unidade": "mg/dL",
+    "periodo": "20/09/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "| Colesterol HDL | 62 mg/dL | superior a 40 mg/dL |",
+      "tipo": "tabela",
+      "linha": "Colesterol HDL",
+      "coluna": "Resultado"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "ldl": {
+    "status": "encontrado",
+    "valor": 96,
+    "valor_como_escrito": "96",
+    "unidade": "mg/dL",
+    "periodo": "20/09/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "| Colesterol LDL | 96 mg/dL | inferior a 130 mg/dL |",
+      "tipo": "tabela",
+      "linha": "Colesterol LDL",
+      "coluna": "Resultado"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "triglicerideos": {
+    "status": "encontrado",
+    "valor": 98,
+    "valor_como_escrito": "98",
+    "unidade": "mg/dL",
+    "periodo": "20/09/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "| Triglicerídeos | 98 mg/dL | inferior a 150 mg/dL |",
+      "tipo": "tabela",
+      "linha": "Triglicerídeos",
+      "coluna": "Resultado"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "creatinina": {
+    "status": "encontrado",
+    "valor": 0.78,
+    "valor_como_escrito": "0,78",
+    "unidade": "mg/dL",
+    "periodo": "20/09/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "| Creatinina | 0,78 mg/dL | 0,50 a 1,10 mg/dL |",
+      "tipo": "tabela",
+      "linha": "Creatinina",
+      "coluna": "Resultado"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "hemoglobina": {
+    "status": "encontrado",
+    "valor": 11.2,
+    "valor_como_escrito": "11,2",
+    "unidade": "g/dL",
+    "periodo": "20/09/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "| Hemoglobina | 11,2 g/dL | 12,0 a 15,5 g/dL |",
+      "tipo": "tabela",
+      "linha": "Hemoglobina",
+      "coluna": "Resultado"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  }
+}

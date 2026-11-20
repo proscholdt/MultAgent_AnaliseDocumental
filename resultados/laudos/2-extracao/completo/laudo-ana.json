@@ -1,0 +1,206 @@
+{
+  "documento": {
+    "doc_id": "efbecb04edf3e7c9",
+    "arquivo": "laudo-ana.pdf",
+    "empresa": "Ana Lima",
+    "origem_da_empresa": {
+      "source": "llm",
+      "page": 1,
+      "snippet": "Paciente: Ana Lima"
+    },
+    "tipo": null,
+    "paginas": 1,
+    "periodo_referencia": "20/09/2024",
+    "periodo_comparavel": null,
+    "origem_do_periodo": {
+      "source": "llm",
+      "page": 1,
+      "snippet": "Data da coleta: 20/09/2024"
+    }
+  },
+  "indicadores": {
+    "glicose": {
+      "rotulo": "Glicose",
+      "informado": {
+        "status": "encontrado",
+        "valor": "85",
+        "valor_numerico": 85.0,
+        "unidade": "mg/dL",
+        "periodo": "20/09/2024",
+        "escopo": null,
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 1,
+          "chunk_index": 2,
+          "secao": "Bioquímica",
+          "trecho": "| Exame | Resultado | Valores de referência |\n| Glicose | 85 mg/dL | 70 a 99 mg/dL |",
+          "linha": "Glicose",
+          "coluna": "Resultado"
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "hemoglobina_glicada": {
+      "rotulo": "Hemoglobina glicada (HbA1c)",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "O laudo não apresenta o exame de hemoglobina glicada (HbA1c); a busca por 'hemoglobina glicada' e afins retornou apenas uma observação sobre hemoglobina (hemograma).",
+        "evidencia": {
+          "termos_procurados": [
+            "hemoglobina glicada",
+            "hba1c",
+            "glicohemoglobina"
+          ],
+          "paginas_com_o_termo": [],
+          "paginas_descartadas": []
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "colesterol_total": {
+      "rotulo": "Colesterol total",
+      "informado": {
+        "status": "encontrado",
+        "valor": "178",
+        "valor_numerico": 178.0,
+        "unidade": "mg/dL",
+        "periodo": "20/09/2024",
+        "escopo": null,
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 1,
+          "chunk_index": 2,
+          "secao": "Bioquímica",
+          "trecho": "| Exame | Resultado | Valores de referência |\n| Colesterol total | 178 mg/dL | inferior a 190 mg/dL |",
+          "linha": "Colesterol total",
+          "coluna": "Resultado"
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "hdl": {
+      "rotulo": "Colesterol HDL",
+      "informado": {
+        "status": "encontrado",
+        "valor": "62",
+        "valor_numerico": 62.0,
+        "unidade": "mg/dL",
+        "periodo": "20/09/2024",
+        "escopo": null,
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 1,
+          "chunk_index": 2,
+          "secao": "Bioquímica",
+          "trecho": "| Exame | Resultado | Valores de referência |\n| Colesterol HDL | 62 mg/dL | superior a 40 mg/dL |",
+          "linha": "Colesterol HDL",
+          "coluna": "Resultado"
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "ldl": {
+      "rotulo": "Colesterol LDL",
+      "informado": {
+        "status": "encontrado",
+        "valor": "96",
+        "valor_numerico": 96.0,
+        "unidade": "mg/dL",
+        "periodo": "20/09/2024",
+        "escopo": null,
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 1,
+          "chunk_index": 2,
+          "secao": "Bioquímica",
+          "trecho": "| Exame | Resultado | Valores de referência |\n| Colesterol LDL | 96 mg/dL | inferior a 130 mg/dL |",
+          "linha": "Colesterol LDL",
+          "coluna": "Resultado"
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "triglicerideos": {
+      "rotulo": "Triglicerídeos",
+      "informado": {
+        "status": "encontrado",
+        "valor": "98",
+        "valor_numerico": 98.0,
+        "unidade": "mg/dL",
+        "periodo": "20/09/2024",
+        "escopo": null,
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 1,
+          "chunk_index": 2,
+          "secao": "Bioquímica",
+          "trecho": "| Exame | Resultado | Valores de referência |\n| Triglicerídeos | 98 mg/dL | inferior a 150 mg/dL |",
+          "linha": "Triglicerídeos",
+          "coluna": "Resultado"
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "creatinina": {
+      "rotulo": "Creatinina",
+      "informado": {
+        "status": "encontrado",
+        "valor": "0,78",
+        "valor_numerico": 0.78,
+        "unidade": "mg/dL",
+        "periodo": "20/09/2024",
+        "escopo": null,
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 1,
+          "chunk_index": 2,
+          "secao": "Bioquímica",
+          "trecho": "| Exame | Resultado | Valores de referência |\n| Creatinina | 0,78 mg/dL | 0,50 a 1,10 mg/dL |",
+          "linha": "Creatinina",
+          "coluna": "Resultado"
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "hemoglobina": {
+      "rotulo": "Hemoglobina",
+      "informado": {
+        "status": "encontrado",
+        "valor": "11,2",
+        "valor_numerico": 11.2,
+        "unidade": "g/dL",
+        "periodo": "20/09/2024",
+        "escopo": null,
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 1,
+          "chunk_index": 1,
+          "secao": "Hemograma",
+          "trecho": "| Exame | Resultado | Valores de referência |\n| Hemoglobina | 11,2 g/dL | 12,0 a 15,5 g/dL |",
+          "linha": "Hemoglobina",
+          "coluna": "Resultado"
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    }
+  },
+  "valores_de_apoio": {},
+  "alertas_de_validacao": [],
+  "impressao_do_indice": "2026-11-20T18:33:05.375966Z|4"
+}

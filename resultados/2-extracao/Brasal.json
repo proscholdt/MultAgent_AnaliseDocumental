@@ -36,7 +36,7 @@
   "ebitda": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O relatório não apresenta o indicador EBITDA (nem LAJIDA) em tabelas ou texto; não foi encontrado no documento.",
+    "motivo": "O documento não apresenta o indicador EBITDA/LAJIDA nem tabela/nota com esse termo (buscas por 'EBITDA', 'LAJIDA').",
     "busca": {
       "termos_procurados": [
         "ebitda",
@@ -49,7 +49,7 @@
   "margem_ebitda": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não informa margem EBITDA (percentual) em texto ou tabelas.",
+    "motivo": "O documento não apresenta margem EBITDA nem percentual associado a EBITDA (buscas por 'margem EBITDA').",
     "busca": {
       "termos_procurados": [
         "margem ebitda",
@@ -93,7 +93,7 @@
   "divida_liquida": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não apresenta uma linha/frase com 'dívida líquida'; será calculada pelo servidor a partir de empréstimos (circulante e não circulante) e caixa/equivalentes.",
+    "motivo": "O documento não informa o indicador 'dívida líquida' (buscas por 'dívida líquida').",
     "busca": {
       "termos_procurados": [
         "dívida líquida",
@@ -106,7 +106,7 @@
   "alavancagem": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento menciona 'alavancagem financeira' em contexto descritivo de gestão do capital, mas não informa o indicador 'Alavancagem (dívida líquida / EBITDA)' como múltiplo (ex.: 'x'). O valor será calculado pelo servidor com EBITDA e dívida líquida.",
+    "motivo": "O documento menciona 'alavancagem' apenas em contexto qualitativo de gestão do capital (risco de estrutura de capital), mas não apresenta o múltiplo 'dívida líquida/EBITDA' (não há linha/nota com o cálculo do indicador).",
     "busca": {
       "termos_procurados": [
         "alavancagem",
@@ -155,7 +155,7 @@
   "capex": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não informa um total de 'capex'/'total de investimentos'. As aquisições aparecem no fluxo de caixa como 'Imobilizado e intangível' (gravadas como apoio).",
+    "motivo": "O documento traz apenas a linha de investimento 'Imobilizado e intangível' na demonstração dos fluxos de caixa (valor de apoio), mas não declara um total de 'capex'/'total de investimentos' com esse nome.",
     "busca": {
       "termos_procurados": [
         "capex",

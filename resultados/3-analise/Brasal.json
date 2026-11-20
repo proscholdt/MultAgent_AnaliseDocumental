@@ -5,7 +5,7 @@
     "motivo_resultado": [
       {
         "status": "nao_encontrado",
-        "motivo": "Não há relatório/mensagem/comentário da administração ou seção de análise de desempenho que explique causas de variação de receita ou resultados; o documento contém demonstrações financeiras e notas explicativas (sem discussão de performance).",
+        "motivo": "O documento não apresenta relatório/mensagem/comentário da administração ou seção de discussão de desempenho que explique causas do resultado e variações de receita; o conteúdo é predominantemente notas explicativas e políticas contábeis.",
         "evidencia": {
           "termos_procurados": [],
           "paginas_com_o_termo": [],
@@ -15,7 +15,7 @@
     ],
     "risco": [
       {
-        "afirmacao": "Há risco de crédito relacionado à concessão de crédito aos clientes, mitigado por política de gestão com análise do perfil e monitoramento dos saldos a receber, além de diluição por dispersão de clientes.",
+        "afirmacao": "O principal risco para o negócio está ligado à concessão de crédito aos clientes e, para mitigá-lo, a Companhia adota política de gestão com análise de perfil e monitoramento dos saldos a receber.",
         "citacao": "O principal fator de risco de mercado que afeta o negócio é a concessão de crédito aos clientes. Para reduzir as possíveis perdas com inadimplência, é adotada uma política de gestão na concessão de crédito, que consiste em análises do perfil dos clientes, bem como em monitoramento dos saldos a receber.",
         "pagina": 49,
         "chunk_index": 128,
@@ -24,39 +24,39 @@
         "tom": null
       },
       {
-        "afirmacao": "Para ações classificadas como risco possível, a Companhia indica que elas não são provisionadas nas demonstrações financeiras em consonância ao CPC 25.",
-        "citacao": "A Companhia possui ainda ações judiciais classificadas com risco possível, dessa forma, em consonância ao CPC 25 não estão provisionadas em suas demonstrações financeiras, a saber:",
-        "pagina": 41,
-        "chunk_index": 103,
-        "secao": "19. Provisões para demandas judiciais e administrativas > d) Resumo das ações classificadas como \"risco possível\"",
-        "fonte": "nota explicativa",
-        "tom": null
-      },
-      {
-        "afirmacao": "Existem passivos contingentes relevantes de demandas judiciais e processos administrativos, envolvendo questões tributárias, trabalhistas e civis, com riscos avaliados e sujeitos a diferentes classificações (inclusive não provisionadas em casos de risco possível).",
-        "citacao": "A Companhia é parte em ações judiciais e processos administrativos perante vários tribunais e órgãos governamentais, decorrentes do curso normal de operações, envolvendo questões tributárias, trabalhistas, civis e outros assuntos, que estão avaliados como segue:",
-        "pagina": 39,
-        "chunk_index": 96,
-        "secao": "19. Provisões para demandas judiciais e administrativas",
-        "fonte": "nota explicativa",
-        "tom": null
-      },
-      {
-        "afirmacao": "A Companhia reconhece exposição a risco de mercado com possibilidade de não recebimento e também oscilações de preços e taxas de juros, que podem impactar resultados operacionais e condição financeira.",
+        "afirmacao": "A Administração reconhece que a Companhia está exposta a riscos de mercado, incluindo realização de contas a receber e oscilações de preços e de taxas de juros, que podem afetar resultados e condição financeira.",
         "citacao": "A Companhia está exposta a riscos de mercado decorrentes de suas atividades. Esses riscos envolvem, principalmente, a possibilidade da realização de contas a receber de clientes, de oscilações dos preços dos produtos e de taxas de juros, que podem impactar os resultados operacionais e a condição financeira, sendo os principais os seguintes:",
         "pagina": 49,
         "chunk_index": 127,
         "secao": "26. Gestão de riscos",
         "fonte": "nota explicativa",
         "tom": null
+      },
+      {
+        "afirmacao": "A Companhia indica que os itens do ativo e passivo circulante têm liquidez imediata ou vencimento em prazos de até 12 meses, o que reduz risco de liquidez no curto prazo.",
+        "citacao": "Os valores registrados no ativo e no passivo circulante têm liquidez imediata ou vencimento, em prazos não superiores há 12 meses.",
+        "pagina": 48,
+        "chunk_index": 124,
+        "secao": "25. Gestão de riscos dos instrumentos financeiros",
+        "fonte": "nota explicativa",
+        "tom": null
       }
     ],
     "guidance": [
       {
-        "afirmacao": "Para créditos fiscais ligados à exclusão do ICMS da base do PIS/COFINS, a administração estimou a expectativa de realização dos saldos, com parcela ocorrendo no exercício de 2022 e o restante até fevereiro de 2023.",
+        "afirmacao": "Para créditos fiscais de PIS e COFINS excluindo ICMS, a Companhia indica que a expectativa de realização foi baseada em projeções orçamentárias e que a realização deve ocorrer majoritariamente em 2022, com parte até fevereiro de 2023.",
         "citacao": "A Controlada realizou um estudo com base nos últimos recolhimentos de PIS e COFINS, além de considerar também as projeções orçamentárias para o próximo exercício, a expectativa de realização dos saldos dos valores relativos aos créditos fiscais, oriundos da exclusão do ICMS da base de cálculo do PIS e da COFINS e demais créditos de PIS e COFINS, é de que ocorrerá no exercício de 2022 aproximadamente 68,6%, sendo que o restante de 31,4% acontecerá até fevereiro de 2023.",
         "pagina": 28,
         "chunk_index": 61,
+        "secao": "8. Tributos a recuperar > a) Circulante",
+        "fonte": "nota explicativa",
+        "tom": null
+      },
+      {
+        "afirmacao": "A Administração também reforça a projeção de compensação de tributos a recuperar, indicando que parte da compensação esperada deveria acontecer até julho de 2023, após a realização em 2022.",
+        "citacao": "Foi realizado em 2022 o acompanhamneto de compensação dos tributos a recuperar oriundos da exclusão do ICMS da base de cálculo do PIS e da COFINS e demais créditos de PIS e COFINS, em função de uma retração no crescimento esperado para o 4º. Semestre de 2022, ficando abaixo um pouco das metas estabelecidas, então ocorreu uma compensação no exercício de 2022 de aproximadamente 61,1%, sendo que o restante de 38,9% deverá acontecer até julho de 2023.",
+        "pagina": 28,
+        "chunk_index": 62,
         "secao": "8. Tributos a recuperar > a) Circulante",
         "fonte": "nota explicativa",
         "tom": null
@@ -64,8 +64,8 @@
     ],
     "evento_relevante": [
       {
-        "afirmacao": "Após o encerramento, o STF decidiu que a 'coisa julgada' sobre tributos recolhidos de forma continuada pode perder efeitos caso a corte se pronuncie em sentido contrário, aumentando a necessidade de monitoramento dos processos relacionados.",
-        "citacao": "Em decisão tomada no dia 08 de fevereiro 2023, por unanimidade, o Plenário do Supremo Tribunal Federal (STF) considerou que uma decisão definitiva, a chamada \"coisa julgada\", sobre tributos recolhidos de forma continuada, perde seus efeitos caso a corte se pronuncie em sentido contrário. Isso porque, de acordo com a legislação e a jurisprudência, uma decisão, mesmo transitada em julgado, produz os seus efeitos enquanto perdurar o quadro fático e jurídico que a justificou. Havendo alteração, os efeitos da decisão anterior podem deixar de se produzir.",
+        "afirmacao": "Após o encerramento, o STF proferiu decisão sobre a perda de efeitos da coisa julgada em tributos recolhidos de forma continuada, sinalizando potencial impacto nos créditos/valores relacionados a julgados passados.",
+        "citacao": "Em decisão tomada no dia 08 de fevereiro 2023, por unanimidade, o Plenário do Supremo Tribunal Federal (STF) considerou que uma decisão definitiva, a chamada \"coisa julgada\", sobre tributos recolhidos de forma continuada, perde seus efeitos caso a corte se pronuncie em sentido contrário.",
         "pagina": 51,
         "chunk_index": 137,
         "secao": "28. Eventos subsequentes - Perda de efeitos da \"coisa julgada\" sobre tributos recolhidos de forma continuada",
@@ -75,13 +75,13 @@
     ],
     "tom": [
       {
-        "afirmacao": "O documento mantém um tom neutro ao descrever responsabilidades da diretoria na avaliação da continuidade operacional e na elaboração das demonstrações, sem indicar viés positivo ou negativo sobre desempenho ou futuro.",
-        "citacao": "Na elaboração das demonstrações financeiras individuais e consolidadas, a diretoria é responsável pela avaliação da capacidade de a Companhia continuar operando, divulgando, quando aplicável, os assuntos relacionados com a sua continuidade operacional e o uso dessa base contábil na elaboração das demonstrações financeiras, a não ser que a administração pretenda liquidar a Companhia ou cessar suas operações, ou não tenha nenhuma alternativa realista para evitar o encerramento das operações.",
-        "pagina": 4,
-        "chunk_index": 5,
-        "secao": "Responsabilidades da diretoria pelas demonstrações financeiras individuais e consolidadas",
-        "fonte": "demonstração financeira",
-        "tom": "neutro"
+        "status": "nao_encontrado",
+        "motivo": "Não há seção de administração (relatório/mensagem) com posicionamento qualitativo; apenas descrições factuais em notas, sem avaliação explícita de tom (positivo/neutro/negativo) pela administração.",
+        "evidencia": {
+          "termos_procurados": [],
+          "paginas_com_o_termo": [],
+          "paginas_descartadas": []
+        }
       }
     ]
   }

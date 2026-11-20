@@ -1,6 +1,6 @@
 # Avaliação contra o gabarito
 
-Base lida em 2026-11-17T15:39:42+00:00. Gabarito: `agents/avaliacao/gabarito.json`, conferido à mão nos PDFs.
+Base lida em 2026-11-20T18:49:05+00:00. Gabarito: `agents/avaliacao/gabarito.json`, conferido à mão nos PDFs.
 
 | Medida | Resultado |
 |---|---|
@@ -13,7 +13,7 @@ Base lida em 2026-11-17T15:39:42+00:00. Gabarito: `agents/avaliacao/gabarito.jso
 | Alertas automáticos esperados que dispararam | 2 de 2 |
 | Inconsistências do texto da fonte registradas | 7 de 7 |
 | Perguntas com o conteúdo e a fonte esperados | 5 de 5 |
-| Citações que existem literalmente no trecho citado | 35 de 35 |
+| Citações que existem literalmente no trecho citado | 32 de 32 |
 
 | Documento | Indicador | Esperado | Obtido | Valor | Página | Ano anterior | Calculado |
 |---|---|---|---|---|---|---|---|
@@ -38,7 +38,7 @@ Base lida em 2026-11-17T15:39:42+00:00. Gabarito: `agents/avaliacao/gabarito.jso
 | Light.pdf | fluxo_caixa_operacional | informado | informado (200.763 R$ mil) | sim | sim | sim | — |
 | Light.pdf | ebitda | informado | informado (1.180 R$ milhões) | sim | sim | — | — |
 | Light.pdf | margem_ebitda | nao_encontrado | nao_encontrado | — | — | — | — |
-| Light.pdf | divida_liquida | informado | informado (9.032 R$ milhões) | sim | sim | — | — |
+| Light.pdf | divida_liquida | informado | informado (9.032.236 R$ mil) | sim | sim | — | — |
 | Light.pdf | alavancagem | informado | informado (3,32x) | sim | sim | — | — |
 | Light.pdf | capex | nao_encontrado | nao_encontrado | — | — | — | sim |
 

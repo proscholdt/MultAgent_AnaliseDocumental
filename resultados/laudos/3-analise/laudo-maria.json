@@ -1,0 +1,57 @@
+{
+  "arquivo": "laudo-maria.pdf",
+  "empresa": "Maria Souza",
+  "analise": {
+    "fora_da_referencia": [
+      {
+        "afirmacao": "Colesterol total (231 mg/dL) está acima da faixa de referência do laudo (inferior a 190 mg/dL).",
+        "citacao": "| Colesterol total | 231 mg/dL | inferior a 190 mg/dL |",
+        "pagina": 1,
+        "chunk_index": 2,
+        "secao": "Lipidograma",
+        "fonte": "relatório",
+        "tom": null
+      },
+      {
+        "afirmacao": "Colesterol LDL (158 mg/dL) está acima da faixa de referência do laudo (inferior a 130 mg/dL).",
+        "citacao": "| Colesterol LDL | 158 mg/dL | inferior a 130 mg/dL |",
+        "pagina": 1,
+        "chunk_index": 2,
+        "secao": "Lipidograma",
+        "fonte": "relatório",
+        "tom": null
+      }
+    ],
+    "observacao": [
+      {
+        "afirmacao": "O laudo informa o método utilizado como enzimático colorimétrico.",
+        "citacao": "Material: soro. Método: enzimático colorimétrico. Observação: amostra levemente lipêmica.",
+        "pagina": 1,
+        "chunk_index": 3,
+        "secao": "Lipidograma",
+        "fonte": "relatório",
+        "tom": null
+      },
+      {
+        "afirmacao": "O laudo registra observação de amostra levemente lipêmica.",
+        "citacao": "Material: soro. Método: enzimático colorimétrico. Observação: amostra levemente lipêmica.",
+        "pagina": 1,
+        "chunk_index": 3,
+        "secao": "Lipidograma",
+        "fonte": "relatório",
+        "tom": null
+      }
+    ],
+    "recomendacao": [
+      {
+        "afirmacao": "O laudo recomenda repetir o lipidograma após jejum de 12 horas.",
+        "citacao": "Recomenda-se repetir o lipidograma após jejum de 12 horas.",
+        "pagina": 1,
+        "chunk_index": 3,
+        "secao": "Lipidograma",
+        "fonte": "relatório",
+        "tom": null
+      }
+    ]
+  }
+}

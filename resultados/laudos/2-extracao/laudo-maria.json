@@ -1,0 +1,136 @@
+{
+  "empresa": "Maria Souza",
+  "documento": "laudo-maria.pdf",
+  "periodo_referencia": "12/03/2024",
+  "periodo_comparavel": null,
+  "glicose": {
+    "status": "encontrado",
+    "valor": 92,
+    "valor_como_escrito": "92",
+    "unidade": "mg/dL",
+    "periodo": "12/03/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "| Glicose | 92 mg/dL | 70 a 99 mg/dL |",
+      "tipo": "tabela",
+      "linha": "Glicose",
+      "coluna": "Resultado"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "hemoglobina_glicada": {
+    "status": "encontrado",
+    "valor": 5.4,
+    "valor_como_escrito": "5,4 %",
+    "unidade": "%",
+    "periodo": "12/03/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "| Hemoglobina glicada (HbA1c) | 5,4 % | inferior a 5,7 % |",
+      "tipo": "tabela",
+      "linha": "Hemoglobina glicada (HbA1c)",
+      "coluna": "Resultado"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "colesterol_total": {
+    "status": "encontrado",
+    "valor": 231,
+    "valor_como_escrito": "231",
+    "unidade": "mg/dL",
+    "periodo": "12/03/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "| Colesterol total | 231 mg/dL | inferior a 190 mg/dL |",
+      "tipo": "tabela",
+      "linha": "Colesterol total",
+      "coluna": "Resultado"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "hdl": {
+    "status": "encontrado",
+    "valor": 48,
+    "valor_como_escrito": "48",
+    "unidade": "mg/dL",
+    "periodo": "12/03/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "| Colesterol HDL | 48 mg/dL | superior a 40 mg/dL |",
+      "tipo": "tabela",
+      "linha": "Colesterol HDL",
+      "coluna": "Resultado"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "ldl": {
+    "status": "encontrado",
+    "valor": 158,
+    "valor_como_escrito": "158",
+    "unidade": "mg/dL",
+    "periodo": "12/03/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "| Colesterol LDL | 158 mg/dL | inferior a 130 mg/dL |",
+      "tipo": "tabela",
+      "linha": "Colesterol LDL",
+      "coluna": "Resultado"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "triglicerideos": {
+    "status": "encontrado",
+    "valor": 125,
+    "valor_como_escrito": "125",
+    "unidade": "mg/dL",
+    "periodo": "12/03/2024",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "| Triglicerídeos | 125 mg/dL | inferior a 150 mg/dL |",
+      "tipo": "tabela",
+      "linha": "Triglicerídeos",
+      "coluna": "Resultado"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "creatinina": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "o laudo não traz o exame creatinina (buscado por 'creatinina' e verificada a página 1; há apenas glicose, hemoglobina glicada e lipidograma).",
+    "busca": {
+      "termos_procurados": [
+        "creatinina"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    }
+  },
+  "hemoglobina": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "o laudo não traz o exame hemoglobina (no hemograma); a página 1 contém apenas glicose, hemoglobina glicada e lipidograma, sem hemograma.",
+    "busca": {
+      "termos_procurados": [
+        "hemoglobina"
+      ],
+      "paginas_com_o_termo": [
+        1
+      ],
+      "paginas_descartadas": [
+        1
+      ]
+    }
+  }
+}

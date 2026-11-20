@@ -7,7 +7,7 @@
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "O texto afirma que o quadro reflete os fluxos em 31 de dezembro de 2021, porém o quadro apresenta a coluna de 2022 (no título do próprio quadro).",
+      "mensagem": "O texto introduz o quadro como refletindo 31/12/2021, mas a própria tabela apresenta valores sob a coluna/ano “2022” (inconsistência de data de referência para os riscos de liquidez).",
       "detalhes": {
         "pagina": 41,
         "chunk_index": 115,
@@ -21,12 +21,12 @@
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "No quadro, duas colunas têm o mesmo título \"Controladora - 31/12/2021\", o que indica cabeçalho duplicado para anos distintos (e não há coluna de 31/12/2022 para a controladora).",
+      "mensagem": "No quadro de instrumentos financeiros, há duas colunas com o mesmo título “Controladora - 31/12/2021”, sugerindo que uma das datas foi registrada incorretamente (duplicação de título de coluna).",
       "detalhes": {
         "pagina": 42,
         "chunk_index": 120,
         "secao": "22. Gestão de risco > 22.3. Instrumento financeiro por categoria",
-        "citacao": "| | Controladora - 31/12/2021 | Controladora - 31/12/2021 | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 | |----------------------------------------------------|-----------------------------|-----------------------------|----------------------------|----------------------------|"
+        "citacao": "| | Controladora - 31/12/2021 | Controladora - 31/12/2021 | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 |"
       },
       "registrado_por": "validador"
     },
@@ -35,7 +35,7 @@
       "codigo": "revisao_das_fontes_concluida",
       "severidade": "informacao",
       "campo": null,
-      "mensagem": "Fontes revisadas pelo agente validador. Revisadas as fontes e dois candidatos de inconsistência foram verificados no documento; 2 inconsistências foram registradas (datas/títulos de colunas em quadros de risco de liquidez e mensuração de instrumentos).",
+      "mensagem": "Fontes revisadas pelo agente validador. Foram lidos os alertas e candidatos de inconsistência e verificadas as tabelas correspondentes; duas inconsistências de datas/títulos de colunas foram registradas.",
       "detalhes": {
         "inconsistencias_registradas": 2
       },

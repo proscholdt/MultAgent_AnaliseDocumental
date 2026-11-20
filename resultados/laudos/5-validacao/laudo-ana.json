@@ -1,0 +1,17 @@
+{
+  "arquivo": "laudo-ana.pdf",
+  "empresa": "Ana Lima",
+  "alertas": [
+    {
+      "tipo": "fonte",
+      "codigo": "revisao_das_fontes_concluida",
+      "severidade": "informacao",
+      "campo": null,
+      "mensagem": "Fontes revisadas pelo agente validador. Alertas automáticos lidos (nenhum) e o laudo (1 página) foi conferido quanto a inconsistências internas de datas/paciente/unidades/valores; nenhuma inconsistência do próprio documento foi encontrada.",
+      "detalhes": {
+        "inconsistencias_registradas": 0
+      },
+      "registrado_por": "validador"
+    }
+  ]
+}

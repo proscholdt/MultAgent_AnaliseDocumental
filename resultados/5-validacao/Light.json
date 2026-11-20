@@ -34,13 +34,23 @@
       "codigo": "sem_comparavel",
       "severidade": "informacao",
       "campo": null,
-      "mensagem": "Sem o valor de 2021, a variação não foi calculada para: EBITDA, Dívida líquida, Alavancagem (dívida líquida / EBITDA).",
+      "mensagem": "Sem o valor de 2021, a variação não foi calculada para: EBITDA, Alavancagem (dívida líquida / EBITDA).",
       "detalhes": {
         "campos": [
           "EBITDA",
-          "Dívida líquida",
           "Alavancagem (dívida líquida / EBITDA)"
         ]
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "validacao",
+      "codigo": "unidade_herdada",
+      "severidade": "informacao",
+      "campo": "divida_liquida",
+      "mensagem": "Dívida líquida (2022): a unidade (R$ mil) vem de uma convenção declarada em página anterior, não da própria página.",
+      "detalhes": {
+        "pagina": 105
       },
       "registrado_por": "extrator"
     },
@@ -75,21 +85,7 @@
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "A redução informada na comparação entre 2022 e 2021 não fecha com os dois valores apresentados na mesma frase para o EBITDA CVM.",
-      "detalhes": {
-        "pagina": 9,
-        "chunk_index": 33,
-        "secao": "EBITDA CVM",
-        "citacao": "Em 2022, o EBITDA CVM foi de R$1.180 milhões, apresentando uma redução R$3.001 milhões se comparado a 2021."
-      },
-      "registrado_por": "validador"
-    },
-    {
-      "tipo": "fonte",
-      "codigo": "inconsistencia_na_fonte",
-      "severidade": "atencao",
-      "campo": null,
-      "mensagem": "No quadro, há duplicidade de colunas com o mesmo título “Consolidado - 2021”, o que indica possível erro de ano/coluna no demonstrativo.",
+      "mensagem": "O quadro apresenta duas colunas com o mesmo título 'Consolidado - 2021', repetindo o ano no cabeçalho de colunas diferentes.",
       "detalhes": {
         "pagina": 21,
         "chunk_index": 58,
@@ -103,7 +99,21 @@
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "O texto compara o indicador de 2021 com ele mesmo (mesmo ano citado nos dois lados da comparação), tornando a variação sem sentido.",
+      "mensagem": "A redução de EBITDA citada não fecha com os dois valores informados na mesma frase (R$1.817 milhões e R$1.179 milhões), indicando inconsistência no valor da variação.",
+      "detalhes": {
+        "pagina": 8,
+        "chunk_index": 24,
+        "secao": "Desempenho Financeiro",
+        "citacao": "Em 2022, o EBITDA CVM 1 da distribuidora foi de R$1.817 milhões, uma redução de R$2.996 milhões em relação aos R$1.179 milhões apurados em 2021."
+      },
+      "registrado_por": "validador"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
+      "severidade": "atencao",
+      "campo": null,
+      "mensagem": "O texto compara o indicador de covenants 'encerrou 2021' e em seguida afirma 'no 2021 (3,48x)', repetindo o mesmo ano dos dois lados da comparação, o que sugere troca de período no texto.",
       "detalhes": {
         "pagina": 10,
         "chunk_index": 35,
@@ -117,12 +127,12 @@
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "A redução informada não fecha com os dois valores de EBITDA CVM apresentados na mesma frase (2022 vs 2021).",
+      "mensagem": "A redução de EBITDA citada não fecha com os dois valores informados na mesma frase (R$1.180 milhões e o comparável em 2021), indicando inconsistência na variação apresentada.",
       "detalhes": {
-        "pagina": 8,
-        "chunk_index": 24,
-        "secao": "Desempenho Financeiro",
-        "citacao": "Em 2022, o EBITDA CVM 1 da distribuidora foi de R$1.817 milhões, uma redução de R$2.996 milhões em relação aos R$1.179 milhões apurados em 2021."
+        "pagina": 9,
+        "chunk_index": 33,
+        "secao": "EBITDA CVM",
+        "citacao": "Em 2022, o EBITDA CVM foi de R$1.180 milhões, apresentando uma redução R$3.001 milhões se comparado a 2021."
       },
       "registrado_por": "validador"
     },
@@ -131,7 +141,7 @@
       "codigo": "revisao_das_fontes_concluida",
       "severidade": "informacao",
       "campo": null,
-      "mensagem": "Fontes revisadas pelo agente validador. Foram conferidos os trechos do relatório da administração sobre EBITDA e Dívida Líquida/EBITDA e os candidatos de inconsistência; foram registrados 3 problemas de consistência na fonte.",
+      "mensagem": "Fontes revisadas pelo agente validador. Foram lidos os alertas e os candidatos de inconsistência no documento (incluindo conferência dos trechos sobre EBITDA, covenants e cabeçalho de quadro). Quatro inconsistências foram registradas na fonte do documento.",
       "detalhes": {
         "inconsistencias_registradas": 4
       },

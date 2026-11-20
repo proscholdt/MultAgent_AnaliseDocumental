@@ -16,7 +16,7 @@ O que sai na pasta (uma subpasta por item do enunciado):
                                          escreve, página e trecho), ou "não encontrado". Nada calculado
     2-extracao/completo/<documento>.json o JSON completo: valores de apoio, cálculos e validações
     3-analise/<documento>.json           a análise qualitativa, cada item com a citação e a página
-    4-perguntas/respostas.md e .json     as 5 perguntas, com as fontes
+    4-perguntas/respostas.md e .json     as perguntas do domínio, com as fontes
     5-validacao/<documento>.json         inconsistências e informações não encontradas
     6-relatorio/relatorio.md             o relatório consolidado, como o servidor o montou
     6-relatorio/avaliacao.md             as métricas da base contra o gabarito
@@ -33,6 +33,7 @@ from pathlib import Path
 import httpx
 from base import ROOT, arguments, login, settings, snapshot
 
+from app import pacotes
 from app.ferramentas.avaliacao import evaluate, render
 from app.ferramentas.avaliacao_automatica import gabarito_path
 from app.orquestrador.grafo import latin_only
@@ -40,7 +41,7 @@ from app.orquestrador.grafo import latin_only
 PARTS = {
     "extracao": ("2-extracao", "Extração estruturada (item 2): um JSON por documento"),
     "analise": ("3-analise", "Análise qualitativa (item 3): um JSON por documento"),
-    "perguntas": ("4-perguntas", "As 5 perguntas (item 4), com as fontes"),
+    "perguntas": ("4-perguntas", "As perguntas (item 4), com as fontes"),
     "validacao": ("5-validacao", "Validação (item 5): inconsistências e não encontrados, por documento"),
     "relatorio": ("6-relatorio", "Relatório consolidado (item 6) e a nota contra o gabarito"),
 }
@@ -71,7 +72,7 @@ async def run_report(api: str, token: str, colecao_id: str | None = None) -> dic
     return {**run, "passos": steps}
 
 
-def export(current: dict, out: Path, parts: list[str], gabarito_file: Path) -> list[str]:
+def export(current: dict, out: Path, parts: list[str], gabarito_file: Path, dominio: str | None) -> list[str]:
     """Grava as partes pedidas e devolve o que faltou na base para elas."""
     missing: list[str] = []
     for part in parts:
@@ -95,10 +96,11 @@ def export(current: dict, out: Path, parts: list[str], gabarito_file: Path) -> l
     if "perguntas" in parts:
         answers = sorted((answer for answer in current["respostas"] if not answer["pergunta_id"].startswith("livre")),
                          key=lambda answer: answer["pergunta_id"])
-        missing += [f"resposta à pergunta {n}" for n in range(1, 6)
-                    if f"p{n}" not in {answer["pergunta_id"] for answer in answers}]
+        questions = [question.id for question in pacotes.pacote(dominio).perguntas]  # p1, p2... do domínio
+        missing += [f"resposta à pergunta {question_id[1:]}" for question_id in questions
+                    if question_id not in {answer["pergunta_id"] for answer in answers}]
         write(out / "4-perguntas" / "respostas.json", answers)
-        lines = ["# Respostas às cinco perguntas", ""]
+        lines = ["# Respostas às perguntas", ""]
         for answer in answers:
             lines += [f"## {answer['pergunta_id'][1:]}. {answer['pergunta']}", "", answer["resposta"], "",
                       "Fontes: " + "; ".join(dict.fromkeys(answer["fontes"])) + ".", ""]
@@ -150,7 +152,7 @@ async def main() -> int:
     if unknown := [part for part in parts if part not in PARTS]:
         parser.error(f"parte desconhecida: {', '.join(unknown)}. Use: {', '.join(PARTS)}")
 
-    gabarito_file = ROOT / "avaliacao" / "gabarito.json"
+    gabarito_file, dominio = ROOT / "avaliacao" / "gabarito.json", None
     if args.retrato:
         current = json.loads(Path(args.retrato).read_text(encoding="utf-8"))
         if args.execucao:
@@ -169,12 +171,12 @@ async def main() -> int:
         if args.rodar:
             write(out / "execucao.json", await run_report(args.api, identity.user_token, identity.colecao_id))
         current = await snapshot(config, identity)
-        gabarito_file = ROOT / gabarito_path(config, identity.dominio)
+        gabarito_file, dominio = ROOT / gabarito_path(config, identity.dominio), identity.dominio
     if not current["documentos"]:
         print("A base não tem documento indexado para este usuário: envie os PDFs antes.")
         return 1
 
-    missing = export(current, out, parts, gabarito_file)
+    missing = export(current, out, parts, gabarito_file, dominio)
     readme(current, out, missing)
     for part in parts:
         print(f"  {PARTS[part][0]:<13} {PARTS[part][1]}")

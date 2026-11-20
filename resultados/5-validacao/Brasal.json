@@ -7,12 +7,12 @@
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "O documento define o Cenário Provável para os 12 meses de 2020 usando como base montantes em 31 de dezembro de 2022, criando inconsistência temporal (ano do cenário não corresponde ao ano-base informado).",
+      "mensagem": "O documento descreve a definição do Cenário Provável para os '12 meses de 2020' com base em montantes de 31 de dezembro de 2022, o que sugere inconsistência de período (ano projetado não compatível com a data-base citada).",
       "detalhes": {
         "pagina": 49,
         "chunk_index": 131,
         "secao": "26. Gestão de riscos > Análise de sensibilidade",
-        "citacao": "Com base nesses montantes em 31 de dezembro de 2022, definimos o Cenário Provável para os 12 meses de 2020 (Cenário I)."
+        "citacao": "Com a finalidade de verificar a sensibilidade dos indexadores nas dívidas ao qual a Companhia está exposta na data base de 31 de dezembro de 2022, foram estimados 3 cenários distintos, considerando o volume de financiamento total. Com base nesses montantes em 31 de dezembro de 2022, definimos o Cenário Provável para os 12 meses de 2020 (Cenário I)."
       },
       "registrado_por": "validador"
     },
@@ -21,7 +21,7 @@
       "codigo": "revisao_das_fontes_concluida",
       "severidade": "informacao",
       "campo": null,
-      "mensagem": "Fontes revisadas pelo agente validador. Foram lidos os alertas automáticos (nenhum) e o candidato de inconsistência do documento; a revisão confirmou 1 inconsistência registrada no texto de gestão de riscos (cenário 12 meses de 2020 definido com base em 31/12/2022).",
+      "mensagem": "Fontes revisadas pelo agente validador. Leitura dos alertas automáticos e do(s) candidato(s) de inconsistência no texto e conferência da referência de período; foi registrada 1 inconsistência na fonte do documento.",
       "detalhes": {
         "inconsistencias_registradas": 1
       },

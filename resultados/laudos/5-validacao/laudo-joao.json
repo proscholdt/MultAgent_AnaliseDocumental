@@ -1,0 +1,31 @@
+{
+  "arquivo": "laudo-joao.pdf",
+  "empresa": "João Pereira",
+  "alertas": [
+    {
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
+      "severidade": "atencao",
+      "campo": null,
+      "mensagem": "A data de liberação do laudo (04/06/2024) é anterior à data da coleta (05/06/2024) no documento.",
+      "detalhes": {
+        "pagina": 1,
+        "chunk_index": 0,
+        "secao": "Laboratório Santa Luzia",
+        "citacao": "Paciente: João Pereira Data da coleta: 05/06/2024 Laudo liberado em: 04/06/2024 Médico solicitante: Dr. Carlos Nunes"
+      },
+      "registrado_por": "validador"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "revisao_das_fontes_concluida",
+      "severidade": "informacao",
+      "campo": null,
+      "mensagem": "Fontes revisadas pelo agente validador. Laudo-joao (laudo-joao.pdf) teve a página única revisada e a extração conferida; foi registrado 1 problema de inconsistência (data da coleta posterior à data de liberação) e não havia candidatos adicionais a julgar.",
+      "detalhes": {
+        "inconsistencias_registradas": 1
+      },
+      "registrado_por": "validador"
+    }
+  ]
+}

@@ -1,0 +1,193 @@
+{
+  "documento": {
+    "doc_id": "34f35b0636d713dd",
+    "arquivo": "consenso-perfil-lipidico-sbac.pdf",
+    "empresa": null,
+    "origem_da_empresa": {
+      "source": null
+    },
+    "tipo": null,
+    "paginas": 5,
+    "periodo_referencia": "documento",
+    "periodo_comparavel": null,
+    "origem_do_periodo": {
+      "source": null
+    }
+  },
+  "indicadores": {
+    "glicose": {
+      "rotulo": "Glicose",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "O documento não traz resultados/lâmina de glicose do paciente; apenas recomendações de modelo e valores referenciais para perfil lipídico.",
+        "evidencia": {
+          "termos_procurados": [
+            "glicose",
+            "glicemia"
+          ],
+          "paginas_com_o_termo": [
+            1
+          ],
+          "paginas_descartadas": [
+            1
+          ]
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "hemoglobina_glicada": {
+      "rotulo": "Hemoglobina glicada (HbA1c)",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "O documento não traz resultado de hemoglobina glicada (HbA1c); contém apenas recomendações sobre perfil lipídico/jejum.",
+        "evidencia": {
+          "termos_procurados": [
+            "hemoglobina glicada",
+            "hba1c",
+            "glicohemoglobina"
+          ],
+          "paginas_com_o_termo": [],
+          "paginas_descartadas": []
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "colesterol_total": {
+      "rotulo": "Colesterol total",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "O documento não apresenta resultado de colesterol total do paciente; traz apenas texto e tabelas com valores referenciais/desejáveis (limites) para interpretação do perfil lipídico.",
+        "evidencia": {
+          "termos_procurados": [
+            "colesterol total"
+          ],
+          "paginas_com_o_termo": [
+            1,
+            3,
+            4
+          ],
+          "paginas_descartadas": [
+            1,
+            3,
+            4
+          ]
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "hdl": {
+      "rotulo": "Colesterol HDL",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "O documento não apresenta resultado de HDL-C do paciente; contém apenas valores referenciais/desejáveis e critérios para interpretação.",
+        "evidencia": {
+          "termos_procurados": [
+            "hdl"
+          ],
+          "paginas_com_o_termo": [
+            1,
+            3,
+            4
+          ],
+          "paginas_descartadas": [
+            1,
+            3,
+            4
+          ]
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "ldl": {
+      "rotulo": "Colesterol LDL",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "O documento não apresenta resultado de LDL-C do paciente; apenas metas terapêuticas e valores referenciais/cortes em tabelas e texto.",
+        "evidencia": {
+          "termos_procurados": [
+            "ldl"
+          ],
+          "paginas_com_o_termo": [
+            1,
+            3,
+            4
+          ],
+          "paginas_descartadas": [
+            1,
+            3,
+            4
+          ]
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "triglicerideos": {
+      "rotulo": "Triglicerídeos",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "O documento não apresenta resultado de triglicerídeos do paciente; contém apenas referências/metas e observações (ex.: TG>440 mg/dL) para o modelo de laudo.",
+        "evidencia": {
+          "termos_procurados": [
+            "triglicer"
+          ],
+          "paginas_com_o_termo": [
+            2
+          ],
+          "paginas_descartadas": [
+            2
+          ]
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "creatinina": {
+      "rotulo": "Creatinina",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "O documento não traz resultado de creatinina; é um documento de recomendações para perfil lipídico.",
+        "evidencia": {
+          "termos_procurados": [
+            "creatinina"
+          ],
+          "paginas_com_o_termo": [],
+          "paginas_descartadas": []
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "hemoglobina": {
+      "rotulo": "Hemoglobina",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "O documento não traz resultado de hemoglobina do hemograma; contém apenas recomendações relacionadas a perfil lipídico/jejum.",
+        "evidencia": {
+          "termos_procurados": [
+            "hemoglobina"
+          ],
+          "paginas_com_o_termo": [],
+          "paginas_descartadas": []
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    }
+  },
+  "valores_de_apoio": {},
+  "alertas_de_validacao": [],
+  "impressao_do_indice": "2026-11-20T17:53:02.693447Z|19"
+}

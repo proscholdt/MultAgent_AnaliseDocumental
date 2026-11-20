@@ -1,6 +1,6 @@
 # Resultados
 
-Gerado a partir da base do servidor MCP em 2026-11-17T15:39:42+00:00, com 3 documento(s): Brasal.pdf, Light.pdf, Millet.pdf.
+Gerado a partir da base do servidor MCP em 2026-11-20T18:49:05+00:00, com 3 documento(s): Brasal.pdf, Light.pdf, Millet.pdf.
 
 ## Extração estruturada (item 2): um JSON por documento
 
@@ -17,7 +17,7 @@ Gerado a partir da base do servidor MCP em 2026-11-17T15:39:42+00:00, com 3 docu
 - [3-analise/Light.json](3-analise/Light.json)
 - [3-analise/Millet.json](3-analise/Millet.json)
 
-## As 5 perguntas (item 4), com as fontes
+## As perguntas (item 4), com as fontes
 
 - [4-perguntas/respostas.json](4-perguntas/respostas.json)
 - [4-perguntas/respostas.md](4-perguntas/respostas.md)

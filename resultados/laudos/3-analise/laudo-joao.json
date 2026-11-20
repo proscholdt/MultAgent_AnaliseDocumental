@@ -1,0 +1,66 @@
+{
+  "arquivo": "laudo-joao.pdf",
+  "empresa": "João Pereira",
+  "analise": {
+    "fora_da_referencia": [
+      {
+        "afirmacao": "Glicose apresentou resultado acima da faixa de referência do laudo.",
+        "citacao": "Material: soro. Método: enzimático. Resultado: 118 mg/dL Valores de referência: 70 a 99 mg/dL",
+        "pagina": 1,
+        "chunk_index": 1,
+        "secao": "GLICOSE",
+        "fonte": "relatório",
+        "tom": null
+      },
+      {
+        "afirmacao": "Triglicerídeos apresentaram resultado acima da faixa de referência do laudo.",
+        "citacao": "Material: soro. Método: enzimático. Resultado: 210 mg/dL Valores de referência: inferior a 150 mg/dL Observação: paciente informou jejum de 8 horas.",
+        "pagina": 1,
+        "chunk_index": 4,
+        "secao": "TRIGLICERÍDEOS",
+        "fonte": "relatório",
+        "tom": null
+      },
+      {
+        "afirmacao": "Hemoglobina glicada (HbA1c) apresentou resultado acima da faixa de referência do laudo.",
+        "citacao": "Material: sangue total. Método: HPLC. Resultado: 6,3 % Valores de referência: inferior a 5,7 %",
+        "pagina": 1,
+        "chunk_index": 2,
+        "secao": "HEMOGLOBINA GLICADA (HbA1c)",
+        "fonte": "relatório",
+        "tom": null
+      }
+    ],
+    "observacao": [
+      {
+        "afirmacao": "O laudo informa que o paciente informou jejum de 8 horas.",
+        "citacao": "Observação: paciente informou jejum de 8 horas.",
+        "pagina": 1,
+        "chunk_index": 4,
+        "secao": "TRIGLICERÍDEOS",
+        "fonte": "relatório",
+        "tom": null
+      }
+    ],
+    "recomendacao": [
+      {
+        "status": "nao_encontrado",
+        "motivo": "O laudo não apresenta orientações escritas como repetir/confirmar coleta/jejum/retornar, apenas descreve resultados e uma observação sobre jejum informada pelo paciente.",
+        "evidencia": {
+          "termos_procurados": [
+            "recomenda",
+            "repetir",
+            "jejum",
+            "orientação"
+          ],
+          "paginas_com_o_termo": [
+            1
+          ],
+          "paginas_descartadas": [
+            1
+          ]
+        }
+      }
+    ]
+  }
+}

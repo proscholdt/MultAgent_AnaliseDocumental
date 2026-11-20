@@ -70,6 +70,25 @@ Laudo é dado sensível: os documentos de teste do domínio de laudos são fict�
 [`gerar_laudos.py`](dominios/laudos/avaliacao/gerar_laudos.py), e o sistema não faz diagnóstico
 nem recomenda tratamento.
 
+**Os dois domínios, medidos do zero** (mesmo usuário, uma coleção de cada, PDFs lidos pelo
+Docling, nota automática contra o gabarito de cada domínio):
+
+| | Financeiro (Brasal, Light, Millet) | Laudos (3 laudos fictícios + o consenso da SBAC) |
+|---|---|---|
+| Status certo (informado ou não encontrado) | 24 de 24 | 32 de 32 |
+| Valor e página certos | 13 de 13 | 17 de 17 |
+| Invenção | 0 de 11 | 0 de 15 |
+| Inconsistências da fonte registradas | 7 de 7 | 1 de 1 (liberação antes da coleta) |
+| Perguntas certas | 5 de 5 | 4 de 4 |
+| Citações literais | 32 de 32 | 19 de 19 |
+| Relatório completo | 257 s, US$ 0,24 | 201 s, US$ 0,10 |
+
+O consenso da Sociedade Brasileira de Análises Clínicas sobre o laudo do perfil lipídico é um PDF
+público, com tabelas de valores de referência e nenhum resultado de paciente. Os 8 exames saíram
+"não encontrado", com a prova, e nenhum valor foi tirado das tabelas de referência. Os resultados
+de laudos estão em [`resultados/laudos/`](resultados/laudos/LEIAME.md):
+`make resultados COLECAO=<id> SAIDA=../resultados/laudos`.
+
 ## Arquitetura
 
 ```mermaid
