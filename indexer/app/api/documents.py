@@ -59,7 +59,7 @@ async def upload_document(
     file: Annotated[UploadFile, File(description="O documento em PDF.")],
     colecao_id: Annotated[str | None, Form(description="A coleção (e com ela o domínio). Sem ela: a primeira "
                                            "coleção do domínio padrão, criada na hora.")] = None,
-    company: Annotated[str | None, Form(description="Opcional: força a entidade do documento (a empresa, "
+    company: Annotated[str | None, Form(description="Opcional: força a entidade do documento (a do pacote: "
                                         "o paciente...).")] = None,
     period: Annotated[str | None, Form(description="Opcional: força o recorte (ex.: 2022, 3T25).")] = None,
 ) -> UploadAccepted:

@@ -1,0 +1,17 @@
+{
+  "arquivo": "contrato-limpeza.pdf",
+  "entidade": "Contrato Nº 012/2024",
+  "alertas": [
+    {
+      "tipo": "fonte",
+      "codigo": "revisao_das_fontes_concluida",
+      "severidade": "informacao",
+      "campo": null,
+      "mensagem": "Fontes revisadas pelo agente validador. Contrato Nº 012/2024: alertas automáticos e varredura por candidatos não apontaram inconsistências; texto inteiro (páginas 1 e 2) revisado e nenhum problema registrado.",
+      "detalhes": {
+        "inconsistencias_registradas": 0
+      },
+      "registrado_por": "validador"
+    }
+  ]
+}

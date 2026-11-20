@@ -18,6 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 ferramentas/comum.py --conferir
+      - run: python3 ferramentas/conferir_generico.py
 
   python:
     name: ${{ matrix.sistema }}

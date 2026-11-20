@@ -1,33 +1,24 @@
 {
   "arquivo": "laudo-ana.pdf",
-  "empresa": "Ana Lima",
+  "entidade": "Ana Lima",
   "analise": {
     "fora_da_referencia": [
       {
-        "afirmacao": "Hemoglobina (11,2 g/dL) está abaixo da faixa de referência do laudo (12,0 a 15,5 g/dL).",
+        "afirmacao": "Hemoglobina está abaixo da faixa de referência informada no laudo.",
         "citacao": "| Hemoglobina | 11,2 g/dL | 12,0 a 15,5 g/dL |",
         "pagina": 1,
         "chunk_index": 1,
         "secao": "Hemograma",
-        "fonte": "relatório",
+        "fonte": "documento",
         "tom": null
       },
       {
-        "afirmacao": "Hemoglobina (11,2 g/dL) está abaixo da faixa de referência do laudo (12,0 a 15,5 g/dL).",
-        "citacao": "| Hemoglobina | 11,2 g/dL | 12,0 a 15,5 g/dL |",
-        "pagina": 1,
-        "chunk_index": 1,
-        "secao": "Hemograma",
-        "fonte": "relatório",
-        "tom": null
-      },
-      {
-        "afirmacao": "Hematócrito (35 %) está abaixo da faixa de referência do laudo (36 a 46 %).",
+        "afirmacao": "Hematócrito está abaixo da faixa de referência informada no laudo.",
         "citacao": "| Hemoglobina | 11,2 g/dL | 12,0 a 15,5 g/dL | | Hematócrito | 35 % | 36 a 46 % |",
         "pagina": 1,
         "chunk_index": 1,
         "secao": "Hemograma",
-        "fonte": "relatório",
+        "fonte": "documento",
         "tom": null
       }
     ],
@@ -38,14 +29,14 @@
         "pagina": 1,
         "chunk_index": 3,
         "secao": "Bioquímica",
-        "fonte": "relatório",
+        "fonte": "documento",
         "tom": null
       }
     ],
     "recomendacao": [
       {
         "status": "nao_encontrado",
-        "motivo": "Não há orientações no laudo para repetir, confirmar com nova coleta ou outras recomendações explícitas; o documento traz apenas os resultados e uma observação.",
+        "motivo": "Não há orientações escritas no laudo para repetir/confimar exames ou qualquer recomendação (buscadas por termos como \"repetir\" e \"confirmar\").",
         "evidencia": {
           "termos_procurados": [
             "recomenda",

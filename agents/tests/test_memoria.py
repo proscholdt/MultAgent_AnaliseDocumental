@@ -27,6 +27,18 @@ def test_previous_calls_come_back_shortened():
     assert {"chunk_index": 11} in [p.get("args") for m in history for p in m["parts"]]
 
 
+def test_a_call_that_fell_in_the_middle_does_not_lock_the_next_one():
+    # A busca caiu (ReadError) depois de o modelo pedir a tool: o pedido ficou sem o resultado.
+    cut = [{"kind": "request", "parts": [{"part_kind": "user-prompt", "content": "extraia"}]},
+           {"kind": "response", "parts": [{"part_kind": "text", "content": "Vou buscar."},
+                                          {"part_kind": "tool-call", "tool_name": "buscar_trechos", "args": {},
+                                           "tool_call_id": "c-caiu"}]}]
+    history = compact(split_runs(run("primeira") + cut), max_tokens=100_000)
+    calls = [p.get("tool_call_id") for m in history for p in m["parts"] if p["part_kind"] == "tool-call"]
+    assert calls == ["c-primeira"]  # a que tem resultado fica; a que caiu sai
+    assert "Vou buscar." in [p.get("content") for m in history for p in m["parts"]]
+
+
 def test_short_results_stay_whole_and_the_oldest_calls_leave_above_the_ceiling():
     small = compact(split_runs(run("curta", result_size=100)), max_tokens=100_000)
     assert "| Receita |" in next(p["content"] for m in small for p in m["parts"] if p["part_kind"] == "tool-return")

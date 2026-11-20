@@ -36,7 +36,7 @@
   "ebitda": {
     "status": "encontrado",
     "valor": 1180,
-    "valor_como_escrito": "1.180",
+    "valor_como_escrito": "R$1.180",
     "unidade": "R$ milhões",
     "periodo": "2022",
     "escopo": null,
@@ -51,7 +51,7 @@
   "margem_ebitda": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento menciona EBITDA (EBITDA CVM) e o indicador Dívida Líquida/EBITDA ajustado para covenants, mas não apresenta Margem EBITDA (percentual) para 2022.",
+    "motivo": "O documento informa EBITDA (EBITDA CVM), mas não traz a margem EBITDA (percentual) para o consolidado no exercício.",
     "busca": {
       "termos_procurados": [
         "margem ebitda",
@@ -134,7 +134,18 @@
       "trecho": "O indicador de covenants Dívida Líquida/EBITDA ajustado para fins de covenants encerrou 2021 em 3,32x, menor do que no 2021 (3,48x).",
       "tipo": "texto"
     },
-    "periodo_comparavel": null,
+    "periodo_comparavel": {
+      "valor": 3.32,
+      "valor_como_escrito": "3,32x",
+      "unidade": "x",
+      "periodo": "2021",
+      "escopo": null,
+      "origem": {
+        "pagina": 10,
+        "trecho": "O indicador de covenants Dívida Líquida/EBITDA ajustado para fins de covenants encerrou 2021 em 3,32x, menor do que no 2021 (3,48x).",
+        "tipo": "texto"
+      }
+    },
     "variacao_informada": null
   },
   "fluxo_caixa_operacional": {
@@ -170,7 +181,7 @@
   "capex": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não apresenta um total explícito de 'capex'/'total de investimentos' com esse rótulo. As aquisições de imobilizado e intangível aparecem no fluxo de caixa (usadas como apoio para capex_imobilizado e capex_intangivel), e na página 66 'Capex' aparece como parte de custo de captação (BNDES - Capex), não como total de capex do período.",
+    "motivo": "O documento não informa um total agregado de capex (ex.: 'total de investimentos' ou 'capex') para o consolidado no exercício; apenas apresenta linhas de aquisições no fluxo de caixa que servem como apoio (aquisição de imobilizado e aquisição de intangível/ativo de contrato).",
     "busca": {
       "termos_procurados": [
         "capex",

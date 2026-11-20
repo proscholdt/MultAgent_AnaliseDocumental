@@ -1,6 +1,6 @@
 # Avaliação contra o gabarito
 
-Base lida em 2026-11-20T18:49:12+00:00. Gabarito: `dominios/laudos/avaliacao/gabarito.json`, conferido à mão nos PDFs.
+Base lida em 2026-11-20T23:04:47+00:00. Gabarito: `dominios/laudos/avaliacao/gabarito.json`, conferido à mão nos PDFs.
 
 | Medida | Resultado |
 |---|---|
@@ -13,7 +13,7 @@ Base lida em 2026-11-20T18:49:12+00:00. Gabarito: `dominios/laudos/avaliacao/gab
 | Alertas automáticos esperados que dispararam | 0 de 0 |
 | Inconsistências do texto da fonte registradas | 1 de 1 |
 | Perguntas com o conteúdo e a fonte esperados | 4 de 4 |
-| Citações que existem literalmente no trecho citado | 19 de 19 |
+| Citações que existem literalmente no trecho citado | 20 de 20 |
 
 | Documento | Indicador | Esperado | Obtido | Valor | Página | Ano anterior | Calculado |
 |---|---|---|---|---|---|---|---|

@@ -1,5 +1,5 @@
 {
-  "empresa": "Ana Lima",
+  "paciente": "Ana Lima",
   "documento": "laudo-ana.pdf",
   "periodo_referencia": "20/09/2024",
   "periodo_comparavel": null,
@@ -23,7 +23,7 @@
   "hemoglobina_glicada": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O laudo não apresenta o exame de hemoglobina glicada (HbA1c); a busca por 'hemoglobina glicada' e afins retornou apenas uma observação sobre hemoglobina (hemograma).",
+    "motivo": "o laudo não traz exame de hemoglobina glicada (HbA1c) com resultado.",
     "busca": {
       "termos_procurados": [
         "hemoglobina glicada",

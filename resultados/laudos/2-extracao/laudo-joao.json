@@ -1,5 +1,5 @@
 {
-  "empresa": "João Pereira",
+  "paciente": "João Pereira",
   "documento": "laudo-joao.pdf",
   "periodo_referencia": "05/06/2024",
   "periodo_comparavel": null,
@@ -36,7 +36,7 @@
   "colesterol_total": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O laudo não informa colesterol total (apenas glicose, HbA1c, triglicerídeos e creatinina).",
+    "motivo": "o laudo não traz o exame de colesterol total",
     "busca": {
       "termos_procurados": [
         "colesterol total"
@@ -48,7 +48,7 @@
   "hdl": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O laudo não informa colesterol HDL.",
+    "motivo": "o laudo não traz o exame de colesterol HDL",
     "busca": {
       "termos_procurados": [
         "hdl"
@@ -60,7 +60,7 @@
   "ldl": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O laudo não informa colesterol LDL.",
+    "motivo": "o laudo não traz o exame de colesterol LDL",
     "busca": {
       "termos_procurados": [
         "ldl"
@@ -102,7 +102,7 @@
   "hemoglobina": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O laudo não traz hemoglobina do hemograma (apenas hemoglobina glicada/HbA1c).",
+    "motivo": "o laudo não traz hemoglobina (g/dL); apenas HbA1c (hemoglobina glicada)",
     "busca": {
       "termos_procurados": [
         "hemoglobina"

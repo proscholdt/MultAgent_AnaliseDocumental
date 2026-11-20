@@ -35,12 +35,18 @@ coleção da execução (`dom`, `col`; sem eles, o domínio padrão e todos os d
 - **O que ele alcança.** Listagem, busca, pendências e acesso a documento ficam na coleção. As
   respostas e o relatório consolidado também são da coleção (`colecao_id`): a `p1` dos laudos não
   é a `p1` do financeiro.
-- **O que vale.** Os portões genéricos valem para todos. As regras das demonstrações (período na
-  coluna, escopo, valores de apoio, fórmulas, validações, as inconsistências de dinheiro) só no
-  pacote com `plugin: financeiro`. Um campo `numero` lê "92 mg/dL" da célula e recusa outra
-  unidade: o servidor não converte.
-- `make dominios` valida os pacotes com as exigências daqui (o plugin financeiro exige os campos das
-  fórmulas).
+- **O que vale.** Os portões genéricos valem para todos. O que é de um domínio só está no plugin
+  dele, dentro do pacote (`dominios/<id>/plugin/mcp/`), atrás dos ganchos de
+  [app/plugins/interface.py](app/plugins/interface.py): no financeiro, as fórmulas e as
+  validações, os valores de apoio, o escopo consolidado ou controladora, de onde vem cada indicador
+  e as inconsistências em reais. Um campo `numero` lê "92 mg/dL" da célula e recusa outra unidade
+  (o servidor não converte); um de `texto` ou de `data` entra com o trecho que o escreve, e a data
+  é gravada em dd/mm/aaaa.
+- **O que o modelo lê.** As descrições das tools usam marcadores (`$entidade`, `$n_perguntas`,
+  `$categorias`...) trocados pelas palavras do domínio de quem pede. O contrato fica em
+  `tests/contratos/tools-<id>.json`, um por domínio.
+- `make dominios` valida os pacotes com as exigências do plugin de cada um (o financeiro exige os
+  campos das fórmulas).
 
 ## Portões
 
@@ -126,6 +132,11 @@ app/
 │  ├─ auditoria.py       uma linha por chamada
 │  ├─ catalogo.py        o @tool e o registro das tools
 │  └─ erros.py           recusa de portão e erros que voltam ao agente
+│
+├─ plugins/              O CÓDIGO DE UM DOMÍNIO, carregado do pacote
+│  ├─ interface.py       os ganchos (PluginMCP) e o neutro (PluginGenerico)
+│  ├─ carregar.py        dominios/<id>/plugin/mcp/__init__.py → Plugin
+│  └─ api.py             o que um plugin pode importar do núcleo
 │
 ├─ regras/               O QUE OS PORTÕES CONFEREM
 │  ├─ campos.py          os 8 indicadores, os valores de apoio, as categorias e as perguntas

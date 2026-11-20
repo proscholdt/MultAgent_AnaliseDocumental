@@ -2,8 +2,8 @@
   "documento": {
     "doc_id": "efbecb04edf3e7c9",
     "arquivo": "laudo-ana.pdf",
-    "empresa": "Ana Lima",
-    "origem_da_empresa": {
+    "entidade": "Ana Lima",
+    "origem_da_entidade": {
       "source": "llm",
       "page": 1,
       "snippet": "Paciente: Ana Lima"
@@ -18,7 +18,7 @@
       "snippet": "Data da coleta: 20/09/2024"
     }
   },
-  "indicadores": {
+  "campos": {
     "glicose": {
       "rotulo": "Glicose",
       "informado": {
@@ -46,7 +46,7 @@
       "rotulo": "Hemoglobina glicada (HbA1c)",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O laudo não apresenta o exame de hemoglobina glicada (HbA1c); a busca por 'hemoglobina glicada' e afins retornou apenas uma observação sobre hemoglobina (hemograma).",
+        "motivo": "o laudo não traz exame de hemoglobina glicada (HbA1c) com resultado.",
         "evidencia": {
           "termos_procurados": [
             "hemoglobina glicada",

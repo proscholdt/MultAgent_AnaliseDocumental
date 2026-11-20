@@ -1,11 +1,11 @@
 {
   "arquivo": "Brasal.pdf",
-  "empresa": "Brasal Brasília Holding S.A.",
+  "entidade": "Brasal Brasília Holding S.A.",
   "analise": {
     "motivo_resultado": [
       {
         "status": "nao_encontrado",
-        "motivo": "O documento não apresenta relatório/mensagem/comentário da administração ou seção de discussão de desempenho que explique causas do resultado e variações de receita; o conteúdo é predominantemente notas explicativas e políticas contábeis.",
+        "motivo": "O documento disponibilizado parece conter apenas demonstrações financeiras e notas explicativas, sem seção de relatório/mensagem/comentário da administração que explique as causas da variação do resultado e, em especial, da receita líquida no período.",
         "evidencia": {
           "termos_procurados": [],
           "paginas_com_o_termo": [],
@@ -15,7 +15,7 @@
     ],
     "risco": [
       {
-        "afirmacao": "O principal risco para o negócio está ligado à concessão de crédito aos clientes e, para mitigá-lo, a Companhia adota política de gestão com análise de perfil e monitoramento dos saldos a receber.",
+        "afirmacao": "Como mitigação ao risco de crédito, a Companhia informa que adota política de gestão com análises do perfil dos clientes e monitoramento dos saldos a receber.",
         "citacao": "O principal fator de risco de mercado que afeta o negócio é a concessão de crédito aos clientes. Para reduzir as possíveis perdas com inadimplência, é adotada uma política de gestão na concessão de crédito, que consiste em análises do perfil dos clientes, bem como em monitoramento dos saldos a receber.",
         "pagina": 49,
         "chunk_index": 128,
@@ -24,27 +24,45 @@
         "tom": null
       },
       {
-        "afirmacao": "A Administração reconhece que a Companhia está exposta a riscos de mercado, incluindo realização de contas a receber e oscilações de preços e de taxas de juros, que podem afetar resultados e condição financeira.",
-        "citacao": "A Companhia está exposta a riscos de mercado decorrentes de suas atividades. Esses riscos envolvem, principalmente, a possibilidade da realização de contas a receber de clientes, de oscilações dos preços dos produtos e de taxas de juros, que podem impactar os resultados operacionais e a condição financeira, sendo os principais os seguintes:",
+        "afirmacao": "A Companhia realiza análise de sensibilidade em três cenários para avaliar efeitos adversos com deterioração de 25% e 50% da variável do risco considerada.",
+        "citacao": "A Companhia realiza suas análises de sensibilidade em três cenários, sendo um provável e dois que possam representar efeitos adversos com deterioração de 25% e 50% da variável do risco considerado pela Administração.",
         "pagina": 49,
-        "chunk_index": 127,
-        "secao": "26. Gestão de riscos",
+        "chunk_index": 131,
+        "secao": "26. Gestão de riscos > Análise de sensibilidade",
         "fonte": "nota explicativa",
         "tom": null
       },
       {
-        "afirmacao": "A Companhia indica que os itens do ativo e passivo circulante têm liquidez imediata ou vencimento em prazos de até 12 meses, o que reduz risco de liquidez no curto prazo.",
+        "afirmacao": "A administração descreve que as obrigações e itens financeiros no ativo/passivo circulante possuem liquidez imediata ou vencimento em prazos não superiores a 12 meses.",
         "citacao": "Os valores registrados no ativo e no passivo circulante têm liquidez imediata ou vencimento, em prazos não superiores há 12 meses.",
         "pagina": 48,
         "chunk_index": 124,
         "secao": "25. Gestão de riscos dos instrumentos financeiros",
         "fonte": "nota explicativa",
         "tom": null
+      },
+      {
+        "afirmacao": "A Companhia destaca exposição a riscos de mercado, incluindo risco de realização de contas a receber e oscilações de preços e de taxas de juros que podem afetar resultados operacionais e condição financeira.",
+        "citacao": "A Companhia está exposta a riscos de mercado decorrentes de suas atividades. Esses riscos envolvem, principalmente, a possibilidade da realização de contas a receber de clientes, de oscilações dos preços dos produtos e de taxas de juros, que podem impactar os resultados operacionais e a condição financeira, sendo os principais os seguintes:",
+        "pagina": 49,
+        "chunk_index": 127,
+        "secao": "26. Gestão de riscos",
+        "fonte": "nota explicativa",
+        "tom": null
       }
     ],
     "guidance": [
       {
-        "afirmacao": "Para créditos fiscais de PIS e COFINS excluindo ICMS, a Companhia indica que a expectativa de realização foi baseada em projeções orçamentárias e que a realização deve ocorrer majoritariamente em 2022, com parte até fevereiro de 2023.",
+        "afirmacao": "O documento também detalha acompanhamento de compensação e indica que parte da compensação deverá ocorrer até julho de 2023, com base nas metas estabelecidas.",
+        "citacao": "Foi realizado em 2022 o acompanhamneto de compensação dos tributos a recuperar oriundos da exclusão do ICMS da base de cálculo do PIS e da COFINS e demais créditos de PIS e COFINS, em função de uma retração no crescimento esperado para o 4º. Semestre de 2022, ficando abaixo um pouco das metas estabelecidas, então ocorreu uma compensação no exercício de 2022 de aproximadamente 61,1%, sendo que o restante de 38,9% deverá acontecer até julho de 2023.",
+        "pagina": 28,
+        "chunk_index": 62,
+        "secao": "8. Tributos a recuperar > a) Circulante",
+        "fonte": "nota explicativa",
+        "tom": null
+      },
+      {
+        "afirmacao": "A Companhia apresenta expectativa (com base em projeções orçamentárias) de realização de créditos fiscais, indicando que a expectativa de realização dos saldos ocorrerá majoritariamente no exercício seguinte e o restante até fevereiro de 2023.",
         "citacao": "A Controlada realizou um estudo com base nos últimos recolhimentos de PIS e COFINS, além de considerar também as projeções orçamentárias para o próximo exercício, a expectativa de realização dos saldos dos valores relativos aos créditos fiscais, oriundos da exclusão do ICMS da base de cálculo do PIS e da COFINS e demais créditos de PIS e COFINS, é de que ocorrerá no exercício de 2022 aproximadamente 68,6%, sendo que o restante de 31,4% acontecerá até fevereiro de 2023.",
         "pagina": 28,
         "chunk_index": 61,
@@ -53,18 +71,27 @@
         "tom": null
       },
       {
-        "afirmacao": "A Administração também reforça a projeção de compensação de tributos a recuperar, indicando que parte da compensação esperada deveria acontecer até julho de 2023, após a realização em 2022.",
-        "citacao": "Foi realizado em 2022 o acompanhamneto de compensação dos tributos a recuperar oriundos da exclusão do ICMS da base de cálculo do PIS e da COFINS e demais créditos de PIS e COFINS, em função de uma retração no crescimento esperado para o 4º. Semestre de 2022, ficando abaixo um pouco das metas estabelecidas, então ocorreu uma compensação no exercício de 2022 de aproximadamente 61,1%, sendo que o restante de 38,9% deverá acontecer até julho de 2023.",
-        "pagina": 28,
-        "chunk_index": 62,
-        "secao": "8. Tributos a recuperar > a) Circulante",
+        "afirmacao": "Para classificação circulante e não circulante de tributos a recuperar, o documento afirma que essa classificação reflete a expectativa de realização segundo projeções de operações futuras.",
+        "citacao": "A classificação no circulante e não circulante reflete a expectativa de realização da Administração segundo as projeções de operações futuras da Companhia.",
+        "pagina": 29,
+        "chunk_index": 64,
+        "secao": "8. Tributos a recuperar > b) Não circulante",
         "fonte": "nota explicativa",
         "tom": null
       }
     ],
     "evento_relevante": [
       {
-        "afirmacao": "Após o encerramento, o STF proferiu decisão sobre a perda de efeitos da coisa julgada em tributos recolhidos de forma continuada, sinalizando potencial impacto nos créditos/valores relacionados a julgados passados.",
+        "afirmacao": "Apesar do tema de “coisa julgada”, a Administração informa que não identificou impactos nessas demonstrações financeiras, mas manterá monitoramento permanente dos processos.",
+        "citacao": "A Administração em conjunto com os assessores jurídicos da Companhia não identificou impactos para estas demonstrações financeiras. No entanto manterá o monitoramento permanente de todos os seus processos, considerando a referida decisão.",
+        "pagina": 51,
+        "chunk_index": 138,
+        "secao": "28. Eventos subsequentes - Perda de efeitos da \"coisa julgada\" sobre tributos recolhidos de forma continuada",
+        "fonte": "nota explicativa",
+        "tom": null
+      },
+      {
+        "afirmacao": "O documento reporta evento subsequente relacionado ao entendimento do STF sobre a “coisa julgada” para tributos recolhidos de forma continuada, com potencial perda de efeitos caso a Corte se pronuncie em sentido contrário.",
         "citacao": "Em decisão tomada no dia 08 de fevereiro 2023, por unanimidade, o Plenário do Supremo Tribunal Federal (STF) considerou que uma decisão definitiva, a chamada \"coisa julgada\", sobre tributos recolhidos de forma continuada, perde seus efeitos caso a corte se pronuncie em sentido contrário.",
         "pagina": 51,
         "chunk_index": 137,
@@ -75,13 +102,13 @@
     ],
     "tom": [
       {
-        "status": "nao_encontrado",
-        "motivo": "Não há seção de administração (relatório/mensagem) com posicionamento qualitativo; apenas descrições factuais em notas, sem avaliação explícita de tom (positivo/neutro/negativo) pela administração.",
-        "evidencia": {
-          "termos_procurados": [],
-          "paginas_com_o_termo": [],
-          "paginas_descartadas": []
-        }
+        "afirmacao": "O tom apresentado pela Administração no documento é neutro, ao reportar avaliação jurídica sem identificar impactos, mantendo postura de monitoramento permanente.",
+        "citacao": "A Administração em conjunto com os assessores jurídicos da Companhia não identificou impactos para estas demonstrações financeiras. No entanto manterá o monitoramento permanente de todos os seus processos, considerando a referida decisão.",
+        "pagina": 51,
+        "chunk_index": 138,
+        "secao": "28. Eventos subsequentes - Perda de efeitos da \"coisa julgada\" sobre tributos recolhidos de forma continuada",
+        "fonte": "nota explicativa",
+        "tom": "neutro"
       }
     ]
   }

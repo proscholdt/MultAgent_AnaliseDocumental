@@ -208,10 +208,11 @@ def ler(pasta: Path) -> Pacote:
 
 @cache
 def todos(pasta: Path | None = None) -> dict[str, Pacote]:
-    """Os pacotes de `dominios/`, por id. Um pacote inválido impede a subida, com o motivo."""
+    """Os pacotes de `dominios/`, por id. Um pacote inválido impede a subida, com o motivo. Pasta
+    que começa com "_" (o `_modelo`, de onde `make novo-dominio` copia) não é um pacote."""
     raiz = pasta or pasta_dos_dominios()
-    pacotes = {sub.name: ler(sub) for sub in sorted(raiz.iterdir()) if (sub / "dominio.yaml").is_file()} \
-        if raiz.is_dir() else {}
+    pacotes = {sub.name: ler(sub) for sub in sorted(raiz.iterdir())
+               if (sub / "dominio.yaml").is_file() and not sub.name.startswith("_")} if raiz.is_dir() else {}
     if PADRAO not in pacotes:
         raise PacoteInvalido(f"{raiz}: falta o pacote padrão '{PADRAO}'")
     return pacotes

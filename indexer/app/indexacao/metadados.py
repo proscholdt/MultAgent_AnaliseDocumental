@@ -44,13 +44,25 @@ _SCOPE: list[tuple[re.Pattern[str], str]] = [
 _MENTION = re.compile(r"R\$\s?-?[\d.,]+\s*(milh(?:ão|ões)|bilh(?:ão|ões)|mil(?!h))\b", re.IGNORECASE)
 
 
+# Um número por extenso logo antes ("cento e vinte mil reais") faz de "mil reais" o fim de um valor
+# escrito, como nos contratos, e não a declaração da unidade de um quadro.
+_POR_EXTENSO = re.compile(
+    r"\b(?:um|uma|dois|duas|tr[eê]s|quatro|cinco|seis|sete|oito|nove|dez|onze|doze|treze|quatorze|catorze|quinze"
+    r"|dezesseis|dezessete|dezoito|dezenove|vinte|trinta|quarenta|cinquenta|sessenta|setenta|oitenta|noventa|cem"
+    r"|cento|duzentos|trezentos|quatrocentos|quinhentos|seiscentos|setecentos|oitocentos|novecentos)\s+(?:e\s+)?$",
+    re.IGNORECASE)
+
+
 def detect_declared_unit(text: str) -> str | None:
     """Primeira declaração explícita de unidade no texto, se houver."""
     best: tuple[int, str] | None = None
     for pattern, unit in _DECLARED:
-        match = pattern.search(text)
-        if match and (best is None or match.start() < best[0]):
-            best = (match.start(), unit)
+        for match in pattern.finditer(text):
+            if _POR_EXTENSO.search(text[max(0, match.start() - 40):match.start()]):
+                continue
+            if best is None or match.start() < best[0]:
+                best = (match.start(), unit)
+            break
     return best[1] if best else None
 
 

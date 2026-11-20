@@ -1,0 +1,247 @@
+{
+  "documento": {
+    "doc_id": "afa70b0d857c4e77",
+    "arquivo": "contrato-fornecimento.pdf",
+    "entidade": "CONTRATO DE FORNECIMENTO Nº 2024-07",
+    "origem_da_entidade": {
+      "source": "llm",
+      "page": 1,
+      "snippet": "CONTRATO DE FORNECIMENTO Nº 2024-07"
+    },
+    "tipo": null,
+    "paginas": 2,
+    "periodo_referencia": "documento",
+    "periodo_comparavel": null,
+    "origem_do_periodo": null
+  },
+  "campos": {
+    "contratante": {
+      "rotulo": "Contratante",
+      "informado": {
+        "status": "encontrado",
+        "valor": "Padaria Pão Dourado Ltda.",
+        "valor_numerico": null,
+        "unidade": null,
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 1,
+          "chunk_index": 0,
+          "secao": "CONTRATO DE FORNECIMENTO Nº 2024-07 Quadro-resumo",
+          "trecho": "| Item | Condição |\n| Contratante | Padaria Pão Dourado Ltda. |",
+          "linha": "Contratante",
+          "coluna": "Condição"
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "contratada": {
+      "rotulo": "Contratada",
+      "informado": {
+        "status": "encontrado",
+        "valor": "Moinho Serra Azul S.A.",
+        "valor_numerico": null,
+        "unidade": null,
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 1,
+          "chunk_index": 0,
+          "secao": "CONTRATO DE FORNECIMENTO Nº 2024-07 Quadro-resumo",
+          "trecho": "| Item | Condição |\n| Contratada | Moinho Serra Azul S.A. |",
+          "linha": "Contratada",
+          "coluna": "Condição"
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "objeto": {
+      "rotulo": "Objeto",
+      "informado": {
+        "status": "encontrado",
+        "valor": "Fornecimento mensal de farinha de trigo especial",
+        "valor_numerico": null,
+        "unidade": null,
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 1,
+          "chunk_index": 0,
+          "secao": "CONTRATO DE FORNECIMENTO Nº 2024-07 Quadro-resumo",
+          "trecho": "| Item | Condição |\n| Objeto | Fornecimento mensal de farinha de trigo especial |",
+          "linha": "Objeto",
+          "coluna": "Condição"
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "valor_total": {
+      "rotulo": "Valor total",
+      "informado": {
+        "status": "encontrado",
+        "valor": "R$ 84.500,00",
+        "valor_numerico": 84500.0,
+        "unidade": "R$",
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 1,
+          "chunk_index": 0,
+          "secao": "CONTRATO DE FORNECIMENTO Nº 2024-07 Quadro-resumo",
+          "trecho": "| Item | Condição |\n| Valor total | R$ 84.500,00 |",
+          "linha": "Valor total",
+          "coluna": "Condição"
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "data_assinatura": {
+      "rotulo": "Data de assinatura",
+      "informado": {
+        "status": "encontrado",
+        "valor": "20/06/2024",
+        "valor_numerico": null,
+        "unidade": null,
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "texto",
+          "pagina": 1,
+          "chunk_index": 1,
+          "secao": "CONTRATO DE FORNECIMENTO Nº 2024-07 Quadro-resumo",
+          "trecho": "Firmado em 20/06/2024."
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "inicio_vigencia": {
+      "rotulo": "Início da vigência",
+      "informado": {
+        "status": "encontrado",
+        "valor": "01/07/2024",
+        "valor_numerico": null,
+        "unidade": null,
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 1,
+          "chunk_index": 0,
+          "secao": "CONTRATO DE FORNECIMENTO Nº 2024-07 Quadro-resumo",
+          "trecho": "| Item | Condição |\n| Início da vigência | 01/07/2024 |",
+          "linha": "Início da vigência",
+          "coluna": "Condição"
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "fim_vigencia": {
+      "rotulo": "Fim da vigência",
+      "informado": {
+        "status": "encontrado",
+        "valor": "30/06/2024",
+        "valor_numerico": null,
+        "unidade": null,
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 1,
+          "chunk_index": 0,
+          "secao": "CONTRATO DE FORNECIMENTO Nº 2024-07 Quadro-resumo",
+          "trecho": "| Item | Condição |\n| Fim da vigência | 30/06/2024 |",
+          "linha": "Fim da vigência",
+          "coluna": "Condição"
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "multa_rescisao": {
+      "rotulo": "Multa por rescisão",
+      "informado": {
+        "status": "encontrado",
+        "valor": "20%",
+        "valor_numerico": 20.0,
+        "unidade": "%",
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "texto",
+          "pagina": 2,
+          "chunk_index": 3,
+          "secao": "CLÁUSULA 2 - DAS PENALIDADES E DA RESCISÃO",
+          "trecho": "O descumprimento de qualquer cláusula permite a rescisão do contrato, com multa de 20% sobre o valor total, devida pela parte que der causa."
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "indice_reajuste": {
+      "rotulo": "Índice de reajuste",
+      "informado": {
+        "status": "encontrado",
+        "valor": "IGP-M, a cada doze meses",
+        "valor_numerico": null,
+        "unidade": null,
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "tabela",
+          "pagina": 1,
+          "chunk_index": 0,
+          "secao": "CONTRATO DE FORNECIMENTO Nº 2024-07 Quadro-resumo",
+          "trecho": "| Item | Condição |\n| Reajuste | IGP-M, a cada doze meses |",
+          "linha": "Reajuste",
+          "coluna": "Condição"
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "foro": {
+      "rotulo": "Foro",
+      "informado": {
+        "status": "encontrado",
+        "valor": "Comarca de Curitiba/PR",
+        "valor_numerico": null,
+        "unidade": null,
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "texto",
+          "pagina": 2,
+          "chunk_index": 5,
+          "secao": "CLÁUSULA 4 - DO FORO",
+          "trecho": "As partes elegem o foro da Comarca de Curitiba/PR. Contrato fictício, gerado para testar o sistema. As partes e os valores não existem."
+        },
+        "nota_do_agente": "Texto traz também observação sobre contrato fictício; foro é a primeira linha."
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    }
+  },
+  "valores_de_apoio": {},
+  "alertas_de_validacao": [],
+  "impressao_do_indice": "2026-11-20T22:51:53.600320Z|6"
+}

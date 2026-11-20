@@ -1,13 +1,13 @@
 {
   "arquivo": "laudo-maria.pdf",
-  "empresa": "Maria Souza",
+  "entidade": "Maria Souza",
   "alertas": [
     {
       "tipo": "fonte",
       "codigo": "revisao_das_fontes_concluida",
       "severidade": "informacao",
       "campo": null,
-      "mensagem": "Fontes revisadas pelo agente validador. Alertas automáticos e possíveis inconsistências não apontaram problemas; o laudo (1 página) foi lido e não há divergências internas de datas, unidades ou resultados repetidos.",
+      "mensagem": "Fontes revisadas pelo agente validador. Laudo de Maria Souza (1 página) foi lido integralmente; não foram encontrados erros de consistência interna (datas, unidades e resultados) no próprio documento, e nenhum candidato foi registrado.",
       "detalhes": {
         "inconsistencias_registradas": 0
       },

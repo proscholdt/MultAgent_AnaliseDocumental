@@ -1,12 +1,12 @@
 {
-  "empresa": null,
+  "paciente": null,
   "documento": "consenso-perfil-lipidico-sbac.pdf",
   "periodo_referencia": "documento",
   "periodo_comparavel": null,
   "glicose": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não traz resultados/lâmina de glicose do paciente; apenas recomendações de modelo e valores referenciais para perfil lipídico.",
+    "motivo": "O documento é um consenso/recomendações (modelo de laudo) e não traz resultado laboratorial de glicose; apenas menções gerais a risco de hipoglicemia e jejum.",
     "busca": {
       "termos_procurados": [
         "glicose",
@@ -23,7 +23,7 @@
   "hemoglobina_glicada": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não traz resultado de hemoglobina glicada (HbA1c); contém apenas recomendações sobre perfil lipídico/jejum.",
+    "motivo": "O documento não traz resultado laboratorial de hemoglobina glicada (HbA1c); é apenas texto de recomendações/modelo.",
     "busca": {
       "termos_procurados": [
         "hemoglobina glicada",
@@ -37,7 +37,7 @@
   "colesterol_total": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não apresenta resultado de colesterol total do paciente; traz apenas texto e tabelas com valores referenciais/desejáveis (limites) para interpretação do perfil lipídico.",
+    "motivo": "O documento é um consenso/recomendações (modelo de laudo) e não traz resultado laboratorial de colesterol total do paciente; apenas cita colesterol total (CT) em descrições metodológicas e valores referenciais/limites.",
     "busca": {
       "termos_procurados": [
         "colesterol total"
@@ -57,7 +57,7 @@
   "hdl": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não apresenta resultado de HDL-C do paciente; contém apenas valores referenciais/desejáveis e critérios para interpretação.",
+    "motivo": "O documento não traz resultado laboratorial de HDL-C do paciente; aparece apenas em contexto de recomendações e valores referenciais em tabelas do modelo de laudo.",
     "busca": {
       "termos_procurados": [
         "hdl"
@@ -77,7 +77,7 @@
   "ldl": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não apresenta resultado de LDL-C do paciente; apenas metas terapêuticas e valores referenciais/cortes em tabelas e texto.",
+    "motivo": "O documento não traz resultado laboratorial de LDL-C do paciente; aparece apenas em contexto de recomendações/modelo e valores referenciais (adultos/crianças) e método de cálculo.",
     "busca": {
       "termos_procurados": [
         "ldl"
@@ -97,7 +97,7 @@
   "triglicerideos": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não apresenta resultado de triglicerídeos do paciente; contém apenas referências/metas e observações (ex.: TG>440 mg/dL) para o modelo de laudo.",
+    "motivo": "O documento é um consenso/recomendações (modelo de laudo) e não traz resultado laboratorial de triglicérides do paciente; aparecem apenas como recomendações/metodologia (ex.: TG > 440 mg/dL) e valores referenciais em tabelas.",
     "busca": {
       "termos_procurados": [
         "triglicer"
@@ -113,7 +113,7 @@
   "creatinina": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não traz resultado de creatinina; é um documento de recomendações para perfil lipídico.",
+    "motivo": "O documento não traz resultado de creatinina; é um consenso sobre perfil lipídico/modelo de laudo.",
     "busca": {
       "termos_procurados": [
         "creatinina"
@@ -125,7 +125,7 @@
   "hemoglobina": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não traz resultado de hemoglobina do hemograma; contém apenas recomendações relacionadas a perfil lipídico/jejum.",
+    "motivo": "O documento não traz resultado laboratorial de hemoglobina (g/dL); é um consenso/recomendações sobre perfil lipídico.",
     "busca": {
       "termos_procurados": [
         "hemoglobina"

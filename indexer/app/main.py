@@ -17,7 +17,7 @@ from app.schemas import HealthOut
 log = logging.getLogger("api")
 
 DESCRIPTION = """
-Recebe demonstrações financeiras em PDF e as indexa no Qdrant com **vetor denso (semântico)**
+Recebe documentos em PDF, de qualquer domínio com pacote, e os indexa no Qdrant com **vetor denso (semântico)**
 e **vetor esparso (BM25)**, prontos para busca híbrida com RRF.
 
 **Como testar por aqui**
@@ -103,7 +103,7 @@ async def _fila_local(settings):
 
 def create_app(with_lifespan: bool = True) -> FastAPI:
     app = FastAPI(
-        title="Indexador de Demonstrações Financeiras",
+        title="Indexador de documentos",
         version="0.1.0",
         description=DESCRIPTION,
         openapi_tags=TAGS,

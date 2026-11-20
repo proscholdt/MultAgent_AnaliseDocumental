@@ -12,4 +12,5 @@ código.
 | [0004](0004-chave-propria-por-servico.md) | Chave Ed25519 por serviço no lugar do segredo compartilhado | aceita |
 | [0005](0005-postgres-para-replicas.md) | Postgres opcional para várias réplicas | aceita |
 | [0006](0006-modo-dev.md) | Modo dev com fila local e um serviço de especialistas | aceita |
-| [0007](0007-dominios-plugaveis.md) | Domínios plugáveis: o que muda de um tipo de documento para outro fica num pacote | em andamento |
+| [0007](0007-dominios-plugaveis.md) | Domínios plugáveis: o que muda de um tipo de documento para outro fica num pacote | aceita |
+| [0008](0008-nucleo-generico.md) | Núcleo genérico: o código de um domínio mora no pacote dele (plugins, prompts com marcadores, nomes genéricos) | aceita |

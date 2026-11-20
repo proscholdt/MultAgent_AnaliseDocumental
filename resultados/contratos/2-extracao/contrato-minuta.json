@@ -1,0 +1,169 @@
+{
+  "contrato": "Minuta de contrato de prestação de serviços (modelo)",
+  "documento": "contrato-minuta.pdf",
+  "periodo_referencia": "documento",
+  "periodo_comparavel": null,
+  "contratante": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "Documento é uma minuta-modelo fictícia, em branco, com campos preenchidos por placeholders (ex.: [nome ou razão social da contratante]).",
+    "busca": {
+      "termos_procurados": [
+        "contratante"
+      ],
+      "paginas_com_o_termo": [
+        1
+      ],
+      "paginas_descartadas": [
+        1
+      ]
+    }
+  },
+  "contratada": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "Documento é uma minuta-modelo fictícia, em branco, com campos preenchidos por placeholders (ex.: [nome ou razão social da contratada]).",
+    "busca": {
+      "termos_procurados": [
+        "contratada",
+        "contratado"
+      ],
+      "paginas_com_o_termo": [
+        1
+      ],
+      "paginas_descartadas": [
+        1
+      ]
+    }
+  },
+  "objeto": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "Objeto consta como placeholder ([descrever o serviço]) em minuta-modelo fictícia.",
+    "busca": {
+      "termos_procurados": [
+        "objeto"
+      ],
+      "paginas_com_o_termo": [
+        1
+      ],
+      "paginas_descartadas": [
+        1
+      ]
+    }
+  },
+  "valor_total": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "Valor total consta como placeholder ([______]) em minuta-modelo fictícia.",
+    "busca": {
+      "termos_procurados": [
+        "valor total",
+        "valor global",
+        "valor do contrato",
+        "preço"
+      ],
+      "paginas_com_o_termo": [
+        1
+      ],
+      "paginas_descartadas": [
+        1
+      ]
+    }
+  },
+  "data_assinatura": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "Data de assinatura aparece como placeholder ([data]) em 'Fica eleito o foro...' (minuta-modelo fictícia).",
+    "busca": {
+      "termos_procurados": [
+        "assinatura",
+        "assinado",
+        "firmado",
+        "data"
+      ],
+      "paginas_com_o_termo": [
+        1
+      ],
+      "paginas_descartadas": [
+        1
+      ]
+    }
+  },
+  "inicio_vigencia": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "Vigência tem datas como placeholders ([__/__/____]) na cláusula de vigência da minuta-modelo fictícia.",
+    "busca": {
+      "termos_procurados": [
+        "vigência",
+        "início",
+        "a partir de"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    }
+  },
+  "fim_vigencia": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "Vigência tem datas como placeholders ([__/__/____]) e não há data efetiva de término (minuta-modelo fictícia).",
+    "busca": {
+      "termos_procurados": [
+        "vigência",
+        "término",
+        "até"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    }
+  },
+  "multa_rescisao": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "Multa por rescisão aparece como placeholder ([__]%) em cláusula de rescisão de minuta-modelo fictícia.",
+    "busca": {
+      "termos_procurados": [
+        "multa"
+      ],
+      "paginas_com_o_termo": [
+        1
+      ],
+      "paginas_descartadas": [
+        1
+      ]
+    }
+  },
+  "indice_reajuste": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "Índice de reajuste aparece como placeholder ([indicar o índice]) em minuta-modelo fictícia.",
+    "busca": {
+      "termos_procurados": [
+        "reajuste",
+        "ipca",
+        "igp-m",
+        "inpc"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    }
+  },
+  "foro": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "Foro consta com placeholders ([cidade/UF], [Local], [data]) na cláusula de foro de minuta-modelo fictícia.",
+    "busca": {
+      "termos_procurados": [
+        "foro",
+        "comarca"
+      ],
+      "paginas_com_o_termo": [
+        1
+      ],
+      "paginas_descartadas": [
+        1
+      ]
+    }
+  }
+}

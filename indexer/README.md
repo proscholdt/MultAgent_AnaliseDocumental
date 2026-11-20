@@ -51,6 +51,11 @@ O indexador lê qualquer PDF; o que muda por domínio vem do pacote
   `doc_type` continuam na API, preenchidos pelos papéis do pacote (entidade, recorte, tipo).
 - **Sugestão de domínio.** As frases `reconhecer` de cada pacote são contadas nas primeiras
   páginas; quando o PDF parece de outro domínio, o documento ganha `aviso_dominio`.
+- **Plugin do domínio.** O que é de um tipo de documento só fica no plugin dele, dentro do pacote
+  (`dominios/<id>/plugin/indexador.py`, ganchos em [app/plugins/interface.py](app/plugins/interface.py)):
+  no financeiro, o nome fixo das demonstrações (abre a seção no corte e separa o título do bloco do
+  Azure), o rodapé "parte integrante", a reserva de metadados por regex e a frase das figuras. O
+  corte, as unidades em reais e a busca são do núcleo.
 - **Base antiga.** A subida acrescenta as colunas novas (Postgres e SQLite), e o documento de antes
   fica no domínio padrão.
 

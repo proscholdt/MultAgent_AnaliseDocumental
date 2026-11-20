@@ -1,51 +1,51 @@
 {
   "arquivo": "Millet.pdf",
-  "empresa": "Millet Participações S.A.",
+  "entidade": "Millet Participações S.A.",
   "analise": {
     "motivo_resultado": [
       {
-        "afirmacao": "A administração atribui o desempenho das vendas em 2022 ao fato de que a performance atendeu às projeções e expectativas, apesar de uma demanda mais fraca do que a prevista para o ano.",
-        "citacao": "A performance das vendas atendeu às projeções e expectativas, mesmo com uma demanda mais fraca do que era previsto para o ano.",
-        "pagina": 11,
-        "chunk_index": 15,
-        "secao": "1. Contexto operacional > 1.1. COVID-19",
-        "fonte": "nota explicativa",
-        "tom": null
-      },
-      {
-        "afirmacao": "O resultado também foi impactado pela elevação contínua do custo de matérias-primas, sobretudo derivados lácteos, com necessidade de repasse no preço de venda, sem recuperação do mesmo nível de margem antes da pandemia.",
-        "citacao": "verificou-se a continuidade de aumento no custo de matérias primas principalmente dos derivados lácteos, com necessidade de repasse no preço de venda. Apesar desses repasses, em termos percentuais, não foi possível recuperar o mesmo nível de margem antes da pandemia.",
-        "pagina": 11,
-        "chunk_index": 15,
-        "secao": "1. Contexto operacional > 1.1. COVID-19",
-        "fonte": "nota explicativa",
-        "tom": null
+        "status": "nao_encontrado",
+        "motivo": "O documento disponibilizado não contém relatório/carta/mensagem da administração ou seção de 'comentário de desempenho' explicando causas da variação do resultado e da receita no período; as citações encontradas referem-se a políticas contábeis e notas explicativas sem explicação gerencial do desempenho.",
+        "evidencia": {
+          "termos_procurados": [],
+          "paginas_com_o_termo": [],
+          "paginas_descartadas": []
+        }
       }
     ],
     "risco": [
       {
-        "afirmacao": "A Companhia está exposta ao risco de taxa de câmbio, que pode afetar despesa (ou receita) financeira e o saldo passivo de contratos indexados a moeda estrangeira, mitigado por monitoramento das tendências de mercado e revisões periódicas.",
-        "citacao": "Risco de taxa de câmbio: está atrelado a possibilidade de alteração nas taxas de câmbio, afetando a despesa financeira (ou receita) e o saldo passivo de contratos que tenham como indexador uma moeda estrangeira.",
-        "pagina": 41,
-        "chunk_index": 117,
-        "secao": "22. Gestão de risco > 22.1. Fatores de risco financeiro > c) Risco de mercado",
-        "fonte": "nota explicativa",
-        "tom": null
-      },
-      {
-        "afirmacao": "Há risco de liquidez, descrito como dificuldade de cumprir obrigações associadas a passivos financeiros liquidados à vista ou com outro ativo financeiro, mitigado pela busca de liquidez suficiente inclusive em condições de estresse.",
+        "afirmacao": "No risco de liquidez, a administração busca garantir liquidez suficiente para cumprir obrigações ao vencerem, inclusive sob condições de estresse, sem perdas inaceitáveis ou risco à reputação.",
         "citacao": "Risco de liquidez é o risco em que a Companhia irá encontrar dificuldades em cumprir com as obrigações associadas com seus passivos financeiros que são liquidados com pagamentos à vista ou com outro ativo financeiro. A abordagem da Companhia na administração de liquidez é de garantir, o máximo possível, que sempre tenha liquidez suficiente para cumprir com suas obrigações ao vencerem, sob condições normais e de estresse, sem causar perdas inaceitáveis ou com risco de prejudicar a reputação da Companhia.",
         "pagina": 41,
         "chunk_index": 114,
         "secao": "22. Gestão de risco > 22.1. Fatores de risco financeiro > b) Risco de liquidez",
         "fonte": "nota explicativa",
         "tom": null
+      },
+      {
+        "afirmacao": "A Companhia identifica exposição a risco de crédito, risco de liquidez e risco de mercado, descrevendo que as políticas de gerenciamento são estabelecidas para identificar, analisar e monitorar riscos e aderência a limites.",
+        "citacao": "A companhia está exposta aos seguintes riscos: Risco de Crédito; Risco de Liquidez; e Risco de Mercado Essa nota apresenta informações sobre a exposição da Companhia sobre cada um dos riscos acima.",
+        "pagina": 40,
+        "chunk_index": 112,
+        "secao": "22. Gestão de risco > 22.1. Fatores de risco financeiro",
+        "fonte": "nota explicativa",
+        "tom": null
+      },
+      {
+        "afirmacao": "Para risco de mercado, a Companhia considera o risco de taxa de juros e de taxa de câmbio, incluindo monitoramento pela administração das tendências de mercado e do endividamento.",
+        "citacao": "Risco de taxa de câmbio: está atrelado a possibilidade de alteração nas taxas de câmbio, afetando a despesa financeira (ou receita) e o saldo passivo de contratos que tenham como indexador uma moeda estrangeira. A Administração da Companhia monitora os fatores de risco mediante acompanhamento das tendências de mercado e revisões periódicas dos ativos e de seu endividamento.",
+        "pagina": 41,
+        "chunk_index": 117,
+        "secao": "22. Gestão de risco > 22.1. Fatores de risco financeiro > c) Risco de mercado",
+        "fonte": "nota explicativa",
+        "tom": null
       }
     ],
     "guidance": [
       {
-        "afirmacao": "Para os próximos períodos, a administração indica que continuará monitorando os efeitos da crise e os impactos nas operações e nas demonstrações financeiras.",
-        "citacao": "A Companhia continuará monitorando os efeitos da crise e os impactos nas suas operações e nas demonstrações financeiras.",
+        "afirmacao": "Ao tratar do cenário de COVID-19, a Companhia informa que a performance das vendas atendeu às projeções e expectativas e que continuará monitorando os efeitos da crise e seus impactos nas operações e nas demonstrações financeiras.",
+        "citacao": "A performance das vendas atendeu às projeções e expectativas, mesmo com uma demanda mais fraca do que era previsto para o ano. Como ponto residual e contínuo de 2020, verificou-se a continuidade de aumento no custo de matérias primas principalmente dos derivados lácteos, com necessidade de repasse no preço de venda. Apesar desses repasses, em termos percentuais, não foi possível recuperar o mesmo nível de margem antes da pandemia. A Companhia segue com os protocolos de segurança, seguindo as determinações da OMS. A Companhia continuará monitorando os efeitos da crise e os impactos nas suas operações e nas demonstrações financeiras.",
         "pagina": 11,
         "chunk_index": 15,
         "secao": "1. Contexto operacional > 1.1. COVID-19",
@@ -55,33 +55,33 @@
     ],
     "evento_relevante": [
       {
-        "afirmacao": "Após 31 de dezembro de 2022, até a aprovação das demonstrações financeiras, a administração afirma que não ocorreram eventos que necessitassem de divulgação.",
-        "citacao": "Após 31 de dezembro de 2022, até a data da aprovação das demonstrações financeiras pela Administração da Companhia, não ocorreram eventos que necessitam de divulgação nas demonstrações financeiras.",
-        "pagina": 43,
-        "chunk_index": 123,
-        "secao": "24. Eventos subsequentes",
+        "afirmacao": "A Companhia também divulgou incorporação da Genkor Ingredientes Ltda., indicando que o ágio resultante do investimento é amortizado para fins fiscais e que há testes de impairment baseados em rentabilidade futura e projeções.",
+        "citacao": "Em 31 de julho de 2015, a Companhia incorporou a Genkor Ingredientes Ltda., cujas participações societárias foram adquiridas em 2014 e 2015. O ágio decorrente desse investimento está sendo amortizado para fins fiscais, conforme apurado nos respectivos laudos de avaliação.",
+        "pagina": 30,
+        "chunk_index": 85,
+        "secao": "8. Intangível",
         "fonte": "nota explicativa",
         "tom": null
       },
       {
-        "afirmacao": "O documento registra a aquisição de direitos de voto correspondentes a 85% do capital votante, com preço pago de R$ 179.350 mil por 85% das quotas, conforme SPA com os alienantes.",
-        "citacao": "Com a Transação, a Adquirente adquiriu direitos de voto na Empresa correspondentes a 85% do capital votante. Nos termos do SPA assinado entre Adquirente e os alienantes e com base em informações fornecidas pela Administração, o preço pago aos Alienante por 85% das quotas da Empresa foi de R$ 179.350 mil (cento e setenta e nove milhões, trezentos e cinquenta mil reais).",
-        "pagina": 27,
-        "chunk_index": 76,
-        "secao": "7. Investimentos",
+        "afirmacao": "A Companhia informa que, após processo pré-operacional, adquiriu 85% de participação na Alibra Ingredientes S.A. até junho de 2021, configurando evento relevante de consolidação do período.",
+        "citacao": "A Companhia possui sede em São Paulo - SP, e tem por objeto social a participação em outras sociedades civis ou comerciais, como sócia, acionista ou quotista. Permaneceu em processo pré-operacional realizando avaliações e negociações de investimentos até junho de 2021 quando a Companhia adquiriu 85% de participação na Alibra Ingredientes S.A. (\"Alibra\").",
+        "pagina": 11,
+        "chunk_index": 13,
+        "secao": "1. Contexto operacional",
         "fonte": "nota explicativa",
         "tom": null
       }
     ],
     "tom": [
       {
-        "afirmacao": "O tom é positivo, pois a administração destaca que a performance das vendas atendeu às projeções e expectativas mesmo diante de demanda mais fraca.",
-        "citacao": "A performance das vendas atendeu às projeções e expectativas, mesmo com uma demanda mais fraca do que era previsto para o ano.",
-        "pagina": 11,
-        "chunk_index": 15,
-        "secao": "1. Contexto operacional > 1.1. COVID-19",
-        "fonte": "nota explicativa",
-        "tom": "positivo"
+        "afirmacao": "Como não há relatório gerencial detalhando desempenho, o texto da administração nas demonstrações e notas é predominantemente descritivo e de responsabilidade formal, sugerindo tom neutro.",
+        "citacao": "Na elaboração das demonstrações financeiras individuais e consolidadas, a Administração é responsável pela avaliação da capacidade de a Companhia continuar operando, divulgando, quando aplicável, os assuntos relacionados com a sua continuidade operacional e o uso dessa base contábil na elaboração das demonstrações financeiras, a não ser que a Administração pretenda liquidar a Companhia ou cessar suas operações, ou não tenha nenhuma alternativa realista para evitar o encerramento das operações.",
+        "pagina": 3,
+        "chunk_index": 4,
+        "secao": "Responsabilidade da Administração sobre as demonstrações financeiras individuais e consolidadas",
+        "fonte": "demonstração financeira",
+        "tom": "neutro"
       }
     ]
   }

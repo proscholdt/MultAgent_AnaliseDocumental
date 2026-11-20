@@ -1,0 +1,55 @@
+# Frases de exemplo do roteador de intenção no domínio de contratos (o formato e a calibração estão
+# no dominios/financeiro/intencoes.yaml, o do domínio padrão). Relido sem reiniciar. O contrato
+# citado pelo nome ("o de limpeza") é achado nos documentos da coleção.
+ligado: true
+modelo_embedding: text-embedding-3-small
+limiar: 0.45
+margem: 0.03
+max_palavras_seguimento: 8
+# Palavras do nome de um contrato que não o identificam.
+palavras_genericas: [contrato, contratos, prestação, serviços, fornecimento, licença]
+
+rotas:
+  relatorio:
+  - Gere o relatório
+  - Gere o relatório consolidado dos contratos
+  - Quero o relatório completo da coleção
+  - Monte o relatório de todos os contratos
+  - Faça a análise completa dos contratos
+  - Gere o relatório do contrato de limpeza
+  - Quero o relatório só do contrato 33/2024
+  - Monte o relatório de novo
+  - Relatório completo dos contratos, por favor
+  - Produza o relatório dos contratos enviados
+
+  pergunta:
+  - Qual contrato tem o maior valor total?
+  - Quando termina a vigência de cada contrato?
+  - Qual é a multa por rescisão do contrato de fornecimento?
+  - Qual o foro do contrato de software?
+  - Compare os valores dos contratos
+  - Qual índice de reajuste cada contrato usa?
+  - Quem é a contratada no contrato de limpeza?
+  - Qual é o objeto de cada contrato?
+  - Algum contrato tem renovação automática?
+  - Quais são as obrigações da contratada?
+  - Qual o aviso prévio para rescindir?
+  - Quando o contrato foi assinado?
+  - Há limitação de responsabilidade em algum contrato?
+  - Qual contrato vence primeiro?
+
+  fora_do_escopo:
+  - olá, tudo bem?
+  - obrigado!
+  - me conta uma piada
+  - qual a previsão do tempo?
+  - posso rescindir sem pagar a multa?
+  - esse contrato é válido?
+  - devo assinar esse contrato?
+  - me indica um advogado
+  - escreva um contrato novo para mim
+  - quem é você?
+  - bom dia
+  - valeu
+  - qual a melhor empresa de limpeza da cidade?
+  - escreva um poema

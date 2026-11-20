@@ -1,0 +1,92 @@
+{
+  "arquivo": "contrato-software.pdf",
+  "entidade": "Contrato de Licença de Uso de Software Nº 33/2024",
+  "analise": {
+    "obrigacoes": [
+      {
+        "afirmacao": "A CONTRATANTE paga o preço total da licença em doze parcelas mensais, conforme o valor contratado.",
+        "citacao": "Pela licença, a CONTRATANTE pagará o valor total de R$ 36.000,00 (trinta e seis mil reais), em doze parcelas mensais.",
+        "pagina": 1,
+        "chunk_index": 2,
+        "secao": "2. PREÇO",
+        "fonte": "documento",
+        "tom": null
+      },
+      {
+        "afirmacao": "O contrato define como objeto a licença de uso do sistema de agendamento da CONTRATADA, com suporte técnico em horário comercial.",
+        "citacao": "O objeto deste contrato é a licença de uso do sistema de agendamento da CONTRATADA, com suporte técnico em horário comercial.",
+        "pagina": 1,
+        "chunk_index": 1,
+        "secao": "1. OBJETO",
+        "fonte": "documento",
+        "tom": null
+      },
+      {
+        "afirmacao": "As parcelas são reajustadas anualmente pelo INPC, estabelecendo a regra de atualização do valor pago.",
+        "citacao": "As parcelas serão reajustadas anualmente pelo INPC.",
+        "pagina": 1,
+        "chunk_index": 5,
+        "secao": "5. REAJUSTE",
+        "fonte": "documento",
+        "tom": null
+      }
+    ],
+    "penalidades": [
+      {
+        "afirmacao": "Em caso de atraso no pagamento, também incidem juros de 1% ao mês sobre a parcela em atraso.",
+        "citacao": "O atraso no pagamento sujeita a CONTRATANTE a multa de mora de 2% e juros de 1% ao mês sobre a parcela em atraso.",
+        "pagina": 1,
+        "chunk_index": 4,
+        "secao": "4. ATRASO NO PAGAMENTO",
+        "fonte": "documento",
+        "tom": null
+      },
+      {
+        "afirmacao": "Em caso de atraso no pagamento, a CONTRATANTE fica sujeita à multa de mora prevista no contrato.",
+        "citacao": "O atraso no pagamento sujeita a CONTRATANTE a multa de mora de 2% e juros de 1% ao mês sobre a parcela em atraso.",
+        "pagina": 1,
+        "chunk_index": 4,
+        "secao": "4. ATRASO NO PAGAMENTO",
+        "fonte": "documento",
+        "tom": null
+      }
+    ],
+    "rescisao": [
+      {
+        "status": "nao_encontrado",
+        "motivo": "Não foi localizada no documento cláusula de rescisão/denúncia, hipóteses de término antecipado ou previsão de aviso prévio para rescindir o contrato; o contrato traz apenas duração (prazo) e regras correlatas (objeto, preço, atraso no pagamento, reajuste e foro).",
+        "evidencia": {
+          "termos_procurados": [
+            "rescisão",
+            "rescindido",
+            "rescindir",
+            "aviso prévio"
+          ],
+          "paginas_com_o_termo": [],
+          "paginas_descartadas": []
+        }
+      }
+    ],
+    "pontos_de_atencao": [
+      {
+        "status": "nao_encontrado",
+        "motivo": "Não há cláusulas no documento sobre renovação automática do contrato, exclusividade entre as partes, cessão do contrato ou garantias adicionais; foi verificado o conteúdo disponível (título e seções) na página do PDF.",
+        "evidencia": {
+          "termos_procurados": [
+            "renovação",
+            "exclusividade",
+            "responsabilidade",
+            "cessão",
+            "garantia"
+          ],
+          "paginas_com_o_termo": [
+            1
+          ],
+          "paginas_descartadas": [
+            1
+          ]
+        }
+      }
+    ]
+  }
+}

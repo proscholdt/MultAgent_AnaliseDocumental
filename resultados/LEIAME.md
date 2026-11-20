@@ -1,6 +1,6 @@
 # Resultados
 
-Gerado a partir da base do servidor MCP em 2026-11-20T18:49:05+00:00, com 3 documento(s): Brasal.pdf, Light.pdf, Millet.pdf.
+Gerado a partir da base do servidor MCP em 2026-11-20T23:04:40+00:00, com 3 documento(s): Brasal.pdf, Light.pdf, Millet.pdf.
 
 ## Extração estruturada (item 2): um JSON por documento
 

@@ -1,18 +1,18 @@
 {
   "arquivo": "Brasal.pdf",
-  "empresa": "Brasal Brasília Holding S.A.",
+  "entidade": "Brasal Brasília Holding S.A.",
   "alertas": [
     {
       "tipo": "fonte",
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "O documento descreve a definição do Cenário Provável para os '12 meses de 2020' com base em montantes de 31 de dezembro de 2022, o que sugere inconsistência de período (ano projetado não compatível com a data-base citada).",
+      "mensagem": "O documento define “Cenário Provável” para 12 meses de 2020 usando montantes de 31 de dezembro de 2022, conflitante com o período citado (projeção para um ano anterior).",
       "detalhes": {
         "pagina": 49,
         "chunk_index": 131,
         "secao": "26. Gestão de riscos > Análise de sensibilidade",
-        "citacao": "Com a finalidade de verificar a sensibilidade dos indexadores nas dívidas ao qual a Companhia está exposta na data base de 31 de dezembro de 2022, foram estimados 3 cenários distintos, considerando o volume de financiamento total. Com base nesses montantes em 31 de dezembro de 2022, definimos o Cenário Provável para os 12 meses de 2020 (Cenário I)."
+        "citacao": "Com base nesses montantes em 31 de dezembro de 2022, definimos o Cenário Provável para os 12 meses de 2020 (Cenário I)."
       },
       "registrado_por": "validador"
     },
@@ -21,7 +21,7 @@
       "codigo": "revisao_das_fontes_concluida",
       "severidade": "informacao",
       "campo": null,
-      "mensagem": "Fontes revisadas pelo agente validador. Leitura dos alertas automáticos e do(s) candidato(s) de inconsistência no texto e conferência da referência de período; foi registrada 1 inconsistência na fonte do documento.",
+      "mensagem": "Fontes revisadas pelo agente validador. Leitura de alertas automáticos, candidatos e do trecho de gestão de riscos; 1 inconsistência foi registrada no documento.",
       "detalhes": {
         "inconsistencias_registradas": 1
       },

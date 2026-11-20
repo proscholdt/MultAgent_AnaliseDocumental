@@ -578,4 +578,4 @@ def test_context_header_format():
                                   ["Notas", "21. Receita operacional líquida"], 43, 43)
     assert header == "[Brasal Brasília Holding S.A. | 2022 | R$ mil | Notas > 21. Receita operacional líquida | p. 43]"
     assert build_context_header(None, None, None, [], 2, 3) == \
-        "[Empresa não identificada | período não identificado | p. 2-3]"
+        "[Entidade não identificada | recorte não identificado | p. 2-3]"

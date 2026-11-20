@@ -1,15 +1,15 @@
 {
   "arquivo": "Light.pdf",
-  "empresa": "LIGHT S.A.",
+  "entidade": "LIGHT S.A.",
   "alertas": [
     {
       "tipo": "validacao",
       "codigo": "ebitda_divergente",
       "severidade": "atencao",
       "campo": "ebitda",
-      "mensagem": "O EBITDA informado (1.180 R$ milhões) não bate com o resultado antes do resultado financeiro mais depreciação e amortização (-1.179.644 R$ mil). Pode ser um EBITDA ajustado, o valor de uma controlada ou um sinal omitido no texto.",
+      "mensagem": "O EBITDA informado (R$1.180 R$ milhões) não bate com o resultado antes do resultado financeiro mais depreciação e amortização (-1.179.644 R$ mil). Pode ser um EBITDA ajustado, o valor de uma controlada ou um sinal omitido no texto.",
       "detalhes": {
-        "informado": "1.180 R$ milhões",
+        "informado": "R$1.180 R$ milhões",
         "pagina": 9,
         "calculado": "-1.179.644 R$ mil",
         "trecho": "Em 2022, o EBITDA CVM foi de R$1.180 milhões, apresentando uma redução R$3.001 milhões se comparado a 2021. Essa retração foi devida, principalmente, a provisões de - R$2.513 milhões no período, sendo referentes, em especial, ao reconhecimento de provisão Light para devolução de créditos de PIS/COFINS aos consumidores, conforme Lei 14.385/22 (- R$1.081 milhões), revisões nas metodologias e estimativas de PECLD (-R$855 milhões) e de provisões para contingências JEC e Cível (-R$379 milhões)."
@@ -34,12 +34,101 @@
       "codigo": "sem_comparavel",
       "severidade": "informacao",
       "campo": null,
-      "mensagem": "Sem o valor de 2021, a variação não foi calculada para: EBITDA, Alavancagem (dívida líquida / EBITDA).",
+      "mensagem": "Sem o valor de 2021, a variação não foi calculada para: EBITDA.",
       "detalhes": {
         "campos": [
-          "EBITDA",
-          "Alavancagem (dívida líquida / EBITDA)"
+          "EBITDA"
         ]
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "validacao",
+      "codigo": "unidade_herdada",
+      "severidade": "informacao",
+      "campo": "emprestimos_circulante",
+      "mensagem": "Empréstimos e financiamentos (circulante) (2022): a unidade (R$ mil) vem de uma convenção declarada em página anterior, não da própria página.",
+      "detalhes": {
+        "pagina": 63
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "validacao",
+      "codigo": "secao_inesperada",
+      "severidade": "informacao",
+      "campo": "emprestimos_circulante",
+      "mensagem": "Empréstimos e financiamentos (circulante) (2022): o valor veio da seção '20. EMPRÉSTIMOS E FINANCIAMENTOS', e não de uma demonstração de balanço.",
+      "detalhes": {
+        "pagina": 63
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "validacao",
+      "codigo": "periodo_nao_confirmado",
+      "severidade": "atencao",
+      "campo": "emprestimos_circulante",
+      "mensagem": "Empréstimos e financiamentos (circulante) (2022): a fonte citada não escreve o período 2022. Confira se o valor é mesmo desse período.",
+      "detalhes": {
+        "pagina": 63,
+        "trecho": "| Financiador - Consolidado | Controlada | Circulante - Principal | Circulante - Encargos | Circulante - Total | Não circulante - Principal | Total - 31.12.2022 | Total - 31.12.2021 |\n| TOTAL |  | 298.020 | 10.926 | 308.946 | 3.464.352 | 3.773.298 | 4.409.020 |"
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "validacao",
+      "codigo": "unidade_herdada",
+      "severidade": "informacao",
+      "campo": "caixa_equivalentes",
+      "mensagem": "Caixa e equivalentes de caixa (2022): a unidade (R$ mil) vem de uma convenção declarada em página anterior, não da própria página.",
+      "detalhes": {
+        "pagina": 47
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "validacao",
+      "codigo": "secao_inesperada",
+      "severidade": "informacao",
+      "campo": "caixa_equivalentes",
+      "mensagem": "Caixa e equivalentes de caixa (2022): o valor veio da seção '6. CAIXA E EQUIVALENTES DE CAIXA', e não de uma demonstração de balanço.",
+      "detalhes": {
+        "pagina": 47
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "validacao",
+      "codigo": "unidade_herdada",
+      "severidade": "informacao",
+      "campo": "emprestimos_nao_circulante",
+      "mensagem": "Empréstimos e financiamentos (não circulante) (2022): a unidade (R$ mil) vem de uma convenção declarada em página anterior, não da própria página.",
+      "detalhes": {
+        "pagina": 63
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "validacao",
+      "codigo": "secao_inesperada",
+      "severidade": "informacao",
+      "campo": "emprestimos_nao_circulante",
+      "mensagem": "Empréstimos e financiamentos (não circulante) (2022): o valor veio da seção '20. EMPRÉSTIMOS E FINANCIAMENTOS', e não de uma demonstração de balanço.",
+      "detalhes": {
+        "pagina": 63
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "validacao",
+      "codigo": "periodo_nao_confirmado",
+      "severidade": "atencao",
+      "campo": "emprestimos_nao_circulante",
+      "mensagem": "Empréstimos e financiamentos (não circulante) (2022): a fonte citada não escreve o período 2022. Confira se o valor é mesmo desse período.",
+      "detalhes": {
+        "pagina": 63,
+        "trecho": "| Financiador - Consolidado | Controlada | Circulante - Principal | Circulante - Encargos | Circulante - Total | Não circulante - Principal | Total - 31.12.2022 | Total - 31.12.2021 |\n| TOTAL |  | 298.020 | 10.926 | 308.946 | 3.464.352 | 3.773.298 | 4.409.020 |"
       },
       "registrado_por": "extrator"
     },
@@ -85,7 +174,7 @@
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "O quadro apresenta duas colunas com o mesmo título 'Consolidado - 2021', repetindo o ano no cabeçalho de colunas diferentes.",
+      "mensagem": "O quadro apresenta duas colunas com o mesmo título 'Consolidado - 2021', o que impede identificar adequadamente o período de uma das colunas.",
       "detalhes": {
         "pagina": 21,
         "chunk_index": 58,
@@ -99,12 +188,12 @@
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "A redução de EBITDA citada não fecha com os dois valores informados na mesma frase (R$1.817 milhões e R$1.179 milhões), indicando inconsistência no valor da variação.",
+      "mensagem": "A redução informada do EBITDA (R$3.001 milhões) não fecha com a diferença entre o EBITDA de R$1.180 milhões e o comparativo de 2021 usado na mesma frase.",
       "detalhes": {
-        "pagina": 8,
-        "chunk_index": 24,
-        "secao": "Desempenho Financeiro",
-        "citacao": "Em 2022, o EBITDA CVM 1 da distribuidora foi de R$1.817 milhões, uma redução de R$2.996 milhões em relação aos R$1.179 milhões apurados em 2021."
+        "pagina": 9,
+        "chunk_index": 33,
+        "secao": "EBITDA CVM",
+        "citacao": "Em 2022, o EBITDA CVM foi de R$1.180 milhões, apresentando uma redução R$3.001 milhões se comparado a 2021. Essa retração foi devida"
       },
       "registrado_por": "validador"
     },
@@ -113,7 +202,7 @@
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "O texto compara o indicador de covenants 'encerrou 2021' e em seguida afirma 'no 2021 (3,48x)', repetindo o mesmo ano dos dois lados da comparação, o que sugere troca de período no texto.",
+      "mensagem": "A frase afirma que um indicador 'encerrou 2021' é menor do que no '2021 (3,48x)', usando o mesmo ano nos dois lados da comparação.",
       "detalhes": {
         "pagina": 10,
         "chunk_index": 35,
@@ -127,12 +216,12 @@
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "A redução de EBITDA citada não fecha com os dois valores informados na mesma frase (R$1.180 milhões e o comparável em 2021), indicando inconsistência na variação apresentada.",
+      "mensagem": "A redução informada do EBITDA (R$2.996 milhões) não fecha com a diferença entre o EBITDA de R$1.817 milhões e o comparativo de R$1.179 milhões informado na mesma frase.",
       "detalhes": {
-        "pagina": 9,
-        "chunk_index": 33,
-        "secao": "EBITDA CVM",
-        "citacao": "Em 2022, o EBITDA CVM foi de R$1.180 milhões, apresentando uma redução R$3.001 milhões se comparado a 2021."
+        "pagina": 8,
+        "chunk_index": 24,
+        "secao": "Desempenho Financeiro",
+        "citacao": "Em 2022, o EBITDA CVM 1 da distribuidora foi de R$1.817 milhões, uma redução de R$2.996 milhões em relação aos R$1.179 milhões apurados em 2021. Essa retração foi devida"
       },
       "registrado_por": "validador"
     },
@@ -141,7 +230,7 @@
       "codigo": "revisao_das_fontes_concluida",
       "severidade": "informacao",
       "campo": null,
-      "mensagem": "Fontes revisadas pelo agente validador. Foram lidos os alertas e os candidatos de inconsistência no documento (incluindo conferência dos trechos sobre EBITDA, covenants e cabeçalho de quadro). Quatro inconsistências foram registradas na fonte do documento.",
+      "mensagem": "Fontes revisadas pelo agente validador. Revisão das seções com números e dos candidatos de inconsistência: 4 inconsistências registradas no texto/quadro (sem repetir alertas automáticos).",
       "detalhes": {
         "inconsistencias_registradas": 4
       },

@@ -45,13 +45,17 @@ inconsistências e os não encontrados (5), o [relatório consolidado](resultado
 ## Domínios
 
 Um domínio é uma pasta em [`dominios/`](dominios/README.md), e o núcleo não sabe qual está
-rodando. O `dominio.yaml` diz que documentos o domínio trata, de quem é cada documento (a
-entidade: empresa, paciente), o recorte no tempo (período contábil, data da coleta), os metadados
-que o indexador extrai, os campos que os agentes extraem, as categorias da análise, as perguntas
-padrão e os textos da tela. Ao lado: os prompts dos agentes naquele domínio, as frases do
-roteador do chat e o gabarito. O que não cabe em YAML (as fórmulas e as regras de inconsistência
-das demonstrações) é plugin em Python. Decisão e fases em
-[docs/decisoes/0007](docs/decisoes/0007-dominios-plugaveis.md).
+rodando nem tem vocabulário de domínio nenhum (`make generico` confere, no CI). O `dominio.yaml`
+diz que documentos o domínio trata, de quem é cada documento (a entidade: empresa, paciente,
+contrato), o recorte no tempo (período contábil, data da coleta, nenhum), os metadados que o
+indexador extrai, os campos que os agentes extraem (dinheiro, percentual, número com unidade,
+data, texto), as categorias da análise, as perguntas padrão e os textos da tela e do relatório. Ao
+lado: o que cada agente precisa saber do domínio (o prompt base é o método, com as palavras do
+pacote por marcador), as frases do roteador do chat e o gabarito. O que não cabe em YAML (as
+fórmulas, as regras da fonte, o nome fixo das demonstrações) é um plugin em Python dentro do
+pacote, atrás dos ganchos de cada sistema. Um domínio novo começa com `make novo-dominio ID=x`.
+Decisões em [docs/decisoes/0007](docs/decisoes/0007-dominios-plugaveis.md) e
+[0008](docs/decisoes/0008-nucleo-generico.md).
 
 O usuário escolhe o domínio por **coleção**: cria uma coleção de um domínio e envia os PDFs nela.
 Relatórios e perguntas rodam dentro da coleção; o token de cada agente leva a coleção e o domínio
@@ -59,35 +63,38 @@ ao servidor MCP, que mostra ao modelo só os campos, as categorias e as pergunta
 só os documentos daquela coleção. No envio, o indexador compara o PDF com as frases típicas de cada
 domínio e avisa quando ele parece de outro.
 
-| | Financeiro (`financeiro`) | Laudos (`laudos`) |
-|---|---|---|
-| Entidade · recorte | empresa · período (com o anterior como comparável) | paciente · data da coleta |
-| Campos | 8 indicadores e 8 valores de apoio, em dinheiro, % e x | 8 exames, número com a unidade (mg/dL, g/dL, %) |
-| Regras em código | fórmulas, validações, inconsistências da fonte (plugin) | nenhuma: só YAML e prompts |
-| Portões | os mesmos: citação literal, número só por marcador ou citação, ausência com prova, unidade conferida | |
+| | Financeiro (`financeiro`) | Laudos (`laudos`) | Contratos (`contratos`) |
+|---|---|---|---|
+| Entidade · recorte | empresa · período (com o anterior como comparável) | paciente · data da coleta | contrato · nenhum |
+| Campos | 8 indicadores e 8 valores de apoio, em dinheiro, % e x | 8 exames, número com a unidade (mg/dL, g/dL, %) | partes, objeto, foro e reajuste (texto), assinatura e vigência (data), valor (R$), multa (%) |
+| Regras em código | plugin no servidor MCP (fórmulas, validações, fonte, inconsistências em reais) e no indexador (títulos das demonstrações) | nenhuma: só YAML e prompts | nenhuma: só YAML e prompts |
+| Portões | os mesmos: citação literal, número só por marcador ou citação, ausência com prova, unidade conferida | | |
 
 Laudo é dado sensível: os documentos de teste do domínio de laudos são fictícios, gerados por
 [`gerar_laudos.py`](dominios/laudos/avaliacao/gerar_laudos.py), e o sistema não faz diagnóstico
 nem recomenda tratamento.
 
-**Os dois domínios, medidos do zero** (mesmo usuário, uma coleção de cada, PDFs lidos pelo
-Docling, nota automática contra o gabarito de cada domínio):
+**Os três domínios, medidos** (mesmo usuário, uma coleção de cada, PDFs lidos pelo Docling, nota
+automática contra o gabarito de cada domínio, depois dos prompts genéricos e das tools renomeadas):
 
-| | Financeiro (Brasal, Light, Millet) | Laudos (3 laudos fictícios + o consenso da SBAC) |
-|---|---|---|
-| Status certo (informado ou não encontrado) | 24 de 24 | 32 de 32 |
-| Valor e página certos | 13 de 13 | 17 de 17 |
-| Invenção | 0 de 11 | 0 de 15 |
-| Inconsistências da fonte registradas | 7 de 7 | 1 de 1 (liberação antes da coleta) |
-| Perguntas certas | 5 de 5 | 4 de 4 |
-| Citações literais | 32 de 32 | 19 de 19 |
-| Relatório completo | 257 s, US$ 0,24 | 201 s, US$ 0,10 |
+| | Financeiro (Brasal, Light, Millet) | Laudos (3 fictícios + o consenso da SBAC) | Contratos (3 fictícios + uma minuta em branco) |
+|---|---|---|---|
+| Status certo (informado ou não encontrado) | 24 de 24 | 32 de 32 | 40 de 40 |
+| Valor e página certos | 13 de 13 | 17 de 17 | 28 de 28 |
+| Invenção | 0 de 11 | 0 de 15 | 0 de 12 |
+| Inconsistências da fonte registradas | 7 de 7 | 1 de 1 (liberação antes da coleta) | 1 de 1 (vigência que termina antes de começar) |
+| Perguntas certas | 5 de 5 | 4 de 4 | 4 de 4 |
+| Citações literais | 35 de 35 | 20 de 20 | 20 de 20 |
+| Relatório completo, do zero | 241 s, US$ 0,25 | 161 s, US$ 0,11 | 100 s a 162 s, US$ 0,08 a 0,12 |
 
-O consenso da Sociedade Brasileira de Análises Clínicas sobre o laudo do perfil lipídico é um PDF
-público, com tabelas de valores de referência e nenhum resultado de paciente. Os 8 exames saíram
-"não encontrado", com a prova, e nenhum valor foi tirado das tabelas de referência. Os resultados
-de laudos estão em [`resultados/laudos/`](resultados/laudos/LEIAME.md):
-`make resultados COLECAO=<id> SAIDA=../resultados/laudos`.
+Os documentos "de controle" não podem render valor nenhum. O consenso da Sociedade Brasileira de
+Análises Clínicas sobre o laudo do perfil lipídico é um PDF público, com tabelas de referência e
+nenhum paciente: os 8 exames saíram "não encontrado", com a prova. A minuta de contrato em branco
+("R$ [______]", "[cidade/UF]") também saiu toda "não encontrado". No contrato de software, a vigência
+é dada em meses e a única multa é a de mora: o fim da vigência e a multa por rescisão saíram "não
+encontrado", sem conta. Resultados em [`resultados/laudos/`](resultados/laudos/LEIAME.md) e
+[`resultados/contratos/`](resultados/contratos/LEIAME.md):
+`make resultados COLECAO=<id> SAIDA=../resultados/<dominio>`.
 
 ## Arquitetura
 

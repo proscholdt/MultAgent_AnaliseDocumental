@@ -132,7 +132,7 @@ def coverage(gabarito: dict[str, Any], snapshot: dict[str, Any], doc_ids: set[st
     without = [doc["arquivo"] for doc in present if doc["doc_id"] not in by_id]
     all_snapshot = {doc["doc_id"] for doc in snapshot["documentos"]}
     questions = doc_ids is None and all_snapshot == set(by_id)
-    reason = None if questions else ("relatório de uma empresa: as perguntas comparam as empresas" if doc_ids is not None
+    reason = None if questions else ("relatório de um documento: as perguntas comparam os documentos" if doc_ids is not None
                                      else "os documentos não são exatamente os do gabarito")
     return {"documentos": with_key, "sem_gabarito": without, "perguntas": questions, "perguntas_motivo": reason}
 

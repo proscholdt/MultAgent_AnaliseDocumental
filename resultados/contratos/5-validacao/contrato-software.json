@@ -1,0 +1,17 @@
+{
+  "arquivo": "contrato-software.pdf",
+  "entidade": "Contrato de Licença de Uso de Software Nº 33/2024",
+  "alertas": [
+    {
+      "tipo": "fonte",
+      "codigo": "revisao_das_fontes_concluida",
+      "severidade": "informacao",
+      "campo": null,
+      "mensagem": "Fontes revisadas pelo agente validador. Documento lido integralmente (todas as cláusulas em 1 página); não foram encontrados candidatos a inconsistência e não há divergências internas de valores ou datas para registrar.",
+      "detalhes": {
+        "inconsistencias_registradas": 0
+      },
+      "registrado_por": "validador"
+    }
+  ]
+}

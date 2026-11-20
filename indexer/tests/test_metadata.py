@@ -57,6 +57,9 @@ def laudo_doc(texto: str = LAUDO_TEXTO) -> ParsedDocument:
     ("Valores em milhões de reais", "R$ milhões"),
     ("(R$ milhões)", "R$ milhões"),
     ("A receita cresceu no exercício.", None),
+    # O valor por extenso de um contrato não declara a unidade: "mil reais" é o fim do número.
+    ("O valor total é de R$ 120.000,00 (cento e vinte mil reais).", None),
+    ("pagará o valor total de R$ 36.000,00 (trinta e seis mil reais)", None),
 ])
 def test_detect_declared_unit(text, unit):
     assert detect_declared_unit(text) == unit

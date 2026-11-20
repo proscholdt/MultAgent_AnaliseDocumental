@@ -1,10 +1,10 @@
 {
   "arquivo": "Light.pdf",
-  "empresa": "LIGHT S.A.",
+  "entidade": "LIGHT S.A.",
   "analise": {
     "motivo_resultado": [
       {
-        "afirmacao": "A administração atribui a redução da receita operacional líquida (desconsiderando receita de construção) em 2022 aos estornos de faturamento de regularizações, ao não acionamento das bandeiras tarifárias e à variação negativa da conta CVA.",
+        "afirmacao": "Na Light S.A., a receita operacional líquida (sem receita de construção) caiu em 2022, influenciada por estornos de faturamento de regularizações, pelo não acionamento das bandeiras tarifárias e pela variação negativa da conta CVA.",
         "citacao": "A receita operacional líquida, desconsiderando a receita de construção, totalizou em 2022 R$12.107 milhões, 13% abaixo da registrada em 2021. Essa redução foi influenciada pelos estornos de faturamento de regularizações, pelo não acionamento das bandeiras tarifárias e pela variação negativa na conta CVA, que é uma compensação para cobertura dos custos com a Parcela A.",
         "pagina": 9,
         "chunk_index": 31,
@@ -13,7 +13,7 @@
         "tom": null
       },
       {
-        "afirmacao": "A administração explica que a variação de custos e despesas operacionais consolidados em 2022 decorreu principalmente do reconhecimento de provisão para devolução de créditos de PIS/COFINS aos consumidores e de revisões metodológicas/estimativas de PECLD e de provisões para contingências (JEC e Cível).",
+        "afirmacao": "O aumento dos custos e despesas operacionais consolidados em 2022 foi explicado principalmente pelo reconhecimento de provisão para devolução de créditos de PIS/COFINS aos consumidores (Lei 14.385/22) e por revisões metodológicas/estimativas de PECLD e de provisões para contingências JEC e Cível.",
         "citacao": "Os custos e despesas operacionais consolidados, já desconsiderando os custos de construção, encerraram o ano de 2022 em R$15.179 milhões, 19,2% superior ao apurado em 2021. Essa variação pode ser explicada, principalmente, pelo reconhecimento de provisão para devolução de créditos de PIS/COFINS aos consumidores, conforme Lei 14.385/22 (- R$1.081 milhões), revisões nas metodologias e estimativas de PECLD (-R$855 milhões) e de provisões para contingências JEC e Cível (-R$379 milhões).",
         "pagina": 9,
         "chunk_index": 32,
@@ -22,19 +22,28 @@
         "tom": null
       },
       {
-        "afirmacao": "No caso da Light Energia, a administração relaciona a melhora do resultado líquido em 2022 à melhora do cenário hidrológico, que elevou o GSF e reduziu o PLD, diminuindo os custos de compra de energia.",
-        "citacao": "Essa variação pode ser explicada pela melhora do cenário hidrológico ao longo do ano de 2022, que levou ao aumento do GSF e à queda do PLD, reduzindo os custos com compra de energia. A Light mostrou grande eficiência na estratégia de proteção do resultado aos riscos de mercado (GSF/PLD).",
+        "afirmacao": "A retração do EBITDA CVM em 2022 foi atribuída principalmente a provisões reconhecidas no período, com destaque para devolução de créditos de PIS/COFINS (Lei 14.385/22), revisões de PECLD e provisões para contingências JEC e Cível.",
+        "citacao": "Em 2022, o EBITDA CVM foi de R$1.180 milhões, apresentando uma redução R$3.001 milhões se comparado a 2021. Essa retração foi devida, principalmente, a provisões de - R$2.513 milhões no período, sendo referentes, em especial, ao reconhecimento de provisão Light para devolução de créditos de PIS/COFINS aos consumidores, conforme Lei 14.385/22 (- R$1.081 milhões), revisões nas metodologias e estimativas de PECLD (-R$855 milhões) e de provisões para contingências JEC e Cível (-R$379 milhões).",
         "pagina": 9,
-        "chunk_index": 28,
-        "secao": "Desempenho Financeiro",
+        "chunk_index": 33,
+        "secao": "EBITDA CVM",
         "fonte": "relatório",
         "tom": null
       }
     ],
     "risco": [
       {
-        "afirmacao": "A administração explica que há risco de crédito decorrente da inadimplência de consumidores e de instituições financeiras, mitigado por ferramentas como corte por inadimplência, negativação e cobrança judicial, além de matriz de provisão para perdas esperadas.",
-        "citacao": "Decorre da possibilidade da Companhia sofrer perdas decorrentes de inadimplência dos seus consumidores ou de instituições financeiras depositárias de recursos ou de investimentos financeiros. Para mitigar esses riscos, a Companhia utiliza de todas as ferramentas de cobrança permitidas pelo órgão regulador, tais como corte por inadimplência, negativação de clientes inadimplentes em empresas de proteção ao crédito e cobrança judicial.",
+        "afirmacao": "A administração destaca que o Grupo pode enfrentar incerteza significativa quanto à capacidade de continuidade operacional, apesar da conclusão de que possui condições para os próximos 12 meses, por existirem eventos e condições que não estão sob controle da administração.",
+        "citacao": "Porém, não há garantia de que a Companhia terá êxito nas estratégias, visto que parte relevante dos elementos das estratégias não está sob o controle da Administração da Companhia, existindo, portanto, uma incerteza sobre seu sucesso. Os eventos e condições, anteriormente mencionados, individual ou coletivamente, indicam, no julgamento da Administração da Companhia, a existência de incerteza significativa que pode levantar dúvida significativa quanto à capacidade de continuidade operacional da Light e da Light SESA, controlada da Companhia.",
+        "pagina": 3,
+        "chunk_index": 4,
+        "secao": "Octavio Pereira Lopes",
+        "fonte": "relatório",
+        "tom": null
+      },
+      {
+        "afirmacao": "A Companhia aponta que o risco de crédito decorre de inadimplência de consumidores ou de instituições depositárias, mitigado por ferramentas de cobrança (incluindo corte e negativação) e por matriz de provisão para avaliar perdas esperadas.",
+        "citacao": "Decorre da possibilidade da Companhia sofrer perdas decorrentes de inadimplência dos seus consumidores ou de instituições financeiras depositárias de recursos ou de investimentos financeiros. Para mitigar esses riscos, a Companhia utiliza de todas as ferramentas de cobrança permitidas pelo órgão regulador, tais como corte por inadimplência, negativação de clientes inadimplentes em empresas de proteção ao crédito e cobrança judicial. O risco de crédito das contas a receber encontra-se pulverizado considerando a base de clientes da Companhia.",
         "pagina": 101,
         "chunk_index": 315,
         "secao": "34. INSTRUMENTOS FINANCEIROS E GERENCIAMENTO DE RISCOS > 34.2 Gerenciamento de riscos e objetivos alcançados > 34.2.4 Risco de crédito",
@@ -42,17 +51,8 @@
         "tom": null
       },
       {
-        "afirmacao": "A administração aponta que escassez prolongada de chuva, por reduzir o volume de água dos reservatórios, pode aumentar custos de compra de energia e necessidade de caixa no curto prazo, com potencial impacto em aumentos tarifários futuros.",
-        "citacao": "Um período prolongado de escassez de chuva pode resultar na redução do volume de água dos reservatórios das usinas, acarretar perdas em função do aumento de custos na aquisição de energia ou redução de receitas com a implementação de programas abrangentes de conservação de energia elétrica. O prolongamento da geração de energia por meio de termelétricas pode pressionar o aumento dos custos para as distribuidoras de energia, o que ocasiona uma maior necessidade de caixa no curto prazo, que são recuperáveis dentro do arcabouço regulatório vigente, e pode impactar em aumentos tarifários futuros.",
-        "pagina": 101,
-        "chunk_index": 317,
-        "secao": "34. INSTRUMENTOS FINANCEIROS E GERENCIAMENTO DE RISCOS > 34.2 Gerenciamento de riscos e objetivos alcançados > 34.2.5 Risco de liquidez",
-        "fonte": "nota explicativa",
-        "tom": null
-      },
-      {
-        "afirmacao": "A administração descreve que o risco de liquidez é gerenciado acompanhando continuamente fluxos de caixa previstos e reais e combinando os perfis de vencimento dos passivos financeiros.",
-        "citacao": "Conforme divulgado na Nota 1.1, a Administração da Companhia está acompanhando atentamente todos os riscos relacionados a continuidade operacional do Grupo e gerencia o risco de liquidez por meio do acompanhamento contínuo dos fluxos de caixa previstos e reais, bem como pela combinação dos perfis de vencimento dos seus passivos financeiros.",
+        "afirmacao": "O risco de liquidez é descrito como a capacidade financeira de cumprir compromissos e é gerenciado pela administração por acompanhamento contínuo dos fluxos de caixa previstos e reais e pela combinação dos perfis de vencimento dos passivos financeiros.",
+        "citacao": "O risco de liquidez evidencia a capacidade financeira em cumprir adequadamente os compromissos assumidos, os fluxos de vencimentos dos recursos captados e de outras obrigações que fazem parte das divulgações. Informações com maior detalhamento sobre os recursos captados são apresentadas nas Notas 20 e 21. A Companhia tem obtido recursos a partir da sua atividade comercial, do mercado financeiro e de empresas ligadas, destinando-os principalmente ao seu programa de investimentos e à administração de seu caixa para capital de giro e compromissos financeiros. Conforme divulgado na Nota 1.1, a Administração da Companhia está acompanhando atentamente todos os riscos relacionados a continuidade operacional do Grupo e gerencia o risco de liquidez por meio do acompanhamento contínuo dos fluxos de caixa previstos e reais, bem como pela combinação dos perfis de vencimento dos seus passivos financeiros.",
         "pagina": 101,
         "chunk_index": 316,
         "secao": "34. INSTRUMENTOS FINANCEIROS E GERENCIAMENTO DE RISCOS > 34.2 Gerenciamento de riscos e objetivos alcançados > 34.2.5 Risco de liquidez",
@@ -62,8 +62,8 @@
     ],
     "guidance": [
       {
-        "afirmacao": "A administração afirma que concentrou investimentos necessários para a sustentabilidade do serviço até a renovação da concessão, com o objetivo de maximizar o fluxo de caixa nos próximos 36 meses, período considerado crucial para o Grupo.",
-        "citacao": "Concentramos nossos investimentos naqueles estritamente necessários para a sustentabilidade do nosso serviço até a renovação da concessão, de forma a maximizar o fluxo de caixa nos próximos 36 meses, período que será crucial para o Grupo.",
+        "afirmacao": "A administração indica que concentrará os investimentos estritamente necessários para a sustentabilidade do serviço até a renovação da concessão, buscando maximizar o fluxo de caixa nos próximos 36 meses, período considerado crucial pelo Grupo.",
+        "citacao": "Concentramos nossos investimentos naqueles estritamente necessários para a sustentabilidade do nosso serviço até a renovação da concessão, de forma a maximizar o fluxo de caixa nos próximos 36 meses, período que será crucial para o Grupo. Tudo isso, obviamente, sem afetar a qualidade e segurança dos nossos serviços.",
         "pagina": 3,
         "chunk_index": 3,
         "secao": "Mensagem da Administração",
@@ -71,8 +71,8 @@
         "tom": null
       },
       {
-        "afirmacao": "A administração declara que perseguirá e envidará os melhores esforços nas estratégias mencionadas na seção 1.1 das demonstrações financeiras de 2022.",
-        "citacao": "Adicionalmente, a Administração da Companhia perseguirá e envidará os melhores esforços nas diversas estratégias mencionadas na seção 1.1 das DFs de 2022.",
+        "afirmacao": "A administração declara que perseguirá e envidará os melhores esforços nas estratégias mencionadas nas demonstrações financeiras de 2022, embora ressalte ausência de garantia de êxito.",
+        "citacao": "Adicionalmente, a Administração da Companhia perseguirá e envidará os melhores esforços nas diversas estratégias mencionadas na seção 1.1 das DFs de 2022. Porém, não há garantia de que a Companhia terá êxito nas estratégias, visto que parte relevante dos elementos das estratégias não está sob o controle da Administração da Companhia, existindo, portanto, uma incerteza sobre seu sucesso.",
         "pagina": 3,
         "chunk_index": 4,
         "secao": "Octavio Pereira Lopes",
@@ -82,7 +82,7 @@
     ],
     "evento_relevante": [
       {
-        "afirmacao": "A administração registra que assinou contrato para aquisição de 49% das ações da Axxiom, com expectativa de conclusão da operação no segundo trimestre de 2023 após aprovações e cumprimento de condições precedentes.",
+        "afirmacao": "Como evento subsequente, a Light assinou em dezembro de 2022 contrato para adquirir 49% da Axxiom, com aprovação do CADE em janeiro de 2023, e expectativa de conclusão no segundo trimestre de 2023.",
         "citacao": "Em 21 de dezembro de 2022, a Light S.A. assinou um Contrato de Compra e Venda de Ações e Outras Avenças para aquisição de 49% das ações da controlada em conjunto Axxiom Soluções pertencentes a Companhia Energética de Minas Gerais (\"CEMIG\"). A operação foi realizada por R$1,00 (um real) onde o Grupo Light S.A. terá 100% das ações da Axxiom. Em 25 de janeiro de 2023, o Conselho de Administrativo de Defesa Econômica (\"CADE\") aprovou a operação. Para que essa operação seja finalizada, existem algumas condições precedentes a serem cumpridas e a Companhia tem expectativa para conclusão da operação no segundo trimestre de 2023.",
         "pagina": 107,
         "chunk_index": 334,
@@ -91,24 +91,24 @@
         "tom": null
       },
       {
-        "afirmacao": "A administração descreve a promulgação da Lei nº 14.385/2022, que determinou a destinação integral dos valores relacionados à exclusão do ICMS da base do PIS/COFINS, e afirma que foram traçadas estratégias de atuação judicial com base na opinião de assessores legais externos.",
-        "citacao": "Em 27 de junho de 2022, foi promulgada a Lei nº 14.385/22, a qual altera a Lei nº 9.427, de 26 de dezembro de 1996, para disciplinar o repasse de valores de tributos recolhidos a maior pelas prestadoras do serviço público de distribuição de energia elétrica. A nova Lei incluiu o art. 3º-B, na Lei nº 9.427/1996, para determinar a destinação integral em proveitos dos usuários afetados, dos créditos oriundos das ações em que as distribuidoras de energia elétrica obtiveram a exclusão do ICMS da base de cálculo do PIS/COFINS.",
-        "pagina": 28,
-        "chunk_index": 76,
-        "secao": "1. CONTEXTO OPERACIONAL > 1.2 Promulgação da Lei nº 14.385 em 27 de junho de 2022",
+        "afirmacao": "A ANEEL aprovou em 15 de março de 2023 o reajuste tarifário de 2023, com novas tarifas em vigor a partir dessa data e repasse aos consumidores de créditos tributários em cumprimento à Lei 14.385/22.",
+        "citacao": "Em 15 de março de 2023, foi aprovado pela ANEEL o processo de reajuste das tarifas da Companhia. O resultado representa um reajuste tarifário médio para o consumidor de 7,0%, e engloba todas as classes de consumo (residencial, industrial, comercial, rural e outras). O índice de reajuste é constituído de dois componentes: (i) estrutural, que passa a integrar a tarifa, de 2,84%, compreendido pelos custos não gerenciáveis (Parcela A) e gerenciáveis (Parcela B); e (ii) componente financeiro negativo que somam 4,16%, aplicado exclusivamente aos próximos 12 meses. Neste reajuste está incluído o repasse aos consumidores de créditos tributários da exclusão do ICMS da base do PIS/Cofins, no valor de R$1.777.129, em cumprimento à Lei nº 14.385/22. As novas tarifas entraram em vigor a partir de 15 de março de 2023.",
+        "pagina": 107,
+        "chunk_index": 333,
+        "secao": "38. EVENTOS SUBSEQUENTES > 38.1 Revisão tarifária 2023",
         "fonte": "nota explicativa",
         "tom": null
       }
     ],
     "tom": [
       {
-        "afirmacao": "A administração adota tom cauteloso ao reconhecer que não há garantia de êxito das estratégias, devido a fatores que não estão sob seu controle.",
-        "citacao": "Porém, não há garantia de que a Companhia terá êxito nas estratégias, visto que parte relevante dos elementos das estratégias não está sob o controle da Administração da Companhia, existindo, portanto, uma incerteza sobre seu sucesso.",
+        "afirmacao": "O tom geral da administração é positivo, com ênfase em eficiência obtida e confiança na transformação da Light, apesar do reconhecimento de incertezas nas estratégias e do contexto de continuidade operacional.",
+        "citacao": "Somos hoje uma empresa eficiente na gestão de despesas e na alocação de recursos. Engajamos um corpo de lideranças altamente qualificado e comprometido com a recuperação do protagonismo histórico da Light.",
         "pagina": 3,
-        "chunk_index": 4,
-        "secao": "Octavio Pereira Lopes",
+        "chunk_index": 3,
+        "secao": "Mensagem da Administração",
         "fonte": "relatório",
-        "tom": "negativo"
+        "tom": "positivo"
       }
     ]
   }

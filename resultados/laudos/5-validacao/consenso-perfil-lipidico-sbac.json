@@ -1,13 +1,13 @@
 {
   "arquivo": "consenso-perfil-lipidico-sbac.pdf",
-  "empresa": null,
+  "entidade": null,
   "alertas": [
     {
       "tipo": "fonte",
       "codigo": "revisao_das_fontes_concluida",
       "severidade": "informacao",
       "campo": null,
-      "mensagem": "Fontes revisadas pelo agente validador. Revisados os alertas automáticos, candidatos de inconsistência (nenhum) e o conteúdo das páginas 1-4 do documento; não foram identificadas inconsistências internas, nem dados de paciente/coleta conflitantes ou atribuições incorretas de resultados.",
+      "mensagem": "Fontes revisadas pelo agente validador. Documento (consenso/recomendações) foi lido nas 5 páginas; não foram identificadas inconsistências numéricas/internas a serem registradas (0 alertas de erro na fonte).",
       "detalhes": {
         "inconsistencias_registradas": 0
       },

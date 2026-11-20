@@ -78,6 +78,7 @@ def dominio(dominio_id: str | None = None) -> Dominio:
     plugin = carregar_plugin(pacote)
     conferir(pacote, plugin)
     fields = [Field(name=c.nome, label=c.rotulo, kind=c.tipo, main=c.principal, terms=tuple(c.termos),
+                    # genérico: `demonstracao` é a chave do formato dos pacotes (campo de um quadro fixo).
                     section=c.secao, mention=tuple(c.mencao), statement=c.demonstracao, unit=c.unidade)
               for c in pacote.campos]
     return Dominio(

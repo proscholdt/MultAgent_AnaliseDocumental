@@ -1,0 +1,31 @@
+{
+  "arquivo": "contrato-fornecimento.pdf",
+  "entidade": "CONTRATO DE FORNECIMENTO Nº 2024-07",
+  "alertas": [
+    {
+      "tipo": "fonte",
+      "codigo": "inconsistencia_na_fonte",
+      "severidade": "atencao",
+      "campo": null,
+      "mensagem": "A vigência informada no quadro está incoerente: o fim da vigência (30/06/2024) ocorre antes do início (01/07/2024).",
+      "detalhes": {
+        "pagina": 1,
+        "chunk_index": 0,
+        "secao": "CONTRATO DE FORNECIMENTO Nº 2024-07 Quadro-resumo",
+        "citacao": "| Início da vigência | 01/07/2024 | | Fim da vigência | 30/06/2024 |"
+      },
+      "registrado_por": "validador"
+    },
+    {
+      "tipo": "fonte",
+      "codigo": "revisao_das_fontes_concluida",
+      "severidade": "informacao",
+      "campo": null,
+      "mensagem": "Fontes revisadas pelo agente validador. Contrato lido nas duas páginas; uma inconsistência real foi registrada (vigência com fim anterior ao início).",
+      "detalhes": {
+        "inconsistencias_registradas": 1
+      },
+      "registrado_por": "validador"
+    }
+  ]
+}

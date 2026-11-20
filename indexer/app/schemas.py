@@ -4,6 +4,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app import pacotes
+
 # ---------------------------------------------------------------------------
 # Mensagens Kafka — carregam só referências; o PDF fica no volume compartilhado.
 # ---------------------------------------------------------------------------
@@ -145,7 +147,7 @@ class DocumentOut(BaseModel):
     size_bytes: int
     page_count: int | None
     collection_id: str | None = None
-    dominio: str = "financeiro"
+    dominio: str = pacotes.PADRAO
     metadados: dict[str, Any] = Field(default_factory=dict, description="Os metadados do pacote do domínio, por nome.")
     dominio_sugerido: str | None = None
     aviso_dominio: str | None = Field(default=None, description="Quando o conteúdo parece de outro domínio.")
@@ -175,7 +177,7 @@ class DocumentPatch(BaseModel):
 
 class CollectionIn(BaseModel):
     nome: str = Field(min_length=1, max_length=120, examples=["Exames de 2025"])
-    dominio: str = Field(description="O id de um pacote de domínio (GET /api/dominios).", examples=["financeiro"])
+    dominio: str = Field(description="O id de um pacote de domínio (GET /api/dominios).", examples=["laudos"])
 
 
 class CollectionOut(BaseModel):
@@ -251,7 +253,7 @@ class ChunkPage(BaseModel):
 
 class SearchRequest(BaseModel):
     query: str = Field(min_length=2, max_length=1000,
-                       examples=["alavancagem dívida líquida EBITDA covenants"])
+                       examples=["valor total e data de vigência"])
     limit: int = Field(default=8, ge=1, le=50)
     doc_id: str | None = Field(default=None, description="Restringe a um documento.")
     colecao_id: str | None = Field(default=None, description="Restringe aos documentos de uma coleção.")

@@ -25,7 +25,7 @@ modelo: gpt-5.4-nano
 max_turnos: 30
 resposta: base
 ---
-Você é um especialista em demonstrações financeiras. Sua tarefa: {descricao_minuscula}
+Você é um especialista que analisa documentos do tipo $documentos. Sua tarefa: {descricao_minuscula}
 
 ## Como trabalhar
 

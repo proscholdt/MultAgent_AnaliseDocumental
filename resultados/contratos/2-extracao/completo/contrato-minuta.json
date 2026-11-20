@@ -1,0 +1,235 @@
+{
+  "documento": {
+    "doc_id": "173a373b3381bbcb",
+    "arquivo": "contrato-minuta.pdf",
+    "entidade": "Minuta de contrato de prestação de serviços (modelo)",
+    "origem_da_entidade": {
+      "source": "llm",
+      "page": 1,
+      "snippet": "MINUTA DE CONTRATO DE PRESTAÇÃO DE SERVIÇOS (MODELO)"
+    },
+    "tipo": null,
+    "paginas": 1,
+    "periodo_referencia": "documento",
+    "periodo_comparavel": null,
+    "origem_do_periodo": null
+  },
+  "campos": {
+    "contratante": {
+      "rotulo": "Contratante",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "Documento é uma minuta-modelo fictícia, em branco, com campos preenchidos por placeholders (ex.: [nome ou razão social da contratante]).",
+        "evidencia": {
+          "termos_procurados": [
+            "contratante"
+          ],
+          "paginas_com_o_termo": [
+            1
+          ],
+          "paginas_descartadas": [
+            1
+          ]
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "contratada": {
+      "rotulo": "Contratada",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "Documento é uma minuta-modelo fictícia, em branco, com campos preenchidos por placeholders (ex.: [nome ou razão social da contratada]).",
+        "evidencia": {
+          "termos_procurados": [
+            "contratada",
+            "contratado"
+          ],
+          "paginas_com_o_termo": [
+            1
+          ],
+          "paginas_descartadas": [
+            1
+          ]
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "objeto": {
+      "rotulo": "Objeto",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "Objeto consta como placeholder ([descrever o serviço]) em minuta-modelo fictícia.",
+        "evidencia": {
+          "termos_procurados": [
+            "objeto"
+          ],
+          "paginas_com_o_termo": [
+            1
+          ],
+          "paginas_descartadas": [
+            1
+          ]
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "valor_total": {
+      "rotulo": "Valor total",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "Valor total consta como placeholder ([______]) em minuta-modelo fictícia.",
+        "evidencia": {
+          "termos_procurados": [
+            "valor total",
+            "valor global",
+            "valor do contrato",
+            "preço"
+          ],
+          "paginas_com_o_termo": [
+            1
+          ],
+          "paginas_descartadas": [
+            1
+          ]
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "data_assinatura": {
+      "rotulo": "Data de assinatura",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "Data de assinatura aparece como placeholder ([data]) em 'Fica eleito o foro...' (minuta-modelo fictícia).",
+        "evidencia": {
+          "termos_procurados": [
+            "assinatura",
+            "assinado",
+            "firmado",
+            "data"
+          ],
+          "paginas_com_o_termo": [
+            1
+          ],
+          "paginas_descartadas": [
+            1
+          ]
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "inicio_vigencia": {
+      "rotulo": "Início da vigência",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "Vigência tem datas como placeholders ([__/__/____]) na cláusula de vigência da minuta-modelo fictícia.",
+        "evidencia": {
+          "termos_procurados": [
+            "vigência",
+            "início",
+            "a partir de"
+          ],
+          "paginas_com_o_termo": [],
+          "paginas_descartadas": []
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "fim_vigencia": {
+      "rotulo": "Fim da vigência",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "Vigência tem datas como placeholders ([__/__/____]) e não há data efetiva de término (minuta-modelo fictícia).",
+        "evidencia": {
+          "termos_procurados": [
+            "vigência",
+            "término",
+            "até"
+          ],
+          "paginas_com_o_termo": [],
+          "paginas_descartadas": []
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "multa_rescisao": {
+      "rotulo": "Multa por rescisão",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "Multa por rescisão aparece como placeholder ([__]%) em cláusula de rescisão de minuta-modelo fictícia.",
+        "evidencia": {
+          "termos_procurados": [
+            "multa"
+          ],
+          "paginas_com_o_termo": [
+            1
+          ],
+          "paginas_descartadas": [
+            1
+          ]
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "indice_reajuste": {
+      "rotulo": "Índice de reajuste",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "Índice de reajuste aparece como placeholder ([indicar o índice]) em minuta-modelo fictícia.",
+        "evidencia": {
+          "termos_procurados": [
+            "reajuste",
+            "ipca",
+            "igp-m",
+            "inpc"
+          ],
+          "paginas_com_o_termo": [],
+          "paginas_descartadas": []
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "foro": {
+      "rotulo": "Foro",
+      "informado": {
+        "status": "nao_encontrado",
+        "motivo": "Foro consta com placeholders ([cidade/UF], [Local], [data]) na cláusula de foro de minuta-modelo fictícia.",
+        "evidencia": {
+          "termos_procurados": [
+            "foro",
+            "comarca"
+          ],
+          "paginas_com_o_termo": [
+            1
+          ],
+          "paginas_descartadas": [
+            1
+          ]
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    }
+  },
+  "valores_de_apoio": {},
+  "alertas_de_validacao": [],
+  "impressao_do_indice": "2026-11-20T22:51:55.080742Z|7"
+}

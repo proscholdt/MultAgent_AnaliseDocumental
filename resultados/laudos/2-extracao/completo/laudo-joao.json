@@ -2,8 +2,8 @@
   "documento": {
     "doc_id": "ab44024ba75dc363",
     "arquivo": "laudo-joao.pdf",
-    "empresa": "João Pereira",
-    "origem_da_empresa": {
+    "entidade": "João Pereira",
+    "origem_da_entidade": {
       "source": "llm",
       "page": 1,
       "snippet": "Paciente: João Pereira"
@@ -18,7 +18,7 @@
       "snippet": "Data da coleta: 05/06/2024"
     }
   },
-  "indicadores": {
+  "campos": {
     "glicose": {
       "rotulo": "Glicose",
       "informado": {
@@ -65,7 +65,7 @@
       "rotulo": "Colesterol total",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O laudo não informa colesterol total (apenas glicose, HbA1c, triglicerídeos e creatinina).",
+        "motivo": "o laudo não traz o exame de colesterol total",
         "evidencia": {
           "termos_procurados": [
             "colesterol total"
@@ -82,7 +82,7 @@
       "rotulo": "Colesterol HDL",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O laudo não informa colesterol HDL.",
+        "motivo": "o laudo não traz o exame de colesterol HDL",
         "evidencia": {
           "termos_procurados": [
             "hdl"
@@ -99,7 +99,7 @@
       "rotulo": "Colesterol LDL",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O laudo não informa colesterol LDL.",
+        "motivo": "o laudo não traz o exame de colesterol LDL",
         "evidencia": {
           "termos_procurados": [
             "ldl"
@@ -158,7 +158,7 @@
       "rotulo": "Hemoglobina",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O laudo não traz hemoglobina do hemograma (apenas hemoglobina glicada/HbA1c).",
+        "motivo": "o laudo não traz hemoglobina (g/dL); apenas HbA1c (hemoglobina glicada)",
         "evidencia": {
           "termos_procurados": [
             "hemoglobina"

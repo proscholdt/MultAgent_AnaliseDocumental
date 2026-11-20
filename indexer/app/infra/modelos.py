@@ -6,6 +6,8 @@ from typing import Any
 from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from app import pacotes
+
 
 def new_id() -> str:
     return str(uuid.uuid4())
@@ -55,7 +57,7 @@ class Document(Base):
 
     # A coleção e o domínio dela. Documento de antes das coleções: sem coleção, domínio padrão.
     collection_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
-    dominio: Mapped[str] = mapped_column(String(40), default="financeiro")
+    dominio: Mapped[str] = mapped_column(String(40), default=pacotes.PADRAO)
     # Os metadados do pacote do domínio, por nome (ex.: {"paciente": ..., "data_exame": ...}).
     metadados: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     # O domínio que o conteúdo sugere e o aviso quando ele não é o da coleção.

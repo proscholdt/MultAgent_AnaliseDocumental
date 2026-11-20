@@ -21,7 +21,7 @@ def main() -> None:
     started = time.perf_counter()
     from app.indexacao.embeddings import Bm25SparseEmbedder
 
-    Bm25SparseEmbedder(settings).embed_query("receita líquida")
+    Bm25SparseEmbedder(settings).embed_query("valor total do documento")
     print(f"BM25 ({settings.bm25_language}) ok ({time.perf_counter() - started:.1f}s)")
 
     from app.leitura.parsing import ParserError, build_parser

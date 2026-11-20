@@ -1,0 +1,60 @@
+{
+  "arquivo": "contrato-minuta.pdf",
+  "entidade": "Minuta de contrato de prestação de serviços (modelo)",
+  "analise": {
+    "obrigacoes": [
+      {
+        "status": "nao_encontrado",
+        "motivo": "O documento apresenta apenas identificação das partes, objeto, valor, vigência, reajuste, rescisão e foro, sem cláusulas indicando obrigações específicas (como entrega, pagamento, sigilo, seguro) e seus prazos.",
+        "evidencia": {
+          "termos_procurados": [
+            "obrigações",
+            "obriga-se",
+            "compete"
+          ],
+          "paginas_com_o_termo": [],
+          "paginas_descartadas": []
+        }
+      }
+    ],
+    "penalidades": [
+      {
+        "afirmacao": "Em caso de rescisão sem justa causa, a parte que der causa fica sujeita ao pagamento de multa sobre o valor remanescente.",
+        "citacao": "A rescisão sem justa causa sujeita a parte que a der a multa de [__]% sobre o valor remanescente.",
+        "pagina": 1,
+        "chunk_index": 5,
+        "secao": "CLÁUSULA QUINTA - DA RESCISÃO",
+        "fonte": "documento",
+        "tom": null
+      }
+    ],
+    "rescisao": [
+      {
+        "afirmacao": "O contrato prevê rescisão sem justa causa, com multa para a parte que der causa à rescisão.",
+        "citacao": "A rescisão sem justa causa sujeita a parte que a der a multa de [__]% sobre o valor remanescente.",
+        "pagina": 1,
+        "chunk_index": 5,
+        "secao": "CLÁUSULA QUINTA - DA RESCISÃO",
+        "fonte": "documento",
+        "tom": null
+      }
+    ],
+    "pontos_de_atencao": [
+      {
+        "status": "nao_encontrado",
+        "motivo": "Não há no documento cláusulas de renovação automática, exclusividade, limitação de responsabilidade, cessão ou garantias; o texto apenas define vigência por datas e foro.",
+        "evidencia": {
+          "termos_procurados": [
+            "renovação",
+            "exclusividade",
+            "responsabilidade",
+            "cessão",
+            "garantia"
+          ],
+          "paginas_com_o_termo": [],
+          "paginas_descartadas": []
+        }
+      }
+    ]
+  }
+}

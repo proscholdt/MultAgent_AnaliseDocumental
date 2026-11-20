@@ -1,0 +1,321 @@
+{
+  "_como_foi_feito": "Contratos fictícios gerados por gerar_contratos.py: os valores nascem no gerador, e o gabarito também. Texto: o que a resposta tem de conter; data em dd/mm/aaaa; valor em reais; multa em percentual; página do arquivo PDF.",
+  "documentos": {
+    "contrato-limpeza.pdf": {
+      "doc_id": "5262fad55b9fc2be",
+      "campos": {
+        "contratante": {
+          "status": "informado",
+          "texto": "Condomínio Edifício Aurora",
+          "paginas": [
+            1
+          ]
+        },
+        "contratada": {
+          "status": "informado",
+          "texto": "Brilho Serviços de Limpeza",
+          "paginas": [
+            1
+          ]
+        },
+        "objeto": {
+          "status": "informado",
+          "texto": "limpeza",
+          "paginas": [
+            1
+          ]
+        },
+        "valor_total": {
+          "status": "informado",
+          "valor": 120000,
+          "unidade": "R$",
+          "paginas": [
+            1
+          ]
+        },
+        "data_assinatura": {
+          "status": "informado",
+          "data": "15/01/2024",
+          "paginas": [
+            2
+          ]
+        },
+        "inicio_vigencia": {
+          "status": "informado",
+          "data": "01/02/2024",
+          "paginas": [
+            1
+          ]
+        },
+        "fim_vigencia": {
+          "status": "informado",
+          "data": "31/01/2025",
+          "paginas": [
+            1
+          ]
+        },
+        "multa_rescisao": {
+          "status": "informado",
+          "valor": 10,
+          "unidade": "%",
+          "paginas": [
+            2
+          ]
+        },
+        "indice_reajuste": {
+          "status": "informado",
+          "texto": "IPCA",
+          "paginas": [
+            1
+          ]
+        },
+        "foro": {
+          "status": "informado",
+          "texto": "Belo Horizonte",
+          "paginas": [
+            2
+          ]
+        }
+      },
+      "inconsistencias_na_fonte_esperadas": []
+    },
+    "contrato-fornecimento.pdf": {
+      "doc_id": "afa70b0d857c4e77",
+      "campos": {
+        "contratante": {
+          "status": "informado",
+          "texto": "Padaria Pão Dourado",
+          "paginas": [
+            1
+          ]
+        },
+        "contratada": {
+          "status": "informado",
+          "texto": "Moinho Serra Azul",
+          "paginas": [
+            1
+          ]
+        },
+        "objeto": {
+          "status": "informado",
+          "texto": "farinha",
+          "paginas": [
+            1
+          ]
+        },
+        "valor_total": {
+          "status": "informado",
+          "valor": 84500,
+          "unidade": "R$",
+          "paginas": [
+            1
+          ]
+        },
+        "data_assinatura": {
+          "status": "informado",
+          "data": "20/06/2024",
+          "paginas": [
+            1
+          ]
+        },
+        "inicio_vigencia": {
+          "status": "informado",
+          "data": "01/07/2024",
+          "paginas": [
+            1
+          ]
+        },
+        "fim_vigencia": {
+          "status": "informado",
+          "data": "30/06/2024",
+          "paginas": [
+            1
+          ]
+        },
+        "multa_rescisao": {
+          "status": "informado",
+          "valor": 20,
+          "unidade": "%",
+          "paginas": [
+            2
+          ]
+        },
+        "indice_reajuste": {
+          "status": "informado",
+          "texto": "IGP-M",
+          "paginas": [
+            1
+          ]
+        },
+        "foro": {
+          "status": "informado",
+          "texto": "Curitiba",
+          "paginas": [
+            2
+          ]
+        }
+      },
+      "inconsistencias_na_fonte_esperadas": [
+        {
+          "pagina": 1,
+          "contem": "30/06/2024"
+        }
+      ]
+    },
+    "contrato-software.pdf": {
+      "doc_id": "ac66a203192342ab",
+      "campos": {
+        "contratante": {
+          "status": "informado",
+          "texto": "Clínica Vida Plena",
+          "paginas": [
+            1
+          ]
+        },
+        "contratada": {
+          "status": "informado",
+          "texto": "Nuvem Sistemas",
+          "paginas": [
+            1
+          ]
+        },
+        "objeto": {
+          "status": "informado",
+          "texto": "licença de uso",
+          "paginas": [
+            1
+          ]
+        },
+        "valor_total": {
+          "status": "informado",
+          "valor": 36000,
+          "unidade": "R$",
+          "paginas": [
+            1
+          ]
+        },
+        "data_assinatura": {
+          "status": "informado",
+          "data": "10/03/2024",
+          "paginas": [
+            1
+          ]
+        },
+        "inicio_vigencia": {
+          "status": "informado",
+          "data": "01/04/2024",
+          "paginas": [
+            1
+          ]
+        },
+        "fim_vigencia": {
+          "status": "nao_encontrado"
+        },
+        "multa_rescisao": {
+          "status": "nao_encontrado"
+        },
+        "indice_reajuste": {
+          "status": "informado",
+          "texto": "INPC",
+          "paginas": [
+            1
+          ]
+        },
+        "foro": {
+          "status": "informado",
+          "texto": "São Paulo",
+          "paginas": [
+            1
+          ]
+        }
+      },
+      "inconsistencias_na_fonte_esperadas": []
+    },
+    "contrato-minuta.pdf": {
+      "doc_id": "173a373b3381bbcb",
+      "campos": {
+        "contratante": {
+          "status": "nao_encontrado"
+        },
+        "contratada": {
+          "status": "nao_encontrado"
+        },
+        "objeto": {
+          "status": "nao_encontrado"
+        },
+        "valor_total": {
+          "status": "nao_encontrado"
+        },
+        "data_assinatura": {
+          "status": "nao_encontrado"
+        },
+        "inicio_vigencia": {
+          "status": "nao_encontrado"
+        },
+        "fim_vigencia": {
+          "status": "nao_encontrado"
+        },
+        "multa_rescisao": {
+          "status": "nao_encontrado"
+        },
+        "indice_reajuste": {
+          "status": "nao_encontrado"
+        },
+        "foro": {
+          "status": "nao_encontrado"
+        }
+      },
+      "inconsistencias_na_fonte_esperadas": []
+    }
+  },
+  "perguntas": {
+    "p1": {
+      "deve_conter": [
+        "012/2024",
+        "120.000"
+      ],
+      "fontes_de": [
+        "contrato-limpeza.pdf"
+      ],
+      "por_que": "o maior valor total é o do contrato de limpeza"
+    },
+    "p2": {
+      "deve_conter": [
+        "31/01/2025",
+        "30/06/2024"
+      ],
+      "fontes_de": [
+        "contrato-limpeza.pdf",
+        "contrato-fornecimento.pdf"
+      ],
+      "por_que": "o de software não escreve o fim (só doze meses a partir de 1º de abril)"
+    },
+    "p3": {
+      "deve_conter": [
+        "10%",
+        "20%"
+      ],
+      "fontes_de": [
+        "contrato-limpeza.pdf",
+        "contrato-fornecimento.pdf"
+      ],
+      "por_que": "o de software só tem multa de mora, que não é a de rescisão"
+    },
+    "p4": {
+      "deve_conter": [
+        "Belo Horizonte",
+        "Curitiba",
+        "São Paulo",
+        "IPCA",
+        "IGP-M",
+        "INPC"
+      ],
+      "fontes_de": [
+        "contrato-limpeza.pdf",
+        "contrato-fornecimento.pdf",
+        "contrato-software.pdf"
+      ],
+      "por_que": "foro e reajuste dos três"
+    }
+  }
+}

@@ -86,13 +86,29 @@ def split_runs(messages: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
     return runs
 
 
+def without_unanswered_calls(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """O histórico sem as chamadas de tool que ficaram sem resposta. Uma chamada que caiu no meio
+    (rede, tempo) deixa o pedido do modelo sem o resultado; com ele no histórico, o PydanticAI
+    recusa a chamada seguinte ("unprocessed tool calls"), e o documento ficava travado (visto numa
+    execução real, depois de um ReadError na busca)."""
+    answered = {part.get("tool_call_id") for message in messages for part in message.get("parts", [])
+                if part.get("part_kind") in ("tool-return", "retry-prompt")}
+    out = []
+    for message in messages:
+        parts = [part for part in message.get("parts", [])
+                 if part.get("part_kind") != "tool-call" or part.get("tool_call_id") in answered]
+        if parts:
+            out.append({**message, "parts": parts})
+    return out
+
+
 def compact(runs: list[list[dict[str, Any]]], max_tokens: int) -> list[dict[str, Any]]:
     """O histórico para a próxima chamada: todas as anteriores encurtadas e, acima do teto, sem as
-    mais antigas. A última chamada guardada fica sempre."""
+    mais antigas. A última chamada guardada fica sempre. As chamadas de tool sem resposta saem."""
     shortened = [shorten(run) for run in runs if run]
     while len(shortened) > 1 and _estimate_tokens(shortened) > max_tokens:
         shortened.pop(0)
-    return [message for run in shortened for message in run]
+    return without_unanswered_calls([message for run in shortened for message in run])
 
 
 class Memory:

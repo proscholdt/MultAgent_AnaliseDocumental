@@ -75,12 +75,13 @@ regra, aceitam `COLECAO=` e avaliam com o gabarito do domínio da coleção. A
 identidade da execução leva o domínio e a coleção no token do servidor MCP e no token A2A, e o
 especialista os lê de volta.
 
-O pacote fala com cada agente por `dominios/<id>/prompts/<agente>.md`: `modo: complemento` entra no
-fim do prompt, `modo: substitui` é o prompt daquele agente no domínio (modelo e turnos continuam os
-do agente). Os prompts em `agentes/` são os do domínio financeiro, o padrão; os de laudos ficam em
-[`dominios/laudos/prompts/`](../dominios/laudos/prompts/). O texto de fora do escopo, as opções, as
-frases do roteador (`dominios/<id>/intencoes.yaml`) e o gabarito da nota automática também são do
-domínio.
+Os prompts em `agentes/` são o método de cada agente, sem domínio: as palavras do domínio entram por
+marcador (`$documentos`, `$entidade`, `$campos`, `$categorias`, `$n_perguntas`, `$perguntas`,
+`$recorte`), trocadas pelas do pacote. O que cada agente precisa saber do domínio vem de
+`dominios/<id>/prompts/<agente>.md`, no fim do prompt (`modo: complemento`; o cabeçalho pode dar a
+`descricao` que o orquestrador lê na lista da equipe). O texto de fora do escopo, as opções, as
+frases do roteador e as palavras genéricas de nome (`dominios/<id>/intencoes.yaml`) e o gabarito da
+nota automática (`dominios/<id>/avaliacao/`) também são do domínio.
 
 ## Intenção
 

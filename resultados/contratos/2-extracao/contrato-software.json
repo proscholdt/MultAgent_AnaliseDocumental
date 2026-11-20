@@ -1,0 +1,156 @@
+{
+  "contrato": "Contrato de Licença de Uso de Software Nº 33/2024",
+  "documento": "contrato-software.pdf",
+  "periodo_referencia": "documento",
+  "periodo_comparavel": null,
+  "contratante": {
+    "status": "encontrado",
+    "valor": null,
+    "valor_como_escrito": "Clínica Vida Plena Ltda.",
+    "unidade": null,
+    "periodo": "documento",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "Pelo presente instrumento, Clínica Vida Plena Ltda., doravante CONTRATANTE, e Nuvem Sistemas Ltda., doravante CONTRATADA, firmam este contrato em 10 de março de 2024, nas condições abaixo.",
+      "tipo": "texto"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "contratada": {
+    "status": "encontrado",
+    "valor": null,
+    "valor_como_escrito": "Nuvem Sistemas Ltda.",
+    "unidade": null,
+    "periodo": "documento",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "Pelo presente instrumento, Clínica Vida Plena Ltda., doravante CONTRATANTE, e Nuvem Sistemas Ltda., doravante CONTRATADA, firmam este contrato em 10 de março de 2024, nas condições abaixo.",
+      "tipo": "texto"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "objeto": {
+    "status": "encontrado",
+    "valor": null,
+    "valor_como_escrito": "licença de uso do sistema de agendamento da CONTRATADA, com suporte técnico em horário comercial",
+    "unidade": null,
+    "periodo": "documento",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "O objeto deste contrato é a licença de uso do sistema de agendamento da CONTRATADA, com suporte técnico em horário comercial.",
+      "tipo": "texto"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "valor_total": {
+    "status": "encontrado",
+    "valor": 36000,
+    "valor_como_escrito": "36.000,00",
+    "unidade": "R$",
+    "periodo": "documento",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "Pela licença, a CONTRATANTE pagará o valor total de R$ 36.000,00 (trinta e seis mil reais), em doze parcelas mensais.",
+      "tipo": "texto"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "data_assinatura": {
+    "status": "encontrado",
+    "valor": null,
+    "valor_como_escrito": "10/03/2024",
+    "unidade": null,
+    "periodo": "documento",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "Pelo presente instrumento, Clínica Vida Plena Ltda., doravante CONTRATANTE, e Nuvem Sistemas Ltda., doravante CONTRATADA, firmam este contrato em 10 de março de 2024, nas condições abaixo.",
+      "tipo": "texto"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "inicio_vigencia": {
+    "status": "encontrado",
+    "valor": null,
+    "valor_como_escrito": "01/04/2024",
+    "unidade": null,
+    "periodo": "documento",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "O contrato terá duração de doze meses, contados a partir de 1º de abril de 2024.",
+      "tipo": "texto"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "fim_vigencia": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O contrato informa apenas que terá duração de doze meses, contados a partir de 1º de abril de 2024, sem indicar data específica de término.",
+    "busca": {
+      "termos_procurados": [
+        "vigência",
+        "término",
+        "até"
+      ],
+      "paginas_com_o_termo": [],
+      "paginas_descartadas": []
+    }
+  },
+  "multa_rescisao": {
+    "status": "não encontrado",
+    "valor": null,
+    "motivo": "O documento traz multa de mora por atraso no pagamento (2% e juros de 1% ao mês), mas não prevê multa por rescisão do contrato.",
+    "busca": {
+      "termos_procurados": [
+        "multa"
+      ],
+      "paginas_com_o_termo": [
+        1
+      ],
+      "paginas_descartadas": [
+        1
+      ]
+    }
+  },
+  "indice_reajuste": {
+    "status": "encontrado",
+    "valor": null,
+    "valor_como_escrito": "INPC",
+    "unidade": null,
+    "periodo": "documento",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "As parcelas serão reajustadas anualmente pelo INPC.",
+      "tipo": "texto"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  },
+  "foro": {
+    "status": "encontrado",
+    "valor": null,
+    "valor_como_escrito": "Comarca de São Paulo/SP",
+    "unidade": null,
+    "periodo": "documento",
+    "escopo": null,
+    "origem": {
+      "pagina": 1,
+      "trecho": "Fica eleito o foro da Comarca de São Paulo/SP. Contrato fictício, gerado para testar o sistema. As partes e os valores não existem.",
+      "tipo": "texto"
+    },
+    "periodo_comparavel": null,
+    "variacao_informada": null
+  }
+}

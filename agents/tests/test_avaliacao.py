@@ -179,4 +179,4 @@ def test_only_documents_with_a_key_are_evaluated_and_questions_need_exactly_the_
 
     company = evaluate(KEY, snapshot(not_found(), []), {"a87339d097478f1c"})  # relatório de uma empresa
     assert company["avaliados"] == ["Light.pdf"] and company["perguntas"] == {}
-    assert "uma empresa" in company["perguntas_nao_avaliadas"]
+    assert "um documento" in company["perguntas_nao_avaliadas"]

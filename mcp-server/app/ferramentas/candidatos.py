@@ -84,7 +84,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Candidatos a inconsistência da fonte, por regra (sem modelo).")
     parser.add_argument("--usuario", required=True, help="usuário do indexador")
     parser.add_argument("--senha", required=True, help="senha do indexador")
-    parser.add_argument("--doc", help="parte do nome do arquivo, da empresa ou do doc_id (padrão: todos)")
+    parser.add_argument("--doc", help="parte do nome do arquivo, da entidade ou do doc_id (padrão: todos)")
     args = parser.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
     sys.exit(asyncio.run(run(args.usuario, args.senha, args.doc)))

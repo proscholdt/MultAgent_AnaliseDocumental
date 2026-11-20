@@ -45,7 +45,7 @@ class Run:
     # A coleção do pedido e o domínio dela (dominios/<id>/). Sem coleção: o domínio padrão e todos os
     # documentos do usuário, como antes dos pacotes de domínio.
     colecao_id: str | None = None
-    dominio: str = "financeiro"
+    dominio: str = pacotes.PADRAO
     conversa_id: str = ""  # a conversa do usuário a que este pedido pertence
     estado: str = "na_fila"  # na_fila | em_andamento | completa | incompleta | falhou | interrompida
     criada_em: str = field(default_factory=now)

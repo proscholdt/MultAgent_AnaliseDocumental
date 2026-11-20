@@ -1,0 +1,66 @@
+# Modelo de pacote de domínio. `make novo-dominio ID=<id>` copia esta pasta para dominios/<id>/ e
+# põe o id no lugar; depois é editar este arquivo e rodar `make dominios`. O formato, com cada chave
+# explicada, está em comum/pacotes.py; o passo a passo, em dominios/README.md.
+#
+# Um domínio novo não precisa de código: só deste arquivo (e, se quiser, dos prompts em prompts/,
+# das frases do roteador em intencoes.yaml e do gabarito em avaliacao/). Regra que não cabe em YAML
+# (uma fórmula, uma conferência da fonte) é um plugin em plugin/mcp/ ou plugin/indexador.py.
+
+id: __ID__
+nome: Nome do domínio
+descricao: >-
+  Que documentos são estes e o que o sistema tira deles, em duas ou três linhas.
+plugin: null
+
+documento:
+  tipos:
+  - O tipo de documento
+  reconhecer:              # frases típicas das primeiras páginas: sugerem o domínio no envio
+  - uma frase típica
+  - outra frase típica
+
+entidade:                  # de quem é cada documento (a empresa, o paciente, o contrato)
+  nome: entidade
+  rotulo: Entidade
+  plural: Entidades
+
+recorte:                   # periodo (com comparável) | data (um dia) | nenhum
+  nome: documento
+  rotulo: Documento
+  tipo: nenhum
+
+metadados:                 # o que o indexador tira do documento inteiro, cada valor com o trecho que o prova
+- nome: entidade
+  rotulo: Entidade
+  papel: entidade
+  instrucao: o nome da entidade como está no documento
+
+campos:                    # o que os agentes extraem; tipo: valor | percentual | multiplo | numero | data | texto
+- nome: campo_exemplo
+  rotulo: Campo de exemplo
+  tipo: texto
+  principal: true
+  termos: [termo procurado]   # procurados quando o agente diz que o campo não existe
+  mencao: [termo]             # o que a linha ou a frase tem de mencionar (sem acento)
+
+categorias:                # a análise qualitativa, cada item com citação
+- nome: pontos_de_atencao
+  rotulo: Pontos de atenção
+  descricao: o que o documento destaca como risco ou atenção
+  termos: [atenção, risco]
+
+perguntas:                 # as perguntas padrão do relatório
+- id: p1
+  enunciado: Uma pergunta que compara os documentos da coleção?
+
+textos:
+  titulo: Análise de documentos
+  envio: Envie os documentos em PDF.
+  fora_do_escopo: >-
+    Isso está fora do escopo deste sistema. Ele responde perguntas sobre os documentos enviados,
+    sempre com a página de origem. Escolha uma das opções ou escreva a sua pergunta.
+  opcoes:
+  - titulo: Fazer uma pergunta
+    exemplo: Uma pergunta que compara os documentos da coleção?
+  - titulo: Gerar o relatório da coleção
+    exemplo: Gere o relatório consolidado

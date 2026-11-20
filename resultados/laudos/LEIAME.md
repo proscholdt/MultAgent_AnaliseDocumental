@@ -1,6 +1,6 @@
 # Resultados
 
-Gerado a partir da base do servidor MCP em 2026-11-20T18:49:12+00:00, com 4 documento(s): consenso-perfil-lipidico-sbac.pdf, laudo-ana.pdf, laudo-joao.pdf, laudo-maria.pdf.
+Gerado a partir da base do servidor MCP em 2026-11-20T23:04:47+00:00, com 4 documento(s): consenso-perfil-lipidico-sbac.pdf, laudo-ana.pdf, laudo-joao.pdf, laudo-maria.pdf.
 
 ## Extração estruturada (item 2): um JSON por documento
 

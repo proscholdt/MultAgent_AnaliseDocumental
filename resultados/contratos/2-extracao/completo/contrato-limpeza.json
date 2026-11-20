@@ -1,0 +1,232 @@
+{
+  "documento": {
+    "doc_id": "5262fad55b9fc2be",
+    "arquivo": "contrato-limpeza.pdf",
+    "entidade": "Contrato Nº 012/2024",
+    "origem_da_entidade": {
+      "source": "llm",
+      "page": 1,
+      "snippet": "CONTRATO Nº 012/2024 - PRESTAÇÃO DE SERVIÇOS DE LIMPEZA"
+    },
+    "tipo": null,
+    "paginas": 2,
+    "periodo_referencia": "documento",
+    "periodo_comparavel": null,
+    "origem_do_periodo": null
+  },
+  "campos": {
+    "contratante": {
+      "rotulo": "Contratante",
+      "informado": {
+        "status": "encontrado",
+        "valor": "Condomínio Edifício Aurora",
+        "valor_numerico": null,
+        "unidade": null,
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "texto",
+          "pagina": 1,
+          "chunk_index": 0,
+          "secao": "CONTRATO Nº 012/2024 - PRESTAÇÃO DE SERVIÇOS DE LIMPEZA",
+          "trecho": "CONTRATANTE: Condomínio Edifício Aurora, inscrito no CNPJ sob o nº 00.000.000/0001-00, com sede na Rua das Acácias, 120, Belo Horizonte/MG. CONTRATADA: Brilho Serviços de Limpeza Ltda., inscrita no CNPJ sob o nº 00.000.000/0002-00."
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "contratada": {
+      "rotulo": "Contratada",
+      "informado": {
+        "status": "encontrado",
+        "valor": "Brilho Serviços de Limpeza Ltda.",
+        "valor_numerico": null,
+        "unidade": null,
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "texto",
+          "pagina": 1,
+          "chunk_index": 0,
+          "secao": "CONTRATO Nº 012/2024 - PRESTAÇÃO DE SERVIÇOS DE LIMPEZA",
+          "trecho": "CONTRATANTE: Condomínio Edifício Aurora, inscrito no CNPJ sob o nº 00.000.000/0001-00, com sede na Rua das Acácias, 120, Belo Horizonte/MG. CONTRATADA: Brilho Serviços de Limpeza Ltda., inscrita no CNPJ sob o nº 00.000.000/0002-00."
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "objeto": {
+      "rotulo": "Objeto",
+      "informado": {
+        "status": "encontrado",
+        "valor": "a prestação de serviços de limpeza e conservação das áreas comuns do condomínio, cinco dias por semana",
+        "valor_numerico": null,
+        "unidade": null,
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "texto",
+          "pagina": 1,
+          "chunk_index": 1,
+          "secao": "CLÁUSULA PRIMEIRA - DO OBJETO",
+          "trecho": "O objeto do presente contrato é a prestação de serviços de limpeza e conservação das áreas comuns do condomínio, cinco dias por semana."
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "valor_total": {
+      "rotulo": "Valor total",
+      "informado": {
+        "status": "encontrado",
+        "valor": "120.000,00",
+        "valor_numerico": 120000.0,
+        "unidade": "R$",
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "texto",
+          "pagina": 1,
+          "chunk_index": 2,
+          "secao": "CLÁUSULA SEGUNDA - DO VALOR",
+          "trecho": "O valor total do contrato é de R$ 120.000,00 (cento e vinte mil reais), pago em doze parcelas mensais iguais."
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "data_assinatura": {
+      "rotulo": "Data de assinatura",
+      "informado": {
+        "status": "encontrado",
+        "valor": "15/01/2024",
+        "valor_numerico": null,
+        "unidade": null,
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "texto",
+          "pagina": 2,
+          "chunk_index": 7,
+          "secao": "CLÁUSULA SÉTIMA - DO FORO",
+          "trecho": "Fica eleito o foro da Comarca de Belo Horizonte/MG para dirimir as questões deste contrato. Belo Horizonte, 15/01/2024. Assinado pelas partes. Contrato fictício, gerado para testar o sistema. As partes e os valores não existem."
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "inicio_vigencia": {
+      "rotulo": "Início da vigência",
+      "informado": {
+        "status": "encontrado",
+        "valor": "01/02/2024",
+        "valor_numerico": null,
+        "unidade": null,
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "texto",
+          "pagina": 1,
+          "chunk_index": 3,
+          "secao": "CLÁUSULA TERCEIRA - DA VIGÊNCIA",
+          "trecho": "O contrato vigora de 01/02/2024 a 31/01/2025, podendo ser prorrogado por acordo das partes."
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "fim_vigencia": {
+      "rotulo": "Fim da vigência",
+      "informado": {
+        "status": "encontrado",
+        "valor": "31/01/2025",
+        "valor_numerico": null,
+        "unidade": null,
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "texto",
+          "pagina": 1,
+          "chunk_index": 3,
+          "secao": "CLÁUSULA TERCEIRA - DA VIGÊNCIA",
+          "trecho": "O contrato vigora de 01/02/2024 a 31/01/2025, podendo ser prorrogado por acordo das partes."
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "multa_rescisao": {
+      "rotulo": "Multa por rescisão",
+      "informado": {
+        "status": "encontrado",
+        "valor": "10%",
+        "valor_numerico": 10.0,
+        "unidade": "%",
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "texto",
+          "pagina": 2,
+          "chunk_index": 6,
+          "secao": "CLÁUSULA SEXTA - DA RESCISÃO",
+          "trecho": "O contrato pode ser rescindido por qualquer das partes com aviso prévio de trinta dias. A parte que rescindir sem justa causa pagará multa de 10% sobre o valor remanescente do contrato."
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "indice_reajuste": {
+      "rotulo": "Índice de reajuste",
+      "informado": {
+        "status": "encontrado",
+        "valor": "IPCA",
+        "valor_numerico": null,
+        "unidade": null,
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "texto",
+          "pagina": 1,
+          "chunk_index": 4,
+          "secao": "CLÁUSULA QUARTA - DO REAJUSTE",
+          "trecho": "Em caso de prorrogação, o valor será reajustado pela variação do IPCA dos doze meses anteriores."
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    },
+    "foro": {
+      "rotulo": "Foro",
+      "informado": {
+        "status": "encontrado",
+        "valor": "Comarca de Belo Horizonte/MG",
+        "valor_numerico": null,
+        "unidade": null,
+        "periodo": "documento",
+        "escopo": null,
+        "origem": {
+          "tipo": "texto",
+          "pagina": 2,
+          "chunk_index": 7,
+          "secao": "CLÁUSULA SÉTIMA - DO FORO",
+          "trecho": "Fica eleito o foro da Comarca de Belo Horizonte/MG para dirimir as questões deste contrato. Belo Horizonte, 15/01/2024. Assinado pelas partes. Contrato fictício, gerado para testar o sistema. As partes e os valores não existem."
+        }
+      },
+      "comparavel": null,
+      "variacao": null,
+      "calculado": null
+    }
+  },
+  "valores_de_apoio": {},
+  "alertas_de_validacao": [],
+  "impressao_do_indice": "2026-11-20T22:51:54.624772Z|8"
+}

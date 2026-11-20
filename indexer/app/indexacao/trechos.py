@@ -265,7 +265,7 @@ def split_table(markdown: str, preamble: str, max_tokens: int) -> list[str]:
 
 def build_context_header(company: str | None, period: str | None, unit: str | None,
                          section_path: list[str], page_start: int, page_end: int,
-                         missing: tuple[str, str] = ("Empresa não identificada", "período não identificado")) -> str:
+                         missing: tuple[str, str] = ("Entidade não identificada", "recorte não identificado")) -> str:
     """Prefixo determinístico embutido nos dois embeddings; não entra no texto citável. `company`
     e `period` são a entidade e o recorte do domínio; `missing`, o que dizer sem eles."""
     pages = f"p. {page_start}" if page_start == page_end else f"p. {page_start}-{page_end}"

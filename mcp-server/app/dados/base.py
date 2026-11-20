@@ -30,6 +30,7 @@ def publicada_atual(payload: dict[str, Any]) -> dict[str, Any]:
     payload = {**payload, "campos": payload["indicadores"]}
     del payload["indicadores"]
     meta = dict(payload.get("documento") or {})
+    # genérico: os nomes antigos das chaves, só para ler o que foi gravado antes deles.
     for antiga, nova in (("empresa", "entidade"), ("origem_da_empresa", "origem_da_entidade")):
         if antiga in meta:
             meta[nova] = meta.pop(antiga)

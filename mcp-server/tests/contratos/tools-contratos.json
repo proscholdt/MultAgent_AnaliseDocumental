@@ -1,0 +1,835 @@
+{
+  "buscar_trechos": {
+    "description": "Busca híbrida (semântica + palavras exatas) nos documentos do usuário. Devolve os trechos mais relevantes com doc_id, chunk_index, páginas, seção, tipo e unidade. O texto de cada trecho vem cortado; use ler_chunk ou ler_pagina para o conteúdo inteiro.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "consulta": {
+          "description": "O que procurar, em linguagem natural ou com os termos exatos do documento.",
+          "type": "string"
+        },
+        "doc_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Restringe a um documento. null busca em todos."
+        },
+        "limite": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Quantos trechos devolver (padrão 6, máximo 10)."
+        },
+        "pagina_ate": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Última página do intervalo, ou null."
+        },
+        "pagina_de": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Primeira página do intervalo, ou null."
+        },
+        "tipo": {
+          "anyOf": [
+            {
+              "enum": [
+                "texto",
+                "tabela",
+                "grafico"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Restringe a um tipo de trecho. null busca em todos."
+        }
+      },
+      "required": [
+        "consulta",
+        "doc_id",
+        "tipo",
+        "pagina_de",
+        "pagina_ate",
+        "limite"
+      ],
+      "type": "object"
+    },
+    "name": "buscar_trechos"
+  },
+  "candidatos_inconsistencia": {
+    "description": "Lista os trechos do documento que uma regra marcou como possível inconsistência: conta que não fecha numa frase (valor, variação e comparável), variação no texto que não bate com os dois períodos da extração, um ano comparado com ele mesmo, projeção para um ano que já passou, quadro com data diferente da do texto que o apresenta ou com duas colunas de mesmo título. São candidatos, não conclusões: leia cada um e registre só o que for erro do documento.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "doc_id": {
+          "description": "Documento.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "doc_id"
+      ],
+      "type": "object"
+    },
+    "name": "candidatos_inconsistencia"
+  },
+  "comparar_campos": {
+    "description": "Compara um campo entre os documentos do usuário, pelos valores guardados: ordena (maior, menor) ou filtra por um limite (acima_de, abaixo_de). Diz, para cada contrato, se o valor é informado pelo documento ou calculado, e devolve o marcador para usar na resposta. Use esta tool em vez de comparar números por conta própria.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "campo": {
+          "description": "Campo a comparar entre os documentos (contratos).",
+          "enum": [
+            "contratante",
+            "contratada",
+            "objeto",
+            "valor_total",
+            "data_assinatura",
+            "inicio_vigencia",
+            "fim_vigencia",
+            "multa_rescisao",
+            "indice_reajuste",
+            "foro"
+          ],
+          "type": "string"
+        },
+        "criterio": {
+          "description": "'maior' e 'menor' ordenam os documentos; 'acima_de' e 'abaixo_de' filtram pelo limite.",
+          "enum": [
+            "maior",
+            "menor",
+            "acima_de",
+            "abaixo_de"
+          ],
+          "type": "string"
+        },
+        "limite": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Só para 'acima_de' e 'abaixo_de'. Percentual e múltiplo na própria escala (3 = 3x; 20 = 20%); dinheiro, em reais."
+        }
+      },
+      "required": [
+        "campo",
+        "criterio",
+        "limite"
+      ],
+      "type": "object"
+    },
+    "name": "comparar_campos"
+  },
+  "concluir_revisao": {
+    "description": "Marca que as fontes de um documento foram revisadas em busca de inconsistências. Chame depois de ler os alertas automáticos e de julgar cada candidato (registrar_alerta ou descartar_candidato). Com candidato sem julgamento, é recusada e diz quais faltam. Sem ela, a revisão continua aparecendo como pendência.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "doc_id": {
+          "description": "Documento revisado.",
+          "type": "string"
+        },
+        "observacao": {
+          "description": "O que foi revisado e o resultado, em uma frase (ex.: 'Relatório da administração e notas de dívida lidos; duas inconsistências registradas').",
+          "type": "string"
+        }
+      },
+      "required": [
+        "doc_id",
+        "observacao"
+      ],
+      "type": "object"
+    },
+    "name": "concluir_revisao"
+  },
+  "descartar_candidato": {
+    "description": "Diz que um candidato de candidatos_inconsistencia NÃO é erro do documento, e por quê. O motivo fica guardado e na auditoria (não vai para o relatório). Use só depois de ler o trecho e a prova; se o trecho estiver errado, registre com registrar_alerta.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "chunk_index": {
+          "description": "O chunk_index do candidato, como veio em candidatos_inconsistencia.",
+          "type": "integer"
+        },
+        "doc_id": {
+          "description": "Documento.",
+          "type": "string"
+        },
+        "motivo": {
+          "description": "Por que não é erro do documento, em uma ou duas frases (ex.: 'arredondamento entre o texto e o quadro', 'a nota explica que a coluna é de outra parte do documento'). Números só os que estão no trecho.",
+          "type": "string"
+        },
+        "regra": {
+          "description": "A regra do candidato, como veio em candidatos_inconsistencia.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "doc_id",
+        "chunk_index",
+        "regra",
+        "motivo"
+      ],
+      "type": "object"
+    },
+    "name": "descartar_candidato"
+  },
+  "fechar_extracao": {
+    "description": "Fecha a extração de um documento. Confere que os campos principais têm valor ou \"não encontrado\", calcula o que os valores guardados permitem (a variação contra o período comparável e as fórmulas do domínio, quando há), roda as validações automáticas e publica o JSON. Se faltar campo, o erro lista quais. Se o domínio calcula campos a partir de valores de apoio e eles faltarem, o erro diz quais gravar.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "apoio_ausente": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Normalmente null. Preencha só se a chamada foi recusada por falta de valores de apoio e o documento realmente não os traz (ex.: não há fluxo de caixa): diga quais faltam e por quê."
+        },
+        "doc_id": {
+          "description": "Documento.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "doc_id",
+        "apoio_ausente"
+      ],
+      "type": "object"
+    },
+    "name": "fechar_extracao"
+  },
+  "ler_alertas": {
+    "description": "Lê os alertas de um documento: os das validações automáticas (margem, variação, unidades) e os de inconsistência na fonte registrados com citação.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "doc_id": {
+          "description": "Documento.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "doc_id"
+      ],
+      "type": "object"
+    },
+    "name": "ler_alertas"
+  },
+  "ler_analise": {
+    "description": "Lê a análise qualitativa guardada de um documento, por categoria, com a citação e a página de cada item.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "doc_id": {
+          "description": "Documento.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "doc_id"
+      ],
+      "type": "object"
+    },
+    "name": "ler_analise"
+  },
+  "ler_chunk": {
+    "description": "Devolve um chunk inteiro (uma tabela completa, por exemplo), pelo doc_id e chunk_index que a busca informou.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "chunk_index": {
+          "description": "Número do chunk, como veio na busca.",
+          "type": "integer"
+        },
+        "doc_id": {
+          "description": "Documento.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "doc_id",
+        "chunk_index"
+      ],
+      "type": "object"
+    },
+    "name": "ler_chunk"
+  },
+  "ler_extracao": {
+    "description": "Lê a extração publicada de um documento (ou de todos). Diz também quando ela está desatualizada, isto é, quando o documento foi reindexado depois da extração.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "detalhe": {
+          "description": "'resumo': uma linha por campo. 'enxuto': só os campos do relatório, cada um com valor, unidade, variação e origem (página e trecho), ou 'não encontrado'. 'completo': o JSON inteiro, com os valores de apoio e as validações.",
+          "enum": [
+            "resumo",
+            "enxuto",
+            "completo"
+          ],
+          "type": "string"
+        },
+        "doc_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Um documento, ou null para todos os do usuário."
+        }
+      },
+      "required": [
+        "doc_id",
+        "detalhe"
+      ],
+      "type": "object"
+    },
+    "name": "ler_extracao"
+  },
+  "ler_pagina": {
+    "description": "Devolve todos os chunks que cobrem uma página do PDF, inteiros e em ordem: os parágrafos, as tabelas e as notas daquela página.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "doc_id": {
+          "description": "Documento.",
+          "type": "string"
+        },
+        "pagina": {
+          "description": "Página do PDF (a primeira é 1).",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "doc_id",
+        "pagina"
+      ],
+      "type": "object"
+    },
+    "name": "ler_pagina"
+  },
+  "ler_relatorio": {
+    "description": "Devolve o relatório consolidado mais recente do usuário, em Markdown.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "required": [],
+      "type": "object"
+    },
+    "name": "ler_relatorio"
+  },
+  "ler_relatorio_documento": {
+    "description": "Devolve o relatório mais recente de um documento, em Markdown.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "doc_id": {
+          "description": "Documento (um(a) contrato).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "doc_id"
+      ],
+      "type": "object"
+    },
+    "name": "ler_relatorio_documento"
+  },
+  "ler_respostas": {
+    "description": "Lê as respostas guardadas do usuário, já com os valores e as fontes no lugar dos marcadores, e o enunciado oficial das 4 perguntas do relatório (p1 a p4), dizendo quais já têm resposta.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "required": [],
+      "type": "object"
+    },
+    "name": "ler_respostas"
+  },
+  "listar_documentos": {
+    "description": "Lista os documentos indexados do usuário: doc_id, arquivo, contrato, documento, tipo e número de páginas. É por aqui que se descobre o doc_id para as outras tools.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "required": [],
+      "type": "object"
+    },
+    "name": "listar_documentos"
+  },
+  "montar_relatorio": {
+    "description": "Monta o relatório consolidado em Markdown a partir da base: resumo executivo, tabela comparativa dos campos, análise qualitativa, respostas às 4 perguntas e alertas. Tudo é montado pelo código; nenhum número é redigitado. Se faltar alguma parte, a chamada é recusada com a lista do que falta.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "required": [],
+      "type": "object"
+    },
+    "name": "montar_relatorio"
+  },
+  "montar_relatorio_documento": {
+    "description": "Monta o relatório de UM documento em Markdown a partir da base: resumo executivo, campos com a página, análise qualitativa com as citações e alertas. Precisa da extração, da revisão das fontes, da análise e do resumo do documento; se faltar algo, a chamada é recusada com a lista. As perguntas comparativas não entram: são do relatório consolidado.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "doc_id": {
+          "description": "Documento (um(a) contrato).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "doc_id"
+      ],
+      "type": "object"
+    },
+    "name": "montar_relatorio_documento"
+  },
+  "pendencias": {
+    "description": "Diz o que ainda falta para o relatório completo do usuário: extração, revisão das fontes, análise qualitativa, respostas às 4 perguntas, resumos e a montagem do relatório. Cada item indica o documento, o agente que costuma resolver e se já pode ser feito: 'liberada' true, ou false com o que ele 'aguarda' (as perguntas esperam a extração e a análise de todos os documentos; o resumo espera a extração, a revisão e a análise do documento). Com doc_id, é o que falta para o relatório só daquele documento (sem as perguntas comparativas). Lista vazia = está completo.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "doc_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Só para o relatório de UM documento: o doc_id dele. Sem doc_id, a lista é a do relatório consolidado."
+        }
+      },
+      "required": [
+        "doc_id"
+      ],
+      "type": "object"
+    },
+    "name": "pendencias"
+  },
+  "registrar_alerta": {
+    "description": "Registra uma inconsistência que está no próprio documento (uma frase cujos números não fecham, um ano trocado), com a citação literal. Não corrija o documento: sinalize. Os números da descrição têm de estar na citação.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "chunk_index": {
+          "description": "Chunk onde a inconsistência está.",
+          "type": "integer"
+        },
+        "citacao": {
+          "description": "O trecho inconsistente, copiado literalmente do chunk (pelo menos 40 caracteres).",
+          "type": "string"
+        },
+        "descricao": {
+          "description": "O que está inconsistente na fonte, em uma ou duas frases.",
+          "type": "string"
+        },
+        "doc_id": {
+          "description": "Documento.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "doc_id",
+        "descricao",
+        "chunk_index",
+        "citacao"
+      ],
+      "type": "object"
+    },
+    "name": "registrar_alerta"
+  },
+  "registrar_ausencia_analise": {
+    "description": "Registra que o documento não traz uma categoria da análise qualitativa. O servidor procura os termos da categoria; se aparecerem em páginas que você não descartou, a chamada é recusada com as páginas, para você ler antes de afirmar a ausência.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "categoria": {
+          "description": "A categoria que o documento não traz.",
+          "enum": [
+            "obrigacoes",
+            "penalidades",
+            "rescisao",
+            "pontos_de_atencao"
+          ],
+          "type": "string"
+        },
+        "doc_id": {
+          "description": "Documento.",
+          "type": "string"
+        },
+        "motivo": {
+          "description": "Por que não há essa informação e onde foi procurada (ex.: o documento não tem a seção em que isso costuma estar).",
+          "type": "string"
+        },
+        "paginas_descartadas": {
+          "description": "Páginas em que os termos da categoria aparecem e que não servem. Pode começar vazia.",
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "doc_id",
+        "categoria",
+        "motivo",
+        "paginas_descartadas"
+      ],
+      "type": "object"
+    },
+    "name": "registrar_ausencia_analise"
+  },
+  "salvar_campo": {
+    "description": "Grava um campo de um documento, depois de conferir a origem. Valor de tabela: informe chunk_index, rotulo_linha e rotulo_coluna, e o servidor lê a célula (não informe o número). Valor de texto: informe chunk_index, o trecho copiado do documento e o valor como está escrito. Campo de texto ou de data: o valor é o que o documento escreve (o nome, a cláusula, a data), e tem de estar no trecho citado ou na célula apontada. Se a conferência falhar, o erro diz o que corrigir. Salvar de novo o mesmo campo e período substitui o anterior. Num recorte com período comparável, em valor de tabela do período de referência, o servidor grava também o do período anterior, lido da coluna irmã da mesma linha, quando ela existe.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "campo": {
+          "description": "Qual campo. Os principais são os do relatório; os demais (quando há) são valores de apoio, usados pelo servidor nos cálculos.",
+          "enum": [
+            "contratante",
+            "contratada",
+            "objeto",
+            "valor_total",
+            "data_assinatura",
+            "inicio_vigencia",
+            "fim_vigencia",
+            "multa_rescisao",
+            "indice_reajuste",
+            "foro"
+          ],
+          "type": "string"
+        },
+        "chunk_index": {
+          "description": "Chunk onde o valor está.",
+          "type": "integer"
+        },
+        "doc_id": {
+          "description": "Documento.",
+          "type": "string"
+        },
+        "medida": {
+          "description": "'valor': o campo em si. 'variacao_informada': a variação percentual contra o período anterior que o próprio documento escreve (o servidor também calcula a variação e compara as duas).",
+          "enum": [
+            "valor",
+            "variacao_informada"
+          ],
+          "type": "string"
+        },
+        "nota": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Observação curta sobre o valor, se necessária (ex.: 'valor de uma parte do documento, não do total'). Senão, null."
+        },
+        "ocorrencia_coluna": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Só se o cabeçalho da coluna se repete: qual ocorrência. Senão, null."
+        },
+        "ocorrencia_linha": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Só se o rótulo da linha se repete na tabela: qual ocorrência (1 = a primeira). Senão, null."
+        },
+        "origem": {
+          "description": "De onde o valor vem: célula de tabela ou texto corrido.",
+          "enum": [
+            "tabela",
+            "texto"
+          ],
+          "type": "string"
+        },
+        "periodo": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Período do valor, nos domínios com período contábil: o ano com 4 dígitos (ex.: 2022) num documento anual; o trimestre (3T2025) ou o acumulado do ano (9M2025) num trimestral. Nos outros, null: vale a data do documento."
+        },
+        "rotulo_coluna": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "origem='tabela': cabeçalho da coluna, copiado da tabela (ex.: '2022', 'Resultado')."
+        },
+        "rotulo_linha": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "origem='tabela': rótulo da linha, copiado da primeira coluna da tabela."
+        },
+        "trecho": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "origem='texto': a frase do documento que traz o valor, copiada literalmente do chunk."
+        },
+        "valor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "origem='texto': o número como está escrito no trecho (ex.: '9.032', '1,5x', '23%'). Em origem='tabela' fica null: o servidor lê a célula."
+        }
+      },
+      "required": [
+        "doc_id",
+        "campo",
+        "periodo",
+        "medida",
+        "origem",
+        "chunk_index",
+        "rotulo_linha",
+        "rotulo_coluna",
+        "ocorrencia_linha",
+        "ocorrencia_coluna",
+        "trecho",
+        "valor",
+        "nota"
+      ],
+      "type": "object"
+    },
+    "name": "salvar_campo"
+  },
+  "salvar_item_analise": {
+    "description": "Grava um item da análise qualitativa de um documento, com a citação literal que o sustenta. A citação tem de existir no chunk, e os números da afirmação têm de estar na citação. Uma categoria pode ter vários itens; na categoria 'tom' informe também a classificação.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "afirmacao": {
+          "description": "O achado, em uma ou duas frases suas.",
+          "type": "string"
+        },
+        "categoria": {
+          "description": "obrigacoes: o que cada parte se obriga a fazer (prazos de entrega, pagamento, sigilo, seguro). penalidades: multas, juros e sanções por atraso ou descumprimento, além da multa por rescisão. rescisao: as hipóteses e o aviso prévio para rescindir o contrato. pontos_de_atencao: renovação automática, exclusividade, limitação de responsabilidade, cessão, garantias.",
+          "enum": [
+            "obrigacoes",
+            "penalidades",
+            "rescisao",
+            "pontos_de_atencao"
+          ],
+          "type": "string"
+        },
+        "chunk_index": {
+          "description": "Chunk de onde vem a citação.",
+          "type": "integer"
+        },
+        "citacao": {
+          "description": "Frase do documento que sustenta a afirmação, copiada literalmente do chunk (pelo menos 40 caracteres).",
+          "type": "string"
+        },
+        "doc_id": {
+          "description": "Documento.",
+          "type": "string"
+        },
+        "tom": {
+          "anyOf": [
+            {
+              "enum": [
+                "positivo",
+                "neutro",
+                "negativo"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Só na categoria 'tom', quando o domínio tem uma: a classificação. A afirmação é a justificativa. Nas outras categorias, null."
+        }
+      },
+      "required": [
+        "doc_id",
+        "categoria",
+        "afirmacao",
+        "chunk_index",
+        "citacao",
+        "tom"
+      ],
+      "type": "object"
+    },
+    "name": "salvar_item_analise"
+  },
+  "salvar_nao_encontrado": {
+    "description": "Registra que o documento não informa um campo. O servidor procura os termos do campo no documento inteiro; se aparecerem, a chamada é recusada com as páginas, e você deve lê-las: se o valor está lá, use salvar_campo; se não serve, repita a chamada listando essas páginas em paginas_descartadas e explicando no motivo. Nunca estime um valor.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "campo": {
+          "description": "O campo que o documento não informa.",
+          "enum": [
+            "contratante",
+            "contratada",
+            "objeto",
+            "valor_total",
+            "data_assinatura",
+            "inicio_vigencia",
+            "fim_vigencia",
+            "multa_rescisao",
+            "indice_reajuste",
+            "foro"
+          ],
+          "type": "string"
+        },
+        "doc_id": {
+          "description": "Documento.",
+          "type": "string"
+        },
+        "motivo": {
+          "description": "Por que o campo não existe no documento, e onde foi procurado.",
+          "type": "string"
+        },
+        "paginas_descartadas": {
+          "description": "Páginas em que o termo aparece e que não servem (o motivo explica por quê). Pode começar vazia: se o termo aparecer no documento, o erro lista as páginas.",
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "doc_id",
+        "campo",
+        "motivo",
+        "paginas_descartadas"
+      ],
+      "type": "object"
+    },
+    "name": "salvar_nao_encontrado"
+  },
+  "salvar_resposta": {
+    "description": "Grava a resposta a uma pergunta, com as fontes. O servidor troca os marcadores {{doc_id.campo}} pelos valores guardados (com unidade e página) e as citações [[doc_id:chunk_index]] por \"(arquivo, p. N)\". Toda resposta precisa de pelo menos uma fonte, e número fora de marcador só passa se estiver escrito num trecho citado.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "pergunta": {
+          "description": "A pergunta respondida. Para p1 a p4, o enunciado oficial (ler_respostas mostra todos).",
+          "type": "string"
+        },
+        "pergunta_id": {
+          "description": "p1 a p4: as 4 perguntas do relatório. 'livre': outra pergunta do usuário.",
+          "enum": [
+            "p1",
+            "p2",
+            "p3",
+            "p4",
+            "livre"
+          ],
+          "type": "string"
+        },
+        "resposta": {
+          "description": "A resposta. Valores vão como marcador {{doc_id.campo}} (ou .calculado, .variacao, .comparavel); trechos citados vão como [[doc_id:chunk_index]]; categoria da análise registrada como ausente vai como {{doc_id.analise.<categoria>}}. Não escreva números fora dos marcadores, a não ser que estejam num trecho citado.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pergunta_id",
+        "pergunta",
+        "resposta"
+      ],
+      "type": "object"
+    },
+    "name": "salvar_resposta"
+  },
+  "salvar_resumo": {
+    "description": "Grava o resumo executivo de um documento (até 5 linhas). Os valores entram por marcador, que o servidor troca pelo número guardado com a unidade e a página. Número escrito direto no texto é recusado, a não ser ano e contagem pequena.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "doc_id": {
+          "description": "Documento (um(a) contrato).",
+          "type": "string"
+        },
+        "texto": {
+          "description": "O resumo executivo do documento, em até 5 linhas. Valores vão como marcador: {{campo}}, {{campo.variacao}}, {{campo.calculado}}, {{campo.comparavel}}. Não escreva números por conta própria.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "doc_id",
+        "texto"
+      ],
+      "type": "object"
+    },
+    "name": "salvar_resumo"
+  }
+}

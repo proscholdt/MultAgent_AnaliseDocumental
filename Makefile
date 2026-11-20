@@ -27,7 +27,7 @@ SAIDA ?= ../resultados
 unexport VIRTUAL_ENV
 
 .DEFAULT_GOAL := ajuda
-.PHONY: ajuda urls bancos subir subir-dev descer-dev reconstruir descer status logs zerar zerar-base testes testes-indexer testes-mcp \
+.PHONY: generico novo-dominio ajuda urls bancos subir subir-dev descer-dev reconstruir descer status logs zerar zerar-base testes testes-indexer testes-mcp \
         testes-agentes testes-frontend lint comum chaves validar-agentes dominios avaliar-intencao inconsistencias resultados extracao \
         analise perguntas validacao relatorio avaliar pendencias pergunta
 
@@ -56,6 +56,8 @@ ajuda:
 	@echo lint ............................. ruff nos tres sistemas Python
 	@echo validar-agentes .................. confere os arquivos dos agentes
 	@echo dominios ......................... valida os pacotes de dominio e mostra o que cada um define
+	@echo generico ......................... confere que o nucleo nao tem vocabulario de um dominio
+	@echo novo-dominio ID=x ................ cria dominios/x/ a partir do modelo (dominios/_modelo)
 	@echo comum ............................ copia o codigo de comum/ (telemetria) para os sistemas
 	@echo chaves ........................... uma chave Ed25519 por servico, no lugar do segredo compartilhado
 	@echo avaliar-intencao ................. o roteador de intencao contra 52 mensagens rotuladas, centesimos de centavo
@@ -186,6 +188,14 @@ lint:
 	cd indexer && uv run ruff check .
 	cd mcp-server && uv run ruff check . ../dominios
 	cd agents && uv run ruff check . ../ferramentas
+	python ferramentas/conferir_generico.py
+
+generico:
+	python ferramentas/conferir_generico.py
+
+novo-dominio:
+	$(if $(ID),,$(error Informe ID=<id do dominio>))
+	python ferramentas/novo_dominio.py $(ID)
 
 comum:
 	python ferramentas/comum.py

@@ -43,7 +43,8 @@ class StoredValue(Base):
     unidade: Mapped[str | None] = mapped_column(String(32), nullable=True)
     unidade_origem: Mapped[str | None] = mapped_column(String(16), nullable=True)
     escopo: Mapped[str | None] = mapped_column(String(16), nullable=True)  # consolidado | controladora
-    alternativa_consolidada: Mapped[bool] = mapped_column(default=False)  # a tabela tinha coluna consolidada?
+    # genérico: coluna da base (o plugin diz se a tabela tinha um escopo melhor que o escolhido).
+    alternativa_consolidada: Mapped[bool] = mapped_column(default=False)
     periodo_confirmado: Mapped[bool] = mapped_column(default=True)  # o período está escrito na fonte citada?
     motivo: Mapped[str | None] = mapped_column(Text, nullable=True)
     evidencia: Mapped[dict | None] = mapped_column(JSON, nullable=True)
@@ -180,7 +181,7 @@ class CompanyReport(Base):
     """Relatório de uma empresa só, montado pelo código. Vale para a impressão do documento em que
     foi montado: se o documento for reindexado, ele deixa de valer."""
 
-    __tablename__ = "relatorios_empresa"
+    __tablename__ = "relatorios_empresa"  # genérico: nome da tabela na base, de antes dos domínios
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[str] = mapped_column(String(64))
@@ -190,7 +191,7 @@ class CompanyReport(Base):
     markdown: Mapped[str] = mapped_column(Text)
     at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
-    __table_args__ = (Index("ix_relatorios_empresa_doc", "user_id", "doc_id"),)
+    __table_args__ = (Index("ix_relatorios_empresa_doc", "user_id", "doc_id"),)  # genérico: nome na base
 
 
 class AuditRow(Base):

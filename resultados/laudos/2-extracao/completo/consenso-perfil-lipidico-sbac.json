@@ -2,8 +2,8 @@
   "documento": {
     "doc_id": "34f35b0636d713dd",
     "arquivo": "consenso-perfil-lipidico-sbac.pdf",
-    "empresa": null,
-    "origem_da_empresa": {
+    "entidade": null,
+    "origem_da_entidade": {
       "source": null
     },
     "tipo": null,
@@ -14,12 +14,12 @@
       "source": null
     }
   },
-  "indicadores": {
+  "campos": {
     "glicose": {
       "rotulo": "Glicose",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não traz resultados/lâmina de glicose do paciente; apenas recomendações de modelo e valores referenciais para perfil lipídico.",
+        "motivo": "O documento é um consenso/recomendações (modelo de laudo) e não traz resultado laboratorial de glicose; apenas menções gerais a risco de hipoglicemia e jejum.",
         "evidencia": {
           "termos_procurados": [
             "glicose",
@@ -41,7 +41,7 @@
       "rotulo": "Hemoglobina glicada (HbA1c)",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não traz resultado de hemoglobina glicada (HbA1c); contém apenas recomendações sobre perfil lipídico/jejum.",
+        "motivo": "O documento não traz resultado laboratorial de hemoglobina glicada (HbA1c); é apenas texto de recomendações/modelo.",
         "evidencia": {
           "termos_procurados": [
             "hemoglobina glicada",
@@ -60,7 +60,7 @@
       "rotulo": "Colesterol total",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não apresenta resultado de colesterol total do paciente; traz apenas texto e tabelas com valores referenciais/desejáveis (limites) para interpretação do perfil lipídico.",
+        "motivo": "O documento é um consenso/recomendações (modelo de laudo) e não traz resultado laboratorial de colesterol total do paciente; apenas cita colesterol total (CT) em descrições metodológicas e valores referenciais/limites.",
         "evidencia": {
           "termos_procurados": [
             "colesterol total"
@@ -85,7 +85,7 @@
       "rotulo": "Colesterol HDL",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não apresenta resultado de HDL-C do paciente; contém apenas valores referenciais/desejáveis e critérios para interpretação.",
+        "motivo": "O documento não traz resultado laboratorial de HDL-C do paciente; aparece apenas em contexto de recomendações e valores referenciais em tabelas do modelo de laudo.",
         "evidencia": {
           "termos_procurados": [
             "hdl"
@@ -110,7 +110,7 @@
       "rotulo": "Colesterol LDL",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não apresenta resultado de LDL-C do paciente; apenas metas terapêuticas e valores referenciais/cortes em tabelas e texto.",
+        "motivo": "O documento não traz resultado laboratorial de LDL-C do paciente; aparece apenas em contexto de recomendações/modelo e valores referenciais (adultos/crianças) e método de cálculo.",
         "evidencia": {
           "termos_procurados": [
             "ldl"
@@ -135,7 +135,7 @@
       "rotulo": "Triglicerídeos",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não apresenta resultado de triglicerídeos do paciente; contém apenas referências/metas e observações (ex.: TG>440 mg/dL) para o modelo de laudo.",
+        "motivo": "O documento é um consenso/recomendações (modelo de laudo) e não traz resultado laboratorial de triglicérides do paciente; aparecem apenas como recomendações/metodologia (ex.: TG > 440 mg/dL) e valores referenciais em tabelas.",
         "evidencia": {
           "termos_procurados": [
             "triglicer"
@@ -156,7 +156,7 @@
       "rotulo": "Creatinina",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não traz resultado de creatinina; é um documento de recomendações para perfil lipídico.",
+        "motivo": "O documento não traz resultado de creatinina; é um consenso sobre perfil lipídico/modelo de laudo.",
         "evidencia": {
           "termos_procurados": [
             "creatinina"
@@ -173,7 +173,7 @@
       "rotulo": "Hemoglobina",
       "informado": {
         "status": "nao_encontrado",
-        "motivo": "O documento não traz resultado de hemoglobina do hemograma; contém apenas recomendações relacionadas a perfil lipídico/jejum.",
+        "motivo": "O documento não traz resultado laboratorial de hemoglobina (g/dL); é um consenso/recomendações sobre perfil lipídico.",
         "evidencia": {
           "termos_procurados": [
             "hemoglobina"

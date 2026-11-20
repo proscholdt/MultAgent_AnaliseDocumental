@@ -1,13 +1,35 @@
 {
   "arquivo": "Millet.pdf",
-  "empresa": "Millet Participações S.A.",
+  "entidade": "Millet Participações S.A.",
   "alertas": [
+    {
+      "tipo": "validacao",
+      "codigo": "secao_inesperada",
+      "severidade": "informacao",
+      "campo": "emprestimos_circulante",
+      "mensagem": "Empréstimos e financiamentos (circulante) (2022): o valor veio da seção '11. Empréstimos e financiamentos', e não de uma demonstração de balanço.",
+      "detalhes": {
+        "pagina": 32
+      },
+      "registrado_por": "extrator"
+    },
+    {
+      "tipo": "validacao",
+      "codigo": "secao_inesperada",
+      "severidade": "informacao",
+      "campo": "emprestimos_nao_circulante",
+      "mensagem": "Empréstimos e financiamentos (não circulante) (2022): o valor veio da seção '11. Empréstimos e financiamentos', e não de uma demonstração de balanço.",
+      "detalhes": {
+        "pagina": 32
+      },
+      "registrado_por": "extrator"
+    },
     {
       "tipo": "fonte",
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "O texto introduz o quadro como refletindo 31/12/2021, mas a própria tabela apresenta valores sob a coluna/ano “2022” (inconsistência de data de referência para os riscos de liquidez).",
+      "mensagem": "O texto diz que o quadro reflete os fluxos em 31 de dezembro de 2021, mas a tabela apresenta valores e colunas rotuladas como 2022.",
       "detalhes": {
         "pagina": 41,
         "chunk_index": 115,
@@ -21,12 +43,12 @@
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "No quadro de instrumentos financeiros, há duas colunas com o mesmo título “Controladora - 31/12/2021”, sugerindo que uma das datas foi registrada incorretamente (duplicação de título de coluna).",
+      "mensagem": "No quadro, há duas colunas com o mesmo título \"Controladora - 31/12/2021\", o que indica possível duplicação de ano no cabeçalho.",
       "detalhes": {
         "pagina": 42,
         "chunk_index": 120,
         "secao": "22. Gestão de risco > 22.3. Instrumento financeiro por categoria",
-        "citacao": "| | Controladora - 31/12/2021 | Controladora - 31/12/2021 | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 |"
+        "citacao": "Diversas políticas e divulgações contábeis da Companhia exigem a determinação do valor justo, tanto para os ativos e passivos financeiros como para os não financeiros. Os valores justos têm sido apurados para propósitos de mensuração e/ou divulgação. | | Controladora - 31/12/2021 | Controladora - 31/12/2021 | Consolidado - 31/12/2022 | Consolidado - 31/12/2021 |"
       },
       "registrado_por": "validador"
     },
@@ -35,7 +57,7 @@
       "codigo": "revisao_das_fontes_concluida",
       "severidade": "informacao",
       "campo": null,
-      "mensagem": "Fontes revisadas pelo agente validador. Foram lidos os alertas e candidatos de inconsistência e verificadas as tabelas correspondentes; duas inconsistências de datas/títulos de colunas foram registradas.",
+      "mensagem": "Fontes revisadas pelo agente validador. Foram lidos alertas automáticos, a extração completa e os trechos/tabelas associados aos candidatos; duas inconsistências foram registradas no documento.",
       "detalhes": {
         "inconsistencias_registradas": 2
       },

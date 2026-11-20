@@ -1,0 +1,163 @@
+# Pacote de domínio: contratos. O terceiro pacote, feito para provar que o núcleo é genérico onde
+# laudos não chega: sem recorte no tempo (recorte: nenhum), com campos de texto e de data (as
+# partes, o foro, a vigência) e dinheiro sem plugin. É só este arquivo e os prompts. O formato está
+# em comum/pacotes.py; como criar um domínio, em dominios/README.md.
+#
+# Os documentos de teste são contratos fictícios, gerados por avaliacao/gerar_contratos.py, e um
+# modelo público de contrato. O sistema lê e organiza as cláusulas com a página de origem; não dá
+# parecer jurídico.
+
+id: contratos
+nome: Contratos
+descricao: >-
+  Contratos de prestação de serviços e de fornecimento: as partes, o objeto, o valor, a vigência,
+  a multa, o reajuste e o foro, cada um com a página e o trecho, as obrigações, as penalidades e as
+  hipóteses de rescisão, e a comparação entre os contratos da coleção, sem parecer jurídico.
+plugin: null
+
+documento:
+  tipos:
+  - Contrato
+  reconhecer:
+  - CONTRATANTE
+  - CONTRATADA
+  - Cláusula
+  - CLÁUSULA
+  - objeto do presente contrato
+  - vigência
+  - foro
+  - rescisão
+
+entidade:
+  nome: contrato
+  rotulo: Contrato
+  plural: Contratos
+  ausente: Contrato não identificado
+
+recorte:
+  nome: documento
+  rotulo: Documento
+  tipo: nenhum
+
+metadados:
+- nome: contrato
+  rotulo: Contrato
+  papel: entidade
+  instrucao: >-
+    a identificação do contrato como está no documento: o número ou o título (ex.: "Contrato nº
+    012/2024"), sem as partes
+- nome: contratante
+  rotulo: Contratante
+  instrucao: nome ou razão social da parte contratante
+
+# Os campos que os agentes extraem. Texto e data entram com o trecho que os escreve; o valor, da
+# célula ou da frase, em reais; a multa, em percentual. O que o contrato não traz é "não
+# encontrado", com a prova de que o termo não aparece (ou de que aparece sem o valor).
+campos:
+- nome: contratante
+  rotulo: Contratante
+  tipo: texto
+  principal: true
+  termos: [contratante]
+  mencao: [contratante]
+- nome: contratada
+  rotulo: Contratada
+  tipo: texto
+  principal: true
+  termos: [contratada, contratado]
+  mencao: [contratad]
+- nome: objeto
+  rotulo: Objeto
+  tipo: texto
+  principal: true
+  termos: [objeto]
+  mencao: [objeto]
+- nome: valor_total
+  rotulo: Valor total
+  tipo: valor
+  principal: true
+  termos: [valor total, valor global, valor do contrato, preço]
+  mencao: [valor, preco]
+- nome: data_assinatura
+  rotulo: Data de assinatura
+  tipo: data
+  principal: true
+  termos: [assinatura, assinado, firmado, data]
+  mencao: [assin, firmad]
+- nome: inicio_vigencia
+  rotulo: Início da vigência
+  tipo: data
+  principal: true
+  termos: [vigência, início, a partir de]
+  mencao: [vigencia, inicio]
+- nome: fim_vigencia
+  rotulo: Fim da vigência
+  tipo: data
+  principal: true
+  termos: [vigência, término, até]
+  mencao: [vigencia, termino]
+- nome: multa_rescisao
+  rotulo: Multa por rescisão
+  tipo: percentual
+  principal: true
+  termos: [multa]
+  mencao: [multa]
+- nome: indice_reajuste
+  rotulo: Índice de reajuste
+  tipo: texto
+  principal: true
+  termos: [reajuste, ipca, igp-m, inpc]
+  mencao: [reajust]
+- nome: foro
+  rotulo: Foro
+  tipo: texto
+  principal: true
+  termos: [foro, comarca]
+  mencao: [foro, comarca]
+
+categorias:
+- nome: obrigacoes
+  rotulo: Obrigações das partes
+  descricao: o que cada parte se obriga a fazer (prazos de entrega, pagamento, sigilo, seguro)
+  termos: [obrigações, obriga-se, compete]
+- nome: penalidades
+  rotulo: Penalidades
+  descricao: multas, juros e sanções por atraso ou descumprimento, além da multa por rescisão
+  termos: [multa, penalidade, sanção, juros]
+- nome: rescisao
+  rotulo: Rescisão
+  descricao: as hipóteses e o aviso prévio para rescindir o contrato
+  termos: [rescisão, rescindido, rescindir, aviso prévio]
+- nome: pontos_de_atencao
+  rotulo: Pontos de atenção
+  descricao: renovação automática, exclusividade, limitação de responsabilidade, cessão, garantias
+  termos: [renovação, exclusividade, responsabilidade, cessão, garantia]
+
+perguntas:
+- id: p1
+  enunciado: Qual contrato tem o maior valor total?
+- id: p2
+  enunciado: Quando termina a vigência de cada contrato?
+- id: p3
+  enunciado: Qual é a multa por rescisão de cada contrato?
+- id: p4
+  enunciado: Qual é o foro e o índice de reajuste de cada contrato?
+
+textos:
+  titulo: Análise de Contratos
+  envio: Envie os contratos em PDF.
+  fora_do_escopo: >-
+    Isso está fora do escopo deste sistema. Ele lê os contratos enviados e responde sobre as
+    cláusulas, sempre com a página de origem; não dá parecer jurídico. Escolha uma das opções ou
+    escreva a sua pergunta.
+  opcoes:
+  - titulo: Comparar os valores
+    exemplo: Qual contrato tem o maior valor total?
+  - titulo: Ver as vigências
+    exemplo: Quando termina a vigência de cada contrato?
+  - titulo: Ver as multas
+    exemplo: Qual é a multa por rescisão de cada contrato?
+  - titulo: Gerar o relatório de um contrato
+    exemplo: Gere o relatório do contrato de limpeza
+  - titulo: Gerar o relatório da coleção
+    exemplo: Gere o relatório consolidado

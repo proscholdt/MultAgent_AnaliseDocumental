@@ -1,5 +1,5 @@
 {
-  "empresa": "Maria Souza",
+  "paciente": "Maria Souza",
   "documento": "laudo-maria.pdf",
   "periodo_referencia": "12/03/2024",
   "periodo_comparavel": null,
@@ -108,7 +108,7 @@
   "creatinina": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "o laudo não traz o exame creatinina (buscado por 'creatinina' e verificada a página 1; há apenas glicose, hemoglobina glicada e lipidograma).",
+    "motivo": "o laudo não traz o exame de creatinina (o termo 'creatinina' não aparece com resultado).",
     "busca": {
       "termos_procurados": [
         "creatinina"
@@ -120,7 +120,7 @@
   "hemoglobina": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "o laudo não traz o exame hemoglobina (no hemograma); a página 1 contém apenas glicose, hemoglobina glicada e lipidograma, sem hemograma.",
+    "motivo": "o laudo não traz hemoglobina (no hemograma). O termo 'Hemoglobina' aparece apenas em 'Hemoglobina glicada (HbA1c)' (página 1), que é outro exame.",
     "busca": {
       "termos_procurados": [
         "hemoglobina"

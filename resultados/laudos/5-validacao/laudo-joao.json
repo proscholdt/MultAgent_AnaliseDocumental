@@ -1,13 +1,13 @@
 {
   "arquivo": "laudo-joao.pdf",
-  "empresa": "João Pereira",
+  "entidade": "João Pereira",
   "alertas": [
     {
       "tipo": "fonte",
       "codigo": "inconsistencia_na_fonte",
       "severidade": "atencao",
       "campo": null,
-      "mensagem": "A data de liberação do laudo (04/06/2024) é anterior à data da coleta (05/06/2024) no documento.",
+      "mensagem": "A data de liberação do laudo é anterior à data de coleta informada no próprio documento.",
       "detalhes": {
         "pagina": 1,
         "chunk_index": 0,
@@ -21,7 +21,7 @@
       "codigo": "revisao_das_fontes_concluida",
       "severidade": "informacao",
       "campo": null,
-      "mensagem": "Fontes revisadas pelo agente validador. Laudo-joao (laudo-joao.pdf) teve a página única revisada e a extração conferida; foi registrado 1 problema de inconsistência (data da coleta posterior à data de liberação) e não havia candidatos adicionais a julgar.",
+      "mensagem": "Fontes revisadas pelo agente validador. Laudo de exames lido na página disponível; foi identificada e registrada 1 inconsistência na fonte (data de liberação anterior à coleta).",
       "detalhes": {
         "inconsistencias_registradas": 1
       },

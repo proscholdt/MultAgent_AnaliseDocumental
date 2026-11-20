@@ -36,7 +36,7 @@
   "ebitda": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não apresenta indicador de EBITDA/LAJIDA no relatório da administração nem em notas; buscas por 'EBITDA'/'LAJIDA' não retornaram tabela ou valor correspondente ao consolidado 2022.",
+    "motivo": "O documento não apresenta EBITDA (nem LAJIDA) em valores do exercício consolidado 2022.",
     "busca": {
       "termos_procurados": [
         "ebitda",
@@ -49,7 +49,7 @@
   "margem_ebitda": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não informa margem de EBITDA (não há EBITDA divulgado para o consolidado 2022, portanto também não há percentual de margem).",
+    "motivo": "Sem EBITDA informado, não há margem EBITDA percentual no documento.",
     "busca": {
       "termos_procurados": [
         "margem ebitda",
@@ -123,7 +123,7 @@
   "alavancagem": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "Alavancagem (dívida líquida / EBITDA) não pode ser informada porque o documento não divulga EBITDA; há cálculo de relação dívida líquida sobre capital ajustado, mas não é o índice 'alavancagem' exigido (múltiplo dívida líquida/EBITDA).",
+    "motivo": "A alavancagem definida como dívida líquida / EBITDA não pode ser calculada porque o documento não informa EBITDA.",
     "busca": {
       "termos_procurados": [
         "alavancagem",
@@ -168,7 +168,7 @@
   "capex": {
     "status": "não encontrado",
     "valor": null,
-    "motivo": "O documento não informa um total de 'capex'/'total de investimentos' no formato do indicador; as linhas de fluxo de caixa de 'Aquisição de imobilizado' e 'Aquisição de intangível' foram gravadas como valores de apoio (capex_imobilizado e capex_intangivel).",
+    "motivo": "O documento não informa um total de capex com rótulo 'capex' ou 'total de investimentos'. As linhas de investimento do fluxo de caixa são apenas 'Aquisição de imobilizado' e 'Aquisição de intangível' (capex de componentes), que foram gravadas como apoio (capex_imobilizado e capex_intangivel).",
     "busca": {
       "termos_procurados": [
         "capex",
