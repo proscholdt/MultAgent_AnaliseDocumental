@@ -2,6 +2,7 @@
   "_como_foi_feito": "Laudos fictícios gerados por gerar_laudos.py: os valores nascem no gerador, e o gabarito também. Valor em número, na unidade do pacote; página do arquivo PDF.",
   "documentos": {
     "laudo-maria.pdf": {
+      "doc_id": "df89e5b72f021aa6",
       "indicadores": {
         "glicose": {
           "status": "informado",
@@ -61,6 +62,7 @@
       "inconsistencias_na_fonte_esperadas": []
     },
     "laudo-joao.pdf": {
+      "doc_id": "ab44024ba75dc363",
       "indicadores": {
         "glicose": {
           "status": "informado",
@@ -115,6 +117,7 @@
       ]
     },
     "laudo-ana.pdf": {
+      "doc_id": "efbecb04edf3e7c9",
       "indicadores": {
         "glicose": {
           "status": "informado",
@@ -174,6 +177,36 @@
           "paginas": [
             1
           ]
+        }
+      },
+      "inconsistencias_na_fonte_esperadas": []
+    },
+    "consenso-perfil-lipidico-sbac.pdf": {
+      "doc_id": "34f35b0636d713dd",
+      "indicadores": {
+        "glicose": {
+          "status": "nao_encontrado"
+        },
+        "hemoglobina_glicada": {
+          "status": "nao_encontrado"
+        },
+        "colesterol_total": {
+          "status": "nao_encontrado"
+        },
+        "hdl": {
+          "status": "nao_encontrado"
+        },
+        "ldl": {
+          "status": "nao_encontrado"
+        },
+        "triglicerideos": {
+          "status": "nao_encontrado"
+        },
+        "creatinina": {
+          "status": "nao_encontrado"
+        },
+        "hemoglobina": {
+          "status": "nao_encontrado"
         }
       },
       "inconsistencias_na_fonte_esperadas": []

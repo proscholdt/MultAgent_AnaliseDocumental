@@ -8,9 +8,11 @@ blocos de texto, duas tabelas), alguns resultados fora da faixa de referência, 
 inconsistência proposital (a liberação antes da coleta). Como os valores nascem aqui, o gabarito
 sai daqui também, e os dois nunca divergem.
 """
+import hashlib
 import json
 from pathlib import Path
 
+from reportlab import rl_config
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
@@ -20,6 +22,9 @@ AQUI = Path(__file__).parent
 PDFS = AQUI / "pdfs"
 ESTILOS = getSampleStyleSheet()
 RODAPE = "Laudo fictício, gerado para testar o sistema. Não corresponde a nenhum paciente real."
+# Sem data nem identificador aleatório no PDF: gerar de novo dá os mesmos bytes, e o doc_id (o hash
+# que o indexador calcula) continua o do gabarito.
+rl_config.invariant = 1
 
 
 def _p(texto: str, estilo: str = "Normal") -> Paragraph:
@@ -126,6 +131,12 @@ GABARITO = {
         "laudo-ana.pdf": {"indicadores": _campos({"glicose": 85, "colesterol_total": 178, "hdl": 62, "ldl": 96,
                                                   "triglicerideos": 98, "creatinina": 0.78, "hemoglobina": 11.2}),
                           "inconsistencias_na_fonte_esperadas": []},
+        # Um documento público que não é laudo: o consenso da SBAC sobre o laudo do perfil lipídico
+        # (https://www.sbac.org.br/wp-content/uploads/2017/09/ConsensoOficial_PerfilLipidico_2016_v13.pdf,
+        # não versionado aqui). Tem tabelas de valores de referência e nenhum resultado de paciente:
+        # tudo tem de sair "não encontrado", sem tirar resultado das tabelas de referência.
+        "consenso-perfil-lipidico-sbac.pdf": {"doc_id": "34f35b0636d713dd", "indicadores": _campos({}),
+                                              "inconsistencias_na_fonte_esperadas": []},
     },
     "perguntas": {
         "p1": {"deve_conter": ["Maria", "João", "Ana"], "fontes_de": ["laudo-maria.pdf", "laudo-joao.pdf", "laudo-ana.pdf"],
@@ -144,6 +155,9 @@ def main() -> None:
     PDFS.mkdir(exist_ok=True)
     for nome, conteudo in (("laudo-maria.pdf", maria()), ("laudo-joao.pdf", joao()), ("laudo-ana.pdf", ana())):
         SimpleDocTemplate(str(PDFS / nome), pagesize=A4, title=nome).build(conteudo)
+        # O avaliador reconhece o documento pelo doc_id, não pelo nome do arquivo.
+        GABARITO["documentos"][nome] = {
+            "doc_id": hashlib.sha256((PDFS / nome).read_bytes()).hexdigest()[:16], **GABARITO["documentos"][nome]}
         print("gerado", PDFS / nome)
     (AQUI / "gabarito.json").write_text(json.dumps(GABARITO, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print("gerado", AQUI / "gabarito.json")

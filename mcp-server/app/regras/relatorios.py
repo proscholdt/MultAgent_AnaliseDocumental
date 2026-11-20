@@ -158,10 +158,12 @@ def build_report(documents: list[dict[str, Any]], answers: list[dict[str, Any]],
         cells = [_cell(doc["extracao"]["indicadores"][campo]) for doc in documents]
         out.append(f"| {FIELDS[campo].label} | " + " | ".join(cells) + " |")
     periods = {(doc["extracao"]["documento"]["periodo_referencia"], doc["extracao"]["documento"]["periodo_comparavel"])
-               for doc in documents}
+               for doc in documents if doc["extracao"]["documento"].get("periodo_comparavel")}
     compared = "; ".join(f"{ref} contra {comp}" for ref, comp in sorted(periods))
+    # Sem comparável (laudo de um dia, documento sem recorte), não há variação para explicar.
     legend = (f"Valores do período de referência; \"var.\" é a variação contra o período comparável ({compared}), "
-              "calculada pelo código. A página é a do PDF.")
+              "calculada pelo código. A página é a do PDF.") if periods \
+        else "Valores de cada documento, na unidade dele. A página é a do PDF."
     if any(" ¹" in line for line in out):
         legend += " ¹ O sinal mudou de um período para o outro: o percentual não tem leitura direta."
     out += ["", legend, ""] + _formulas(documents)
