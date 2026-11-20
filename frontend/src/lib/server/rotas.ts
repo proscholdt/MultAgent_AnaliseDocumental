@@ -1,8 +1,8 @@
 /**
  * O que o navegador pode pedir, por meio do servidor do SvelteKit, a cada sistema.
  *
- * A lista é fechada: o proxy não repassa qualquer caminho. Do indexador, só os documentos e os
- * jobs (enviar, listar, acompanhar, remover); do orquestrador, só as conversas e as execuções.
+ * A lista é fechada: o proxy não repassa qualquer caminho. Do indexador, só os domínios, as
+ * coleções, os documentos e os jobs; do orquestrador, só as conversas e as execuções.
  * Busca direta, cadastro de usuário e as rotas administrativas ficam de fora.
  */
 export type Sistema = 'indexador' | 'agentes';
@@ -13,6 +13,8 @@ const ID = '[A-Za-z0-9_-]+';
 
 export const REGRAS: Record<Sistema, Regra[]> = {
 	indexador: [
+		{ caminho: /^api\/dominios$/, metodos: ['GET'] },
+		{ caminho: /^api\/colecoes$/, metodos: ['GET', 'POST'] },
 		{ caminho: /^api\/documents$/, metodos: ['GET', 'POST'] },
 		{ caminho: new RegExp(`^api/documents/${ID}$`), metodos: ['GET', 'DELETE'] },
 		{ caminho: new RegExp(`^api/documents/${ID}/jobs$`), metodos: ['GET'] },

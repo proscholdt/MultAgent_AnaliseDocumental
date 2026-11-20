@@ -6,10 +6,34 @@ export interface Documento {
 	doc_id: string;
 	file_name: string;
 	page_count: number | null;
+	/** A entidade e o recorte do domínio (a empresa e o período; o paciente e a data da coleta). */
 	company: string | null;
 	period: string | null;
 	status: EstadoDocumento;
 	chunk_count: number;
+	collection_id?: string | null;
+	dominio?: string;
+	/** Quando o conteúdo parece de outro domínio que não o da coleção. */
+	aviso_dominio?: string | null;
+}
+
+/** Um pacote de domínio (dominios/<id>/): o que a tela mostra e como rotula. */
+export interface Dominio {
+	id: string;
+	nome: string;
+	descricao: string;
+	padrao: boolean;
+	entidade: { nome: string; rotulo: string; plural: string };
+	recorte: { nome: string; rotulo: string; tipo: string };
+	textos: { titulo: string; envio: string; fora_do_escopo: string; opcoes: { titulo: string; exemplo: string }[] };
+}
+
+/** Uma coleção de documentos de um domínio. */
+export interface Colecao {
+	id: string;
+	nome: string;
+	dominio: string;
+	documentos: number;
 }
 
 export interface Job {

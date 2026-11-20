@@ -12,6 +12,14 @@ describe('lista de rotas do proxy', () => {
 		expect(recusa('agentes', 'api/execucoes/exec-5d9a50db19e7', 'GET')).toBeNull();
 	});
 
+	it('libera os domínios e as coleções, e só para ler e criar', () => {
+		expect(recusa('indexador', 'api/dominios', 'GET')).toBeNull();
+		expect(recusa('indexador', 'api/colecoes', 'GET')).toBeNull();
+		expect(recusa('indexador', 'api/colecoes', 'POST')).toBeNull();
+		expect(recusa('indexador', 'api/dominios', 'POST')).toBe(405);
+		expect(recusa('indexador', 'api/colecoes', 'DELETE')).toBe(405);
+	});
+
 	it('recusa o que está fora da lista', () => {
 		expect(recusa('indexador', 'api/search', 'POST')).toBe(404);
 		expect(recusa('indexador', 'auth/register', 'POST')).toBe(404);

@@ -4,9 +4,10 @@
 	import { page } from '$app/state';
 	import { api } from '$lib/api';
 	import Chat from '$lib/componentes/chat/Chat.svelte';
+	import Colecoes from '$lib/componentes/lateral/Colecoes.svelte';
 	import Conversas from '$lib/componentes/lateral/Conversas.svelte';
 	import Documentos from '$lib/componentes/lateral/Documentos.svelte';
-	import type { Conversa, Documento } from '$lib/tipos';
+	import type { Colecao, Conversa, Documento, Dominio } from '$lib/tipos';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -16,6 +17,49 @@
 	// A conversa aberta fica no endereço (?c=...): recarregar a página volta a ela.
 	let conversaId = $state<string | null>(page.url.searchParams.get('c'));
 	let lateralAberta = $state(false);
+	let dominios = $state<Dominio[]>([]);
+	let colecoes = $state<Colecao[]>([]);
+	// A coleção ativa fica no navegador: recarregar a página volta a ela.
+	let colecaoId = $state<string | null>(lerColecao());
+
+	const colecao = $derived(colecoes.find((c) => c.id === colecaoId) ?? null);
+	const dominio = $derived(
+		dominios.find((d) => d.id === colecao?.dominio) ?? dominios.find((d) => d.padrao) ?? null
+	);
+	// Os atalhos do chat: os do config/ajustes.yaml no domínio padrão; nos outros, os do pacote.
+	const sugestoes = $derived(dominio && !dominio.padrao ? dominio.textos.opcoes.map((o) => o.exemplo) : data.sugestoes);
+
+	function lerColecao(): string | null {
+		try {
+			return localStorage.getItem('colecao');
+		} catch {
+			return null;
+		}
+	}
+
+	function escolherColecao(id: string) {
+		colecaoId = id;
+		try {
+			localStorage.setItem('colecao', id);
+		} catch {
+			// sem armazenamento: vale até recarregar
+		}
+	}
+
+	async function carregarColecoes() {
+		try {
+			[dominios, colecoes] = await Promise.all([api.dominios(), api.colecoes()]);
+			if (colecoes.length && !colecoes.some((c) => c.id === colecaoId)) escolherColecao(colecoes[0].id);
+		} catch {
+			// sem coleções, a tela continua no domínio padrão
+		}
+	}
+
+	async function criarColecao(nome: string, dominioId: string) {
+		const nova = await api.novaColecao(nome, dominioId);
+		await carregarColecoes();
+		escolherColecao(nova.id);
+	}
 
 	const nomes = $derived(Object.fromEntries(documentos.map((d) => [d.doc_id, d.company || d.file_name])));
 	const indexados = $derived(documentos.filter((d) => d.status === 'indexed').length);
@@ -38,11 +82,14 @@
 		replaceState(url, {});
 	}
 
-	onMount(carregarConversas);
+	onMount(() => {
+		carregarConversas();
+		carregarColecoes();
+	});
 </script>
 
 <svelte:head>
-	<title>Análise de Demonstrações</title>
+	<title>{dominio?.textos.titulo ?? 'Análise de documentos'}</title>
 </svelte:head>
 
 <div class="app">
@@ -50,13 +97,21 @@
 		<header class="marca">
 			<img src="/favicon.svg" alt="" width="28" height="28" />
 			<div>
-				<strong>Demonstrações</strong>
+				<strong>{dominio?.nome ?? 'Análise de documentos'}</strong>
 				<span>Indexação e agentes</span>
 			</div>
 		</header>
 
 		<div class="rolagem">
-			<Documentos aoMudar={(lista) => (documentos = lista)} />
+			<Colecoes {colecoes} {dominios} atual={colecaoId} aoEscolher={escolherColecao} aoCriar={criarColecao} />
+			<Documentos
+				{colecaoId}
+				envio={dominio?.textos.envio}
+				aoMudar={(lista) => {
+					documentos = lista;
+					carregarColecoes();
+				}}
+			/>
 			<Conversas {conversas} atual={conversaId} aoAbrir={abrirConversa} aoNova={() => abrirConversa(null)} />
 		</div>
 
@@ -78,7 +133,8 @@
 		</header>
 		<Chat
 			{conversaId}
-			sugestoes={data.sugestoes}
+			{sugestoes}
+			{colecaoId}
 			intervaloMs={data.intervaloMs}
 			{nomes}
 			{indexados}

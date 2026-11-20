@@ -1,9 +1,13 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { api, ErroApi } from '$lib/api';
 	import type { Documento, Job } from '$lib/tipos';
 
-	let { aoMudar }: { aoMudar: (documentos: Documento[]) => void } = $props();
+	let {
+		aoMudar,
+		colecaoId = null,
+		envio = 'Envie os documentos em PDF.'
+	}: { aoMudar: (documentos: Documento[]) => void; colecaoId?: string | null; envio?: string } = $props();
 
 	let documentos = $state<Documento[]>([]);
 	let jobs = $state<Record<string, Job>>({});
@@ -29,7 +33,7 @@
 	async function atualizar() {
 		clearTimeout(timer);
 		try {
-			documentos = await api.documentos();
+			documentos = await api.documentos(colecaoId);
 			erro = null;
 			const novos: Record<string, Job> = {};
 			await Promise.all(
@@ -59,7 +63,7 @@
 			}
 			envios = [...envios, { id, nome: arquivo.name, erro: null }];
 			try {
-				await api.enviarDocumento(arquivo);
+				await api.enviarDocumento(arquivo, colecaoId);
 				envios = envios.filter((e) => e.id !== id);
 			} catch (e) {
 				const mensagem = e instanceof ErroApi ? e.message : 'Falha no envio.';
@@ -96,7 +100,11 @@
 		return Math.round((100 * job.progress_current) / job.progress_total);
 	}
 
-	onMount(atualizar);
+	// Na troca de coleção, a lista é a da nova coleção.
+	$effect(() => {
+		void colecaoId;
+		atualizar();
+	});
 	onDestroy(() => clearTimeout(timer));
 </script>
 
@@ -146,7 +154,7 @@
 	{/if}
 
 	{#if carregado && !documentos.length && !envios.length}
-		<p class="vazio">Nenhum documento ainda. Envie as demonstrações financeiras em PDF.</p>
+		<p class="vazio" data-testid="documentos-vazio">Nenhum documento ainda. {envio}</p>
 	{/if}
 
 	<ul>
@@ -165,6 +173,9 @@
 						>
 					{/if}
 				</div>
+				{#if doc.aviso_dominio}
+					<p class="aviso" data-testid="aviso-dominio">{doc.aviso_dominio}</p>
+				{/if}
 				<div class="detalhe">
 					{#if emProcesso(doc)}
 						{progresso(doc)}
@@ -391,5 +402,11 @@
 
 	.erro {
 		color: var(--danger);
+	}
+
+	.aviso {
+		margin: 4px 0 0;
+		font-size: 12px;
+		color: var(--warn);
 	}
 </style>

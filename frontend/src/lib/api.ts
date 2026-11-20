@@ -2,7 +2,7 @@
  * Cliente do navegador. Ele só fala com o próprio servidor do SvelteKit (/api/indexador/... e
  * /api/agentes/...), que repassa com o token do cookie. Nenhum token passa por aqui.
  */
-import type { Conversa, Documento, Execucao, Job, Turno } from './tipos';
+import type { Colecao, Conversa, Documento, Dominio, Execucao, Job, Turno } from './tipos';
 
 export class ErroApi extends Error {
 	constructor(
@@ -44,11 +44,17 @@ function json(corpo: unknown): RequestInit {
 }
 
 export const api = {
-	documentos: () => chamar<Documento[]>('indexador', 'api/documents'),
+	dominios: () => chamar<Dominio[]>('indexador', 'api/dominios'),
+	colecoes: () => chamar<Colecao[]>('indexador', 'api/colecoes'),
+	novaColecao: (nome: string, dominio: string) =>
+		chamar<Colecao>('indexador', 'api/colecoes', json({ nome, dominio })),
+	documentos: (colecaoId?: string | null) =>
+		chamar<Documento[]>('indexador', `api/documents${colecaoId ? `?colecao_id=${encodeURIComponent(colecaoId)}` : ''}`),
 	jobs: (docId: string) => chamar<Job[]>('indexador', `api/documents/${docId}/jobs`),
-	enviarDocumento: (arquivo: File) => {
+	enviarDocumento: (arquivo: File, colecaoId?: string | null) => {
 		const dados = new FormData();
 		dados.append('file', arquivo);
+		if (colecaoId) dados.append('colecao_id', colecaoId);
 		return chamar<{ doc_id: string; job_id: string }>('indexador', 'api/documents', { method: 'POST', body: dados });
 	},
 	removerDocumento: (docId: string) => chamar<void>('indexador', `api/documents/${docId}`, { method: 'DELETE' }),
@@ -56,7 +62,8 @@ export const api = {
 	conversas: () => chamar<Conversa[]>('agentes', 'api/conversas'),
 	novaConversa: () => chamar<{ conversa_id: string }>('agentes', 'api/conversas', { method: 'POST' }),
 	conversa: (id: string) => chamar<{ conversa_id: string; turnos: Turno[] }>('agentes', `api/conversas/${id}`),
-	enviarMensagem: (id: string, texto: string) =>
-		chamar<Execucao>('agentes', `api/conversas/${id}/mensagens`, json({ texto, aguardar: false })),
+	enviarMensagem: (id: string, texto: string, colecaoId?: string | null) =>
+		chamar<Execucao>('agentes', `api/conversas/${id}/mensagens`,
+			json({ texto, aguardar: false, ...(colecaoId ? { colecao_id: colecaoId } : {}) })),
 	execucao: (id: string) => chamar<Execucao>('agentes', `api/execucoes/${id}`)
 };

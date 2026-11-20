@@ -13,7 +13,8 @@
 		aoCriarConversa,
 		aoMudarConversas,
 		sugestoes,
-		intervaloMs
+		intervaloMs,
+		colecaoId = null
 	}: {
 		conversaId: string | null;
 		nomes: Record<string, string>;
@@ -25,6 +26,8 @@
 		sugestoes: string[];
 		/** De quanto em quanto tempo o andamento é consultado, do config/ajustes.yaml. */
 		intervaloMs: number;
+		/** A coleção ativa: o pedido roda no domínio dela. */
+		colecaoId?: string | null;
 	} = $props();
 
 
@@ -169,7 +172,7 @@
 				criadaAqui = id;
 				aoCriarConversa(id);
 			}
-			const execucao = await api.enviarMensagem(id, pedido);
+			const execucao = await api.enviarMensagem(id, pedido, colecaoId);
 			texto = '';
 			turnos = [...turnos, turnoDe(execucao)];
 			aoMudarConversas(); // a lista de conversas já mostra o pedido como título
