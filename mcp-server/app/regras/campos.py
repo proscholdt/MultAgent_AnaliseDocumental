@@ -1,13 +1,26 @@
 """Os campos da extração, as categorias da análise e as perguntas do relatório, lidos do pacote de
 domínio (`dominios/<id>/dominio.yaml`, formato em app/pacotes.py).
 
-O pacote é lido uma vez, na importação: o esquema das tools (os `Literal` abaixo) sai dele, e o
-modelo vê esse esquema. Qual pacote: a variável `DOMINIO` (padrão: financeiro); onde ficam os
-pacotes: `DOMINIOS_PATH` (padrão: /app/dominios no contêiner, dominios/ na raiz do projeto).
+Um servidor atende vários domínios. O domínio de cada chamada vem do token do agente (a coleção da
+execução) e fica numa variável de contexto durante a chamada (`usando`). `FIELDS`, `MAIN_FIELDS`,
+`CATEGORIES` e `QUESTIONS` são visões do domínio da chamada atual: quem as importa continua lendo
+como dicionário e tupla, sem saber de domínio. Fora de uma chamada (testes, ferramentas), vale o
+domínio da variável `DOMINIO` (padrão: financeiro).
+
+Nos argumentos das tools, `Campo`, `CampoPrincipal`, `Categoria` e `PerguntaId` são texto marcado:
+o esquema que o agente vê no `tools/list` ganha a lista fechada do domínio dele (`com_opcoes`), e
+a chamada confere o valor contra o domínio da chamada.
 """
 import os
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
-from typing import Literal
+from functools import cache
+from typing import Annotated, Any
+
+from pydantic import AfterValidator
+from pydantic import Field as PydanticField
 
 from app import pacotes
 
@@ -34,11 +47,6 @@ class Field:
     unit: str | None = None
 
 
-def carregar(dominio: str | None = None) -> pacotes.Pacote:
-    """O pacote do domínio, com as exigências dos plugins deste servidor."""
-    return conferir(pacotes.pacote(dominio))
-
-
 def conferir(pacote: pacotes.Pacote) -> pacotes.Pacote:
     """As exigências que o plugin de um pacote faz aos campos dele."""
     if pacote.plugin == "financeiro":
@@ -48,22 +56,154 @@ def conferir(pacote: pacotes.Pacote) -> pacotes.Pacote:
     return pacote
 
 
-DOMINIO = carregar(os.environ.get("DOMINIO") or None)
+def carregar(dominio: str | None = None) -> pacotes.Pacote:
+    """O pacote do domínio, com as exigências dos plugins deste servidor."""
+    return conferir(pacotes.pacote(dominio))
 
-_FIELDS = [Field(name=c.nome, label=c.rotulo, kind=c.tipo, main=c.principal, terms=tuple(c.termos), section=c.secao,
-                 mention=tuple(c.mencao), statement=c.demonstracao, unit=c.unidade) for c in DOMINIO.campos]
-FIELDS: dict[str, Field] = {field.name: field for field in _FIELDS}
-MAIN_FIELDS: tuple[str, ...] = tuple(field.name for field in _FIELDS if field.main)
 
-# Categorias da análise qualitativa e os termos procurados quando o agente diz que o documento não
-# traz aquela informação.
-CATEGORIES: dict[str, tuple[str, tuple[str, ...]]] = {c.nome: (c.rotulo, tuple(c.termos)) for c in DOMINIO.categorias}
+@dataclass(frozen=True)
+class Dominio:
+    """O que as regras e as tools precisam de um domínio, já no formato delas."""
+    pacote: pacotes.Pacote
+    fields: dict[str, Field]
+    main_fields: tuple[str, ...]
+    categories: dict[str, tuple[str, tuple[str, ...]]]
+    questions: dict[str, str]
 
-# As perguntas do relatório. As respostas a elas entram no relatório.
-QUESTIONS: dict[str, str] = {p.id: p.enunciado for p in DOMINIO.perguntas}
+    @property
+    def id(self) -> str:
+        return self.pacote.id
 
-# Os tipos dos argumentos das tools: o que o modelo pode escolher.
-Campo = Literal[tuple(FIELDS)]  # type: ignore[valid-type]
-CampoPrincipal = Literal[MAIN_FIELDS]  # type: ignore[valid-type]
-Categoria = Literal[tuple(CATEGORIES)]  # type: ignore[valid-type]
-PerguntaId = Literal[(*QUESTIONS, "livre")]  # type: ignore[valid-type]
+    @property
+    def financeiro(self) -> bool:
+        return self.pacote.plugin == "financeiro"
+
+    def opcoes(self, tipo: str) -> list[str]:
+        return {"campos": list(self.fields), "campos_principais": list(self.main_fields),
+                "categorias": list(self.categories), "perguntas": [*self.questions, "livre"]}[tipo]
+
+
+@cache
+def dominio(dominio_id: str | None = None) -> Dominio:
+    pacote = carregar(dominio_id)
+    fields = [Field(name=c.nome, label=c.rotulo, kind=c.tipo, main=c.principal, terms=tuple(c.termos),
+                    section=c.secao, mention=tuple(c.mencao), statement=c.demonstracao, unit=c.unidade)
+              for c in pacote.campos]
+    return Dominio(
+        pacote=pacote, fields={field.name: field for field in fields},
+        main_fields=tuple(field.name for field in fields if field.main),
+        # Categorias da análise e os termos procurados quando o agente diz que o documento não as traz.
+        categories={c.nome: (c.rotulo, tuple(c.termos)) for c in pacote.categorias},
+        # As perguntas do relatório. As respostas a elas entram no relatório.
+        questions={p.id: p.enunciado for p in pacote.perguntas})
+
+
+# O domínio do processo (fora de chamada) e o da chamada atual.
+PADRAO_DO_PROCESSO = os.environ.get("DOMINIO") or None
+_ATUAL: ContextVar[str | None] = ContextVar("dominio", default=None)
+
+
+def atual() -> Dominio:
+    return dominio(_ATUAL.get() or PADRAO_DO_PROCESSO)
+
+
+@contextmanager
+def usando(dominio_id: str | None) -> Iterator[Dominio]:
+    """Durante o bloco, as regras e as tools enxergam este domínio."""
+    escolhido = dominio(dominio_id or PADRAO_DO_PROCESSO)  # domínio desconhecido: PacoteInvalido aqui
+    token = _ATUAL.set(escolhido.id)
+    try:
+        yield escolhido
+    finally:
+        _ATUAL.reset(token)
+
+
+class _MapaAtual(Mapping):
+    """Um dicionário do domínio da chamada atual."""
+
+    def __init__(self, pegar: Callable[[Dominio], dict]) -> None:
+        self._pegar = pegar
+
+    def __getitem__(self, key: str) -> Any:
+        return self._pegar(atual())[key]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._pegar(atual()))
+
+    def __len__(self) -> int:
+        return len(self._pegar(atual()))
+
+    def __repr__(self) -> str:
+        return repr(self._pegar(atual()))
+
+
+class _TuplaAtual(Sequence):
+    """Uma tupla do domínio da chamada atual."""
+
+    def __init__(self, pegar: Callable[[Dominio], tuple]) -> None:
+        self._pegar = pegar
+
+    def __getitem__(self, index):  # type: ignore[override]
+        return self._pegar(atual())[index]
+
+    def __len__(self) -> int:
+        return len(self._pegar(atual()))
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._pegar(atual()))
+
+    def __contains__(self, value: object) -> bool:
+        return value in self._pegar(atual())
+
+    def __add__(self, other: tuple) -> tuple:
+        return tuple(self) + tuple(other)
+
+    def __repr__(self) -> str:
+        return repr(self._pegar(atual()))
+
+
+FIELDS: Mapping[str, Field] = _MapaAtual(lambda d: d.fields)
+MAIN_FIELDS: Sequence[str] = _TuplaAtual(lambda d: d.main_fields)
+CATEGORIES: Mapping[str, tuple[str, tuple[str, ...]]] = _MapaAtual(lambda d: d.categories)
+QUESTIONS: Mapping[str, str] = _MapaAtual(lambda d: d.questions)
+
+
+class _DominioDoProcesso:
+    """`DOMINIO` como antes: o pacote do domínio da chamada atual."""
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(atual().pacote, name)
+
+
+DOMINIO: Any = _DominioDoProcesso()
+
+
+def _escolha(tipo: str) -> Any:
+    """Texto que só aceita uma das opções do domínio da chamada; no esquema, marcado para receber
+    a lista fechada do domínio de quem pede o `tools/list`."""
+    def conferir_valor(value: str) -> str:
+        opcoes = atual().opcoes(tipo)
+        if value not in opcoes:
+            raise ValueError(f"{value!r} não existe neste domínio ({atual().id}). Use um de: {', '.join(opcoes)}")
+        return value
+
+    return Annotated[str, AfterValidator(conferir_valor), PydanticField(json_schema_extra={"x-dominio": tipo})]
+
+
+Campo = _escolha("campos")
+CampoPrincipal = _escolha("campos_principais")
+Categoria = _escolha("categorias")
+PerguntaId = _escolha("perguntas")
+
+
+def com_opcoes(schema: Any, dominio_id: str | None = None) -> Any:
+    """O esquema de uma tool com a lista fechada do domínio no lugar de cada marca `x-dominio`."""
+    alvo = dominio(dominio_id or PADRAO_DO_PROCESSO)
+    if isinstance(schema, list):
+        return [com_opcoes(item, dominio_id) for item in schema]
+    if not isinstance(schema, dict):
+        return schema
+    out = {key: com_opcoes(value, dominio_id) for key, value in schema.items() if key != "x-dominio"}
+    if "x-dominio" in schema:
+        out["enum"] = alvo.opcoes(schema["x-dominio"])
+    return out

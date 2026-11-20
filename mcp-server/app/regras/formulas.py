@@ -13,7 +13,7 @@ from decimal import Decimal
 from typing import Any
 
 from app.dominio.periodo import Periodo
-from app.regras.campos import FIELDS, MAIN_FIELDS
+from app.regras.campos import FIELDS, MAIN_FIELDS, atual
 from app.regras.numeros import format_br, in_reais
 
 MARGIN_TOLERANCE = Decimal("0.2")  # pontos percentuais
@@ -340,7 +340,7 @@ class Extraction:
     # -- resultado -----------------------------------------------------------------------------
 
     def indicators(self) -> dict[str, Any]:
-        """Os 8 indicadores, cada um com o informado, o comparável, a variação e o calculado."""
+        """Os campos principais, cada um com o informado, o comparável, a variação e o calculado."""
         result: dict[str, Any] = {}
         self._no_comparable.clear()
         for campo in MAIN_FIELDS:
@@ -362,9 +362,10 @@ class Extraction:
                 "variacao": self.variation(campo),
                 "calculado": computed,
             }
-        self._check_informed_against_calculated()
-        self._check_each_value()
-        self._check_units()
+        if atual().financeiro:  # margem, sinal, seção e unidade monetária: regras das demonstrações
+            self._check_informed_against_calculated()
+            self._check_each_value()
+            self._check_units()
         return result
 
     def support(self) -> dict[str, Any]:

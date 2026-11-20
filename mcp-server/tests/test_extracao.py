@@ -208,7 +208,7 @@ async def fill(governance, not_found=("ebitda", "margem_ebitda", "capex")) -> No
 async def test_closing_needs_every_indicator_to_have_a_value_or_a_not_found(governance):
     await save(governance, cell("receita_liquida", "Receita operacional líquida", "Consolidado - 2022"))
     missing = await rejected(governance, "fechar_extracao", {"doc_id": DOC_ANA})
-    assert "Faltam 7 dos 8 indicadores" in missing["erro"]
+    assert "Faltam 7 dos 8 campos principais" in missing["erro"]
     assert "ebitda: EBITDA" in missing["problemas"] and not any("receita" in p for p in missing["problemas"])
 
 

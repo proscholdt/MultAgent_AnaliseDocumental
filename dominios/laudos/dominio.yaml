@@ -1,0 +1,157 @@
+# Pacote de domínio: laudos de exames laboratoriais. O segundo pacote, feito para provar que o
+# núcleo é genérico: é só este arquivo e os prompts, sem plugin em Python. O formato está em
+# comum/pacotes.py; como criar um domínio, em dominios/README.md.
+#
+# Laudos são dados sensíveis (LGPD). Os documentos de teste deste domínio são fictícios ou modelos
+# publicados por laboratórios, nunca exames de pacientes reais. O sistema lê e organiza os
+# resultados com a página de origem; não faz diagnóstico nem recomenda tratamento.
+
+id: laudos
+nome: Laudos de exames laboratoriais
+descricao: >-
+  Laudos de exames de laboratório (bioquímica, lipidograma, hemograma): cada resultado com o valor,
+  a unidade e a página, os resultados fora da faixa de referência, as observações do laboratório e
+  a comparação entre os exames da coleção, sem diagnóstico.
+plugin: null
+
+documento:
+  tipos:
+  - Laudo de exames laboratoriais
+  reconhecer:
+  - Valores de referência
+  - Valor de referência
+  - Material
+  - Método
+  - Data da coleta
+  - Laudo liberado
+  - Responsável técnico
+  - mg/dL
+
+entidade:
+  nome: paciente
+  rotulo: Paciente
+  plural: Pacientes
+  ausente: Paciente não identificado
+
+recorte:
+  nome: data_coleta
+  rotulo: Data da coleta
+  tipo: data
+  ausente: data da coleta não identificada
+
+metadados:
+- nome: paciente
+  rotulo: Paciente
+  papel: entidade
+  instrucao: nome do paciente como está no laudo
+- nome: data_coleta
+  rotulo: Data da coleta
+  papel: recorte
+  tipo: data
+  instrucao: >-
+    data da coleta do material, no formato dd/mm/aaaa (não a data de liberação nem a de
+    nascimento)
+- nome: laboratorio
+  rotulo: Laboratório
+  instrucao: nome do laboratório que emitiu o laudo
+
+# Os resultados que os agentes extraem. Cada um é um número com a unidade do laudo, lido da célula
+# da tabela (ou da frase "Resultado: 92 mg/dL"), com a página. Um laudo traz só parte dos exames:
+# o que ele não traz é "não encontrado", com a prova de que o termo não aparece.
+campos:
+- nome: glicose
+  rotulo: Glicose
+  tipo: numero
+  unidade: mg/dL
+  principal: true
+  termos: [glicose, glicemia]
+  mencao: [glicose, glicemia]
+- nome: hemoglobina_glicada
+  rotulo: Hemoglobina glicada (HbA1c)
+  tipo: numero
+  unidade: "%"
+  principal: true
+  termos: [hemoglobina glicada, hba1c, glicohemoglobina]
+  mencao: [glicada, hba1c, glicohemoglobina]
+- nome: colesterol_total
+  rotulo: Colesterol total
+  tipo: numero
+  unidade: mg/dL
+  principal: true
+  termos: [colesterol total]
+  mencao: [colesterol total]
+- nome: hdl
+  rotulo: Colesterol HDL
+  tipo: numero
+  unidade: mg/dL
+  principal: true
+  termos: [hdl]
+  mencao: [hdl]
+- nome: ldl
+  rotulo: Colesterol LDL
+  tipo: numero
+  unidade: mg/dL
+  principal: true
+  termos: [ldl]
+  mencao: [ldl]
+- nome: triglicerideos
+  rotulo: Triglicerídeos
+  tipo: numero
+  unidade: mg/dL
+  principal: true
+  termos: [triglicer]
+  mencao: [triglicer]
+- nome: creatinina
+  rotulo: Creatinina
+  tipo: numero
+  unidade: mg/dL
+  principal: true
+  termos: [creatinina]
+  mencao: [creatinina]
+- nome: hemoglobina
+  rotulo: Hemoglobina
+  tipo: numero
+  unidade: g/dL
+  principal: true
+  termos: [hemoglobina]
+  mencao: [hemoglobina]
+
+categorias:
+- nome: fora_da_referencia
+  rotulo: Resultados fora da faixa de referência
+  termos: [referência]
+- nome: observacao
+  rotulo: Observações do laboratório
+  termos: [observação, observações, nota, obs.]
+- nome: recomendacao
+  rotulo: Orientações do laudo
+  termos: [recomenda, repetir, jejum, orientação]
+
+perguntas:
+- id: p1
+  enunciado: Algum resultado está fora da faixa de referência? Qual, e de qual paciente?
+- id: p2
+  enunciado: Qual paciente tem a maior glicose?
+- id: p3
+  enunciado: Qual é o perfil lipídico (colesterol total, HDL, LDL e triglicerídeos) de cada paciente?
+- id: p4
+  enunciado: O laboratório fez alguma observação sobre a amostra, o método ou a necessidade de repetir o exame?
+
+textos:
+  titulo: Análise de Laudos
+  envio: Envie os laudos de exames em PDF.
+  fora_do_escopo: >-
+    Isso está fora do escopo deste sistema. Ele lê os laudos de exames enviados e responde sobre os
+    resultados, sempre com a página de origem; não faz diagnóstico nem recomenda tratamento.
+    Escolha uma das opções ou escreva a sua pergunta.
+  opcoes:
+  - titulo: Ver o que está fora da referência
+    exemplo: Algum resultado está fora da faixa de referência?
+  - titulo: Comparar os pacientes
+    exemplo: Qual paciente tem a maior glicose?
+  - titulo: Ver o perfil lipídico
+    exemplo: Qual o colesterol LDL de cada paciente?
+  - titulo: Gerar o relatório de um paciente
+    exemplo: Gere o relatório da Maria
+  - titulo: Gerar o relatório da coleção
+    exemplo: Gere o relatório consolidado

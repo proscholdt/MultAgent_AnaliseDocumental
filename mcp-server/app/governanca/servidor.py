@@ -21,6 +21,7 @@ from app import telemetria
 from app.governanca.catalogo import Call, Deps, ToolSpec
 from app.governanca.erros import AuthError, IndexerAuthError, IndexerError, IndexerNotFound, ToolRejected
 from app.governanca.identidade import Caller, identify
+from app.regras.campos import usando
 
 log = logging.getLogger(__name__)
 
@@ -51,7 +52,7 @@ class Governance:
         caller = await self._caller(headers)
         policy = self._deps.policies.current()
         allowed = policy.tools_of(caller.agent)
-        tools = [spec.definition() for name, spec in self._tools.items() if name in allowed]
+        tools = [spec.definition(caller.dominio) for name, spec in self._tools.items() if name in allowed]
         await self._deps.audit.record(caller, kind="lista", outcome="ok", policy_digest=policy.digest,
                                       detail=f"{len(tools)} tools")
         return tools
@@ -95,6 +96,11 @@ class Governance:
             message = (f"O agente '{caller.agent}' atingiu o limite de {limit} chamadas nesta execução. "
                        "Encerre com o que já foi feito.")
             return await finish("recusada", {"erro": message}, "limite de chamadas")
+        # A validação e a tool enxergam o domínio da execução (campos, categorias, perguntas).
+        with usando(caller.dominio):
+            return await self._run(spec, caller, arguments, finish, name)
+
+    async def _run(self, spec: Any, caller: Caller, arguments: Any, finish: Any, name: str) -> t.CallToolResult:
         try:
             args = spec.args.model_validate(arguments or {})
         except ValidationError as exc:

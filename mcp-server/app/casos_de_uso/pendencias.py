@@ -25,7 +25,7 @@ async def gather(call: Call) -> list[DocState]:
     """O estado de cada documento indexado do usuário, em ordem de nome."""
     store: Repositorio = call.deps.store
     user_id = call.caller.user_id
-    listed = await call.deps.indexer.documents(call.caller.user_token)
+    listed = await call.deps.indexer.documents(call.caller.user_token, call.caller.colecao_id)
     states = []
     for meta in listed:
         if meta.get("status") != "indexed":

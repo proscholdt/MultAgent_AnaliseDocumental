@@ -74,28 +74,13 @@ def test_o_plugin_financeiro_exige_os_campos_das_formulas(tmp_path):
         conferir(pacote)
 
 
-def test_um_dominio_sem_plugin_carrega_com_campos_proprios(tmp_path):
+def test_o_pacote_laudos_do_repositorio_carrega_sem_plugin():
     """Um domínio novo é só uma pasta: sem as fórmulas financeiras, com a própria entidade."""
-    def laudo(dados):
-        dados.update(id="laudos", plugin=None, entidade={"nome": "paciente", "rotulo": "Paciente", "plural": "Pacientes"},
-                     recorte={"nome": "data_exame", "rotulo": "Data do exame", "tipo": "data"})
-        dados["metadados"] = [
-            {"nome": "paciente", "rotulo": "Paciente", "papel": "entidade", "instrucao": "nome do paciente"},
-            {"nome": "data_exame", "rotulo": "Data do exame", "papel": "recorte", "tipo": "data", "instrucao": "data"}]
-        dados["campos"] = [{"nome": "glicose", "rotulo": "Glicose", "tipo": "numero", "principal": True,
-                            "unidade": "mg/dL"}]
-
-    raiz = _copia(tmp_path).parent
-    shutil.copytree(raiz / "financeiro", raiz / "laudos")
-    arquivo = raiz / "laudos" / "dominio.yaml"
-    dados = yaml.safe_load(arquivo.read_text(encoding="utf-8"))
-    laudo(dados)
-    arquivo.write_text(yaml.safe_dump(dados, allow_unicode=True), encoding="utf-8")
-    todos = pacotes.todos.__wrapped__(raiz)  # sem o cache: outra pasta
-    assert set(todos) == {"financeiro", "laudos"}
-    laudos = conferir(todos["laudos"])
-    assert [c.nome for c in laudos.campos] == ["glicose"] and laudos.campos[0].unidade == "mg/dL"
-    assert laudos.metadado("entidade").nome == "paciente"
+    laudos = carregar("laudos")
+    assert laudos.plugin is None and laudos.metadado("entidade").nome == "paciente"
+    assert laudos.recorte.tipo == "data" and laudos.metadado("recorte").nome == "data_coleta"
+    assert {c.unidade for c in laudos.campos} >= {"mg/dL", "g/dL", "%"}
+    assert not CAMPOS_DAS_FORMULAS & {c.nome for c in laudos.campos}
 
 
 def test_sem_o_pacote_padrao_nada_sobe(tmp_path):

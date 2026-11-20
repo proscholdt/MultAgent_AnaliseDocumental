@@ -17,6 +17,7 @@ from dataclasses import dataclass
 
 import jwt
 
+from app import pacotes
 from app.config import Settings
 from app.dados.indexador import IndexerClient
 from app.governanca import chaves
@@ -32,6 +33,10 @@ class Caller:
     run_id: str
     user_id: str
     user_token: str
+    # O domínio e a coleção da execução (claims `dom` e `col` do token do agente). Sem eles: o domínio
+    # padrão e todos os documentos do usuário, como antes dos pacotes de domínio.
+    dominio: str | None = None
+    colecao_id: str | None = None
 
 
 def bearer(headers: Mapping[str, str]) -> str | None:
@@ -97,4 +102,8 @@ async def identify(headers: Mapping[str, str], settings: Settings, users: UserRe
     user_id = await users.resolve(user_token)
     if claims["usr"] != user_id:
         raise AuthError(403, "O token do agente foi emitido para outro usuário.")
-    return Caller(agent=claims["agent"], run_id=str(claims["run_id"]), user_id=user_id, user_token=user_token)
+    dominio = claims.get("dom") or None
+    if dominio is not None and dominio not in pacotes.todos():
+        raise AuthError(403, f"O token do agente traz um domínio desconhecido: {dominio!r}.")
+    return Caller(agent=claims["agent"], run_id=str(claims["run_id"]), user_id=user_id, user_token=user_token,
+                  dominio=dominio, colecao_id=claims.get("col") or None)

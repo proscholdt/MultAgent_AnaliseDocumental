@@ -133,7 +133,9 @@ class FakeIndexer:
         if path == "/auth/me":
             return httpx.Response(200, json=user)
         if path == "/api/documents":
-            return httpx.Response(200, json=[doc["meta"] for doc in mine.values()])
+            colecao = request.url.params.get("colecao_id")
+            return httpx.Response(200, json=[doc["meta"] for doc in mine.values()
+                                             if colecao is None or doc["meta"].get("collection_id") == colecao])
         if path == "/api/search":
             return httpx.Response(200, json={"query": "", "hits": self._search(mine, json.loads(request.content))})
         parts = path.strip("/").split("/")  # api / documents / {doc_id} [/ chunks]
@@ -233,8 +235,10 @@ def agent_token(agent: str, user_id: str = ANA, run_id: str = "exec-1", *, secre
     return jwt.encode(claims, secret, algorithm="HS256")
 
 
-def headers(agent: str, user_token: str = "tok-ana", user_id: str = ANA, run_id: str = "exec-1") -> dict[str, str]:
-    return {"authorization": f"Bearer {agent_token(agent, user_id, run_id)}", "x-user-token": user_token}
+def headers(agent: str, user_token: str = "tok-ana", user_id: str = ANA, run_id: str = "exec-1",
+            **claims: Any) -> dict[str, str]:
+    """Com `dom` e `col`: o domínio e a coleção da execução, como o orquestrador emite."""
+    return {"authorization": f"Bearer {agent_token(agent, user_id, run_id, **claims)}", "x-user-token": user_token}
 
 
 TEST_POLICY = """

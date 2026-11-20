@@ -19,7 +19,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from decimal import Decimal
 
-from app.regras.campos import FIELDS, MAIN_FIELDS
+from app.regras.campos import FIELDS, MAIN_FIELDS, atual
 from app.regras.formulas import Extraction
 from app.regras.numeros import format_br, in_reais, to_decimal
 from app.regras.tabelas import parse_table
@@ -343,6 +343,14 @@ def find(chunks: Iterable[dict], period: str | None, indicators: Iterable[Indica
     indicators = list(indicators)
     chunks = list(chunks)
     by_column = _numbers_by_column(chunks)
+    # As regras de dinheiro (conta em R$, variação contra a extração) e a de projeção para o passado
+    # (guidance, exercício) são das demonstrações. As de data e de ano valem para qualquer documento.
+    rules = [("conta_na_frase", _sentence_arithmetic),
+             ("variacao_contra_extracao", lambda s: _against_extraction(s, indicators)),
+             ("ano_comparado_com_ele_mesmo", _same_year_comparison),
+             ("projecao_para_o_passado", lambda s: _projection_in_the_past(s, year))]
+    if not atual().financeiro:
+        rules = [rule for rule in rules if rule[0] == "ano_comparado_com_ele_mesmo"]
     out: list[Candidate] = []
     for chunk in chunks:
         text = chunk.get("text") or ""
@@ -350,10 +358,7 @@ def find(chunks: Iterable[dict], period: str | None, indicators: Iterable[Indica
         for sentence in sentences(text):
             if len(sentence) > _SENTENCE_MAX:
                 continue
-            for rule, check in (("conta_na_frase", _sentence_arithmetic),
-                                ("variacao_contra_extracao", lambda s: _against_extraction(s, indicators)),
-                                ("ano_comparado_com_ele_mesmo", _same_year_comparison),
-                                ("projecao_para_o_passado", lambda s: _projection_in_the_past(s, year))):
+            for rule, check in rules:
                 reason = check(sentence)
                 if reason:
                     out.append(Candidate(index, page, rule, reason, sentence))

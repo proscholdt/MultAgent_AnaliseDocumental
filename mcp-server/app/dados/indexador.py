@@ -45,17 +45,19 @@ class IndexerClient:
     async def me(self, token: str) -> dict[str, Any]:
         return await self._request("GET", "/auth/me", token)
 
-    async def documents(self, token: str) -> list[dict[str, Any]]:
-        return await self._request("GET", "/api/documents", token)
+    async def documents(self, token: str, colecao_id: str | None = None) -> list[dict[str, Any]]:
+        """Os documentos do usuário; com a coleção da execução, só os dela."""
+        params = {"colecao_id": colecao_id} if colecao_id else None
+        return await self._request("GET", "/api/documents", token, params=params)
 
     async def document(self, token: str, doc_id: str) -> dict[str, Any]:
         return await self._request("GET", f"/api/documents/{doc_id}", token)
 
     async def search(self, token: str, *, query: str, limit: int, doc_id: str | None = None,
                      chunk_type: str | None = None, page_from: int | None = None,
-                     page_to: int | None = None) -> list[dict[str, Any]]:
+                     page_to: int | None = None, colecao_id: str | None = None) -> list[dict[str, Any]]:
         body = {"query": query, "limit": limit, "doc_id": doc_id, "chunk_type": chunk_type,
-                "page_from": page_from, "page_to": page_to}
+                "page_from": page_from, "page_to": page_to, "colecao_id": colecao_id}
         result = await self._request("POST", "/api/search", token,
                                      json={key: value for key, value in body.items() if value is not None})
         return result["hits"]

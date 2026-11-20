@@ -203,7 +203,7 @@
     "name": "descartar_candidato"
   },
   "fechar_extracao": {
-    "description": "Fecha a extração de um documento. Confere que os 8 indicadores têm valor ou \"não encontrado\", calcula o que os valores guardados permitem (variação contra o ano anterior, margem, EBITDA, dívida líquida, alavancagem, capex), roda as validações automáticas e publica o JSON. Se faltar campo, o erro lista quais. Indicador que a empresa não informa precisa dos valores de apoio para o servidor calcular, e o EBITDA precisa deles mesmo quando é informado, para ser conferido: se faltarem, o erro diz quais gravar.",
+    "description": "Fecha a extração de um documento. Confere que os campos principais têm valor ou \"não encontrado\", calcula o que os valores guardados permitem (variação contra o ano anterior, margem, EBITDA, dívida líquida, alavancagem, capex), roda as validações automáticas e publica o JSON. Se faltar campo, o erro lista quais. Indicador que a empresa não informa precisa dos valores de apoio para o servidor calcular, e o EBITDA precisa deles mesmo quando é informado, para ser conferido: se faltarem, o erro diz quais gravar.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -521,7 +521,7 @@
       "additionalProperties": false,
       "properties": {
         "campo": {
-          "description": "Qual indicador. Os 8 primeiros são os do relatório; os demais são valores de apoio, usados pelo servidor para calcular EBITDA, dívida líquida e capex quando a empresa não os informa.",
+          "description": "Qual campo. Os principais são os do relatório; os demais (quando há) são valores de apoio, usados pelo servidor nos cálculos.",
           "enum": [
             "receita_liquida",
             "ebitda",
@@ -600,8 +600,15 @@
           "type": "string"
         },
         "periodo": {
-          "description": "Período do valor: o ano com 4 dígitos (ex.: 2022) num documento anual; o trimestre (3T2025) ou o acumulado do ano (9M2025) num trimestral.",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Período do valor, nos domínios com período contábil: o ano com 4 dígitos (ex.: 2022) num documento anual; o trimestre (3T2025) ou o acumulado do ano (9M2025) num trimestral. Nos outros, null: vale a data do documento."
         },
         "rotulo_coluna": {
           "anyOf": [

@@ -19,8 +19,8 @@ def analysis_view(items: list[Any]) -> dict[str, list[dict[str, Any]]]:
     for item in items:
         if item.status == "encontrado":
             # Continuidade operacional gravada como guidance antes da regra: é risco (ver GOING_CONCERN).
-            categoria = "risco" if item.categoria == "guidance" and GOING_CONCERN.search(item.citacao or "") \
-                else item.categoria
+            categoria = "risco" if item.categoria == "guidance" and "risco" in grouped \
+                and GOING_CONCERN.search(item.citacao or "") else item.categoria
             grouped[categoria].append({
                 "afirmacao": item.afirmacao, "citacao": item.citacao, "pagina": item.pagina,
                 "chunk_index": item.chunk_index, "secao": item.secao, "fonte": item.fonte, "tom": item.tom})
@@ -36,5 +36,6 @@ def analysis_view(items: list[Any]) -> dict[str, list[dict[str, Any]]]:
             return 0
         return 1 if "receita" in (entry.get("citacao") or "").casefold() else 2
 
-    grouped["motivo_resultado"].sort(key=revenue_first)
+    if "motivo_resultado" in grouped:
+        grouped["motivo_resultado"].sort(key=revenue_first)
     return grouped
