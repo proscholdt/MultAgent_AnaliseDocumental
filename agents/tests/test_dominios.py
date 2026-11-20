@@ -77,6 +77,16 @@ async def test_a_message_in_a_collection_runs_in_its_domain_and_the_next_one_inh
     assert "não faz diagnóstico" in second["mensagem"]  # sem colecao_id: a da mensagem anterior
 
 
+async def test_a_request_without_collection_runs_in_the_default_one(http, model):
+    # A mesma regra do envio sem coleção no indexador: a primeira coleção do domínio padrão. Sem
+    # ela, as respostas e o relatório seriam de "todos os documentos", misturando laudos e balanços.
+    model.scripts["orquestrador"] = [[decide(terminado=True, intencao="fora_do_escopo")]]
+    run = (await http.post("/api/perguntas", headers=auth(), json={"pergunta": "me conta uma piada"})).json()
+    assert (run["colecao_id"], run["dominio"]) == ("col-demonstracoes", "financeiro"), run
+    alone = (await http.post("/api/perguntas", headers=auth(BRUNO), json={"pergunta": "me conta uma piada"})).json()
+    assert (alone["colecao_id"], alone["dominio"]) == (None, "financeiro")  # sem coleção: como antes delas
+
+
 async def test_a_collection_of_someone_else_is_not_found(http, model):
     missing = await http.post("/api/perguntas", headers=auth(BRUNO),
                               json={"pergunta": "Qual a glicose da Maria?", "colecao_id": "col-laudos"})

@@ -63,13 +63,15 @@ async def main() -> int:
     parser.add_argument("--texto", required=True, help="a mensagem, como seria escrita no chat")
     parser.add_argument("--conversa", help="continua esta conversa (o id que a resposta anterior mostrou)")
     parser.add_argument("--api", default="http://localhost:8200", help="endereço da API do orquestrador")
+    parser.add_argument("--colecao", default=os.environ.get("AVALIACAO_COLECAO"),
+                        help="id da coleção; sem ela, a da conversa ou a coleção padrão do usuário")
     args = parser.parse_args()
 
-    identity = await login(settings(), args.usuario, args.senha, "perguntar")
+    identity = await login(settings(), args.usuario, args.senha, "perguntar", colecao=args.colecao)
     async with httpx.AsyncClient(base_url=args.api, timeout=None,
                                  headers={"Authorization": f"Bearer {identity.user_token}"}) as http:
         conversation = args.conversa or (await http.post("/api/conversas")).json()["conversa_id"]
-        response = await http.post(f"/api/conversas/{conversation}/mensagens", json={"texto": args.texto})
+        response = await http.post(f"/api/conversas/{conversation}/mensagens", json={"texto": args.texto, "colecao_id": args.colecao})
         if response.status_code >= 400:
             sys.exit(f"O orquestrador recusou ({response.status_code}): {response.text[:300]}")
         run = response.json()

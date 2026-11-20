@@ -71,8 +71,8 @@ async def main() -> int:
         if args.zerar_entre:
             await asyncio.to_thread(subprocess.run, ["make", "zerar-base", "CONFIRMA=sim"], cwd=ROOT.parent, check=True)
             await asyncio.sleep(15)  # os serviços voltando
-        identity = await login(config, args.usuario, args.senha, f"baseline-{numero}")
-        execucao = await run_report(args.api, identity.user_token)
+        identity = await login(config, args.usuario, args.senha, f"baseline-{numero}", colecao=args.colecao)
+        execucao = await run_report(args.api, identity.user_token, identity.colecao_id)
         avaliacao = evaluate(gabarito, await snapshot(config, identity))
         rodadas.append(rodada(avaliacao, execucao))
         print(f"rodada {numero}: " + ", ".join(f"{k}={v}" for k, v in rodadas[-1].items() if k != "execucao_id"))

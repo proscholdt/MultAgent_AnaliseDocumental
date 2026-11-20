@@ -9,7 +9,13 @@ import httpx
 import jwt
 from fastapi import HTTPException, status
 
+from app import pacotes
 from app.config import Settings
+
+
+def default_of(collections: list[dict]) -> dict | None:
+    """A primeira coleção do domínio padrão, na lista do indexador (em ordem de criação)."""
+    return next((c for c in collections if c.get("dominio") == pacotes.PADRAO), None)
 
 
 class Users:
@@ -31,8 +37,8 @@ class Users:
                                 f"O indexador respondeu {response.status_code} ao conferir o usuário.")
         return response.json()["user_id"]
 
-    async def collection(self, token: str, colecao_id: str) -> dict:
-        """A coleção do usuário (com o domínio dela). Coleção de outro usuário, ou que não existe: 404."""
+    async def collections(self, token: str) -> list[dict]:
+        """As coleções do usuário, na ordem em que foram criadas, cada uma com o domínio dela."""
         try:
             async with httpx.AsyncClient(base_url=self.settings.indexer_url, transport=self.transport,
                                          timeout=15) as http:
@@ -43,10 +49,20 @@ class Users:
         if response.status_code != 200:
             raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE,
                                 f"O indexador respondeu {response.status_code} ao listar as coleções.")
-        found = next((c for c in response.json() if c.get("id") == colecao_id), None)
+        return response.json()
+
+    async def collection(self, token: str, colecao_id: str) -> dict:
+        """A coleção do usuário (com o domínio dela). Coleção de outro usuário, ou que não existe: 404."""
+        found = next((c for c in await self.collections(token) if c.get("id") == colecao_id), None)
         if found is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Coleção não encontrada.")
         return found
+
+    async def default_collection(self, token: str) -> dict | None:
+        """A coleção de um pedido que não escolhe uma: a mesma em que o indexador põe o documento
+        enviado sem coleção (a primeira do domínio padrão). Sem nenhuma: None, e a execução vê todos
+        os documentos do usuário, como antes das coleções."""
+        return default_of(await self.collections(token))
 
     def require_time(self, token: str) -> None:
         """Recusa começar uma execução com o token perto de vencer: as buscas falhariam no meio.

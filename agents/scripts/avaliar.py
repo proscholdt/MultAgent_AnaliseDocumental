@@ -2,8 +2,9 @@
 
     uv run python scripts/avaliar.py --usuario <usuário do indexador> --senha <senha>
 
-Lê a base pelo servidor MCP (identidade "sistema", só leitura), compara com
-avaliacao/gabarito.json e imprime as métricas. Guarda o retrato em avaliacao/resultados/ e,
+Lê a base de uma coleção pelo servidor MCP (identidade "sistema", só leitura; `--colecao`, ou a
+coleção padrão do usuário), compara com o gabarito do domínio dela (avaliacao/gabarito.json no
+financeiro, dominios/<id>/avaliacao/gabarito.json nos outros) e imprime as métricas. Guarda o retrato em avaliacao/resultados/ e,
 se houver um retrato anterior, diz o quanto as duas execuções coincidem.
 
     --salvar-em <arquivo.md>   grava também a tabela de resultados em Markdown
@@ -17,6 +18,7 @@ from pathlib import Path
 from base import ROOT, arguments, login, settings, snapshot
 
 from app.ferramentas.avaliacao import evaluate, render, stability
+from app.ferramentas.avaliacao_automatica import gabarito_path
 
 RESULTS = ROOT / "avaliacao" / "resultados"
 
@@ -28,9 +30,10 @@ async def main() -> int:
     args = parser.parse_args()
 
     config = settings()
-    identity = await login(config, args.usuario, args.senha, f"avaliacao-{datetime.now(UTC):%Y%m%d-%H%M%S}")
+    identity = await login(config, args.usuario, args.senha, f"avaliacao-{datetime.now(UTC):%Y%m%d-%H%M%S}",
+                           colecao=args.colecao)
     current = await snapshot(config, identity)
-    gabarito = json.loads((ROOT / "avaliacao" / "gabarito.json").read_text(encoding="utf-8"))
+    gabarito = json.loads((ROOT / gabarito_path(config, identity.dominio)).read_text(encoding="utf-8"))
     report = evaluate(gabarito, current)
     table = render(report)
     print(table)

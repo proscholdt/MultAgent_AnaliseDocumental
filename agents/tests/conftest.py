@@ -307,8 +307,10 @@ def fake_indexer(request: httpx.Request) -> httpx.Response:
         claims = jwt.decode(token, "segredo-do-indexador-nos-testes-0123456789", algorithms=["HS256"])
     except jwt.PyJWTError:
         return httpx.Response(401, json={"detail": "Token inválido"})
-    if request.url.path == "/api/colecoes":  # a Ana tem uma coleção de laudos; o Bruno, nenhuma
-        mine = [{"id": "col-laudos", "nome": "Exames", "dominio": "laudos"}] if claims["sub"] == ANA else []
+    if request.url.path == "/api/colecoes":  # a Ana tem uma de laudos e uma do financeiro; o Bruno, nenhuma
+        mine = [{"id": "col-laudos", "nome": "Exames", "dominio": "laudos"},
+                {"id": "col-demonstracoes", "nome": "Demonstrações", "dominio": "financeiro"}] \
+            if claims["sub"] == ANA else []
         return httpx.Response(200, json=mine)
     return httpx.Response(200, json={"user_id": claims["sub"], "username": claims["sub"]})
 

@@ -56,7 +56,8 @@ async def main() -> int:
     args = parser.parse_args()
 
     config = settings()
-    identity = await login(config, args.usuario, args.senha, f"pendencias-{datetime.now(UTC):%Y%m%d-%H%M%S}")
+    identity = await login(config, args.usuario, args.senha, f"pendencias-{datetime.now(UTC):%Y%m%d-%H%M%S}",
+                           colecao=args.colecao)
     async with mcp.connect(config, mcp.SYSTEM, identity) as server:
         arguments_ = {}
         if args.doc:

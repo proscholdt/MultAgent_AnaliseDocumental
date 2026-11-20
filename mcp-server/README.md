@@ -32,7 +32,9 @@ coleção da execução (`dom`, `col`; sem eles, o domínio padrão e todos os d
 - **O que o modelo vê.** No `tools/list`, os argumentos `campo`, `categoria` e `pergunta_id` vêm com
   a lista fechada do domínio de quem pede; a chamada confere o valor contra o domínio e devolve as
   opções no erro. Para o financeiro, o esquema é o de antes (`tests/contratos/tools.json`).
-- **O que ele alcança.** Listagem, busca, pendências e acesso a documento ficam na coleção.
+- **O que ele alcança.** Listagem, busca, pendências e acesso a documento ficam na coleção. As
+  respostas e o relatório consolidado também são da coleção (`colecao_id`): a `p1` dos laudos não
+  é a `p1` do financeiro.
 - **O que vale.** Os portões genéricos valem para todos. As regras das demonstrações (período na
   coluna, escopo, valores de apoio, fórmulas, validações, as inconsistências de dinheiro) só no
   pacote com `plugin: financeiro`. Um campo `numero` lê "92 mg/dL" da célula e recusa outra

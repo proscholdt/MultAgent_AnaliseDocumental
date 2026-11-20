@@ -53,16 +53,20 @@ def _publish(summary: dict[str, Any], tipo: str) -> None:
             f"avaliacao.{medida}", acertos if medida == "invencao" else round(acertos / de, 4))
 
 
+def gabarito_path(settings: Settings, dominio: str | None) -> Path:
+    """O gabarito é do domínio: o do pacote (dominios/<id>/avaliacao/gabarito.json) ou, no padrão,
+    o configurado."""
+    if dominio and dominio != pacotes.PADRAO:
+        return pacotes.arquivo_do_pacote(dominio, "avaliacao/gabarito.json") or \
+            Path(f"dominios/{dominio}/avaliacao/gabarito.json")
+    return settings.gabarito_path
+
+
 async def avaliar(settings: Settings, identity: Identity, tipo: str, doc_id: str | None) -> dict[str, Any] | None:
     """A nota do relatório que acabou de terminar, ou None se a avaliação está desligada."""
     if not settings.avaliar_relatorios:
         return None
-    # O gabarito é do domínio: o do pacote (dominios/<id>/avaliacao/gabarito.json) ou, no padrão, o
-    # configurado.
-    path = settings.gabarito_path
-    if identity.dominio and identity.dominio != pacotes.PADRAO:
-        path = pacotes.arquivo_do_pacote(identity.dominio, "avaliacao/gabarito.json") or \
-            Path(f"dominios/{identity.dominio}/avaliacao/gabarito.json")
+    path = gabarito_path(settings, identity.dominio)
     try:
         gabarito = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError:

@@ -170,7 +170,8 @@ async def salvar_resposta(call: Call, args: SalvarResposta) -> dict[str, Any]:
     if question_id == "livre":
         question_id = "livre:" + hashlib.sha256(question.casefold().encode("utf-8")).hexdigest()[:10]
     await call.deps.store.save_answer(Answer(
-        user_id=call.caller.user_id, run_id=call.caller.run_id, pergunta_id=question_id, pergunta=question,
+        user_id=call.caller.user_id, colecao_id=call.caller.colecao_id, run_id=call.caller.run_id,
+        pergunta_id=question_id, pergunta=question,
         texto=raw, renderizado=text, citacoes=sources))
     return {"salva": {"pergunta_id": question_id, "pergunta": question}, "resposta": text,
             "fontes": list(dict.fromkeys(f"{s['arquivo']}, p. {s['pagina']}" for s in sources))}
@@ -184,7 +185,7 @@ class LerRespostas(Args):
     Lê as respostas guardadas do usuário, já com os valores e as fontes no lugar dos marcadores, e o
     enunciado oficial das cinco perguntas do relatório (p1 a p5), dizendo quais já têm resposta.""")
 async def ler_respostas(call: Call, args: LerRespostas) -> dict[str, Any]:
-    answers = await call.deps.store.answers(call.caller.user_id)
+    answers = await call.deps.store.answers(call.caller.user_id, call.caller.colecao_id)
     answered = {answer.pergunta_id for answer in answers}
     return {"perguntas_do_relatorio": [{"pergunta_id": question_id, "pergunta": question,
                                         "respondida": question_id in answered}

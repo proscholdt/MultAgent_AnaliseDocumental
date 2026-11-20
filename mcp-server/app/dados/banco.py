@@ -11,6 +11,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+from sqlalchemy import Connection, inspect, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
@@ -43,6 +44,21 @@ async def ensure_database(url: str) -> None:
         await connection.close()
 
 
+def _add_missing_columns(connection: Connection) -> None:
+    """SQLite de antes de uma coluna nova (o `create_all` não mexe em tabela que já existe): a
+    coluna anulável entra vazia. No Postgres, quem faz isso são as migrações."""
+    inspector = inspect(connection)
+    for table in Base.metadata.sorted_tables:
+        if not inspector.has_table(table.name):
+            continue
+        existing = {column["name"] for column in inspector.get_columns(table.name)}
+        for column in table.columns:
+            if column.name not in existing and column.nullable:
+                kind = column.type.compile(dialect=connection.dialect)
+                connection.execute(text(f'ALTER TABLE "{table.name}" ADD COLUMN "{column.name}" {kind}'))
+                log.info("coluna %s.%s acrescentada", table.name, column.name)
+
+
 def upgrade(url: str) -> None:
     """Aplica as migrações até a última. Roda numa thread: o env.py do Alembic tem o próprio laço."""
     from alembic import command
@@ -69,6 +85,7 @@ class Database:
         if is_sqlite(self.url):
             async with self.engine.begin() as connection:
                 await connection.run_sync(Base.metadata.create_all)
+                await connection.run_sync(_add_missing_columns)
             return
         await ensure_database(self.url)
         await asyncio.to_thread(upgrade, self.url)

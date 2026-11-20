@@ -128,6 +128,9 @@ class Answer(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[str] = mapped_column(String(64))
+    # As perguntas comparam os documentos de uma coleção: a p1 dos laudos não é a p1 do financeiro.
+    # Vazio: execução sem coleção (todos os documentos do usuário).
+    colecao_id: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
     run_id: Mapped[str] = mapped_column(String(64))
     pergunta_id: Mapped[str] = mapped_column(String(40))
     pergunta: Mapped[str] = mapped_column(Text)
@@ -165,6 +168,7 @@ class Report(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[str] = mapped_column(String(64))
+    colecao_id: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)  # um por coleção
     run_id: Mapped[str] = mapped_column(String(64))
     markdown: Mapped[str] = mapped_column(Text)
     at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)

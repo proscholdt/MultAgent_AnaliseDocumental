@@ -21,6 +21,11 @@ from app.governanca.identidade import Caller
 from app.regras.formulas import AlertDraft
 
 
+def _same_collection(column: Any, colecao_id: str | None) -> Any:
+    """Respostas e relatório consolidado são de uma coleção (sem coleção: os de antes delas)."""
+    return column.is_(None) if colecao_id is None else column == colecao_id
+
+
 class Store:
     def __init__(self, database: Database) -> None:
         self._db = database
@@ -117,13 +122,14 @@ class Store:
     async def save_answer(self, row: Answer) -> None:
         async with self._db.session() as session:
             await session.execute(update(Answer).where(
-                Answer.user_id == row.user_id, Answer.pergunta_id == row.pergunta_id,
-                Answer.ativo.is_(True)).values(ativo=False))
+                Answer.user_id == row.user_id, _same_collection(Answer.colecao_id, row.colecao_id),
+                Answer.pergunta_id == row.pergunta_id, Answer.ativo.is_(True)).values(ativo=False))
             session.add(row)
 
-    async def answers(self, user_id: str) -> list[Answer]:
+    async def answers(self, user_id: str, colecao_id: str | None) -> list[Answer]:
         async with self._db.session() as session:
-            query = select(Answer).where(Answer.user_id == user_id, Answer.ativo.is_(True)).order_by(Answer.pergunta_id)
+            query = (select(Answer).where(Answer.user_id == user_id, _same_collection(Answer.colecao_id, colecao_id),
+                                          Answer.ativo.is_(True)).order_by(Answer.pergunta_id))
             return list((await session.execute(query)).scalars())
 
     async def save_summary(self, row: Summary) -> None:
@@ -141,11 +147,13 @@ class Store:
 
     async def save_report(self, caller: Caller, markdown: str) -> None:
         async with self._db.session() as session:
-            session.add(Report(user_id=caller.user_id, run_id=caller.run_id, markdown=markdown))
+            session.add(Report(user_id=caller.user_id, colecao_id=caller.colecao_id, run_id=caller.run_id,
+                               markdown=markdown))
 
-    async def report(self, user_id: str) -> Report | None:
+    async def report(self, user_id: str, colecao_id: str | None) -> Report | None:
         async with self._db.session() as session:
-            query = select(Report).where(Report.user_id == user_id).order_by(Report.id.desc()).limit(1)
+            query = (select(Report).where(Report.user_id == user_id, _same_collection(Report.colecao_id, colecao_id))
+                     .order_by(Report.id.desc()).limit(1))
             return (await session.execute(query)).scalar_one_or_none()
 
     async def save_company_report(self, caller: Caller, doc_id: str, fingerprint: str, markdown: str) -> None:

@@ -52,6 +52,15 @@ continuam sendo os do domínio financeiro: separá-los em "método" e "vocabulá
 que dá a nota máxima no gabarito, e só uma rodada paga diria se piorou. O domínio de laudos traz os
 seus prompts no modo `substitui`. A separação fina fica para quando houver um terceiro domínio.
 
+**Respostas e relatório são da coleção.** As respostas (`p1`, `p2`…) e o relatório consolidado
+eram guardados por usuário. Com duas coleções, a `p1` dos laudos substituía a `p1` do financeiro.
+A rodada da fase 5 mostrou isso. Agora as duas tabelas têm `colecao_id`: a migração 0003 no
+Postgres e a coluna acrescentada na subida no SQLite. O que é por documento (extração, análise,
+alertas, resumo) já era separado, porque o documento é de uma coleção só. O pedido sem coleção
+roda na coleção padrão do usuário, a mesma do envio sem coleção no indexador: a primeira do domínio
+padrão. Os scripts (`make resultados`, `avaliar`, `pendencias`, `pergunta`) seguem a mesma regra e
+aceitam `COLECAO=`.
+
 **O que ficou de fora, de propósito.** Os títulos de demonstração (balanço, DRE, DFC), o rodapé
 "as notas explicativas são parte integrante" e a detecção de R$ no corte em chunks continuam no
 código do indexador, para todo domínio: são regex que só disparam em texto financeiro. Num laudo

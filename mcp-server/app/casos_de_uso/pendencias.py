@@ -48,10 +48,10 @@ async def pending(call: Call, *, include_report: bool = True, doc_id: str | None
     """O que falta, em ordem de execução (veja `app.regras.pendencias.pending_work`)."""
     store: Repositorio = call.deps.store
     states = select_states(await gather(call), doc_id)
-    answers = {answer.pergunta_id: answer for answer in await store.answers(call.caller.user_id)}
+    answers = {answer.pergunta_id: answer for answer in await store.answers(call.caller.user_id, call.caller.colecao_id)}
     items = pending_work(states, answers, doc_id=doc_id)
     if include_report and not items and doc_id is not None:
         items = company_report_pending(states[0], await store.company_report(call.caller.user_id, doc_id))
     elif include_report and not items:
-        items = report_pending(states, answers, await store.report(call.caller.user_id))
+        items = report_pending(states, answers, await store.report(call.caller.user_id, call.caller.colecao_id))
     return items

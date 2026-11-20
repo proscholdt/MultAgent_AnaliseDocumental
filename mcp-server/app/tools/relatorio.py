@@ -125,7 +125,7 @@ async def montar_relatorio(call: Call, args: MontarRelatorio) -> dict[str, Any]:
     states = await gather(call)
     if not states:
         raise ToolRejected("O usuário não tem documento indexado.")
-    answers = await call.deps.store.answers(call.caller.user_id)
+    answers = await call.deps.store.answers(call.caller.user_id, call.caller.colecao_id)
     markdown = build_report(
         [{"extracao": state.extraction, "analise": state.analysis, "resumo": state.summary,
           "alertas": [alert for alert in state.alerts if alert["codigo"] not in INTERNAL_ALERTS]} for state in states],
@@ -143,7 +143,7 @@ class LerRelatorio(Args):
 @tool("ler_relatorio", "relatorio", """
     Devolve o relatório consolidado mais recente do usuário, em Markdown.""")
 async def ler_relatorio(call: Call, args: LerRelatorio) -> dict[str, Any]:
-    report = await call.deps.store.report(call.caller.user_id)
+    report = await call.deps.store.report(call.caller.user_id, call.caller.colecao_id)
     if report is None:
         return {"relatorio": None}
     return {"relatorio": report.markdown, "gerado_em": report.at.isoformat()}

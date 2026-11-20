@@ -8,6 +8,9 @@
 #   make resultados USUARIO=avaliacao SENHA=xxx
 # Também valem as variáveis de ambiente AVALIACAO_USUARIO e AVALIACAO_SENHA: definidas uma vez no
 # terminal, os comandos dispensam USUARIO e SENHA.
+#
+# Coleção: sem COLECAO, a coleção padrão do usuário (a primeira do domínio financeiro). Para outra:
+#   make resultados COLECAO=<id da coleção> SAIDA=../resultados/laudos
 
 USUARIO ?= $(AVALIACAO_USUARIO)
 SENHA ?= $(AVALIACAO_SENHA)
@@ -16,6 +19,8 @@ S ?= agents
 RODAR ?=
 TEXTO ?=
 CONVERSA ?=
+COLECAO ?= $(AVALIACAO_COLECAO)
+SAIDA ?= ../resultados
 
 # Cada sistema Python tem o próprio ambiente (uv). Um VIRTUAL_ENV herdado do terminal (o do indexador,
 # ativado pelo editor) faz o uv avisar a cada comando nos outros sistemas: o make não o repassa.
@@ -210,7 +215,7 @@ inconsistencias:
 
 # Os resultados de cada item vão para resultados/, lidos da base. Com RODAR=sim, o relatório completo
 # é pedido aos agentes antes (gera todos os itens de uma vez).
-gerar_resultados = cd agents && uv run python scripts/gerar_entrega.py --usuario $(USUARIO) --senha $(SENHA) --saida ../resultados $(if $(1),--partes $(1),) $(if $(filter sim,$(RODAR)),--rodar,)
+gerar_resultados = cd agents && uv run python scripts/gerar_entrega.py --usuario $(USUARIO) --senha $(SENHA) --saida $(SAIDA) $(if $(COLECAO),--colecao $(COLECAO),) $(if $(1),--partes $(1),) $(if $(filter sim,$(RODAR)),--rodar,)
 
 resultados:
 	$(precisa_login)
@@ -239,12 +244,12 @@ relatorio:
 pergunta:
 	$(precisa_login)
 	$(if $(TEXTO),,$(error Informe TEXTO="a mensagem"))
-	@cd agents && uv run python scripts/perguntar.py --usuario $(USUARIO) --senha $(SENHA) --texto "$(TEXTO)" $(if $(CONVERSA),--conversa $(CONVERSA),)
+	@cd agents && uv run python scripts/perguntar.py --usuario $(USUARIO) --senha $(SENHA) --texto "$(TEXTO)" $(if $(CONVERSA),--conversa $(CONVERSA),) $(if $(COLECAO),--colecao $(COLECAO),)
 
 pendencias:
 	$(precisa_login)
-	@cd agents && uv run python scripts/pendencias.py --usuario $(USUARIO) --senha $(SENHA) $(if $(DOC),--doc $(DOC),)
+	@cd agents && uv run python scripts/pendencias.py --usuario $(USUARIO) --senha $(SENHA) $(if $(DOC),--doc $(DOC),) $(if $(COLECAO),--colecao $(COLECAO),)
 
 avaliar:
 	$(precisa_login)
-	@cd agents && uv run python scripts/avaliar.py --usuario $(USUARIO) --senha $(SENHA) --sem-guardar
+	@cd agents && uv run python scripts/avaliar.py --usuario $(USUARIO) --senha $(SENHA) --sem-guardar $(if $(COLECAO),--colecao $(COLECAO),)

@@ -3,7 +3,8 @@
     uv run python scripts/gerar_entrega.py --usuario <usuário do indexador> --senha <senha>
         [--saida ../resultados] [--partes extracao,analise,perguntas,validacao,relatorio] [--rodar]
 
-Por padrão só lê o que já está na base, sem custo. Com --rodar, antes pede o relatório completo
+Lê a base de uma coleção (`--colecao`, ou a coleção padrão do usuário: a primeira do domínio
+financeiro), com o gabarito do domínio dela. Por padrão só lê o que já está na base, sem custo. Com --rodar, antes pede o relatório completo
 à API do orquestrador (POST /api/relatorios) e espera terminar; o resumo dessa execução (tempo,
 tokens, custo por agente e por documento) vai junto. Pela raiz do projeto: `make resultados`,
 `make extracao`, `make analise`, `make perguntas`, `make validacao`, `make relatorio`.
@@ -33,6 +34,7 @@ import httpx
 from base import ROOT, arguments, login, settings, snapshot
 
 from app.ferramentas.avaliacao import evaluate, render
+from app.ferramentas.avaliacao_automatica import gabarito_path
 from app.orquestrador.grafo import latin_only
 
 PARTS = {
@@ -50,10 +52,10 @@ def write(path: Path, content: str | dict | list) -> None:
     path.write_text(text.rstrip("\n") + "\n", encoding="utf-8")
 
 
-async def run_report(api: str, token: str) -> dict:
+async def run_report(api: str, token: str, colecao_id: str | None = None) -> dict:
     """Pede o relatório ao orquestrador e acompanha até terminar."""
     async with httpx.AsyncClient(base_url=api, headers={"Authorization": f"Bearer {token}"}, timeout=60) as http:
-        created = await http.post("/api/relatorios", json={"aguardar": False})
+        created = await http.post("/api/relatorios", json={"aguardar": False, "colecao_id": colecao_id})
         created.raise_for_status()
         run_id, started = created.json()["execucao_id"], time.monotonic()
         print(f"Execução {run_id} pedida aos agentes; acompanhando (leva de 2 a 5 min)...")
@@ -69,7 +71,7 @@ async def run_report(api: str, token: str) -> dict:
     return {**run, "passos": steps}
 
 
-def export(current: dict, out: Path, parts: list[str]) -> list[str]:
+def export(current: dict, out: Path, parts: list[str], gabarito_file: Path) -> list[str]:
     """Grava as partes pedidas e devolve o que faltou na base para elas."""
     missing: list[str] = []
     for part in parts:
@@ -106,9 +108,10 @@ def export(current: dict, out: Path, parts: list[str]) -> list[str]:
             write(out / "6-relatorio" / "relatorio.md", current["relatorio"])
         else:
             missing.append("relatório consolidado montado")
-        gabarito = json.loads((ROOT / "avaliacao" / "gabarito.json").read_text(encoding="utf-8"))
+        gabarito = json.loads(gabarito_file.read_text(encoding="utf-8"))
+        shown = gabarito_file.resolve().relative_to(ROOT.parent).as_posix()
         write(out / "6-relatorio" / "avaliacao.md", "# Avaliação contra o gabarito\n\n"
-              f"Base lida em {current['gerado_em']}. Gabarito: `agents/avaliacao/gabarito.json`, conferido à mão "
+              f"Base lida em {current['gerado_em']}. Gabarito: `{shown}`, conferido à mão "
               "nos PDFs.\n\n" + render(evaluate(gabarito, current)))
     return missing
 
@@ -147,6 +150,7 @@ async def main() -> int:
     if unknown := [part for part in parts if part not in PARTS]:
         parser.error(f"parte desconhecida: {', '.join(unknown)}. Use: {', '.join(PARTS)}")
 
+    gabarito_file = ROOT / "avaliacao" / "gabarito.json"
     if args.retrato:
         current = json.loads(Path(args.retrato).read_text(encoding="utf-8"))
         if args.execucao:
@@ -160,15 +164,17 @@ async def main() -> int:
                 {key: value for key, value in step.items() if key != "argumentos"} for step in steps]})
     else:
         config = settings()
-        identity = await login(config, args.usuario, args.senha, f"entrega-{datetime.now(UTC):%Y%m%d-%H%M%S}")
+        identity = await login(config, args.usuario, args.senha, f"entrega-{datetime.now(UTC):%Y%m%d-%H%M%S}",
+                               colecao=args.colecao)
         if args.rodar:
-            write(out / "execucao.json", await run_report(args.api, identity.user_token))
+            write(out / "execucao.json", await run_report(args.api, identity.user_token, identity.colecao_id))
         current = await snapshot(config, identity)
+        gabarito_file = ROOT / gabarito_path(config, identity.dominio)
     if not current["documentos"]:
         print("A base não tem documento indexado para este usuário: envie os PDFs antes.")
         return 1
 
-    missing = export(current, out, parts)
+    missing = export(current, out, parts, gabarito_file)
     readme(current, out, missing)
     for part in parts:
         print(f"  {PARTS[part][0]:<13} {PARTS[part][1]}")

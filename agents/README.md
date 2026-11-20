@@ -68,7 +68,10 @@ permissão.
 ## Domínios
 
 Cada pedido (mensagem, pergunta, relatório) aceita `colecao_id`: o orquestrador resolve o domínio
-da coleção no indexador, e numa conversa a mensagem sem coleção herda a do pedido anterior. A
+da coleção no indexador, e numa conversa a mensagem sem coleção herda a do pedido anterior. Sem
+nenhuma das duas, vale a coleção padrão do usuário, a mesma do envio sem coleção: a primeira do
+domínio padrão. Os scripts (`make resultados`, `avaliar`, `pendencias`, `pergunta`) usam a mesma
+regra, aceitam `COLECAO=` e avaliam com o gabarito do domínio da coleção. A
 identidade da execução leva o domínio e a coleção no token do servidor MCP e no token A2A, e o
 especialista os lê de volta.
 

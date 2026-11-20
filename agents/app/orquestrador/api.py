@@ -156,11 +156,15 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
         return conversa_id
 
     async def scope_of(token: str, colecao_id: str | None, conversa_id: str) -> tuple[str | None, str | None]:
-        """A coleção e o domínio do pedido. Sem coleção, numa conversa: os do pedido anterior dela."""
+        """A coleção e o domínio do pedido. Sem coleção, numa conversa: os do pedido anterior dela;
+        fora de conversa (ou na primeira mensagem), a coleção padrão do usuário."""
         if colecao_id:
             return colecao_id, (await users.collection(token, colecao_id))["dominio"]
         previous = [run for run in deps.runs.of_conversation(conversa_id) if run.colecao_id] if conversa_id else []
-        return (previous[-1].colecao_id, previous[-1].dominio) if previous else (None, None)
+        if previous:
+            return previous[-1].colecao_id, previous[-1].dominio
+        default = await users.default_collection(token)
+        return (default["id"], default["dominio"]) if default else (None, None)
 
     async def start(user: tuple[str, str], tipo: str, pedido: str, wait: bool,
                     conversa_id: str | None = None, colecao_id: str | None = None) -> dict[str, Any]:
