@@ -46,7 +46,7 @@ coleção da execução (`dom`, `col`; sem eles, o domínio padrão e todos os d
 
 | Gravação | O que é conferido |
 |---|---|
-| `salvar_indicador` | O agente aponta chunk, linha e coluna; o servidor lê a célula, confere o ano da coluna, a unidade e que a linha é do indicador; o ano anterior sai da mesma linha. Texto: o trecho existe no chunk e contém o número |
+| `salvar_campo` | O agente aponta chunk, linha e coluna; o servidor lê a célula, confere o ano da coluna, a unidade e que a linha é do indicador; o ano anterior sai da mesma linha. Texto: o trecho existe no chunk e contém o número |
 | `salvar_nao_encontrado` | O servidor procura os termos no documento; se aparecem com valor, recusa mostrando a página. A busca vira evidência |
 | `fechar_extracao` | Os 8 indicadores com valor ou ausência; valores de apoio para calcular o que falta; validações automáticas |
 | análise, alertas, respostas | Citação literal no chunk; números só por marcador (`{{doc.campo}}`) ou dentro de trecho citado |
@@ -76,7 +76,7 @@ aparece como informado. As validações (`ebitda_divergente`, `margem_divergente
 `periodo_nao_confirmado`…) viram alertas com os dois lados da conta.
 
 **Período.** O período de um documento é um ano, e o comparável é o ano anterior
-(`periods()` em `app/tools/extracao.py`); `salvar_indicador` só aceita ano com 4 dígitos, e a
+(`periods()` em `app/tools/extracao.py`); `salvar_campo` só aceita ano com 4 dígitos, e a
 coluna é conferida pelo ano do cabeçalho. Documento trimestral (`3T25`) ainda não fecha a
 extração: o que falta está no [README da raiz](../README.md#caminho-para-produção-no-azure).
 
@@ -88,7 +88,7 @@ hora, e o que ficou mais antigo que sua base volta como desatualizado. `montar_r
 Markdown a partir da base.
 
 Com `doc_id`, `pendencias` lista só o que falta para o relatório daquela empresa (extração,
-revisão, análise e resumo dela, sem as perguntas comparativas), e `montar_relatorio_empresa`
+revisão, análise e resumo dela, sem as perguntas comparativas), e `montar_relatorio_documento`
 monta o relatório dela: resumo, indicadores, análise e alertas. Ele vale para a impressão do
 documento em que foi montado.
 
@@ -113,10 +113,10 @@ app/
 │
 ├─ tools/                AS TOOLS, um arquivo por assunto
 │  ├─ documentos.py      listar_documentos, buscar_trechos, ler_chunk, ler_pagina
-│  ├─ extracao.py        salvar_indicador, salvar_nao_encontrado, fechar_extracao, ler_extracao
+│  ├─ extracao.py        salvar_campo, salvar_nao_encontrado, fechar_extracao, ler_extracao
 │  ├─ validacao.py       registrar_alerta, ler_alertas, concluir_revisao
 │  ├─ analise.py         salvar_item_analise, registrar_ausencia_analise, ler_analise
-│  ├─ respostas.py       comparar_indicadores, salvar_resposta, ler_respostas
+│  ├─ respostas.py       comparar_campos, salvar_resposta, ler_respostas
 │  └─ relatorio.py       salvar_resumo, pendencias, montar_relatorio(_empresa), ler_relatorio(_empresa)
 │
 ├─ governanca/           QUEM PODE O QUÊ, em toda chamada

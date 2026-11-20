@@ -43,27 +43,27 @@ async def test_the_model_sees_the_lists_of_its_domain(governance):
         return next(t for t in tools if t.name == tool).input_schema["properties"][prop]["enum"]
 
     no_laudo = await governance.list_tools(laudos())
-    assert enums(no_laudo, "salvar_indicador", "campo")[:3] == ["glicose", "hemoglobina_glicada", "colesterol_total"]
-    assert "ebitda" not in enums(no_laudo, "salvar_indicador", "campo")
+    assert enums(no_laudo, "salvar_campo", "campo")[:3] == ["glicose", "hemoglobina_glicada", "colesterol_total"]
+    assert "ebitda" not in enums(no_laudo, "salvar_campo", "campo")
     financeiro = await governance.list_tools(headers("extrator"))  # sem domínio no token: o padrão
-    assert "ebitda" in enums(financeiro, "salvar_indicador", "campo")
+    assert "ebitda" in enums(financeiro, "salvar_campo", "campo")
     pesquisador = await governance.list_tools(laudos("pesquisador"))
     assert enums(pesquisador, "salvar_resposta", "pergunta_id") == ["p1", "p2", "p3", "p4", "livre"]
 
 
 async def test_a_lab_result_is_read_from_the_cell_with_the_unit_of_the_package(governance, laudo):
-    saved = payload(await call(governance, "salvar_indicador", {
+    saved = payload(await call(governance, "salvar_campo", {
         "doc_id": DOC_LAUDO, "campo": "glicose", "origem": "tabela", "chunk_index": 1,
         "rotulo_linha": "Glicose", "rotulo_coluna": "Resultado"}))
     assert saved["salvo"]["valor_numerico"] == 92 and saved["salvo"]["unidade"] == "mg/dL"
     # Sem período contábil: o valor é do recorte do documento (a data da coleta), sem ano anterior.
-    assert saved["salvo"]["periodo"] == "12/03/2024" and saved["ano_anterior_gravado_pelo_servidor"] is None
+    assert saved["salvo"]["periodo"] == "12/03/2024" and saved["comparavel_gravado_pelo_servidor"] is None
     assert not [aviso for aviso in saved["avisos"] if "mil, milhões" in aviso or "controladora" in aviso]
 
 
 async def test_a_result_in_running_text_does_not_ask_for_the_period(governance, laudo):
     # A data do laudo não está na frase do resultado, e não precisa: o valor é do documento.
-    saved = payload(await call(governance, "salvar_indicador", {
+    saved = payload(await call(governance, "salvar_campo", {
         "doc_id": DOC_LAUDO, "campo": "creatinina", "origem": "texto", "chunk_index": 3,
         "trecho": "Resultado: 0,92 mg/dL Valores de referência", "valor": "0,92"}))
     assert saved["salvo"]["valor_numerico"] == 0.92 and saved["salvo"]["unidade"] == "mg/dL"
@@ -71,7 +71,7 @@ async def test_a_result_in_running_text_does_not_ask_for_the_period(governance, 
 
 
 async def test_a_field_of_another_domain_is_refused_with_the_options(governance, laudo):
-    refused = await call(governance, "salvar_indicador", {
+    refused = await call(governance, "salvar_campo", {
         "doc_id": DOC_LAUDO, "campo": "ebitda", "origem": "tabela", "chunk_index": 1,
         "rotulo_linha": "Glicose", "rotulo_coluna": "Resultado"})
     assert refused.is_error
@@ -89,7 +89,7 @@ async def test_the_collection_limits_the_documents(governance, laudo):
 
 async def test_the_extraction_closes_without_the_financial_support_values(governance, laudo):
     for campo, row in (("glicose", "Glicose"), ("colesterol_total", "Colesterol total")):
-        assert not (await call(governance, "salvar_indicador", {
+        assert not (await call(governance, "salvar_campo", {
             "doc_id": DOC_LAUDO, "campo": campo, "origem": "tabela", "chunk_index": 1,
             "rotulo_linha": row, "rotulo_coluna": "Resultado"})).is_error
     for campo in ("hemoglobina_glicada", "hdl", "ldl", "triglicerideos", "creatinina", "hemoglobina"):
@@ -100,8 +100,8 @@ async def test_the_extraction_closes_without_the_financial_support_values(govern
     closed = await call(governance, "fechar_extracao", {"doc_id": DOC_LAUDO, "apoio_ausente": None})
     assert not closed.is_error, payload(closed)
     body = payload(closed)
-    assert body["publicada"] and body["empresa"] == "Maria Souza" and body["periodo"] == "12/03/2024"
-    assert "92" in body["indicadores"]["glicose"] and "mg/dL" in body["indicadores"]["glicose"]
+    assert body["publicada"] and body["entidade"] == "Maria Souza" and body["periodo"] == "12/03/2024"
+    assert "92" in body["campos"]["glicose"] and "mg/dL" in body["campos"]["glicose"]
     assert not [alerta for alerta in body["alertas"] if "apoio" in alerta]
 
 

@@ -24,7 +24,7 @@ def spec_of(settings, nome: str = "extrator") -> AgentFile:
 async def test_agent_uses_its_own_mcp_connection_and_every_step_is_recorded(settings, engine, world, model, identity):
     model.scripts["extrator"] = [
         [call("buscar_trechos", consulta="receita líquida", doc_id=DOC)],
-        [call("salvar_indicador", doc_id=DOC, campo="receita_liquida"), call("fechar_extracao", doc_id=DOC)],
+        [call("salvar_campo", doc_id=DOC, campo="receita_liquida"), call("fechar_extracao", doc_id=DOC)],
         [say("Extração fechada.")],
     ]
     run = await run_agent(spec_of(settings), f"Extraia os indicadores.\n\nDocumento: doc_id = {DOC}", identity=identity,
@@ -32,12 +32,12 @@ async def test_agent_uses_its_own_mcp_connection_and_every_step_is_recorded(sett
 
     assert (run.estado, run.texto, run.modelo) == ("concluido", "Extração fechada.", MODEL_NAME)
     # As chamadas chegaram ao servidor como o extrator, na execução e para o usuário certos.
-    assert world.called("extrator") == ["buscar_trechos", "salvar_indicador", "fechar_extracao"]
+    assert world.called("extrator") == ["buscar_trechos", "salvar_campo", "fechar_extracao"]
     assert {(who, ident.run_id, ident.user_id) for who, _, _, ident in world.calls} == {("extrator", "exec-teste", ANA)}
     assert [(step["tool"], step["ok"]) for step in run.passos] == [
-        ("buscar_trechos", True), ("salvar_indicador", True), ("fechar_extracao", True)]
+        ("buscar_trechos", True), ("salvar_campo", True), ("fechar_extracao", True)]
     assert '"consulta": "receita líquida"' in run.passos[0]["argumentos"] and run.passos[0]["ms"] is not None
-    assert run.writes == {"buscar_trechos": 1, "salvar_indicador": 1, "fechar_extracao": 1}
+    assert run.writes == {"buscar_trechos": 1, "salvar_campo": 1, "fechar_extracao": 1}
     # Três chamadas ao modelo, somadas.
     assert run.uso == {"chamadas": 3, "entrada": 300, "entrada_cache": 150, "saida": 30, "total": 330}
 
@@ -52,15 +52,15 @@ async def test_a_refusal_from_the_server_goes_back_to_the_model_and_is_marked_in
             raise Refused("Linha 'Lucro do ano' não existe na tabela.")
         return {"salvo": True}
 
-    world.on("salvar_indicador", gate)
-    model.scripts["extrator"] = [[call("salvar_indicador", rotulo_linha="Lucro do ano")],
-                                 [call("salvar_indicador", rotulo_linha="Lucro líquido do exercício")],
+    world.on("salvar_campo", gate)
+    model.scripts["extrator"] = [[call("salvar_campo", rotulo_linha="Lucro do ano")],
+                                 [call("salvar_campo", rotulo_linha="Lucro líquido do exercício")],
                                  [say("Pronto.")]]
     run = await run_agent(spec_of(settings), "Extraia.", identity=identity, engine=engine, budget=budget())
 
     assert run.estado == "concluido" and len(attempts) == 2
     assert [step["ok"] for step in run.passos] == [False, True]
-    assert run.writes == {"salvar_indicador": 1}  # a recusada não conta como gravação
+    assert run.writes == {"salvar_campo": 1}  # a recusada não conta como gravação
     # O modelo recebeu o motivo da recusa como resultado da tool, para poder corrigir.
     returns = [part for message in model.inputs["extrator"][1] for part in message.parts
                if isinstance(part, ToolReturnPart)]

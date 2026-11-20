@@ -78,28 +78,28 @@ async def test_companies_are_ranked_and_filtered_by_the_stored_values(governance
     await extract(governance)
     await extract_second(governance)
 
-    revenue = payload(await call(governance, "pesquisador", "comparar_indicadores", {
+    revenue = payload(await call(governance, "pesquisador", "comparar_campos", {
         "campo": "receita_liquida", "criterio": "maior", "limite": None}))
-    assert [(row["empresa"], row["valor"], row["base"]) for row in revenue["resultado"]] == [
-        ("Empresa Exemplo S.A.", "R$ 1.325.059 mil", "informado pela empresa"),
-        ("Segunda S.A.", "R$ 462.127 mil", "informado pela empresa")]
+    assert [(row["entidade"], row["valor"], row["base"]) for row in revenue["resultado"]] == [
+        ("Empresa Exemplo S.A.", "R$ 1.325.059 mil", "informado pelo documento"),
+        ("Segunda S.A.", "R$ 462.127 mil", "informado pelo documento")]
     assert revenue["resultado"][0]["marcador"] == f"{{{{{DOC_ANA}.receita_liquida}}}}"
 
     # Margem: só uma empresa tem base, e é calculada. A outra aparece em "sem valor", com o motivo.
-    margin = payload(await call(governance, "pesquisador", "comparar_indicadores", {
+    margin = payload(await call(governance, "pesquisador", "comparar_campos", {
         "campo": "margem_ebitda", "criterio": "maior", "limite": None}))
-    assert [(row["empresa"], row["valor"], row["base"]) for row in margin["resultado"]] == [
+    assert [(row["entidade"], row["valor"], row["base"]) for row in margin["resultado"]] == [
         ("Empresa Exemplo S.A.", "16,74%", "calculado pelo servidor")]
     assert margin["resultado"][0]["marcador"].endswith(".margem_ebitda.calculado}}")
-    assert margin["sem_valor"][0]["empresa"] == "Segunda S.A."
+    assert margin["sem_valor"][0]["entidade"] == "Segunda S.A."
 
-    above = payload(await call(governance, "pesquisador", "comparar_indicadores", {
+    above = payload(await call(governance, "pesquisador", "comparar_campos", {
         "campo": "alavancagem", "criterio": "acima_de", "limite": 3}))
-    assert [(row["empresa"], row["valor"]) for row in above["resultado"]] == [("Empresa Exemplo S.A.", "3,32x")]
-    below = payload(await call(governance, "pesquisador", "comparar_indicadores", {
+    assert [(row["entidade"], row["valor"]) for row in above["resultado"]] == [("Empresa Exemplo S.A.", "3,32x")]
+    below = payload(await call(governance, "pesquisador", "comparar_campos", {
         "campo": "alavancagem", "criterio": "abaixo_de", "limite": 3}))
     assert below["resultado"] == []
-    no_limit = await call(governance, "pesquisador", "comparar_indicadores", {
+    no_limit = await call(governance, "pesquisador", "comparar_campos", {
         "campo": "alavancagem", "criterio": "acima_de", "limite": None})
     assert no_limit.is_error
 
@@ -164,7 +164,7 @@ async def test_summary_has_at_most_five_lines_and_no_typed_numbers(governance):
         "doc_id": DOC_ANA, "texto": "A receita cresceu e o lucro recuou no exercício, com dívida maior."})
     # O resumo usa a extração, a análise e os alertas: sem eles, é recusado dizendo o que falta.
     assert early.is_error and payload(early)["problemas"] == [
-        "extração dos indicadores de Empresa Exemplo S.A.",
+        "extração dos campos de Empresa Exemplo S.A.",
         "análise qualitativa de Empresa Exemplo S.A. (motivo_resultado, risco, guidance, evento_relevante, tom)"]
     await extract(governance)
     half = await call(governance, "redator", "salvar_resumo", {
@@ -186,7 +186,7 @@ async def test_summary_has_at_most_five_lines_and_no_typed_numbers(governance):
         "Receita líquida de {{receita_liquida}}, variação de {{receita_liquida.variacao}} sobre 2021.\n"
         "Lucro líquido de {{lucro_liquido}}; EBITDA {{ebitda}}, com {{ebitda.calculado}}.\n"
         "Alavancagem informada de {{alavancagem}}, um dos 3 pontos de atenção.")}))
-    assert saved["salvo"] == {"empresa": "Empresa Exemplo S.A.", "linhas": 3}
+    assert saved["salvo"] == {"entidade": "Empresa Exemplo S.A.", "linhas": 3}
     assert saved["resumo"].splitlines()[0] == (
         "Receita líquida de R$ 1.325.059 mil (Exemplo.pdf, p. 8), variação de +24,84% sobre 2021.")
     # No resumo o calculado sai curto, com as páginas; a fórmula fica na tabela do relatório.
@@ -209,16 +209,16 @@ async def test_pending_list_follows_the_work_and_report_is_refused_while_somethi
     first = payload(await call(governance, "orquestrador", "pendencias"))
     assert first["completo"] is False
     assert [(p["o_que_falta"].split(" (")[0], p["agente"], p["liberada"]) for p in first["pendencias"][:3]] == [
-        ("extração dos indicadores", "extrator", True),
+        ("extração dos campos", "extrator", True),
         ("revisão das fontes em busca de inconsistências", "validador", False),
         ("análise qualitativa", "analista", True)]
-    assert first["pendencias"][1]["aguarda"] == "extração dos indicadores de Empresa Exemplo S.A."
+    assert first["pendencias"][1]["aguarda"] == "extração dos campos de Empresa Exemplo S.A."
     assert first["pendencias"][2]["categorias"] == ["motivo_resultado", "risco", "guidance", "evento_relevante", "tom"]
     questions = [p for p in first["pendencias"] if p["agente"] == "pesquisador"]
     assert [p["pergunta_id"] for p in questions] == ["p1", "p2", "p3", "p4", "p5"]
     # As perguntas comparam as empresas: esperam a extração e a análise de todos os documentos.
     assert not any(p["liberada"] for p in questions)
-    assert questions[0]["aguarda"].startswith("extração dos indicadores de Empresa Exemplo S.A.; análise qualitativa")
+    assert questions[0]["aguarda"].startswith("extração dos campos de Empresa Exemplo S.A.; análise qualitativa")
     assert first["pendencias"][-1]["agente"] == "redator" and first["pendencias"][-1]["liberada"] is False
 
     refused = await call(governance, "redator", "montar_relatorio")
@@ -251,7 +251,7 @@ async def test_report_is_built_by_code_from_the_store(governance):
     assert [p["o_que_falta"] for p in pending["pendencias"]] == ["montagem do relatório (montar_relatorio)"]
 
     built = payload(await call(governance, "redator", "montar_relatorio"))
-    assert built["montado"] and built["empresas"] == ["Empresa Exemplo S.A."]
+    assert built["montado"] and built["entidades"] == ["Empresa Exemplo S.A."]
     assert payload(await call(governance, "orquestrador", "pendencias")) == {"completo": True, "pendencias": []}
 
     report = payload(await call(governance, "orquestrador", "ler_relatorio"))["relatorio"]
@@ -354,7 +354,7 @@ async def test_company_pending_list_has_only_that_company_and_no_comparative_que
     unknown = await call(governance, "orquestrador", "pendencias", {"doc_id": "nao-existe"})
     assert unknown.is_error and any(DOC_ANA in option for option in payload(unknown)["opcoes"])
 
-    refused = await call(governance, "redator", "montar_relatorio_empresa", {"doc_id": DOC_ANA})
+    refused = await call(governance, "redator", "montar_relatorio_documento", {"doc_id": DOC_ANA})
     assert refused.is_error and len(payload(refused)["problemas"]) == 4
 
 
@@ -367,15 +367,15 @@ async def test_company_report_is_built_by_code_without_the_other_companies(gover
     # As perguntas comparativas não foram respondidas e o segundo documento nem foi extraído:
     # o relatório consolidado não sai, o da empresa sai.
     pending = payload(await call(governance, "orquestrador", "pendencias", {"doc_id": DOC_ANA}))["pendencias"]
-    assert [p["o_que_falta"] for p in pending] == ["montagem do relatório da empresa (montar_relatorio_empresa)"]
+    assert [p["o_que_falta"] for p in pending] == ["montagem do relatório do documento (montar_relatorio_documento)"]
     assert (await call(governance, "redator", "montar_relatorio")).is_error
 
-    built = payload(await call(governance, "redator", "montar_relatorio_empresa", {"doc_id": DOC_ANA}))
-    assert built["montado"] and built["empresa"] == "Empresa Exemplo S.A."
+    built = payload(await call(governance, "redator", "montar_relatorio_documento", {"doc_id": DOC_ANA}))
+    assert built["montado"] and built["entidade"] == "Empresa Exemplo S.A."
     assert payload(await call(governance, "orquestrador", "pendencias", {"doc_id": DOC_ANA})) == {
         "completo": True, "pendencias": []}
 
-    report = payload(await call(governance, "orquestrador", "ler_relatorio_empresa", {"doc_id": DOC_ANA}))["relatorio"]
+    report = payload(await call(governance, "orquestrador", "ler_relatorio_documento", {"doc_id": DOC_ANA}))["relatorio"]
     for expected in [
         "# Relatório de análise: Empresa Exemplo S.A.", "Período 2022, comparado com 2021.",
         "## 1. Resumo executivo", "Receita de R$ 1.325.059 mil (Exemplo.pdf, p. 8)",
@@ -385,7 +385,7 @@ async def test_company_report_is_built_by_code_without_the_other_companies(gover
     ]:
         assert expected in report, expected
     assert "Perguntas e respostas" not in report and "revisao_das_fontes_concluida" not in report
-    assert payload(await call(governance, "orquestrador", "ler_relatorio_empresa", {"doc_id": DOC_ANA_2})) == {
+    assert payload(await call(governance, "orquestrador", "ler_relatorio_documento", {"doc_id": DOC_ANA_2})) == {
         "relatorio": None}
 
     # Dado novo da empresa depois do relatório: ele volta para a lista.
@@ -393,4 +393,4 @@ async def test_company_report_is_built_by_code_without_the_other_companies(gover
     await call(governance, "extrator", "fechar_extracao", {"doc_id": DOC_ANA})
     await summarize(governance)
     pending = payload(await call(governance, "orquestrador", "pendencias", {"doc_id": DOC_ANA}))["pendencias"]
-    assert [p["o_que_falta"].split(":")[0] for p in pending] == ["remontar o relatório da empresa"]
+    assert [p["o_que_falta"].split(":")[0] for p in pending] == ["remontar o relatório do documento"]

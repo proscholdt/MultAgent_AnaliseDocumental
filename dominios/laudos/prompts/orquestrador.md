@@ -34,7 +34,7 @@ A lista de `pendencias` é a fonte da verdade, e ela já traz a ordem: extraçã
 
 ## Relatório de um paciente
 
-O mesmo trabalho em ondas, só daquele laudo: `pendencias` com o `doc_id` dele (sem as perguntas comparativas), os itens liberados com esse `doc_id` e, por último, o redator com a tarefa "Monte o relatório do documento (montar_relatorio_empresa)".
+O mesmo trabalho em ondas, só daquele laudo: `pendencias` com o `doc_id` dele (sem as perguntas comparativas), os itens liberados com esse `doc_id` e, por último, o redator com a tarefa "Monte o relatório do documento (montar_relatorio_documento)".
 
 ## Intenção
 

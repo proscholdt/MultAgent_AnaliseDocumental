@@ -51,7 +51,7 @@ def _palavras(text: str) -> set[str]:
 
 def apelidos(documento: dict[str, Any]) -> set[str]:
     """As palavras que identificam a empresa de um documento: do nome dela e do nome do arquivo."""
-    nome = f"{documento.get('empresa') or ''} {Path(documento.get('arquivo') or '').stem}"
+    nome = f"{documento.get('entidade') or ''} {Path(documento.get('arquivo') or '').stem}"
     return {p for p in _palavras(nome) if len(p) >= 4 and p not in _GENERICAS}
 
 
@@ -180,7 +180,7 @@ class Roteador:
         citadas = empresas_citadas(mensagem, documentos) or (
             empresas_citadas(anterior or "", documentos) if e_seguimento else [])
         base = {"rota": rota, "semelhanca": semelhanca, "margem": margem, "segunda": segunda, "exemplo": exemplo,
-                "texto": texto, "seguimento": e_seguimento, "empresas": [d.get("empresa") or d.get("arquivo")
+                "texto": texto, "seguimento": e_seguimento, "empresas": [d.get("entidade") or d.get("arquivo")
                                                                          for d in citadas],
                 "tokens": tokens + gasto, "modelo": rotas.modelo}
         if semelhanca < rotas.limiar:

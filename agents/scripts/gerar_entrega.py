@@ -78,18 +78,18 @@ def export(current: dict, out: Path, parts: list[str], gabarito_file: Path, domi
     for part in parts:
         shutil.rmtree(out / PARTS[part][0], ignore_errors=True)  # nada de arquivo de uma base anterior
     for doc in current["documentos"]:
-        name, header = Path(doc["arquivo"]).stem, {"arquivo": doc["arquivo"], "empresa": doc["empresa"]}
+        name, header = Path(doc["arquivo"]).stem, {"arquivo": doc["arquivo"], "entidade": doc["entidade"]}
         if "extracao" in parts:
             if doc.get("extracao_enxuta"):
                 write(out / "2-extracao" / f"{name}.json", doc["extracao_enxuta"])
                 write(out / "2-extracao" / "completo" / f"{name}.json", doc["extracao"])
             else:
-                missing.append(f"extração de {doc['empresa'] or doc['arquivo']}")
+                missing.append(f"extração de {doc['entidade'] or doc['arquivo']}")
         if "analise" in parts:
             # A análise vem por categoria; categoria sem item nenhum (nem "não encontrado") não foi feita.
             empty = [category for category, items in (doc["analise"] or {}).items() if not items]
             if empty:
-                missing.append(f"análise de {doc['empresa'] or doc['arquivo']} ({', '.join(empty)})")
+                missing.append(f"análise de {doc['entidade'] or doc['arquivo']} ({', '.join(empty)})")
             write(out / "3-analise" / f"{name}.json", {**header, "analise": doc["analise"]})
         if "validacao" in parts:
             write(out / "5-validacao" / f"{name}.json", {**header, "alertas": doc["alertas"]})

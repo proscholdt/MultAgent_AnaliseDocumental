@@ -9,7 +9,7 @@ e a página:
     {{ebitda.calculado}}           valor calculado, com a fórmula
     {{lucro_liquido.comparavel}}   valor do período comparável
 
-Nas respostas, que falam de várias empresas, o marcador leva o documento na frente:
+Nas respostas, que falam de vários documentos, o marcador leva o documento na frente:
 {{doc_id.receita_liquida}}. As tabelas e as listas do relatório saem direto da base.
 """
 import re
@@ -62,7 +62,7 @@ def _pages(pages: list[int]) -> str:
 
 def render_part(block: dict[str, Any], part: str, file_name: str, pages: list[int] | None = None,
                 brief: bool = False) -> str | None:
-    """O texto de uma parte de um indicador, ou None se essa parte não existe. `brief` é para o
+    """O texto de uma parte de um campo, ou None se essa parte não existe. `brief` é para o
     resumo executivo, que tem 5 linhas: o calculado sai sem a fórmula (ela está na tabela)."""
     if part == "informado":
         informed = block["informado"]
@@ -133,8 +133,8 @@ class Markers:
         campo, part = parts[0], parts[1] if len(parts) > 1 else "informado"
         if part not in _PARTS or len(parts) > 2:
             raise ToolRejected(f"Marcador {{{{{path}}}}}: parte desconhecida.", opcoes=list(_PARTS))
-        block = payload["indicadores"][campo]
-        pages = source_pages(payload["indicadores"], campo, part)
+        block = payload["campos"][campo]
+        pages = source_pages(payload["campos"], campo, part)
         text = render_part(block, part, file_name, pages, brief)
         if text is None:
             available = [name for name in _PARTS if render_part(block, name, file_name) is not None]

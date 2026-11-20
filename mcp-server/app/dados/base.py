@@ -5,6 +5,7 @@ import json
 from typing import Any
 
 from sqlalchemy import select, update
+from sqlalchemy.orm.attributes import set_committed_value
 
 from app.dados.banco import Database
 from app.dados.modelos import (
@@ -19,6 +20,21 @@ from app.dados.modelos import (
 )
 from app.governanca.identidade import Caller
 from app.regras.formulas import AlertDraft
+
+
+def publicada_atual(payload: dict[str, Any]) -> dict[str, Any]:
+    """A extração publicada com as chaves de agora: `campos` (era `indicadores`) e `entidade` (era
+    `empresa`) no bloco do documento."""
+    if "indicadores" not in payload:
+        return payload
+    payload = {**payload, "campos": payload["indicadores"]}
+    del payload["indicadores"]
+    meta = dict(payload.get("documento") or {})
+    for antiga, nova in (("empresa", "entidade"), ("origem_da_empresa", "origem_da_entidade")):
+        if antiga in meta:
+            meta[nova] = meta.pop(antiga)
+    payload["documento"] = meta
+    return payload
 
 
 def _same_collection(column: Any, colecao_id: str | None) -> Any:
@@ -66,7 +82,12 @@ class Store:
         async with self._db.session() as session:
             query = select(Extraction).where(Extraction.user_id == user_id, Extraction.doc_id == doc_id) \
                 .order_by(Extraction.id.desc()).limit(1)
-            return (await session.execute(query)).scalar_one_or_none()
+            row = (await session.execute(query)).scalar_one_or_none()
+        if row is not None:
+            # A extração publicada antes dos nomes genéricos (indicadores, empresa) é lida no formato de
+            # agora. Só a leitura muda: o que está gravado fica como foi.
+            set_committed_value(row, "payload", publicada_atual(row.payload))
+        return row
 
     # -- alertas -------------------------------------------------------------------------------
 

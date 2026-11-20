@@ -20,7 +20,7 @@ from app.dados.indexador import IndexerClient
 from app.governanca.auditoria import Audit
 from app.governanca.identidade import Caller, UserResolver
 from app.governanca.politica import PolicyStore
-from app.regras.campos import com_opcoes
+from app.regras.campos import com_opcoes, no_vocabulario
 
 # Restrições que a validação daqui confere, mas que o modo estrito de saída do modelo não aceita
 # no esquema. Ficam só no Pydantic.
@@ -92,7 +92,7 @@ class ToolSpec:
 
     def definition(self, dominio: str | None = None) -> t.Tool:
         """A tool como o agente a vê, com as listas fechadas (campos, categorias, perguntas) do domínio."""
-        return t.Tool(name=self.name, description=self.description,
+        return t.Tool(name=self.name, description=no_vocabulario(self.description, dominio),
                       input_schema=com_opcoes(strict_schema(self.args), dominio))
 
 

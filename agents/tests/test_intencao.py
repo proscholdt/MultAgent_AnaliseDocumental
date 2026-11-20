@@ -21,9 +21,9 @@ rotas:
   pergunta: [qual empresa teve maior margem ebitda, qual foi a receita líquida, quanto foi o lucro]
   fora_do_escopo: [olá tudo bem, obrigado pela ajuda, conte uma piada]
 """
-DOCUMENTOS = [{"doc_id": "d-brasal", "empresa": "Brasal Brasília Holding S.A.", "arquivo": "Brasal.pdf"},
-              {"doc_id": "d-light", "empresa": "LIGHT S.A.", "arquivo": "Light.pdf"},
-              {"doc_id": "d-millet", "empresa": "Millet Participações S.A.", "arquivo": "Millet.pdf"}]
+DOCUMENTOS = [{"doc_id": "d-brasal", "entidade": "Brasal Brasília Holding S.A.", "arquivo": "Brasal.pdf"},
+              {"doc_id": "d-light", "entidade": "LIGHT S.A.", "arquivo": "Light.pdf"},
+              {"doc_id": "d-millet", "entidade": "Millet Participações S.A.", "arquivo": "Millet.pdf"}]
 
 
 async def palavras(textos: list[str], _modelo: str) -> tuple[list[list[float]], int]:

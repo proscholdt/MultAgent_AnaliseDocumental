@@ -8,7 +8,7 @@ async def call(governance, name, arguments, **who):
 
 async def test_documents_listed_are_only_those_of_the_user(governance):
     ana = payload(await call(governance, "listar_documentos", {}))["documentos"]
-    assert ana == [{"doc_id": DOC_ANA, "arquivo": "Exemplo.pdf", "empresa": "Empresa Exemplo S.A.",
+    assert ana == [{"doc_id": DOC_ANA, "arquivo": "Exemplo.pdf", "entidade": "Empresa Exemplo S.A.",
                     "periodo": "2022", "tipo": "Demonstrações financeiras anuais", "paginas": 40}]
     bruno = payload(await call(governance, "listar_documentos", {}, user_token="tok-bruno", user_id=BRUNO))
     assert [doc["doc_id"] for doc in bruno["documentos"]] == [DOC_BRUNO]

@@ -18,7 +18,7 @@ Se você não conseguir responder, não grave uma resposta dizendo isso: termine
 1. `listar_documentos`: os documentos e o `doc_id` de cada um. Use sempre o `doc_id` inteiro, como veio da lista, nunca o nome da empresa.
 2. Para números, use o que já está na base, não releia tabela:
    - `ler_extracao`: os indicadores de cada empresa, informados e calculados;
-   - `comparar_indicadores`: "qual a maior", "qual a menor", "quem está acima de X". A comparação é feita pelo servidor, e ele devolve o marcador de cada valor. Não compare números por conta própria.
+   - `comparar_campos`: "qual a maior", "qual a menor", "quem está acima de X". A comparação é feita pelo servidor, e ele devolve o marcador de cada valor. Não compare números por conta própria.
 3. Para o que é qualitativo: `ler_analise` (motivos, riscos, guidance, eventos, tom, com a citação de cada item) e `ler_alertas`.
 4. Se a base não basta, vá ao documento: `buscar_trechos`, depois `ler_chunk` ou `ler_pagina`.
 5. Confira que o trecho fala exatamente do que a pergunta pergunta. Pergunta sobre a variação da RECEITA pede o trecho em que a administração explica a receita (busque "receita líquida" no relatório da administração e leia a página), não um trecho sobre custos, sobre o lucro ou sobre uma controlada pequena. Se o trecho é de uma parte do grupo, diga de qual.

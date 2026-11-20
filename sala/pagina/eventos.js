@@ -4,9 +4,10 @@
 // ============================================================================================
 // Eventos → ações
 // ============================================================================================
-const GRAVA = { salvar_indicador: 'indicadores', salvar_nao_encontrado: 'ausências', fechar_extracao: 'extração fechada',
+const GRAVA = { salvar_campo: 'campos', salvar_nao_encontrado: 'ausências', fechar_extracao: 'extração fechada',
   registrar_alerta: 'alertas', concluir_revisao: 'revisão concluída', salvar_item_analise: 'achados', registrar_ausencia_analise: 'ausências',
-  salvar_resposta: 'resposta', salvar_resumo: 'resumo', montar_relatorio: 'relatório montado' };
+  salvar_resposta: 'resposta', salvar_resumo: 'resumo', montar_relatorio: 'relatório montado',
+  montar_relatorio_documento: 'relatório do documento montado' };
 const RAG = new Set(['buscar_trechos', 'ler_chunk', 'ler_pagina', 'listar_documentos']);
 let nomesDocs = {}, pensamentos = {};
 

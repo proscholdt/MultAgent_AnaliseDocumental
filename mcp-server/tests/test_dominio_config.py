@@ -48,7 +48,7 @@ def test_indicador_novo_so_com_yaml_chega_ao_esquema_das_tools(tmp_path):
 
     pasta = _copia(tmp_path, mudar)
     codigo = ("import json; from app.governanca.catalogo import load_tools; t = load_tools(); "
-              "print(json.dumps({'campo': t['salvar_indicador'].definition().input_schema['properties']['campo'], "
+              "print(json.dumps({'campo': t['salvar_campo'].definition().input_schema['properties']['campo'], "
               "'pergunta': t['salvar_resposta'].definition().input_schema['properties']['pergunta_id']}))")
     saida = subprocess.run([sys.executable, "-c", codigo], cwd=RAIZ, capture_output=True, text=True, check=True,
                            env={**os.environ, "DOMINIOS_PATH": str(pasta.parent)})

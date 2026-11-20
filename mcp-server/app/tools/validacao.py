@@ -61,7 +61,7 @@ class CandidatosInconsistencia(Args):
 async def candidatos_inconsistencia(call: Call, args: CandidatosInconsistencia) -> dict[str, Any]:
     document = await call.deps.documents.get(call.caller, args.doc_id)
     found = await _candidates(call, document)
-    return {"doc_id": args.doc_id, "empresa": document.company, "candidatos": [c.view() for c in found],
+    return {"doc_id": args.doc_id, "entidade": document.company, "candidatos": [c.view() for c in found],
             "como_usar": "Julgue CADA candidato: confira o trecho (ler_chunk ou ler_pagina) e, quando houver, a "
                          "`prova` (os mesmos números em outro quadro, com o ano de lá). Se for erro do documento: "
                          "registrar_alerta com o chunk_index e a citação copiada do trecho; a descrição só leva "
@@ -95,7 +95,7 @@ class DescartarCandidato(Args):
     regra: str = Field(description="A regra do candidato, como veio em candidatos_inconsistencia.")
     motivo: str = Field(min_length=20, max_length=400, description="Por que não é erro do documento, em uma ou duas "
                         "frases (ex.: 'arredondamento entre o texto e o quadro', 'a nota explica que a coluna é de "
-                        "outra controlada'). Números só os que estão no trecho.")
+                        "outra parte do documento'). Números só os que estão no trecho.")
 
 
 @tool("descartar_candidato", "validacao", """
@@ -134,7 +134,7 @@ class LerAlertas(Args):
 async def ler_alertas(call: Call, args: LerAlertas) -> dict[str, Any]:
     document = await call.deps.documents.get(call.caller, args.doc_id)
     alerts = await call.deps.store.alerts(call.caller.user_id, args.doc_id, document.fingerprint)
-    return {"doc_id": args.doc_id, "empresa": document.company,
+    return {"doc_id": args.doc_id, "entidade": document.company,
             "alertas": [alert_view(alert) for alert in alerts if alert.codigo != DISCARDED]}
 
 

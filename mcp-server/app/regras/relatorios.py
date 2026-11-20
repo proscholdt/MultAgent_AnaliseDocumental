@@ -1,4 +1,4 @@
-"""Montagem dos relatórios em Markdown: o consolidado e o de uma empresa. As tabelas e as listas
+"""Montagem dos relatórios em Markdown: o consolidado e o de um documento. As tabelas e as listas
 saem direto da base, e os números entram pelos marcadores (ver marcadores.py)."""
 from datetime import datetime
 from typing import Any
@@ -49,18 +49,18 @@ def _textos() -> Any:
 
 
 def _name(doc: dict[str, Any]) -> str:
-    return doc["extracao"]["documento"]["empresa"] or doc["extracao"]["documento"]["arquivo"]
+    return doc["extracao"]["documento"]["entidade"] or doc["extracao"]["documento"]["arquivo"]
 
 
 def _formulas(documents: list[dict[str, Any]]) -> list[str]:
-    formulas = {computed["formula"] for doc in documents for block in doc["extracao"]["indicadores"].values()
+    formulas = {computed["formula"] for doc in documents for block in doc["extracao"]["campos"].values()
                 if (computed := block["calculado"])}
     return ["Fórmulas dos valores calculados:", ""] + [f"- {formula}" for formula in sorted(formulas)] + [""] \
         if formulas else []
 
 
 def _analysis_lines(doc: dict[str, Any]) -> list[str]:
-    """A análise qualitativa de uma empresa, categoria por categoria, com as citações."""
+    """A análise qualitativa de um documento, categoria por categoria, com as citações."""
     out: list[str] = []
     for categoria, (label, _) in CATEGORIES.items():
         out += [f"**{label}**", ""]
@@ -80,8 +80,8 @@ def _analysis_lines(doc: dict[str, Any]) -> list[str]:
 
 
 def _alert_lines(doc: dict[str, Any]) -> list[str]:
-    """O que a empresa não informa e os alertas, os de atenção primeiro."""
-    missing = [line for block in doc["extracao"]["indicadores"].values() if (line := _not_found(block))]
+    """O que o documento não informa e os alertas, os de atenção primeiro."""
+    missing = [line for block in doc["extracao"]["campos"].values() if (line := _not_found(block))]
     complete = f"- {_textos().todos_encontrados}"
     out = [f"- {line}" for line in missing] or [complete]
     out.append("")
@@ -97,8 +97,8 @@ def _alert_lines(doc: dict[str, Any]) -> list[str]:
 
 
 def build_company_report(doc: dict[str, Any], generated_at: datetime) -> str:
-    """O relatório de uma empresa só: resumo, indicadores, análise e alertas. As perguntas
-    comparativas não entram (comparam as empresas: são do relatório consolidado)."""
+    """O relatório de um documento só: resumo, campos, análise e alertas. As perguntas
+    comparativas não entram (comparam os documentos: são do relatório consolidado)."""
     name, meta = _name(doc), doc["extracao"]["documento"]
     recorte = atual().pacote.recorte
     when = (f"Período {meta['periodo_referencia']}, comparado com {meta['periodo_comparavel']}."
@@ -108,7 +108,7 @@ def build_company_report(doc: dict[str, Any], generated_at: datetime) -> str:
     out += ["## 1. Resumo executivo", "", doc["resumo"] or "_Resumo não gerado._", ""]
     out += [f"## 2. {_textos().secao_campos}", "", f"| {_textos().campo} | Valor |", "|---|---|"]
     for campo in MAIN_FIELDS:
-        out.append(f"| {FIELDS[campo].label} | {_cell(doc['extracao']['indicadores'][campo])} |")
+        out.append(f"| {FIELDS[campo].label} | {_cell(doc['extracao']['campos'][campo])} |")
     legend = (f"Valores de {meta['periodo_referencia']}; \"var.\" é a variação contra {meta['periodo_comparavel']}, "
               "calculada pelo código. A página é a do PDF.") if meta.get("periodo_comparavel") \
         else f"Valores do documento de {meta['periodo_referencia']}. A página é a do PDF."
@@ -138,7 +138,7 @@ def build_report(documents: list[dict[str, Any]], answers: list[dict[str, Any]],
     out += [f"## 2. {_textos().secao_comparados}", "",
             f"| {_textos().campo} | " + " | ".join(names) + " |", "|---|" + "---|" * len(names)]
     for campo in MAIN_FIELDS:
-        cells = [_cell(doc["extracao"]["indicadores"][campo]) for doc in documents]
+        cells = [_cell(doc["extracao"]["campos"][campo]) for doc in documents]
         out.append(f"| {FIELDS[campo].label} | " + " | ".join(cells) + " |")
     periods = {(doc["extracao"]["documento"]["periodo_referencia"], doc["extracao"]["documento"]["periodo_comparavel"])
                for doc in documents if doc["extracao"]["documento"].get("periodo_comparavel")}

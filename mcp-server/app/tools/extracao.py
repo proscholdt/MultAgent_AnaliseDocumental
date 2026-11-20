@@ -10,8 +10,8 @@ uma conferência que não depende dele.
 - "Não encontrado": o servidor procura os termos do campo no documento; se aparecem, o agente
   tem de dizer por que aquelas páginas não servem.
 
-O que é calculado (variação, margem, EBITDA pela DRE) não entra por aqui: é o servidor que
-calcula, ao fechar a extração.
+O que é calculado (a variação, as fórmulas do plugin do domínio) não entra por aqui: é o servidor
+que calcula, ao fechar a extração.
 """
 import re
 from decimal import Decimal
@@ -26,6 +26,7 @@ from app.dominio.periodo import Periodo
 from app.governanca.catalogo import Args, Call, tool
 from app.governanca.erros import ToolRejected
 from app.regras.campos import DOMINIO, FIELDS, MAIN_FIELDS, Campo, CampoPrincipal, atual
+from app.regras.datas import data_no_trecho, normalizar_data
 from app.regras.evidencias import occurrences, statement_tables
 from app.regras.evidencias import squash_spaces as _squash
 from app.regras.extracao_enxuta import compact
@@ -80,7 +81,7 @@ def _origem(document: Any, papel: str) -> Any:
     return source.get(metadado.nome) if metadado and metadado.nome in source else source.get(antigo)
 
 
-class SalvarIndicador(Args):
+class SalvarCampo(Args):
     doc_id: str = Field(description="Documento.")
     campo: Campo = Field(description="Qual campo. Os principais são os do relatório; os demais (quando há) são "
                          "valores de apoio, usados pelo servidor nos cálculos.")
@@ -89,15 +90,15 @@ class SalvarIndicador(Args):
                                 "(3T2025) ou o acumulado do ano (9M2025) num trimestral. Nos outros, null: vale a data "
                                 "do documento.")
     medida: Literal["valor", "variacao_informada"] = Field(
-        default="valor", description="'valor': o indicador em si. 'variacao_informada': a variação percentual "
-        "contra o período anterior que a própria empresa escreveu (o servidor também calcula a variação e "
+        default="valor", description="'valor': o campo em si. 'variacao_informada': a variação percentual "
+        "contra o período anterior que o próprio documento escreve (o servidor também calcula a variação e "
         "compara as duas).")
     origem: Literal["tabela", "texto"] = Field(description="De onde o valor vem: célula de tabela ou texto corrido.")
     chunk_index: int = Field(ge=0, description="Chunk onde o valor está.")
     rotulo_linha: str | None = Field(default=None, description="origem='tabela': rótulo da linha, copiado da "
                                      "primeira coluna da tabela.")
     rotulo_coluna: str | None = Field(default=None, description="origem='tabela': cabeçalho da coluna, copiado "
-                                      "da tabela (ex.: 'Consolidado - 2022').")
+                                      "da tabela (ex.: '2022', 'Resultado').")
     ocorrencia_linha: int | None = Field(default=None, ge=1, description="Só se o rótulo da linha se repete na "
                                          "tabela: qual ocorrência (1 = a primeira). Senão, null.")
     ocorrencia_coluna: int | None = Field(default=None, ge=1, description="Só se o cabeçalho da coluna se repete: "
@@ -105,9 +106,9 @@ class SalvarIndicador(Args):
     trecho: str | None = Field(default=None, description="origem='texto': a frase do documento que traz o valor, "
                                "copiada literalmente do chunk.")
     valor: str | None = Field(default=None, description="origem='texto': o número como está escrito no trecho "
-                              "(ex.: '9.032', '3,32x', '23%'). Em origem='tabela' fica null: o servidor lê a célula.")
+                              "(ex.: '9.032', '1,5x', '23%'). Em origem='tabela' fica null: o servidor lê a célula.")
     nota: str | None = Field(default=None, max_length=300, description="Observação curta sobre o valor, se "
-                             "necessária (ex.: 'EBITDA da distribuidora, não do consolidado'). Senão, null.")
+                             "necessária (ex.: 'valor de uma parte do documento, não do total'). Senão, null.")
 
 
 _NUMBER_AND_UNIT = re.compile(r"^\s*(-?\d[\d.,]*)\s*(\S.*?)?\s*$")
@@ -135,7 +136,7 @@ def _cell_number(text: str, info: Any, row: str, column: str) -> Any:
     return parse_number(match.group(1))
 
 
-def _from_table(args: SalvarIndicador, chunk: dict[str, Any]) -> dict[str, Any]:
+def _from_table(args: SalvarCampo, chunk: dict[str, Any]) -> dict[str, Any]:
     if chunk["chunk_type"] != "table":
         raise ToolRejected(f"O chunk {args.chunk_index} não é uma tabela. Para valor em texto corrido, use "
                            "origem='texto' com trecho e valor.")
@@ -165,7 +166,7 @@ def _from_table(args: SalvarIndicador, chunk: dict[str, Any]) -> dict[str, Any]:
         "table": table, "row_index": cell.row_index, "column_index": cell.column_index}
 
 
-def _from_text(args: SalvarIndicador, chunk: dict[str, Any]) -> dict[str, Any]:
+def _from_text(args: SalvarCampo, chunk: dict[str, Any]) -> dict[str, Any]:
     if chunk["chunk_type"] == "table":
         # Citar a linha de uma tabela como "trecho" escaparia da leitura de célula: o número estaria
         # no trecho, mas a coluna (o ano, o escopo) seria escolha do modelo. Na 6ª execução real o
@@ -202,14 +203,17 @@ def _from_text(args: SalvarIndicador, chunk: dict[str, Any]) -> dict[str, Any]:
         or bool(re.search(_MINUS_BEFORE + re.escape(tokens[0]) + r"(?![\d.,]*\d)", snippet))}
 
 
-@tool("salvar_indicador", "extracao", """
-    Grava um indicador de um documento, depois de conferir a origem. Valor de tabela: informe
+@tool("salvar_campo", "extracao", """
+    Grava um campo de um documento, depois de conferir a origem. Valor de tabela: informe
     chunk_index, rotulo_linha e rotulo_coluna, e o servidor lê a célula (não informe o número).
     Valor de texto: informe chunk_index, o trecho copiado do documento e o valor como está escrito.
+    Campo de texto ou de data: o valor é o que o documento escreve (o nome, a cláusula, a data), e
+    tem de estar no trecho citado ou na célula apontada.
     Se a conferência falhar, o erro diz o que corrigir. Salvar de novo o mesmo campo e período
-    substitui o anterior. Em valor de tabela do ano de referência, o servidor grava também o valor
-    do ano anterior, lido da coluna irmã da mesma linha, quando ela existe.""")
-async def salvar_indicador(call: Call, args: SalvarIndicador) -> dict[str, Any]:
+    substitui o anterior. Num recorte com período comparável, em valor de tabela do período de
+    referência, o servidor grava também o do período anterior, lido da coluna irmã da mesma linha,
+    quando ela existe.""")
+async def salvar_campo(call: Call, args: SalvarCampo) -> dict[str, Any]:
     document = await call.deps.documents.get(call.caller, args.doc_id)
     reference, comparable = periods(document)
     if _por_periodo():
@@ -228,8 +232,7 @@ async def salvar_indicador(call: Call, args: SalvarIndicador) -> dict[str, Any]:
         raise ToolRejected("A variação informada só se aplica aos campos principais, em domínio com período "
                            "comparável.")
     if info.kind in ("texto", "data"):
-        raise ToolRejected(f"{info.label} é um campo de {info.kind}: ainda não há leitura conferida para ele. "
-                           "Registre o que o documento diz na análise (salvar_item_analise).")
+        return await _save_text(call, args, document, chunk, info)
     found = _from_table(args, chunk) if args.origem == "tabela" else _from_text(args, chunk)
     number = found["number"]
     kind = "percentual" if args.medida == "variacao_informada" else info.kind
@@ -237,20 +240,20 @@ async def salvar_indicador(call: Call, args: SalvarIndicador) -> dict[str, Any]:
         raise ToolRejected(f"{info.label} é um valor em dinheiro, e o número citado ({number.text}) é um "
                            f"{'percentual' if number.kind == 'percentual' else 'múltiplo'}.")
     if (kind, number.kind) in (("multiplo", "percentual"), ("percentual", "multiplo")):
-        raise ToolRejected(f"{info.label} é um {'múltiplo (ex.: 3,32x)' if kind == 'multiplo' else 'percentual'}, e o "
+        raise ToolRejected(f"{info.label} é um {'múltiplo (ex.: 1,5x)' if kind == 'multiplo' else 'percentual'}, e o "
                            f"número citado ({number.text}) é um {'percentual' if kind == 'multiplo' else 'múltiplo'}: "
-                           "é outro índice. Se a empresa não informa este, use salvar_nao_encontrado.")
+                           "é outro índice. Se o documento não informa este, use salvar_nao_encontrado.")
     if kind == "percentual" and number.kind != "percentual" and (
             args.origem == "texto" or "%" not in f"{found['linha']} {found['coluna']}"):
         raise ToolRejected(f"{info.label} é um percentual, e o número citado ({number.text}) não traz '%': é outro "
-                           "valor. Não calcule a margem nem a variação: o servidor calcula. Se a empresa não escreve "
+                           "valor. Não calcule percentual nem variação: o servidor calcula. Se o documento não escreve "
                            "o percentual, use salvar_nao_encontrado.")
     if kind == "numero" and number.kind == "multiplo":
         raise ToolRejected(f"{info.label} é um número{f' em {info.unit}' if info.unit else ''}, e o citado "
                            f"({number.text}) é um múltiplo: é outro valor.")
     if kind == "multiplo" and number.kind != "multiplo" and args.origem == "texto" and "vez" not in plain(found["trecho"]):
-        raise ToolRejected(f"{info.label} é um múltiplo (ex.: 3,32x), e o número citado ({number.text}) não é: se a "
-                           "empresa não escreve o múltiplo, use salvar_nao_encontrado.")
+        raise ToolRejected(f"{info.label} é um múltiplo (ex.: 1,5x), e o número citado ({number.text}) não é: se o "
+                           "documento não escreve o múltiplo, use salvar_nao_encontrado.")
     atual().plugin.conferir_fonte(args, info, found, chunk, document)
     if args.nota:
         check_script(args.nota, "A nota")
@@ -290,10 +293,82 @@ async def salvar_indicador(call: Call, args: SalvarIndicador) -> dict[str, Any]:
     return {"salvo": {"campo": args.campo, "periodo": args.periodo, "medida": args.medida, "valor": number.text,
                       "valor_numerico": float(value), "unidade": unit, "escopo": found["escopo"],
                       "pagina": chunk["page_start"], "linha": found["linha"], "coluna": found["coluna"]},
-            "ano_anterior_gravado_pelo_servidor": previous, "avisos": warnings}
+            "comparavel_gravado_pelo_servidor": previous, "avisos": warnings}
 
 
-async def _check_cell_is_free(call: Call, args: SalvarIndicador, document: IndexedDocument, found: dict[str, Any],
+def _text_from_table(args: SalvarCampo, chunk: dict[str, Any]) -> tuple[str, str, str, str]:
+    """O texto da célula apontada: (valor, trecho, linha, coluna)."""
+    if chunk["chunk_type"] != "table":
+        raise ToolRejected(f"O chunk {args.chunk_index} não é uma tabela. Para valor em texto corrido, use "
+                           "origem='texto' com trecho e valor.")
+    if not args.rotulo_linha or not args.rotulo_coluna:
+        raise ToolRejected("Com origem='tabela', informe rotulo_linha e rotulo_coluna.")
+    cell = read_cell(chunk["text"], args.rotulo_linha, args.rotulo_coluna, row_occurrence=args.ocorrencia_linha,
+                     column_occurrence=args.ocorrencia_coluna)
+    if not _squash(cell.text or ""):
+        raise ToolRejected(f"A célula ({cell.row_label} × {cell.column_label}) está vazia. Escolha outra linha ou "
+                           "coluna, ou registre o campo como não encontrado.")
+    return _squash(cell.text), f"{cell.header_text}\n{cell.row_text}", cell.row_label, cell.column_label
+
+
+def _text_from_text(args: SalvarCampo, chunk: dict[str, Any]) -> str:
+    """O trecho citado, conferido no chunk; o valor tem de estar nele."""
+    if not args.trecho or not args.valor:
+        raise ToolRejected("Com origem='texto', informe trecho (a frase copiada do chunk) e valor.")
+    snippet = _squash(args.trecho)
+    if len(snippet) < 12:
+        raise ToolRejected("O trecho é curto demais: copie a frase inteira que traz o valor.")
+    if snippet not in _squash(chunk["text"]):
+        raise ToolRejected(f"O trecho não está no chunk {args.chunk_index}. Copie o texto literalmente, sem "
+                           "resumir nem corrigir.")
+    return snippet
+
+
+async def _save_text(call: Call, args: SalvarCampo, document: IndexedDocument, chunk: dict[str, Any],
+                     info: Any) -> dict[str, Any]:
+    """Um campo de texto (o foro, a parte de um contrato) ou de data (a assinatura): o valor é o que
+    o documento escreve. Num de texto, ele está literalmente no trecho ou na célula; num de data, o
+    trecho escreve o dia, o mês e o ano, e o servidor grava em dd/mm/aaaa."""
+    if args.medida != "valor":
+        raise ToolRejected(f"{info.label} é um campo de {info.kind}: não tem variação.")
+    if args.origem == "tabela":
+        if args.valor is not None or args.trecho is not None:
+            raise ToolRejected("Com origem='tabela' não se informa valor nem trecho: o servidor lê a célula.")
+        value, quoted, row_label, column_label = _text_from_table(args, chunk)
+        source = value
+    else:
+        quoted = _text_from_text(args, chunk)
+        value, source, row_label, column_label = _squash(args.valor), quoted, None, None
+        if info.kind == "texto" and value.casefold() not in quoted.casefold():
+            raise ToolRejected(f"O valor '{value}' não está no trecho citado. Copie o valor como está escrito no "
+                               "trecho, sem resumir nem corrigir.")
+    if info.kind == "data":
+        date = normalizar_data(value)
+        if date is None:
+            raise ToolRejected(f"'{value}' não é uma data (dia, mês e ano). Informe a data como está escrita no "
+                               "documento, por exemplo '12/03/2024' ou '12 de março de 2024'.")
+        if not data_no_trecho(date, source):
+            raise ToolRejected(f"A data {date} não está escrita no trecho citado: o dia, o mês e o ano têm de estar "
+                               "nele.")
+        value = date
+    check_script(value, "O valor")
+    if args.nota:
+        check_script(args.nota, "A nota")
+    await call.deps.store.save_value(StoredValue(
+        user_id=call.caller.user_id, doc_id=args.doc_id, fingerprint=document.fingerprint,
+        run_id=call.caller.run_id, agent=call.caller.agent, campo=args.campo, periodo=args.periodo,
+        medida="valor", status="encontrado", origem=args.origem, chunk_index=args.chunk_index,
+        pagina=chunk["page_start"], pagina_final=chunk["page_end"],
+        secao=" > ".join(chunk.get("section_path") or []), linha=row_label, coluna=column_label,
+        trecho=quoted, texto_valor=value, valor=None, tipo=info.kind, unidade=None, unidade_origem=None,
+        escopo=None, alternativa_consolidada=False, periodo_confirmado=True, nota=args.nota))
+    return {"salvo": {"campo": args.campo, "periodo": args.periodo, "medida": "valor", "valor": value,
+                      "valor_numerico": None, "unidade": None, "escopo": None, "pagina": chunk["page_start"],
+                      "linha": row_label, "coluna": column_label},
+            "comparavel_gravado_pelo_servidor": None, "avisos": []}
+
+
+async def _check_cell_is_free(call: Call, args: SalvarCampo, document: IndexedDocument, found: dict[str, Any],
                               replaced: tuple[str, ...]) -> None:
     """Uma célula é um valor só. Gravada em dois campos, uma soma a contaria duas vezes (visto
     com a linha única 'Imobilizado e intangível', gravada como imobilizado e como intangível)."""
@@ -339,7 +414,7 @@ async def _save_comparable(call: Call, row: StoredValue, found: dict[str, Any], 
 
 class SalvarNaoEncontrado(Args):
     doc_id: str = Field(description="Documento.")
-    campo: CampoPrincipal = Field(description="O indicador que o documento não informa.")
+    campo: CampoPrincipal = Field(description="O campo que o documento não informa.")
     motivo: str = Field(min_length=20, max_length=600, description="Por que o campo não existe no documento, e "
                         "onde foi procurado.")
     paginas_descartadas: list[int] = Field(default_factory=list, description="Páginas em que o termo aparece e "
@@ -348,9 +423,9 @@ class SalvarNaoEncontrado(Args):
 
 
 @tool("salvar_nao_encontrado", "extracao", """
-    Registra que o documento não informa um indicador. O servidor procura os termos do campo no
+    Registra que o documento não informa um campo. O servidor procura os termos do campo no
     documento inteiro; se aparecerem, a chamada é recusada com as páginas, e você deve lê-las:
-    se o valor está lá, use salvar_indicador; se não serve, repita a chamada listando essas
+    se o valor está lá, use salvar_campo; se não serve, repita a chamada listando essas
     páginas em paginas_descartadas e explicando no motivo. Nunca estime um valor.""")
 async def salvar_nao_encontrado(call: Call, args: SalvarNaoEncontrado) -> dict[str, Any]:
     document = await call.deps.documents.get(call.caller, args.doc_id)
@@ -361,15 +436,15 @@ async def salvar_nao_encontrado(call: Call, args: SalvarNaoEncontrado) -> dict[s
         pages = sorted({chunk["page_start"] for chunk in statement_tables(document, info.section)})
         if pages:
             raise ToolRejected(
-                f"{info.label} é uma linha da demonstração financeira, e o documento tem essa demonstração (p. "
+                f"{info.label} é uma linha de um quadro do documento ({info.section}), e o documento tem esse quadro (p. "
                 f"{', '.join(map(str, pages[:6]))}): o valor está nela. Abra a tabela com ler_chunk e copie o rótulo "
                 "da linha como está escrito (a linha do total do grupo, não o título). Se a célula não puder ser "
                 "lida, use origem='texto' com uma nota dizendo isso.")
     evidence = atual().plugin.evidencia_de_valor(document, args.campo)
     if evidence:
         raise ToolRejected(
-            f"O documento traz {info.label} com valor: não é 'não encontrado'. Grave com salvar_indicador a linha "
-            "ou a frase da lista (prefira a linha de tabela). Se o que está escrito não é exatamente o indicador "
+            f"O documento traz {info.label} com valor: não é 'não encontrado'. Grave com salvar_campo a linha "
+            "ou a frase da lista (prefira a linha de tabela). Se o que está escrito não é exatamente o campo "
             "do exercício (a frase fala em outro ano, o valor é ajustado ou é de uma parte do grupo), grave mesmo "
             "assim e diga isso em 'nota': o relatório mostra a nota e o alerta, e o analista decide.",
             problemas=[f"p. {page}: {what}" for page, what in evidence[:5]])
@@ -420,10 +495,9 @@ def _status_line(block: dict[str, Any]) -> str:
 
 @tool("fechar_extracao", "extracao", """
     Fecha a extração de um documento. Confere que os campos principais têm valor ou "não encontrado",
-    calcula o que os valores guardados permitem (variação contra o ano anterior, margem, EBITDA,
-    dívida líquida, alavancagem, capex), roda as validações automáticas e publica o JSON. Se faltar
-    campo, o erro lista quais. Indicador que a empresa não informa precisa dos valores de apoio para
-    o servidor calcular, e o EBITDA precisa deles mesmo quando é informado, para ser conferido: se
+    calcula o que os valores guardados permitem (a variação contra o período comparável e as
+    fórmulas do domínio, quando há), roda as validações automáticas e publica o JSON. Se faltar
+    campo, o erro lista quais. Se o domínio calcula campos a partir de valores de apoio e eles
     faltarem, o erro diz quais gravar.""")
 async def fechar_extracao(call: Call, args: FecharExtracao) -> dict[str, Any]:
     document = await call.deps.documents.get(call.caller, args.doc_id)
@@ -432,7 +506,7 @@ async def fechar_extracao(call: Call, args: FecharExtracao) -> dict[str, Any]:
     if missing:
         raise ToolRejected(
             f"Faltam {len(missing)} dos {len(MAIN_FIELDS)} campos principais. Cada um precisa de um valor "
-            "(salvar_indicador) ou de "
+            "(salvar_campo) ou de "
             "um registro de não encontrado (salvar_nao_encontrado).",
             problemas=[f"{campo}: {FIELDS[campo].label}" for campo in missing])
     uncomputable = atual().plugin.conferir_fechamento(document, extraction, args.apoio_ausente)
@@ -449,19 +523,19 @@ async def fechar_extracao(call: Call, args: FecharExtracao) -> dict[str, Any]:
     new_alerts = await call.deps.store.add_alerts(call.caller, args.doc_id, document.fingerprint, "validacao", alerts)
     payload = {
         "documento": {
-            "doc_id": document.doc_id, "arquivo": document.file_name, "empresa": document.company,
-            "origem_da_empresa": _origem(document, "entidade"), "tipo": document.doc_type,
+            "doc_id": document.doc_id, "arquivo": document.file_name, "entidade": document.company,
+            "origem_da_entidade": _origem(document, "entidade"), "tipo": document.doc_type,
             "paginas": document.page_count, "periodo_referencia": extraction.reference,
             "periodo_comparavel": extraction.comparable,
             "origem_do_periodo": _origem(document, "recorte")},
-        "indicadores": indicators,
+        "campos": indicators,
         "valores_de_apoio": extraction.support(),
         "alertas_de_validacao": [alert.view() for alert in alerts],
         "impressao_do_indice": document.fingerprint,
     }
     await call.deps.store.publish(call.caller, args.doc_id, document.fingerprint, payload)
-    return {"publicada": True, "empresa": document.company, "periodo": extraction.reference,
-            "indicadores": {campo: _status_line(indicators[campo]) for campo in MAIN_FIELDS},
+    return {"publicada": True, "entidade": document.company, "periodo": extraction.reference,
+            "campos": {campo: _status_line(indicators[campo]) for campo in MAIN_FIELDS},
             "alertas": [f"[{alert.severidade}] {alert.mensagem}" for alert in alerts],
             "alertas_novos": new_alerts}
 
@@ -469,7 +543,7 @@ async def fechar_extracao(call: Call, args: FecharExtracao) -> dict[str, Any]:
 class LerExtracao(Args):
     doc_id: str | None = Field(default=None, description="Um documento, ou null para todos os do usuário.")
     detalhe: Literal["resumo", "enxuto", "completo"] = Field(
-        default="resumo", description="'resumo': uma linha por indicador. 'enxuto': só os campos do relatório, cada "
+        default="resumo", description="'resumo': uma linha por campo. 'enxuto': só os campos do relatório, cada "
         "um com valor, unidade, variação e origem (página e trecho), ou 'não encontrado'. 'completo': o JSON "
         "inteiro, com os valores de apoio e as validações.")
 
@@ -487,7 +561,7 @@ async def ler_extracao(call: Call, args: LerExtracao) -> dict[str, Any]:
     for doc_id in doc_ids:
         document = await call.deps.documents.get(call.caller, doc_id)
         published = await call.deps.store.extraction(call.caller.user_id, doc_id)
-        entry: dict[str, Any] = {"doc_id": doc_id, "arquivo": document.file_name, "empresa": document.company}
+        entry: dict[str, Any] = {"doc_id": doc_id, "arquivo": document.file_name, "entidade": document.company}
         if published is None:
             entry["extracao"] = None
         elif published.fingerprint != document.fingerprint:
@@ -501,7 +575,7 @@ async def ler_extracao(call: Call, args: LerExtracao) -> dict[str, Any]:
             entry["extracao"] = {
                 "periodo_referencia": payload["documento"]["periodo_referencia"],
                 "periodo_comparavel": payload["documento"]["periodo_comparavel"],
-                "indicadores": {campo: _status_line(block) for campo, block in payload["indicadores"].items()},
+                "campos": {campo: _status_line(block) for campo, block in payload["campos"].items()},
                 "alertas": len(payload["alertas_de_validacao"])}
         result.append(entry)
     return {"documentos": result}

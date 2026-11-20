@@ -32,7 +32,7 @@ def text(campo, snippet, value, *, chunk=TEXT, periodo="2022", **extra):
 
 
 async def save(governance, arguments):
-    result = await call(governance, "salvar_indicador", arguments)
+    result = await call(governance, "salvar_campo", arguments)
     assert not result.is_error, payload(result)
     return payload(result)
 
@@ -57,32 +57,32 @@ async def test_table_value_is_read_by_the_server_from_the_cell_the_agent_points_
 
 
 async def test_agent_cannot_type_the_number_of_a_table_cell(governance):
-    error = await rejected(governance, "salvar_indicador", cell(
+    error = await rejected(governance, "salvar_campo", cell(
         "receita_liquida", "Receita operacional líquida", "Consolidado - 2022", valor="9.999.999"))
     assert "o servidor lê a célula" in error["erro"]
 
 
 async def test_wrong_year_empty_cell_and_unknown_labels_are_refused(governance):
     # A coluna de 2021 pedida como 2022: é o erro que uma conferência "o número existe na página" deixaria passar.
-    year = await rejected(governance, "salvar_indicador", cell(
+    year = await rejected(governance, "salvar_campo", cell(
         "receita_liquida", "Receita operacional líquida", "Consolidado - 2021 - (não auditado)"))
     assert "é de 2021, não de 2022" in year["erro"]
-    empty = await rejected(governance, "salvar_indicador", cell(
+    empty = await rejected(governance, "salvar_campo", cell(
         "receita_liquida", "Receita operacional líquida", "Controladora - 2022"))
     assert "não tem um número: está escrito '-'" in empty["erro"]
-    label = await rejected(governance, "salvar_indicador", cell("receita_liquida", "Receita líquida", "Consolidado - 2022"))
+    label = await rejected(governance, "salvar_campo", cell("receita_liquida", "Receita líquida", "Consolidado - 2022"))
     assert "Receita operacional líquida" in label["opcoes"]
-    not_table = await rejected(governance, "salvar_indicador", cell("receita_liquida", "x", "y", chunk=TEXT))
+    not_table = await rejected(governance, "salvar_campo", cell("receita_liquida", "x", "y", chunk=TEXT))
     assert "não é uma tabela" in not_table["erro"]
-    out_of_range = await rejected(governance, "salvar_indicador", cell("receita_liquida", "x", "y", chunk=99))
+    out_of_range = await rejected(governance, "salvar_campo", cell("receita_liquida", "x", "y", chunk=99))
     assert "de 0 a 9" in out_of_range["erro"]
-    other_year = await rejected(governance, "salvar_indicador", cell(
+    other_year = await rejected(governance, "salvar_campo", cell(
         "receita_liquida", "Receita operacional líquida", "Consolidado - 2022", periodo="2019"))
     assert "Este documento é de 2022" in other_year["erro"]
 
 
 async def test_repeated_row_label_needs_the_occurrence(governance):
-    ambiguous = await rejected(governance, "salvar_indicador", cell(
+    ambiguous = await rejected(governance, "salvar_campo", cell(
         "emprestimos_circulante", "Empréstimos e financiamentos", "Consolidado - 31/12/2022", chunk=BALANCE))
     assert "aparece 2 vezes como linha" in ambiguous["erro"]
     short = await save(governance, cell("emprestimos_circulante", "Empréstimos e financiamentos",
@@ -101,14 +101,14 @@ async def test_text_value_needs_a_literal_snippet_that_contains_the_number(gover
     assert (saved["valor"], saved["valor_numerico"], saved["unidade"], saved["pagina"]) == (
         "9.032", 9032.0, "R$ milhões", 10)  # a unidade vem do trecho, não do agente
 
-    paraphrase = await rejected(governance, "salvar_indicador", text(
+    paraphrase = await rejected(governance, "salvar_campo", text(
         "divida_liquida", "A dívida líquida da Companhia totalizou R$9.032 milhões em 2022", "9.032"))
     assert "não está no chunk" in paraphrase["erro"]
-    invented = await rejected(governance, "salvar_indicador", text("divida_liquida", snippet, "9.132"))
+    invented = await rejected(governance, "salvar_campo", text("divida_liquida", snippet, "9.132"))
     assert "9.132 não está no trecho" in invented["erro"]
-    piece = await rejected(governance, "salvar_indicador", text("divida_liquida", snippet, "032"))
+    piece = await rejected(governance, "salvar_campo", text("divida_liquida", snippet, "032"))
     assert "032 não está no trecho" in piece["erro"]  # pedaço de outro número não vale
-    kind = await rejected(governance, "salvar_indicador", text(
+    kind = await rejected(governance, "salvar_campo", text(
         "divida_liquida", "aumento de 23% em comparação a 2021, de R$7.353 milhões", "23%"))
     assert "é um valor em dinheiro" in kind["erro"]
 
@@ -216,14 +216,14 @@ async def test_closing_computes_with_fixed_formulas_and_keeps_informed_apart_fro
     await fill(governance)
     closed = payload(await call(governance, "fechar_extracao", {"doc_id": DOC_ANA}))
     assert closed["publicada"] and closed["periodo"] == "2022"
-    assert closed["indicadores"]["receita_liquida"] == "informado: 1.325.059 R$ mil (p. 8); variação: 24,84%"
+    assert closed["campos"]["receita_liquida"] == "informado: 1.325.059 R$ mil (p. 8); variação: 24,84%"
     # EBITDA: a empresa não informa; o servidor calcula pela DRE e mostra à parte.
-    assert closed["indicadores"]["ebitda"] == "não encontrado; calculado: 221.854 R$ mil"
+    assert closed["campos"]["ebitda"] == "não encontrado; calculado: 221.854 R$ mil"
 
     full = payload(await call(governance, "ler_extracao", {"doc_id": DOC_ANA, "detalhe": "completo"}))
     extraction = full["documentos"][0]["extracao"]
     assert extraction["documento"]["periodo_referencia"] == "2022" and extraction["documento"]["periodo_comparavel"] == "2021"
-    indicators = extraction["indicadores"]
+    indicators = extraction["campos"]
 
     revenue = indicators["receita_liquida"]
     assert revenue["informado"]["origem"] == {
@@ -287,7 +287,7 @@ async def test_validations_flag_what_does_not_add_up_and_fix_nothing(governance,
         "informado": "485.156 R$ mil", "calculado": "221.854 R$ mil", "pagina": 9,
         "trecho": "O EBITDA de 2022 somou R$ 485.156 mil"}
     # Nada foi corrigido: os valores informados continuam como a fonte os escreve.
-    assert closed["indicadores"]["margem_ebitda"].startswith("informado: 10,0% %")
+    assert closed["campos"]["margem_ebitda"].startswith("informado: 10,0% %")
 
 
 async def test_reindexed_document_makes_what_was_extracted_stale(governance, indexer):
@@ -319,13 +319,13 @@ async def test_extraction_of_one_user_does_not_exist_for_another(governance):
 async def test_the_source_must_be_about_the_indicator_asked_for(governance):
     """'Alavancagem' e 'margem' nomeiam contas diferentes em cada empresa. Na primeira execução real
     entrou como alavancagem um '76%' (dívida sobre capital) e um '0,08' (dívida sobre patrimônio)."""
-    other_row = await rejected(governance, "salvar_indicador", cell("ebitda", "Lucro bruto", "Consolidado - 2022"))
+    other_row = await rejected(governance, "salvar_campo", cell("ebitda", "Lucro bruto", "Consolidado - 2022"))
     assert "a linha apontada não menciona 'ebitda' nem 'lajida'" in other_row["erro"]
     assert "salvar_nao_encontrado" in other_row["erro"]
-    other_ratio = await rejected(governance, "salvar_indicador", text(
+    other_ratio = await rejected(governance, "salvar_campo", text(
         "alavancagem", "Em 2022, a receita líquida cresceu 30% em relação a 2021", "30%", chunk=PERFORMANCE))
-    assert "é um múltiplo (ex.: 3,32x), e o número citado (30%) é um percentual" in other_ratio["erro"]
-    other_text = await rejected(governance, "salvar_indicador", text(
+    assert "é um múltiplo (ex.: 1,5x), e o número citado (30%) é um percentual" in other_ratio["erro"]
+    other_text = await rejected(governance, "salvar_campo", text(
         "divida_liquida", "aumento de 23% em comparação a 2021, de R$7.353 milhões", "7.353", periodo="2021"))
     assert "a frase apontada não menciona 'divida liquida'" in other_text["erro"]
 
@@ -334,7 +334,7 @@ async def test_value_of_a_part_of_the_group_needs_a_note_saying_so(governance, i
     """Na Light, o EBITDA da distribuidora (p. 8) entrou como o da companhia; o consolidado estava na p. 9."""
     add_performance_details(indexer)
     snippet = "O EBITDA da distribuidora foi de R$ 1.817 milhões"
-    part = await rejected(governance, "salvar_indicador", text("ebitda", snippet, "1.817", chunk=EXTRA))
+    part = await rejected(governance, "salvar_campo", text("ebitda", snippet, "1.817", chunk=EXTRA))
     assert "fala em 'distribuidora'" in part["erro"] and "consolidado" in part["erro"]
     noted = await save(governance, text("ebitda", snippet, "1.817", chunk=EXTRA,
                                         nota="EBITDA só da distribuidora; a empresa não informa o consolidado."))
@@ -346,7 +346,7 @@ async def test_one_cell_cannot_be_saved_under_two_fields(governance):
     intangível, e o capex calculado saiu dobrado."""
     row, column = "Outras aquisições de imobilizado e intangível", "Consolidado - 2022"
     await save(governance, cell("capex_imobilizado", row, column, chunk=DFC))
-    twice = await rejected(governance, "salvar_indicador", cell("capex_intangivel", row, column, chunk=DFC))
+    twice = await rejected(governance, "salvar_campo", cell("capex_intangivel", row, column, chunk=DFC))
     assert "já está gravada como 'capex_imobilizado'" in twice["erro"]
     assert "grave-a no campo 'capex_imobilizado_e_intangivel'" in twice["erro"]
 
@@ -355,17 +355,17 @@ async def test_one_cell_cannot_be_saved_under_two_fields(governance):
     await fill_the_rest(governance, capex=False)
     extraction = payload(await call(governance, "ler_extracao", {"doc_id": DOC_ANA, "detalhe": "completo"}))[
         "documentos"][0]["extracao"]
-    capex = extraction["indicadores"]["capex"]["calculado"]
+    capex = extraction["campos"]["capex"]["calculado"]
     assert capex["valor"] == "45.761" and "linha única" in capex["formula"]
     assert "capex_imobilizado" not in extraction["valores_de_apoio"]
     # E o campo da linha única só aceita linha que fale dos dois (na Light entrou nele a de intangível).
-    only_one = await rejected(governance, "salvar_indicador", cell(
+    only_one = await rejected(governance, "salvar_campo", cell(
         "capex_imobilizado_e_intangivel", "Aquisição de intangível", column, chunk=DFC))
     assert "tem de mencionar 'imobilizado e intangivel'" in only_one["erro"]
 
     # O mesmo vale entre outros campos: a célula da receita não pode virar também o lucro.
     operating = "Lucro operacional antes das receitas e despesas financeiras"  # já gravada como valor de apoio
-    again = await rejected(governance, "salvar_indicador", cell("lucro_liquido", operating, column))
+    again = await rejected(governance, "salvar_campo", cell("lucro_liquido", operating, column))
     assert "já está gravada como 'resultado_antes_financeiro'" in again["erro"]
 
 
@@ -404,24 +404,24 @@ async def test_previous_year_is_read_by_the_server_from_the_sibling_column(gover
     """Na primeira execução real o extrator esqueceu o ano anterior em dois dos três documentos, e
     o relatório saiu sem variação. Agora quem lê a coluna irmã é o servidor."""
     saved = await save(governance, cell("receita_liquida", "Receita operacional líquida", "Consolidado - 2022"))
-    assert saved["ano_anterior_gravado_pelo_servidor"] == {
+    assert saved["comparavel_gravado_pelo_servidor"] == {
         "periodo": "2021", "valor": "1.061.410", "coluna": "Consolidado - 2021 - (não auditado)"}
     balance = await save(governance, cell("caixa_equivalentes", "Caixa e equivalentes de caixa",
                                           "Consolidado - 31/12/2022", chunk=BALANCE))
-    assert balance["ano_anterior_gravado_pelo_servidor"]["coluna"] == "Consolidado - 31/12/2021"
+    assert balance["comparavel_gravado_pelo_servidor"]["coluna"] == "Consolidado - 31/12/2021"
     # A coluna irmã é a do mesmo escopo: a da controladora não serve para um valor do consolidado.
-    assert balance["ano_anterior_gravado_pelo_servidor"]["valor"] == "174.602"
+    assert balance["comparavel_gravado_pelo_servidor"]["valor"] == "174.602"
 
     await fill_the_rest(governance)
     revenue = payload(await call(governance, "ler_extracao", {"doc_id": DOC_ANA, "detalhe": "completo"}))[
-        "documentos"][0]["extracao"]["indicadores"]["receita_liquida"]
+        "documentos"][0]["extracao"]["campos"]["receita_liquida"]
     assert revenue["comparavel"]["valor"] == "1.061.410" and revenue["variacao"]["calculada"]["valor"] == "24,84%"
     assert revenue["comparavel"]["origem"]["coluna"] == "Consolidado - 2021 - (não auditado)"
 
     # Valor de texto não tem coluna irmã: não há o que o servidor leia, e nada é inventado.
     from_text = await save(governance, text(
         "divida_liquida", "A dívida líquida da Companhia em 31 de dezembro de 2022 totalizou R$9.032 milhões", "9.032"))
-    assert from_text["ano_anterior_gravado_pelo_servidor"] is None
+    assert from_text["comparavel_gravado_pelo_servidor"] is None
 
 
 async def test_what_the_company_does_not_inform_must_be_computable_or_explained(governance):
@@ -460,7 +460,7 @@ async def test_what_the_company_does_not_inform_must_be_computable_or_explained(
     await save(governance, cell("capex_imobilizado", "Aquisição de imobilizado", "Consolidado - 2022", chunk=DFC))
     await save(governance, cell("capex_intangivel", "Aquisição de intangível", "Consolidado - 2022", chunk=DFC))
     closed = payload(await call(governance, "fechar_extracao", {"doc_id": DOC_ANA}))
-    assert closed["indicadores"]["capex"] == "não encontrado; calculado: 17.732 R$ mil"
+    assert closed["campos"]["capex"] == "não encontrado; calculado: 17.732 R$ mil"
 
 
 async def test_what_the_document_states_with_a_value_cannot_be_declared_missing(governance, indexer):
@@ -486,15 +486,15 @@ async def test_what_the_document_states_with_a_value_cannot_be_declared_missing(
     assert table["problemas"][0] == f"p. 42: linha de tabela '(=) Dívida líquida (a)' (chunk {CAPITAL})"
     assert not any("sobre capital" in problem for problem in table["problemas"])
     saved = await save(governance, cell("divida_liquida", "(=) Dívida líquida (a)", "Consolidado - 31/12/2022", chunk=CAPITAL))
-    assert saved["salvo"]["valor"] == "13.520" and saved["ano_anterior_gravado_pelo_servidor"]["valor"] == "16.877"
+    assert saved["salvo"]["valor"] == "13.520" and saved["comparavel_gravado_pelo_servidor"]["valor"] == "16.877"
     # Com o trecho extra, a margem passa a ter valor escrito: aí não pode mais ser dada como ausente.
     margin = await rejected(governance, "salvar_nao_encontrado", {
         "doc_id": DOC_ANA, "campo": "margem_ebitda", "paginas_descartadas": [9], "motivo": "Não há margem informada."})
     assert any("A margem EBITDA foi de 10,0% no ano." in problem for problem in margin["problemas"])
     # E uma linha sem rótulo não identifica valor nenhum (o caixa operacional da Millet veio de uma).
-    blank = await rejected(governance, "salvar_indicador", cell("fluxo_caixa_operacional", " ", "Consolidado - 2022", chunk=DFC))
+    blank = await rejected(governance, "salvar_campo", cell("fluxo_caixa_operacional", " ", "Consolidado - 2022", chunk=DFC))
     assert "informe rotulo_linha" in blank["erro"] or "está vazio" in blank["erro"]
-    other_line = await rejected(governance, "salvar_indicador", cell(
+    other_line = await rejected(governance, "salvar_campo", cell(
         "fluxo_caixa_operacional", "Aquisição de imobilizado", "Consolidado - 2022", chunk=DFC))
     assert "tem de mencionar 'caixa e operacionais'" in other_line["erro"]
 
@@ -502,11 +502,11 @@ async def test_what_the_document_states_with_a_value_cannot_be_declared_missing(
 async def test_support_values_must_come_from_their_own_line(governance):
     """Na Brasal entrou como caixa a linha 'Caixa e bancos', um componente da nota de caixa (1.346,
     contra 96.453 do total), e a dívida líquida calculada saiu errada."""
-    component = await rejected(governance, "salvar_indicador", cell(
+    component = await rejected(governance, "salvar_campo", cell(
         "caixa_equivalentes", "Empréstimos e financiamentos", "Consolidado - 31/12/2022", chunk=BALANCE, ocorrencia_linha=1))
     assert "não é a deste valor" in component["erro"] and "'caixa e equivalente'" in component["erro"]
     assert "aponte a linha do total" in component["erro"]
-    other_result = await rejected(governance, "salvar_indicador", cell(
+    other_result = await rejected(governance, "salvar_campo", cell(
         "resultado_antes_financeiro", "Lucro líquido do exercício", "Consolidado - 2022"))
     assert "'antes e financeir' ou 'lucro operacional'" in other_result["erro"]
     # A linha certa passa, com ou sem acento no rótulo copiado.
@@ -521,7 +521,7 @@ async def test_statement_field_cannot_be_declared_missing_when_the_statement_is_
     refused = await rejected(governance, "salvar_nao_encontrado", {
         "doc_id": DOC_ANA, "campo": "fluxo_caixa_operacional", "paginas_descartadas": [11],
         "motivo": "A linha do caixa operacional está vazia na demonstração do fluxo de caixa."})
-    assert "o documento tem essa demonstração (p. 11)" in refused["erro"] and "ler_chunk" in refused["erro"]
+    assert "o documento tem esse quadro (p. 11)" in refused["erro"] and "ler_chunk" in refused["erro"]
     # Documento sem a demonstração (o do Bruno tem um parágrafo só): aí o campo pode não existir.
     other = {"user_token": "tok-bruno", "user_id": BRUNO}
     for campo in ("receita_liquida", "lucro_liquido", "fluxo_caixa_operacional", "ebitda", "margem_ebitda",
@@ -543,14 +543,14 @@ async def test_a_percentage_field_does_not_take_an_amount_and_statement_fields_c
     """Na Light, a frase "EBITDA CVM foi de R$1.180 milhões" entrou como margem EBITDA (a única
     invenção da segunda execução), e o prejuízo veio do texto, "-R$5.673 milhões", sem o sinal."""
     add_performance_details(indexer)
-    amount = await rejected(governance, "salvar_indicador", text(
+    amount = await rejected(governance, "salvar_campo", text(
         "margem_ebitda", "O EBITDA de 2022 somou R$ 485.156 mil", "485.156", chunk=EXTRA,
         nota="margem não explicitada; o servidor calculará"))
     assert "é um percentual, e o número citado (485.156) não traz '%'" in amount["erro"]
     assert "o servidor calcula" in amount["erro"]
 
     snippet = "A Companhia apurou um resultado líquido de -R$5.673 milhões no ano"
-    from_text = await rejected(governance, "salvar_indicador", text("lucro_liquido", snippet, "5.673", chunk=EXTRA))
+    from_text = await rejected(governance, "salvar_campo", text("lucro_liquido", snippet, "5.673", chunk=EXTRA))
     assert "vem da demonstração financeira, que é uma tabela" in from_text["erro"]
     # Com a nota, entra; e o sinal escrito antes da moeda é respeitado.
     noted = await save(governance, text("lucro_liquido", snippet, "5.673", chunk=EXTRA,
@@ -567,10 +567,10 @@ async def test_a_table_row_cannot_be_quoted_as_text_and_capex_is_not_one_acquisi
     uma TABELA: o número estava no "trecho", mas a coluna era escolha do modelo, e o ano anterior
     não veio. O capex gravado era só a linha de imobilizado (307.759 de 1.470.292)."""
     row = "| Aquisição de imobilizado | - | - | (6.263) | (3.803) |"
-    as_text = await rejected(governance, "salvar_indicador", text("capex_imobilizado", row, "6.263", chunk=DFC))
+    as_text = await rejected(governance, "salvar_campo", text("capex_imobilizado", row, "6.263", chunk=DFC))
     assert "é uma tabela: use origem='tabela'" in as_text["erro"] and "ocorrencia_coluna" in as_text["erro"]
     # O campo capex é o total que a empresa declara: uma linha de aquisição é valor de apoio.
-    one_line = await rejected(governance, "salvar_indicador", cell(
+    one_line = await rejected(governance, "salvar_campo", cell(
         "capex", "Aquisição de imobilizado", "Consolidado - 2022", chunk=DFC))
     assert "não é um total de investimentos" in one_line["erro"] and "capex_imobilizado" in one_line["erro"]
     # E a linha de aquisição, que contém um termo de busca do capex, não impede o "não encontrado".
@@ -601,7 +601,7 @@ async def test_among_ebitda_sentences_the_one_that_matches_the_statements_wins(g
 
     await save(governance, text("ebitda", "Em 2022, o EBITDA CVM foi de R$221,9 milhões", "221,9", chunk=consolidated))
     closed = payload(await call(governance, "fechar_extracao", {"doc_id": DOC_ANA}))
-    assert closed["indicadores"]["ebitda"].startswith("informado: 221,9 R$ milhões (p. 10)")
+    assert closed["campos"]["ebitda"].startswith("informado: 221,9 R$ milhões (p. 10)")
     # O que bate não gera alerta de divergência.
     assert not any("O EBITDA informado" in alert for alert in closed["alertas"])
     # Um EBITDA de texto que não bate e para o qual o documento não tem alternativa (um EBITDA
@@ -648,7 +648,7 @@ async def test_a_loan_called_capex_is_not_the_capex(governance, indexer):
     """Na 7ª execução real a extração da Light não fechou: a nota de empréstimos tem a linha "BNDES -
     Capex", a regra do "traz com valor" a tomou por capex informado, e o campo ficou sem saída."""
     loans = add_loans_note(indexer)
-    as_capex = await rejected(governance, "salvar_indicador", cell(
+    as_capex = await rejected(governance, "salvar_campo", cell(
         "capex", "BNDES - Capex", "Saldo a amortizar em 31.12.2022", chunk=loans))
     assert "não é um total de investimentos" in as_capex["erro"] and "capex_imobilizado" in as_capex["erro"]
     # O termo aparece na p. 36, e a página tem de ser descartada, como qualquer menção; mas a linha
@@ -677,13 +677,13 @@ async def test_net_income_is_the_total_not_the_part_of_the_controlling_sharehold
         "| Lucro líquido do exercício | 14.743 | 5.371 | 14.743 | 5.371 |")})
     doc["meta"]["chunk_count"] = len(doc["chunks"])
 
-    second = await rejected(governance, "salvar_indicador", cell(
+    second = await rejected(governance, "salvar_campo", cell(
         "lucro_liquido", "Lucro líquido do exercício", "Consolidado - 2022", chunk=statement, ocorrencia_linha=2))
     assert "é a 2ª com o rótulo" in second["erro"] and "parte do lucro atribuída aos controladores" in second["erro"]
     assert "ocorrencia_linha=1" in second["erro"]
     total = await save(governance, cell(
         "lucro_liquido", "Lucro líquido do exercício", "Consolidado - 2022", chunk=statement, ocorrencia_linha=1))
-    assert total["salvo"]["valor"] == "18.891" and total["ano_anterior_gravado_pelo_servidor"]["valor"] == "6.470"
+    assert total["salvo"]["valor"] == "18.891" and total["comparavel_gravado_pelo_servidor"]["valor"] == "6.470"
     # Rótulo repetido sem linha de minoritários no meio (o balanço, com empréstimos de curto e de
     # longo prazo) continua valendo pela ocorrência, como antes.
     long_term = await save(governance, cell("emprestimos_nao_circulante", "Empréstimos e financiamentos",
@@ -698,12 +698,12 @@ async def test_statement_value_comes_from_its_own_statement(governance, indexer)
     doc["chunks"].append({**doc["chunks"][DRE], "chunk_index": len(doc["chunks"]), "page_start": 10, "page_end": 10,
                           "section_path": ["Demonstração das mutações do patrimônio líquido"]})
     doc["meta"]["chunk_count"] = len(doc["chunks"])
-    other = await rejected(governance, "salvar_indicador", cell(
+    other = await rejected(governance, "salvar_campo", cell(
         "lucro_liquido", "Lucro líquido do exercício", "Consolidado - 2022", chunk=len(doc["chunks"]) - 1))
     assert "vem da demonstração de resultado (p. 8)" in other["erro"]
     assert "Demonstração das mutações do patrimônio líquido" in other["erro"]
     right = await save(governance, cell("lucro_liquido", "Lucro líquido do exercício", "Consolidado - 2022"))
-    assert right["ano_anterior_gravado_pelo_servidor"]["valor"] == "275.560"
+    assert right["comparavel_gravado_pelo_servidor"]["valor"] == "275.560"
 
 
 async def test_words_in_another_alphabet_are_refused(governance):
@@ -725,7 +725,7 @@ async def test_words_in_another_alphabet_are_refused(governance):
     ({"doc_id": DOC_ANA, "campo": "ebitda", "periodo": "2022", "origem": "imagem", "chunk_index": 1}, "origem"),
 ])
 async def test_arguments_outside_the_enumerations_are_refused_naming_the_field(governance, arguments, problem):
-    error = await rejected(governance, "salvar_indicador", arguments)
+    error = await rejected(governance, "salvar_campo", arguments)
     assert any(item.startswith(f"{problem}:") for item in error["problemas"])
 
 
@@ -782,7 +782,7 @@ async def test_current_and_long_term_loans_come_from_where_they_are_separated(go
     """Na Brasal, o total dos empréstimos de uma nota (3.417 = 1.849 + 1.568) entrou como circulante
     e o não circulante do balanço foi somado de novo: a dívida líquida calculada saiu errada."""
     add_performance_details(indexer)
-    total = await rejected(governance, "salvar_indicador", cell(
+    total = await rejected(governance, "salvar_campo", cell(
         "emprestimos_circulante", "Total dos empréstimos com terceiros", "Consolidado - 31/12/2022", chunk=CAPITAL))
     assert "não separa circulante de não circulante" in total["erro"] and "balanço patrimonial" in total["erro"]
     # No balanço, passa.

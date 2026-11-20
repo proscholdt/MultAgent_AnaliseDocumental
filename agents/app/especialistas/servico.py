@@ -75,7 +75,7 @@ def agent_card(spec: AgentFile, settings: Settings) -> AgentCard:
         capabilities=AgentCapabilities(streaming=False),
         default_input_modes=["text/plain", "application/json"], default_output_modes=["application/json"],
         skills=[AgentSkill(id=spec.nome, name=spec.nome, description=spec.descricao,
-                           tags=["demonstracoes-financeiras"])],
+                           tags=["analise-documentos"])],
         security_schemes={"orquestrador": SecurityScheme(http_auth_security_scheme=HTTPAuthSecurityScheme(
             scheme="bearer", bearer_format="JWT",
             description="Token assinado pelo orquestrador e emitido para este especialista."))},
@@ -112,8 +112,8 @@ def task_input(tarefa: str, doc_id: str | None, pending: list[dict[str, Any]]) -
                 detail += f" {item['pergunta_id']}: «{item['pergunta']}»"
             if item.get("categorias"):
                 detail += f" ({', '.join(item['categorias'])})"
-            if item.get("empresa"):
-                detail += f" — {item['empresa']} (doc_id {item['doc_id']})"
+            if item.get("entidade"):
+                detail += f" — {item['entidade']} (doc_id {item['doc_id']})"
             if not item.get("liberada", True):
                 detail += f" [ainda não liberada: aguarda {item.get('aguarda')}]"
             lines.append(f"- {detail}")

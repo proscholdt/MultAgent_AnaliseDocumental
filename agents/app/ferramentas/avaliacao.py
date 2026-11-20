@@ -134,7 +134,7 @@ def evaluate(gabarito: dict[str, Any], snapshot: dict[str, Any], doc_ids: set[st
         if file_name not in documents:
             continue  # documento do gabarito que não está nesta base (ou fora deste relatório)
         doc = documents[file_name]
-        indicators = ((doc.get("extracao") or {}).get("indicadores")) or {}
+        indicators = campos_do(doc)
         for campo, expected in expected_doc["indicadores"].items():
             rows.append({"arquivo": file_name, "campo": campo, **check_field(expected, indicators.get(campo))})
         alerts = doc.get("alertas") or []
@@ -175,12 +175,19 @@ def evaluate(gabarito: dict[str, Any], snapshot: dict[str, Any], doc_ids: set[st
     }
 
 
+def campos_do(doc: dict[str, Any]) -> dict[str, Any]:
+    """Os campos da extração de um documento do retrato. Retrato de antes dos nomes genéricos: a
+    chave era `indicadores`."""
+    extracao = doc.get("extracao") or {}
+    return extracao.get("campos") or extracao.get("indicadores") or {}
+
+
 def stability(first: dict[str, Any], second: dict[str, Any]) -> dict[str, Any]:
     """Quanto duas execuções coincidem: status e valor (informado ou calculado) de cada indicador."""
     def values(snapshot: dict[str, Any]) -> dict[tuple[str, str], tuple]:
         result = {}
         for doc in snapshot["documentos"]:
-            for campo, block in (((doc.get("extracao") or {}).get("indicadores")) or {}).items():
+            for campo, block in campos_do(doc).items():
                 informed, computed = block.get("informado") or {}, block.get("calculado") or {}
                 result[(doc["arquivo"], campo)] = (_status(block), informed.get("valor"), computed.get("valor"))
         return result

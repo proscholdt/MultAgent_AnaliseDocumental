@@ -130,7 +130,7 @@ class World:
     def __init__(self) -> None:
         self.policy: dict[str, list[str]] = {
             "orquestrador": ["listar_documentos", "pendencias"],
-            "extrator": ["buscar_trechos", "salvar_indicador", "fechar_extracao"],
+            "extrator": ["buscar_trechos", "salvar_campo", "fechar_extracao"],
             "redator": ["salvar_resumo", "montar_relatorio"],
             "sistema": ["pendencias", "ler_relatorio", "ler_respostas"],
         }
@@ -139,7 +139,7 @@ class World:
         self.report: str | None = None
         self.calls: list[tuple[str, str, dict[str, Any], Identity]] = []
         self.handlers: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
-            "listar_documentos": lambda _: {"documentos": [{"doc_id": DOC, "empresa": "Brasal"}]},
+            "listar_documentos": lambda _: {"documentos": [{"doc_id": DOC, "entidade": "Brasal"}]},
             "pendencias": lambda _: {"completo": not self.pending, "pendencias": list(self.pending)},
             "ler_relatorio": lambda _: {"relatorio": self.report, "gerado_em": "2026-11-13T12:00:00+00:00"},
             "ler_respostas": lambda _: {"respostas": list(self.answers)},

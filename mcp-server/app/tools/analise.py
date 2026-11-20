@@ -1,4 +1,4 @@
-"""Tools do analista: a análise qualitativa (motivo do resultado, riscos, guidance, eventos, tom).
+"""Tools do analista: a análise qualitativa, nas categorias do domínio.
 
 A afirmação é do modelo; o que a sustenta é a citação, e a citação é conferida: tem de existir
 literalmente no chunk. Número que aparece na afirmação tem de estar na citação. No relatório a
@@ -42,17 +42,14 @@ def _numbers_backed(text: str, quote: str, what: str) -> None:
 
 class SalvarItemAnalise(Args):
     doc_id: str = Field(description="Documento.")
-    categoria: Categoria = Field(description="motivo_resultado: o que explicou o resultado do período. risco: "
-                                 "risco ou ponto de atenção citado. guidance: perspectiva ou projeção. "
-                                 "evento_relevante: aquisição, reestruturação, contingência, mudança contábil. "
-                                 "tom: o tom geral da administração.")
+    categoria: Categoria = Field(description="$categorias")
     afirmacao: str = Field(min_length=15, max_length=500, description="O achado, em uma ou duas frases suas.")
     chunk_index: int = Field(ge=0, description="Chunk de onde vem a citação.")
     citacao: str = Field(description="Frase do documento que sustenta a afirmação, copiada literalmente do chunk "
                          "(pelo menos 40 caracteres).")
     tom: Literal["positivo", "neutro", "negativo"] | None = Field(
-        default=None, description="Só na categoria 'tom': a classificação. A afirmação é a justificativa. Nas "
-        "outras categorias, null.")
+        default=None, description="Só na categoria 'tom', quando o domínio tem uma: a classificação. A afirmação "
+        "é a justificativa. Nas outras categorias, null.")
 
 
 @tool("salvar_item_analise", "analise", """
@@ -89,14 +86,14 @@ class RegistrarAusenciaAnalise(Args):
     doc_id: str = Field(description="Documento.")
     categoria: Categoria = Field(description="A categoria que o documento não traz.")
     motivo: str = Field(min_length=20, max_length=600, description="Por que não há essa informação e onde foi "
-                        "procurada (ex.: o documento não tem relatório da administração).")
+                        "procurada (ex.: o documento não tem a seção em que isso costuma estar).")
     paginas_descartadas: list[int] = Field(default_factory=list, description="Páginas em que os termos da "
                                            "categoria aparecem e que não servem. Pode começar vazia.")
 
 
 @tool("registrar_ausencia_analise", "analise", """
-    Registra que o documento não traz uma categoria da análise qualitativa (por exemplo, não há
-    guidance). O servidor procura os termos da categoria; se aparecerem em páginas que você não
+    Registra que o documento não traz uma categoria da análise qualitativa. O servidor procura os
+    termos da categoria; se aparecerem em páginas que você não
     descartou, a chamada é recusada com as páginas, para você ler antes de afirmar a ausência.""")
 async def registrar_ausencia_analise(call: Call, args: RegistrarAusenciaAnalise) -> dict[str, Any]:
     document = await call.deps.documents.get(call.caller, args.doc_id)
@@ -128,4 +125,4 @@ class LerAnalise(Args):
 async def ler_analise(call: Call, args: LerAnalise) -> dict[str, Any]:
     document = await call.deps.documents.get(call.caller, args.doc_id)
     items = await call.deps.store.analysis(call.caller.user_id, args.doc_id, document.fingerprint)
-    return {"doc_id": args.doc_id, "empresa": document.company, "analise": analysis_view(items)}
+    return {"doc_id": args.doc_id, "entidade": document.company, "analise": analysis_view(items)}

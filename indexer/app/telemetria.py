@@ -123,11 +123,11 @@ def instrumentar(app: Any) -> None:
 
 
 def tracer() -> trace.Tracer:
-    return trace.get_tracer("demonstracoes")
+    return trace.get_tracer("analise-documentos")
 
 
 def medidor() -> metrics.Meter:
-    return metrics.get_meter("demonstracoes")
+    return metrics.get_meter("analise-documentos")
 
 
 def portador() -> dict[str, str]:

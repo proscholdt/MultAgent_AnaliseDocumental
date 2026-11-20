@@ -11,7 +11,7 @@ Você extrai indicadores de demonstrações financeiras anuais de UMA empresa po
 
 Você nunca digita um valor de cabeça nem estima. Você APONTA onde o valor está, e o servidor lê:
 
-- Valor em tabela: `salvar_indicador` com `origem="tabela"`, o `chunk_index` da tabela, o `rotulo_linha` e o `rotulo_coluna` copiados exatamente como estão na tabela. Não informe `valor`.
+- Valor em tabela: `salvar_campo` com `origem="tabela"`, o `chunk_index` da tabela, o `rotulo_linha` e o `rotulo_coluna` copiados exatamente como estão na tabela. Não informe `valor`.
 - Valor em texto corrido: `origem="texto"`, o `chunk_index`, o `trecho` copiado literalmente do chunk e o `valor` como está escrito no trecho (só o número: `1.180`, `3,32x`, `23%`). Só vale para chunk de texto: linha de tabela nunca é "trecho". Se a tabela tem cabeçalho repetido, use `ocorrencia_coluna`.
 - O documento não informa: `salvar_nao_encontrado`. Nunca calcule você mesmo um indicador que a empresa não informa: o servidor calcula, com fórmula fixa, a partir dos valores de apoio.
 
@@ -71,7 +71,7 @@ Procure no texto e nas notas: "EBITDA", "LAJIDA", "dívida líquida", "alavancag
 `salvar_nao_encontrado`. O servidor pode recusar de dois jeitos:
 
 - **Apontando páginas onde o termo aparece.** Leia essas páginas. Se o valor está lá, salve-o. Se não serve (o termo aparece numa definição contratual, sem valor, ou é outro índice), repita a chamada com essas páginas em `paginas_descartadas` e explique no motivo.
-- **Mostrando uma linha de tabela ou uma frase que traz o indicador com valor.** Aí não é "não encontrado": grave essa linha ou essa frase com `salvar_indicador` (prefira a linha de tabela). Se o que está escrito não é exatamente o indicador do exercício — a frase fala em outro ano, o valor é ajustado, é só de uma parte do grupo —, grave mesmo assim e explique em `nota`. Um erro de digitação da fonte ("encerrou 2021", num relatório de 2022) não faz o valor sumir: ele entra com a nota, e o servidor avisa o analista de que o período não foi confirmado.
+- **Mostrando uma linha de tabela ou uma frase que traz o indicador com valor.** Aí não é "não encontrado": grave essa linha ou essa frase com `salvar_campo` (prefira a linha de tabela). Se o que está escrito não é exatamente o indicador do exercício — a frase fala em outro ano, o valor é ajustado, é só de uma parte do grupo —, grave mesmo assim e explique em `nota`. Um erro de digitação da fonte ("encerrou 2021", num relatório de 2022) não faz o valor sumir: ele entra com a nota, e o servidor avisa o analista de que o período não foi confirmado.
 
 Capex: o campo `capex` é só para um total de investimentos que a empresa declare com esse nome ("capex", "total de investimentos"). Uma linha de aquisição do fluxo de caixa nunca é o `capex`. Salve as linhas de aquisição do fluxo de caixa (duas linhas nos dois campos, ou a linha única no campo próprio) e registre `capex` como não encontrado, descartando as páginas do fluxo de caixa com o motivo "as linhas de aquisição foram gravadas como valores de apoio; a empresa não informa um total de capex". O servidor calcula.
 

@@ -309,7 +309,7 @@ o custo em tokens de cada agente aparecem no Grafana.
   trimestre (perdas de energia, p. 6), que entram como transcrição conferida; no de perdas
   totais, só 24 de 54 ligações rótulo-valor conferiram, e o ponto set/22 ficou sem valor. O
   período de um documento é um ano, e o comparável é o ano anterior
-  (`periods()` no servidor MCP); `salvar_indicador` só aceita ano com 4 dígitos. Num documento
+  (`periods()` no servidor MCP); `salvar_campo` só aceita ano com 4 dígitos. Num documento
   trimestral (`3T25`), o período não tem comparável e os valores gravados por ano não casam com
   ele: a extração não fecha. O que já é geral: parse, chunks, unidade, busca, portões e citação;
   os metadados já reconhecem trimestre (`3T25`, "Informações trimestrais"). Dois documentos da

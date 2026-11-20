@@ -1,8 +1,9 @@
 """O contrato entre os agentes e o servidor MCP, conferido dos dois lados do repositório.
 
-O servidor grava o contrato das tools em mcp-server/tests/contratos/tools.json (e o teste dele
-falha se mudar sem querer). Aqui, o outro lado: toda tool que o código dos agentes chama e toda
-tool que um prompt cita entre crases existe nesse contrato. Uma tool renomeada no servidor quebra
+O servidor grava o contrato das tools de cada domínio em mcp-server/tests/contratos/tools-<id>.json
+(e o teste dele falha se mudar sem querer). Aqui, o outro lado: toda tool que o código dos agentes
+chama e toda tool que um prompt cita entre crases (os dos agentes e os dos pacotes) existe nesse
+contrato. Uma tool renomeada no servidor quebra
 este teste antes de quebrar uma execução.
 """
 import json
@@ -12,7 +13,7 @@ from pathlib import Path
 import pytest
 
 RAIZ = Path(__file__).resolve().parents[2]
-CONTRATO = RAIZ / "mcp-server" / "tests" / "contratos" / "tools.json"
+CONTRATO = RAIZ / "mcp-server" / "tests" / "contratos" / "tools-financeiro.json"  # os nomes são os mesmos em todo domínio
 AGENTS = RAIZ / "agents"
 
 pytestmark = pytest.mark.skipif(not CONTRATO.exists(), reason="fora do repositório completo")
@@ -35,11 +36,11 @@ def test_tools_citadas_nos_prompts_existem_no_servidor():
     # Um nome entre crases com cara de tool (verbo_objeto das tools do servidor).
     verbos = {nome.split("_", 1)[0] for nome in tools}
     faltam = {}
-    for arquivo in AGENTS.glob("agentes/*/*.md"):
+    for arquivo in [*AGENTS.glob("agentes/*/*.md"), *RAIZ.glob("dominios/*/prompts/*.md")]:
         citadas = {nome for nome in re.findall(r"`([a-z]+_[a-z_]+)`", arquivo.read_text(encoding="utf-8"))
                    if nome.split("_", 1)[0] in verbos}
         if citadas - tools:
-            faltam[arquivo.name] = sorted(citadas - tools)
+            faltam[str(arquivo.relative_to(RAIZ))] = sorted(citadas - tools)
     assert not faltam, f"prompts citam tools que não existem: {faltam}"
 
 

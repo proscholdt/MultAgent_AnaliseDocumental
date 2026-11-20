@@ -17,6 +17,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from functools import cache
+from string import Template
 from typing import Annotated, Any
 
 from pydantic import AfterValidator
@@ -187,14 +188,35 @@ Categoria = _escolha("categorias")
 PerguntaId = _escolha("perguntas")
 
 
+def vocabulario(dominio_id: str | None = None) -> dict[str, str]:
+    """Os marcadores das descrições das tools, com as palavras do domínio: "$entidade" é "empresa"
+    nas demonstrações e "paciente" nos laudos."""
+    pacote = dominio(dominio_id or PADRAO_DO_PROCESSO).pacote
+    ids = [pergunta.id for pergunta in pacote.perguntas]
+    return {"entidade": pacote.entidade.rotulo.lower(), "entidades": pacote.entidade.plural.lower(),
+            "n_perguntas": str(len(ids)), "perguntas": f"{ids[0]} a {ids[-1]}" if len(ids) > 1 else ids[0],
+            "recorte": pacote.recorte.rotulo.lower(),
+            # "motivo_resultado: o que explicou o resultado do período. risco: ..."
+            "categorias": " ".join(f"{c.nome}: {c.descricao or c.rotulo.lower()}." for c in pacote.categorias)}
+
+
+def no_vocabulario(texto: str, dominio_id: str | None = None) -> str:
+    """O texto com os marcadores ($entidade, $entidades, $n_perguntas, $perguntas, $recorte, $categorias) trocados
+    pelas palavras do domínio. Os marcadores dos agentes ({{doc_id.campo}}) não usam $ e ficam."""
+    return Template(texto).safe_substitute(vocabulario(dominio_id))
+
+
 def com_opcoes(schema: Any, dominio_id: str | None = None) -> Any:
-    """O esquema de uma tool com a lista fechada do domínio no lugar de cada marca `x-dominio`."""
+    """O esquema de uma tool no domínio: a lista fechada no lugar de cada marca `x-dominio`, e as
+    descrições com as palavras do domínio."""
     alvo = dominio(dominio_id or PADRAO_DO_PROCESSO)
     if isinstance(schema, list):
         return [com_opcoes(item, dominio_id) for item in schema]
     if not isinstance(schema, dict):
         return schema
     out = {key: com_opcoes(value, dominio_id) for key, value in schema.items() if key != "x-dominio"}
+    if isinstance(out.get("description"), str):
+        out["description"] = no_vocabulario(out["description"], dominio_id)
     if "x-dominio" in schema:
         out["enum"] = alvo.opcoes(schema["x-dominio"])
     return out

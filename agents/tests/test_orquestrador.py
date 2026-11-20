@@ -19,8 +19,8 @@ from tests.conftest import (
     write_agent,
 )
 
-EXTRACTION = {"o_que_falta": "extração dos indicadores (fechar_extracao)", "agente": "extrator", "doc_id": DOC,
-              "empresa": "Brasal"}
+EXTRACTION = {"o_que_falta": "extração dos campos (fechar_extracao)", "agente": "extrator", "doc_id": DOC,
+              "entidade": "Brasal"}
 ASSEMBLY = {"o_que_falta": "montagem do relatório (montar_relatorio)", "agente": "redator"}
 
 
@@ -320,7 +320,7 @@ async def test_when_something_is_left_the_orchestrator_runs_again_with_the_list(
         (1, False, 1), (2, True, 0)]
     # A segunda rodada recebeu a lista do que falta, tirada da base.
     again = model.first_input("orquestrador", turn=1)
-    assert "terminou sem concluir" in again and "extração dos indicadores (fechar_extracao)" in again and DOC in again
+    assert "terminou sem concluir" in again and "extração dos campos (fechar_extracao)" in again and DOC in again
 
 
 async def test_run_ends_incomplete_after_the_allowed_rounds_and_says_what_is_left(http, world, model):
@@ -371,7 +371,7 @@ async def test_a_delegation_that_comes_before_its_turn_is_held_and_the_orchestra
     working_team(world, model)
     answering_researcher(world, agents_dir, "A Brasal.")
     question = {"o_que_falta": "resposta à pergunta", "agente": "pesquisador", "liberada": False,
-                "aguarda": "extração dos indicadores de Brasal", "pergunta_id": "p1"}
+                "aguarda": "extração dos campos de Brasal", "pergunta_id": "p1"}
     world.pending = [{**EXTRACTION, "liberada": True}, question]
     model.scripts["orquestrador"] = [
         [decide(delegation("pesquisador", "Responda a p1."), delegation("extrator", "Extraia.", DOC))],
@@ -383,8 +383,8 @@ async def test_a_delegation_that_comes_before_its_turn_is_held_and_the_orchestra
     held = [s for s in run["passos"] if s["tipo"] == "barrada"]
     assert [(s["agente"], s["doc_id"]) for s in held] == [("pesquisador", None)]
     told = model.first_input("orquestrador", turn=1)
-    assert "não delegado: chegou antes da hora" in told and "extração dos indicadores de Brasal" in told
-    assert "O que já pode ser delegado: extrator: extração dos indicadores (fechar_extracao) (Brasal)" in told
+    assert "não delegado: chegou antes da hora" in told and "extração dos campos de Brasal" in told
+    assert "O que já pode ser delegado: extrator: extração dos campos (fechar_extracao) (Brasal)" in told
 
 
 async def test_outside_the_report_nothing_is_held(http, world, model, agents_dir):
@@ -392,7 +392,7 @@ async def test_outside_the_report_nothing_is_held(http, world, model, agents_dir
     asked = answering_researcher(world, agents_dir, "A Brasal.")
     world.pending = [{**EXTRACTION, "liberada": True},
                      {"o_que_falta": "resposta à pergunta", "agente": "pesquisador", "liberada": False,
-                      "aguarda": "extração dos indicadores de Brasal"}]
+                      "aguarda": "extração dos campos de Brasal"}]
     model.scripts["orquestrador"] = [[decide(delegation("pesquisador", "Qual a maior margem?"))],
                                      [decide(terminado=True)]]
     model.scripts["pesquisador"] = [[call("salvar_resposta", pergunta="Qual a maior margem?")], [say("Gravada.")]]
@@ -559,10 +559,10 @@ def test_runs_survive_a_restart_and_one_caught_in_the_middle_is_marked(tmp_path)
 
 def company_team(world, model) -> dict[str, str]:
     """O relatório de uma empresa: as pendências DELA e o redator que monta só o dela."""
-    world.policy["sistema"].append("ler_relatorio_empresa")
-    world.policy["redator"].append("montar_relatorio_empresa")
-    company = [{"o_que_falta": "montagem do relatório da empresa (montar_relatorio_empresa)", "agente": "redator",
-                "doc_id": DOC, "empresa": "Brasal"}]
+    world.policy["sistema"].append("ler_relatorio_documento")
+    world.policy["redator"].append("montar_relatorio_documento")
+    company = [{"o_que_falta": "montagem do relatório do documento (montar_relatorio_documento)", "agente": "redator",
+                "doc_id": DOC, "entidade": "Brasal"}]
     reports: dict[str, str] = {}
 
     def pending(arguments):
@@ -575,10 +575,10 @@ def company_team(world, model) -> dict[str, str]:
         return {"montado": True}
 
     world.on("pendencias", pending)
-    world.on("montar_relatorio_empresa", assemble)
-    world.on("ler_relatorio_empresa", lambda arguments: {"relatorio": reports.get(arguments["doc_id"]),
+    world.on("montar_relatorio_documento", assemble)
+    world.on("ler_relatorio_documento", lambda arguments: {"relatorio": reports.get(arguments["doc_id"]),
                                                          "gerado_em": "2026-11-14T12:00:00+00:00"})
-    model.scripts["redator"] = [[call("montar_relatorio_empresa", doc_id=DOC)], [say("Relatório da Brasal montado.")]]
+    model.scripts["redator"] = [[call("montar_relatorio_documento", doc_id=DOC)], [say("Relatório da Brasal montado.")]]
     return reports
 
 
@@ -596,7 +596,7 @@ async def test_a_chat_message_asking_for_one_company_gets_that_company_report(ht
     assert (run["estado"], run["tipo"]) == ("completa", "relatorio_empresa"), run["erro"]
     assert run["resultado"]["relatorio"] == "# Relatório de análise: Brasal\n\n..."
     system = [(tool, arguments) for who, tool, arguments, _ in world.calls if who == "sistema"]
-    assert system[-2:] == [("pendencias", {"doc_id": DOC}), ("ler_relatorio_empresa", {"doc_id": DOC})]
+    assert system[-2:] == [("pendencias", {"doc_id": DOC}), ("ler_relatorio_documento", {"doc_id": DOC})]
     assert "ler_relatorio" not in world.called("sistema")  # o consolidado nem é lido
     turn = (await http.get(f"/api/conversas/{conversation}", headers=auth())).json()["turnos"][0]
     assert (turn["tipo"], turn["relatorio"]) == ("relatorio_empresa", "# Relatório de análise: Brasal\n\n...")

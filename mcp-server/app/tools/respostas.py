@@ -7,7 +7,7 @@ A resposta é texto do modelo, com duas amarras:
 - trechos citados vêm como [[doc_id:chunk_index]], que o código confere e troca por "(arquivo,
   p. N)". Número escrito direto no texto só passa se estiver num dos trechos citados.
 
-Comparações entre empresas (maior margem, acima de 3x) não são feitas pelo modelo: há uma tool
+Comparações entre documentos (o maior valor, acima de um limite) não são feitas pelo modelo: há uma tool
 que ordena e filtra pelos valores guardados.
 """
 import difflib
@@ -40,20 +40,23 @@ def markers_for(states: list[DocState]) -> Markers:
     return Markers({state.document.doc_id: state.extraction for state in states if state.extraction}, absences)
 
 
-class CompararIndicadores(Args):
-    campo: CampoPrincipal = Field(description="Indicador a comparar entre as empresas.")
+class CompararCampos(Args):
+    campo: CampoPrincipal = Field(description="Campo a comparar entre os documentos ($entidades).")
     criterio: Literal["maior", "menor", "acima_de", "abaixo_de"] = Field(
-        description="'maior' e 'menor' ordenam as empresas; 'acima_de' e 'abaixo_de' filtram pelo limite.")
+        description="'maior' e 'menor' ordenam os documentos; 'acima_de' e 'abaixo_de' filtram pelo limite.")
     limite: float | None = Field(default=None, description="Só para 'acima_de' e 'abaixo_de'. Percentual e "
                                  "múltiplo na própria escala (3 = 3x; 20 = 20%); dinheiro, em reais.")
 
 
-@tool("comparar_indicadores", "perguntas", """
-    Compara um indicador entre os documentos do usuário, pelos valores guardados: ordena (maior,
-    menor) ou filtra por um limite (acima_de, abaixo_de). Diz, para cada empresa, se o valor é
-    informado por ela ou calculado, e devolve o marcador para usar na resposta. Use esta tool em
+@tool("comparar_campos", "perguntas", """
+    Compara um campo entre os documentos do usuário, pelos valores guardados: ordena (maior,
+    menor) ou filtra por um limite (acima_de, abaixo_de). Diz, para cada $entidade, se o valor é
+    informado pelo documento ou calculado, e devolve o marcador para usar na resposta. Use esta tool em
     vez de comparar números por conta própria.""")
-async def comparar_indicadores(call: Call, args: CompararIndicadores) -> dict[str, Any]:
+async def comparar_campos(call: Call, args: CompararCampos) -> dict[str, Any]:
+    if FIELDS[args.campo].kind in ("texto", "data"):
+        raise ToolRejected(f"{FIELDS[args.campo].label} é um campo de {FIELDS[args.campo].kind}: não se compara por "
+                           "maior ou menor. Leia a extração de cada documento (ler_extracao).")
     threshold = args.criterio in ("acima_de", "abaixo_de")
     if threshold and args.limite is None:
         raise ToolRejected("Com 'acima_de' ou 'abaixo_de', informe o limite.")
@@ -61,24 +64,24 @@ async def comparar_indicadores(call: Call, args: CompararIndicadores) -> dict[st
     for state in await gather(call):
         doc_id = state.document.doc_id
         if state.extraction is None:
-            without.append({"empresa": state.name, "motivo": "sem extração publicada"})
+            without.append({"entidade": state.name, "motivo": "sem extração publicada"})
             continue
-        block = state.extraction["indicadores"][args.campo]
+        block = state.extraction["campos"][args.campo]
         informed, computed = block["informado"], block["calculado"]
         if informed and informed["status"] == "encontrado":
-            source, base, marker = informed, "informado pela empresa", f"{{{{{doc_id}.{args.campo}}}}}"
+            source, base, marker = informed, "informado pelo documento", f"{{{{{doc_id}.{args.campo}}}}}"
         elif computed:
             source, base, marker = computed, "calculado pelo servidor", f"{{{{{doc_id}.{args.campo}.calculado}}}}"
         else:
-            without.append({"empresa": state.name, "motivo": "não informado e sem base para calcular",
+            without.append({"entidade": state.name, "motivo": "não informado e sem base para calcular",
                             "marcador": f"{{{{{doc_id}.{args.campo}}}}}"})
             continue
         number = Decimal(str(source["valor_numerico"]))
         amount = in_reais(number, source["unidade"]) if FIELDS[args.campo].kind == "valor" else number
         if amount is None:
-            without.append({"empresa": state.name, "motivo": "valor sem unidade monetária declarada"})
+            without.append({"entidade": state.name, "motivo": "valor sem unidade monetária declarada"})
             continue
-        rows.append({"empresa": state.name, "doc_id": doc_id, "base": base,
+        rows.append({"entidade": state.name, "doc_id": doc_id, "base": base,
                      "valor": render_amount(source["valor"], source["unidade"]), "marcador": marker,
                      "_amount": amount})
     rows.sort(key=lambda row: row["_amount"], reverse=args.criterio in ("maior", "acima_de"))
@@ -87,20 +90,20 @@ async def comparar_indicadores(call: Call, args: CompararIndicadores) -> dict[st
         rows = [row for row in rows if (row["_amount"] > limit if args.criterio == "acima_de" else row["_amount"] < limit)]
     for row in rows:
         del row["_amount"]
-    return {"indicador": FIELDS[args.campo].label, "criterio": args.criterio, "limite": args.limite,
+    return {"campo": FIELDS[args.campo].label, "criterio": args.criterio, "limite": args.limite,
             "resultado": rows, "sem_valor": without,
-            "observacao": "Valor calculado não é informado pela empresa: diga isso na resposta."}
+            "observacao": "Valor calculado não é informado pelo documento: diga isso na resposta."}
 
 
 class SalvarResposta(Args):
     pergunta_id: PerguntaId = Field(
-        description="p1 a p5: as cinco perguntas do relatório. 'livre': outra pergunta do usuário.")
-    pergunta: str = Field(min_length=1, max_length=500, description="A pergunta respondida. Para p1 a p5, o "
-                          "enunciado oficial (ler_respostas mostra os cinco).")
+        description="$perguntas: as $n_perguntas perguntas do relatório. 'livre': outra pergunta do usuário.")
+    pergunta: str = Field(min_length=1, max_length=500, description="A pergunta respondida. Para $perguntas, o "
+                          "enunciado oficial (ler_respostas mostra todos).")
     resposta: str = Field(min_length=20, max_length=4000, description="A resposta. Valores vão como marcador "
                           "{{doc_id.campo}} (ou .calculado, .variacao, .comparavel); trechos citados vão como "
                           "[[doc_id:chunk_index]]; categoria da análise registrada como ausente vai como "
-                          "{{doc_id.analise.guidance}}. Não escreva números fora dos marcadores, a não ser que "
+                          "{{doc_id.analise.<categoria>}}. Não escreva números fora dos marcadores, a não ser que "
                           "estejam num trecho citado.")
 
 
@@ -124,14 +127,14 @@ async def salvar_resposta(call: Call, args: SalvarResposta) -> dict[str, Any]:
     if official is None and len(squash(args.pergunta)) < 5:
         raise ToolRejected("Em 'pergunta', escreva a pergunta do usuário por inteiro.")
     if args.pergunta_id != "livre":
-        # As cinco perguntas do relatório comparam as empresas: respondidas com a base pela
+        # As perguntas do relatório comparam os documentos: respondidas com a base pela
         # metade, saem dizendo que falta dado (ou, pior, comparando só quem já tem).
         blockers = question_blockers(states)
         if blockers:
             raise ToolRejected("As perguntas do relatório só podem ser respondidas com a extração e a análise de "
                                "todos os documentos. Ainda falta o que está na lista. Se a tarefa é uma pergunta do "
                                "usuário (não traz o pergunta_id do relatório), grave com pergunta_id 'livre'; se é "
-                               "uma das cinco do relatório, termine sem gravar e diga isso.",
+                               "uma das do relatório, termine sem gravar e diga isso.",
                                problemas=blockers)
 
     # 1. Cada citação tem de apontar para um chunk que existe para este usuário.
@@ -144,7 +147,7 @@ async def salvar_resposta(call: Call, args: SalvarResposta) -> dict[str, Any]:
         if chunk is None:
             raise ToolRejected(f"Citação [[{doc_id}:{index}]]: não existe esse chunk nos documentos do usuário.")
         cited_texts.append(chunk["text"])
-        citations.append({"doc_id": doc_id, "arquivo": state.document.file_name, "empresa": state.name,
+        citations.append({"doc_id": doc_id, "arquivo": state.document.file_name, "entidade": state.name,
                           "pagina": chunk["page_start"], "pagina_final": chunk["page_end"], "chunk_index": index,
                           "secao": " > ".join(chunk.get("section_path") or [])})
 
@@ -155,7 +158,7 @@ async def salvar_resposta(call: Call, args: SalvarResposta) -> dict[str, Any]:
     loose = unbacked_numbers(CITATION.sub(" ", MARKER.sub(" ", raw)), [*cited_texts, question])
     if loose:
         raise ToolRejected(f"A resposta traz números que não vêm de marcador nem estão nos trechos citados: "
-                           f"{', '.join(loose)}. Use o marcador do indicador ou cite o trecho que traz o número.")
+                           f"{', '.join(loose)}. Use o marcador do campo ou cite o trecho que traz o número.")
 
     # 3. O código põe os valores e as fontes no lugar.
     rendered = markers_for(states).render(raw)
@@ -164,7 +167,7 @@ async def salvar_resposta(call: Call, args: SalvarResposta) -> dict[str, Any]:
     sources = citations + [{"doc_id": s["doc_id"], "arquivo": s["arquivo"], "pagina": s["pagina"],
                             "campo": s["campo"]} for s in rendered.sources]
     if not sources and not rendered.markers:
-        raise ToolRejected("A resposta não cita nenhuma fonte. Use marcadores de indicador ou cite trechos com "
+        raise ToolRejected("A resposta não cita nenhuma fonte. Use marcadores de campo ou cite trechos com "
                            "[[doc_id:chunk_index]]: toda resposta tem de dizer documento e página.")
     question_id = args.pergunta_id
     if question_id == "livre":
@@ -183,7 +186,7 @@ class LerRespostas(Args):
 
 @tool("ler_respostas", "perguntas", """
     Lê as respostas guardadas do usuário, já com os valores e as fontes no lugar dos marcadores, e o
-    enunciado oficial das cinco perguntas do relatório (p1 a p5), dizendo quais já têm resposta.""")
+    enunciado oficial das $n_perguntas perguntas do relatório ($perguntas), dizendo quais já têm resposta.""")
 async def ler_respostas(call: Call, args: LerRespostas) -> dict[str, Any]:
     answers = await call.deps.store.answers(call.caller.user_id, call.caller.colecao_id)
     answered = {answer.pergunta_id for answer in answers}

@@ -10,7 +10,7 @@ Se você não conseguir responder, não grave uma resposta dizendo isso: termine
 ## De onde vêm as respostas
 
 1. `listar_documentos`: os laudos, com o `doc_id` e o paciente (no campo `empresa`). Use sempre o `doc_id` inteiro.
-2. Resultados: `ler_extracao` (por laudo) e `comparar_indicadores` ("qual a maior glicose", "quem está acima de 190 de colesterol total"). A comparação é feita pelo servidor; não compare números por conta própria.
+2. Resultados: `ler_extracao` (por laudo) e `comparar_campos` ("qual a maior glicose", "quem está acima de 190 de colesterol total"). A comparação é feita pelo servidor; não compare números por conta própria.
 3. Fora da referência, observações e orientações: `ler_analise` (categorias `fora_da_referencia`, `observacao`, `recomendacao`, cada item com a citação).
 4. Se a base não basta, vá ao documento: `buscar_trechos`, depois `ler_chunk` ou `ler_pagina`.
 

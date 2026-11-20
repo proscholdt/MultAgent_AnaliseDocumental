@@ -98,13 +98,13 @@
     },
     "name": "candidatos_inconsistencia"
   },
-  "comparar_indicadores": {
-    "description": "Compara um indicador entre os documentos do usuário, pelos valores guardados: ordena (maior, menor) ou filtra por um limite (acima_de, abaixo_de). Diz, para cada empresa, se o valor é informado por ela ou calculado, e devolve o marcador para usar na resposta. Use esta tool em vez de comparar números por conta própria.",
+  "comparar_campos": {
+    "description": "Compara um campo entre os documentos do usuário, pelos valores guardados: ordena (maior, menor) ou filtra por um limite (acima_de, abaixo_de). Diz, para cada empresa, se o valor é informado pelo documento ou calculado, e devolve o marcador para usar na resposta. Use esta tool em vez de comparar números por conta própria.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
         "campo": {
-          "description": "Indicador a comparar entre as empresas.",
+          "description": "Campo a comparar entre os documentos (empresas).",
           "enum": [
             "receita_liquida",
             "ebitda",
@@ -118,7 +118,7 @@
           "type": "string"
         },
         "criterio": {
-          "description": "'maior' e 'menor' ordenam as empresas; 'acima_de' e 'abaixo_de' filtram pelo limite.",
+          "description": "'maior' e 'menor' ordenam os documentos; 'acima_de' e 'abaixo_de' filtram pelo limite.",
           "enum": [
             "maior",
             "menor",
@@ -146,7 +146,7 @@
       ],
       "type": "object"
     },
-    "name": "comparar_indicadores"
+    "name": "comparar_campos"
   },
   "concluir_revisao": {
     "description": "Marca que as fontes de um documento foram revisadas em busca de inconsistências. Chame depois de ler os alertas automáticos e de julgar cada candidato (registrar_alerta ou descartar_candidato). Com candidato sem julgamento, é recusada e diz quais faltam. Sem ela, a revisão continua aparecendo como pendência.",
@@ -184,7 +184,7 @@
           "type": "string"
         },
         "motivo": {
-          "description": "Por que não é erro do documento, em uma ou duas frases (ex.: 'arredondamento entre o texto e o quadro', 'a nota explica que a coluna é de outra controlada'). Números só os que estão no trecho.",
+          "description": "Por que não é erro do documento, em uma ou duas frases (ex.: 'arredondamento entre o texto e o quadro', 'a nota explica que a coluna é de outra parte do documento'). Números só os que estão no trecho.",
           "type": "string"
         },
         "regra": {
@@ -203,7 +203,7 @@
     "name": "descartar_candidato"
   },
   "fechar_extracao": {
-    "description": "Fecha a extração de um documento. Confere que os campos principais têm valor ou \"não encontrado\", calcula o que os valores guardados permitem (variação contra o ano anterior, margem, EBITDA, dívida líquida, alavancagem, capex), roda as validações automáticas e publica o JSON. Se faltar campo, o erro lista quais. Indicador que a empresa não informa precisa dos valores de apoio para o servidor calcular, e o EBITDA precisa deles mesmo quando é informado, para ser conferido: se faltarem, o erro diz quais gravar.",
+    "description": "Fecha a extração de um documento. Confere que os campos principais têm valor ou \"não encontrado\", calcula o que os valores guardados permitem (a variação contra o período comparável e as fórmulas do domínio, quando há), roda as validações automáticas e publica o JSON. Se faltar campo, o erro lista quais. Se o domínio calcula campos a partir de valores de apoio e eles faltarem, o erro diz quais gravar.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -293,7 +293,7 @@
       "additionalProperties": false,
       "properties": {
         "detalhe": {
-          "description": "'resumo': uma linha por indicador. 'enxuto': só os campos do relatório, cada um com valor, unidade, variação e origem (página e trecho), ou 'não encontrado'. 'completo': o JSON inteiro, com os valores de apoio e as validações.",
+          "description": "'resumo': uma linha por campo. 'enxuto': só os campos do relatório, cada um com valor, unidade, variação e origem (página e trecho), ou 'não encontrado'. 'completo': o JSON inteiro, com os valores de apoio e as validações.",
           "enum": [
             "resumo",
             "enxuto",
@@ -353,13 +353,13 @@
     },
     "name": "ler_relatorio"
   },
-  "ler_relatorio_empresa": {
-    "description": "Devolve o relatório mais recente de uma empresa, em Markdown.",
+  "ler_relatorio_documento": {
+    "description": "Devolve o relatório mais recente de um documento, em Markdown.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
         "doc_id": {
-          "description": "Documento (uma empresa).",
+          "description": "Documento (um(a) empresa).",
           "type": "string"
         }
       },
@@ -368,10 +368,10 @@
       ],
       "type": "object"
     },
-    "name": "ler_relatorio_empresa"
+    "name": "ler_relatorio_documento"
   },
   "ler_respostas": {
-    "description": "Lê as respostas guardadas do usuário, já com os valores e as fontes no lugar dos marcadores, e o enunciado oficial das cinco perguntas do relatório (p1 a p5), dizendo quais já têm resposta.",
+    "description": "Lê as respostas guardadas do usuário, já com os valores e as fontes no lugar dos marcadores, e o enunciado oficial das 5 perguntas do relatório (p1 a p5), dizendo quais já têm resposta.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {},
@@ -391,7 +391,7 @@
     "name": "listar_documentos"
   },
   "montar_relatorio": {
-    "description": "Monta o relatório consolidado em Markdown a partir da base: resumo executivo, tabela comparativa dos indicadores, análise qualitativa, respostas às cinco perguntas e alertas. Tudo é montado pelo código; nenhum número é redigitado. Se faltar alguma parte, a chamada é recusada com a lista do que falta.",
+    "description": "Monta o relatório consolidado em Markdown a partir da base: resumo executivo, tabela comparativa dos campos, análise qualitativa, respostas às 5 perguntas e alertas. Tudo é montado pelo código; nenhum número é redigitado. Se faltar alguma parte, a chamada é recusada com a lista do que falta.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {},
@@ -400,13 +400,13 @@
     },
     "name": "montar_relatorio"
   },
-  "montar_relatorio_empresa": {
-    "description": "Monta o relatório de UMA empresa em Markdown a partir da base: resumo executivo, indicadores com a página, análise qualitativa com as citações e alertas. Precisa da extração, da revisão das fontes, da análise e do resumo da empresa; se faltar algo, a chamada é recusada com a lista. As perguntas comparativas não entram: são do relatório consolidado.",
+  "montar_relatorio_documento": {
+    "description": "Monta o relatório de UM documento em Markdown a partir da base: resumo executivo, campos com a página, análise qualitativa com as citações e alertas. Precisa da extração, da revisão das fontes, da análise e do resumo do documento; se faltar algo, a chamada é recusada com a lista. As perguntas comparativas não entram: são do relatório consolidado.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
         "doc_id": {
-          "description": "Documento (uma empresa).",
+          "description": "Documento (um(a) empresa).",
           "type": "string"
         }
       },
@@ -415,10 +415,10 @@
       ],
       "type": "object"
     },
-    "name": "montar_relatorio_empresa"
+    "name": "montar_relatorio_documento"
   },
   "pendencias": {
-    "description": "Diz o que ainda falta para o relatório completo do usuário: extração, revisão das fontes, análise qualitativa, respostas às cinco perguntas, resumos e a montagem do relatório. Cada item indica o documento, o agente que costuma resolver e se já pode ser feito: 'liberada' true, ou false com o que ele 'aguarda' (as perguntas esperam a extração e a análise de todos os documentos; o resumo espera a extração, a revisão e a análise da empresa). Com doc_id, é o que falta para o relatório só daquela empresa (sem as perguntas comparativas). Lista vazia = está completo.",
+    "description": "Diz o que ainda falta para o relatório completo do usuário: extração, revisão das fontes, análise qualitativa, respostas às 5 perguntas, resumos e a montagem do relatório. Cada item indica o documento, o agente que costuma resolver e se já pode ser feito: 'liberada' true, ou false com o que ele 'aguarda' (as perguntas esperam a extração e a análise de todos os documentos; o resumo espera a extração, a revisão e a análise do documento). Com doc_id, é o que falta para o relatório só daquele documento (sem as perguntas comparativas). Lista vazia = está completo.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -431,7 +431,7 @@
               "type": "null"
             }
           ],
-          "description": "Só para o relatório de UMA empresa: o documento dela. Sem doc_id, a lista é a do relatório consolidado."
+          "description": "Só para o relatório de UM documento: o doc_id dele. Sem doc_id, a lista é a do relatório consolidado."
         }
       },
       "required": [
@@ -474,7 +474,7 @@
     "name": "registrar_alerta"
   },
   "registrar_ausencia_analise": {
-    "description": "Registra que o documento não traz uma categoria da análise qualitativa (por exemplo, não há guidance). O servidor procura os termos da categoria; se aparecerem em páginas que você não descartou, a chamada é recusada com as páginas, para você ler antes de afirmar a ausência.",
+    "description": "Registra que o documento não traz uma categoria da análise qualitativa. O servidor procura os termos da categoria; se aparecerem em páginas que você não descartou, a chamada é recusada com as páginas, para você ler antes de afirmar a ausência.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -494,7 +494,7 @@
           "type": "string"
         },
         "motivo": {
-          "description": "Por que não há essa informação e onde foi procurada (ex.: o documento não tem relatório da administração).",
+          "description": "Por que não há essa informação e onde foi procurada (ex.: o documento não tem a seção em que isso costuma estar).",
           "type": "string"
         },
         "paginas_descartadas": {
@@ -515,8 +515,8 @@
     },
     "name": "registrar_ausencia_analise"
   },
-  "salvar_indicador": {
-    "description": "Grava um indicador de um documento, depois de conferir a origem. Valor de tabela: informe chunk_index, rotulo_linha e rotulo_coluna, e o servidor lê a célula (não informe o número). Valor de texto: informe chunk_index, o trecho copiado do documento e o valor como está escrito. Se a conferência falhar, o erro diz o que corrigir. Salvar de novo o mesmo campo e período substitui o anterior. Em valor de tabela do ano de referência, o servidor grava também o valor do ano anterior, lido da coluna irmã da mesma linha, quando ela existe.",
+  "salvar_campo": {
+    "description": "Grava um campo de um documento, depois de conferir a origem. Valor de tabela: informe chunk_index, rotulo_linha e rotulo_coluna, e o servidor lê a célula (não informe o número). Valor de texto: informe chunk_index, o trecho copiado do documento e o valor como está escrito. Campo de texto ou de data: o valor é o que o documento escreve (o nome, a cláusula, a data), e tem de estar no trecho citado ou na célula apontada. Se a conferência falhar, o erro diz o que corrigir. Salvar de novo o mesmo campo e período substitui o anterior. Num recorte com período comparável, em valor de tabela do período de referência, o servidor grava também o do período anterior, lido da coluna irmã da mesma linha, quando ela existe.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
@@ -551,7 +551,7 @@
           "type": "string"
         },
         "medida": {
-          "description": "'valor': o indicador em si. 'variacao_informada': a variação percentual contra o período anterior que a própria empresa escreveu (o servidor também calcula a variação e compara as duas).",
+          "description": "'valor': o campo em si. 'variacao_informada': a variação percentual contra o período anterior que o próprio documento escreve (o servidor também calcula a variação e compara as duas).",
           "enum": [
             "valor",
             "variacao_informada"
@@ -567,7 +567,7 @@
               "type": "null"
             }
           ],
-          "description": "Observação curta sobre o valor, se necessária (ex.: 'EBITDA da distribuidora, não do consolidado'). Senão, null."
+          "description": "Observação curta sobre o valor, se necessária (ex.: 'valor de uma parte do documento, não do total'). Senão, null."
         },
         "ocorrencia_coluna": {
           "anyOf": [
@@ -619,7 +619,7 @@
               "type": "null"
             }
           ],
-          "description": "origem='tabela': cabeçalho da coluna, copiado da tabela (ex.: 'Consolidado - 2022')."
+          "description": "origem='tabela': cabeçalho da coluna, copiado da tabela (ex.: '2022', 'Resultado')."
         },
         "rotulo_linha": {
           "anyOf": [
@@ -652,7 +652,7 @@
               "type": "null"
             }
           ],
-          "description": "origem='texto': o número como está escrito no trecho (ex.: '9.032', '3,32x', '23%'). Em origem='tabela' fica null: o servidor lê a célula."
+          "description": "origem='texto': o número como está escrito no trecho (ex.: '9.032', '1,5x', '23%'). Em origem='tabela' fica null: o servidor lê a célula."
         }
       },
       "required": [
@@ -672,7 +672,7 @@
       ],
       "type": "object"
     },
-    "name": "salvar_indicador"
+    "name": "salvar_campo"
   },
   "salvar_item_analise": {
     "description": "Grava um item da análise qualitativa de um documento, com a citação literal que o sustenta. A citação tem de existir no chunk, e os números da afirmação têm de estar na citação. Uma categoria pode ter vários itens; na categoria 'tom' informe também a classificação.",
@@ -720,7 +720,7 @@
               "type": "null"
             }
           ],
-          "description": "Só na categoria 'tom': a classificação. A afirmação é a justificativa. Nas outras categorias, null."
+          "description": "Só na categoria 'tom', quando o domínio tem uma: a classificação. A afirmação é a justificativa. Nas outras categorias, null."
         }
       },
       "required": [
@@ -736,12 +736,12 @@
     "name": "salvar_item_analise"
   },
   "salvar_nao_encontrado": {
-    "description": "Registra que o documento não informa um indicador. O servidor procura os termos do campo no documento inteiro; se aparecerem, a chamada é recusada com as páginas, e você deve lê-las: se o valor está lá, use salvar_indicador; se não serve, repita a chamada listando essas páginas em paginas_descartadas e explicando no motivo. Nunca estime um valor.",
+    "description": "Registra que o documento não informa um campo. O servidor procura os termos do campo no documento inteiro; se aparecerem, a chamada é recusada com as páginas, e você deve lê-las: se o valor está lá, use salvar_campo; se não serve, repita a chamada listando essas páginas em paginas_descartadas e explicando no motivo. Nunca estime um valor.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
         "campo": {
-          "description": "O indicador que o documento não informa.",
+          "description": "O campo que o documento não informa.",
           "enum": [
             "receita_liquida",
             "ebitda",
@@ -786,11 +786,11 @@
       "additionalProperties": false,
       "properties": {
         "pergunta": {
-          "description": "A pergunta respondida. Para p1 a p5, o enunciado oficial (ler_respostas mostra os cinco).",
+          "description": "A pergunta respondida. Para p1 a p5, o enunciado oficial (ler_respostas mostra todos).",
           "type": "string"
         },
         "pergunta_id": {
-          "description": "p1 a p5: as cinco perguntas do relatório. 'livre': outra pergunta do usuário.",
+          "description": "p1 a p5: as 5 perguntas do relatório. 'livre': outra pergunta do usuário.",
           "enum": [
             "p1",
             "p2",
@@ -802,7 +802,7 @@
           "type": "string"
         },
         "resposta": {
-          "description": "A resposta. Valores vão como marcador {{doc_id.campo}} (ou .calculado, .variacao, .comparavel); trechos citados vão como [[doc_id:chunk_index]]; categoria da análise registrada como ausente vai como {{doc_id.analise.guidance}}. Não escreva números fora dos marcadores, a não ser que estejam num trecho citado.",
+          "description": "A resposta. Valores vão como marcador {{doc_id.campo}} (ou .calculado, .variacao, .comparavel); trechos citados vão como [[doc_id:chunk_index]]; categoria da análise registrada como ausente vai como {{doc_id.analise.<categoria>}}. Não escreva números fora dos marcadores, a não ser que estejam num trecho citado.",
           "type": "string"
         }
       },
@@ -816,16 +816,16 @@
     "name": "salvar_resposta"
   },
   "salvar_resumo": {
-    "description": "Grava o resumo executivo de uma empresa (até 5 linhas). Os valores entram por marcador, que o servidor troca pelo número guardado com a unidade e a página. Número escrito direto no texto é recusado, a não ser ano e contagem pequena.",
+    "description": "Grava o resumo executivo de um documento (até 5 linhas). Os valores entram por marcador, que o servidor troca pelo número guardado com a unidade e a página. Número escrito direto no texto é recusado, a não ser ano e contagem pequena.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {
         "doc_id": {
-          "description": "Documento (uma empresa).",
+          "description": "Documento (um(a) empresa).",
           "type": "string"
         },
         "texto": {
-          "description": "O resumo executivo da empresa, em até 5 linhas. Valores vão como marcador: {{receita_liquida}}, {{receita_liquida.variacao}}, {{ebitda.calculado}}, {{lucro_liquido.comparavel}}. Não escreva números por conta própria.",
+          "description": "O resumo executivo do documento, em até 5 linhas. Valores vão como marcador: {{campo}}, {{campo.variacao}}, {{campo.calculado}}, {{campo.comparavel}}. Não escreva números por conta própria.",
           "type": "string"
         }
       },

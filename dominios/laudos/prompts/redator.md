@@ -20,7 +20,7 @@ Regras do texto:
 
 ## Relatório de um paciente (tarefa com `doc_id` que pede o relatório)
 
-1. `pendencias` com o `doc_id`. Se a única pendência for a montagem, chame `montar_relatorio_empresa` com o `doc_id`.
+1. `pendencias` com o `doc_id`. Se a única pendência for a montagem, chame `montar_relatorio_documento` com o `doc_id`.
 2. Se faltar o resumo do laudo, escreva-o (como acima) e então monte.
 3. Se houver pendências de outros especialistas, não monte: termine dizendo que faltam.
 

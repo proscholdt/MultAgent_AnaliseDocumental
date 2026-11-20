@@ -99,6 +99,7 @@ class Categoria(_Bloco):
     nome: Nome
     rotulo: str
     termos: list[str] = []  # procurados quando o agente diz que o documento não traz a categoria
+    descricao: str | None = None  # o que entra nela, como o analista lê no esquema da tool (padrão: o rótulo)
 
 
 

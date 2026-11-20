@@ -5,7 +5,7 @@ execução (para saber o que delegar), pelo sistema dos agentes no fim (para con
 ficou para trás) e pelo `montar_relatorio` (que não monta relatório incompleto).
 
 A ordem do trabalho também está aqui, e não na boa vontade do orquestrador. Cada pendência diz
-se está `liberada` ou o que ela `aguarda`: as cinco perguntas comparam as empresas, então só
+se está `liberada` ou o que ela `aguarda`: as perguntas do relatório comparam os documentos, então só
 podem ser respondidas com a extração e a análise de todos os documentos; o resumo de uma
 empresa usa a extração, a análise e os alertas dela. As tools que gravam recusam o que chega
 fora de ordem (na primeira execução real, o orquestrador mandou responder as perguntas enquanto
@@ -74,21 +74,21 @@ class DocState:
 
 
 def question_blockers(states: list[DocState]) -> list[str]:
-    """O que falta para as cinco perguntas do relatório poderem ser respondidas."""
+    """O que falta para as perguntas do relatório poderem ser respondidas."""
     blockers = []
     for state in states:
         if state.extraction is None:
-            blockers.append(f"extração dos indicadores de {state.name}")
+            blockers.append(f"extração dos campos de {state.name}")
         if state.missing_categories:
             blockers.append(f"análise qualitativa de {state.name} ({', '.join(state.missing_categories)})")
     return blockers
 
 
 def summary_blockers(state: DocState) -> list[str]:
-    """O que falta para o resumo executivo de uma empresa poder ser escrito."""
+    """O que falta para o resumo executivo de um documento poder ser escrito."""
     blockers = []
     if state.extraction is None:
-        blockers.append(f"extração dos indicadores de {state.name}")
+        blockers.append(f"extração dos campos de {state.name}")
     elif not state.reviewed:
         blockers.append(f"revisão das fontes de {state.name}")
     if state.missing_categories:
@@ -102,7 +102,7 @@ def _item(what: str, agent: str, state: DocState | None = None, waits: list[str]
     if waits:
         entry["aguarda"] = "; ".join(waits)
     if state is not None:
-        entry.update(doc_id=state.document.doc_id, empresa=state.name)
+        entry.update(doc_id=state.document.doc_id, entidade=state.name)
     return entry
 
 
@@ -122,10 +122,10 @@ def pending_work(states: list[DocState], answers: dict[str, Any], *, doc_id: str
     items: list[dict[str, Any]] = []
     for state in states:
         if state.extraction is None:
-            items.append(_item("extração dos indicadores (fechar_extracao)", "extrator", state))
+            items.append(_item("extração dos campos (fechar_extracao)", "extrator", state))
     for state in states:
         if not state.reviewed:
-            waits = [f"extração dos indicadores de {state.name}"] if state.extraction is None else None
+            waits = [f"extração dos campos de {state.name}"] if state.extraction is None else None
             items.append(_item("revisão das fontes em busca de inconsistências (concluir_revisao)", "validador",
                                state, waits))
     for state in states:
@@ -147,24 +147,24 @@ def pending_work(states: list[DocState], answers: dict[str, Any], *, doc_id: str
         if state.summary is None:
             items.append(_item("resumo executivo (salvar_resumo)", "redator", state, summary_blockers(state)))
         elif state.summary_is_stale:
-            items.append(_item("refazer o resumo executivo: a base da empresa mudou depois dele (salvar_resumo)",
+            items.append(_item("refazer o resumo executivo: a base do documento mudou depois dele (salvar_resumo)",
                                "redator", state, summary_blockers(state)))
     return items
 
 
 def company_report_pending(state: DocState, report: Any | None) -> list[dict[str, Any]]:
-    """Com o resto pronto: falta montar (ou remontar) o relatório de uma empresa?"""
+    """Com o resto pronto: falta montar (ou remontar) o relatório de um documento?"""
     if report is None or report.fingerprint != state.document.fingerprint:
-        return [_item("montagem do relatório da empresa (montar_relatorio_empresa)", "redator", state)]
+        return [_item("montagem do relatório do documento (montar_relatorio_documento)", "redator", state)]
     if state.newest is not None and report.at < state.newest:
-        return [_item("remontar o relatório da empresa: há dados mais novos que ele (montar_relatorio_empresa)",
+        return [_item("remontar o relatório do documento: há dados mais novos que ele (montar_relatorio_documento)",
                       "redator", state)]
     return []
 
 
 def report_pending(states: list[DocState], answers: dict[str, Any], report: Any | None) -> list[dict[str, Any]]:
     """Com o resto pronto: falta montar (ou remontar) o relatório consolidado?"""
-    # Só as cinco perguntas entram no relatório: uma pergunta livre do usuário respondida depois
+    # Só as perguntas do pacote entram no relatório: uma pergunta livre do usuário respondida depois
     # não o deixa desatualizado (antes, cada pergunta de conversa fazia remontar o relatório).
     newest = latest(*(state.newest for state in states),
                      *(answer.at for question_id, answer in answers.items() if question_id in QUESTIONS))

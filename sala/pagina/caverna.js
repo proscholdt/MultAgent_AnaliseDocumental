@@ -578,7 +578,7 @@ linhaFala = function (f) {
 
 const ENIGMAS = [
   'Para voltar para casa, sigam a fonte de cada número.',
-  'Nem tudo que brilha no PDF é um indicador.',
+  'Nem tudo que brilha no PDF é um campo.',
   'O portão que vos barra é o mesmo que vos protege.',
   'Quando a resposta parecer longe, olhem a página.',
   'O Vingador espreita nos números sem fonte.',

@@ -161,7 +161,7 @@ async def test_review_is_concluded_only_after_the_extraction_and_alerts_are_neve
 
 async def test_each_agent_only_reaches_its_own_gate(governance):
     """A política decide: o analista não grava indicador, o extrator não grava análise."""
-    for agent, tool_name in (("analista", "salvar_indicador"), ("extrator", "salvar_item_analise"),
+    for agent, tool_name in (("analista", "salvar_campo"), ("extrator", "salvar_item_analise"),
                              ("pesquisador", "registrar_alerta"), ("validador", "salvar_resumo"),
                              ("redator", "fechar_extracao"), ("orquestrador", "buscar_trechos")):
         refused = await call(governance, agent, tool_name, {})

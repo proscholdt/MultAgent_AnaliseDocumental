@@ -32,7 +32,7 @@ def test_numa_pergunta_o_redator_nao_sai():
 
 def test_delegacao_antes_da_hora_volta_com_o_que_ja_pode_ser_feito():
     pendencias = [
-        {"agente": "extrator", "o_que_falta": "extração", "doc_id": "a", "empresa": "Alfa", "liberada": True},
+        {"agente": "extrator", "o_que_falta": "extração", "doc_id": "a", "entidade": "Alfa", "liberada": True},
         {"agente": "pesquisador", "o_que_falta": "resposta", "liberada": False, "aguarda": "extração de Alfa"},
     ]
     go, held = hold_early([{"agente": "pesquisador", "tarefa": "p1"}, {"agente": "extrator", "doc_id": "a"}],

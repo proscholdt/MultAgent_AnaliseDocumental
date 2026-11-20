@@ -21,7 +21,7 @@ def pick(documents: list[dict], wanted: str) -> str:
     """O doc_id a partir do nome do arquivo, da empresa ou do próprio doc_id."""
     key = wanted.casefold()
     found = [doc for doc in documents
-             if key == doc["doc_id"] or key in doc["arquivo"].casefold() or key in (doc["empresa"] or "").casefold()]
+             if key == doc["doc_id"] or key in doc["arquivo"].casefold() or key in (doc["entidade"] or "").casefold()]
     if len(found) != 1:
         names = ", ".join(f"{doc['arquivo']} ({doc['doc_id']})" for doc in documents)
         sys.exit(f"'{wanted}' não aponta para um documento só. Documentos: {names}.")
@@ -39,7 +39,7 @@ def show(items: list[dict]) -> None:
             continue
         print(f"\n{title} ({len(group)}):")
         for item in group:
-            where = item.get("empresa") or (f"pergunta {item['pergunta_id'][1:]}" if item.get("pergunta_id") else "")
+            where = item.get("entidade") or (f"pergunta {item['pergunta_id'][1:]}" if item.get("pergunta_id") else "")
             line = f"  - [{item['agente']}] {item['o_que_falta']}" + (f" — {where}" if where else "")
             if item.get("categorias"):
                 line += f" ({', '.join(item['categorias'])})"

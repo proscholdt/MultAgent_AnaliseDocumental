@@ -286,12 +286,15 @@ campos:
 categorias:
 - nome: motivo_resultado
   rotulo: Principais motivos do resultado
+  descricao: o que explicou o resultado do período
 - nome: risco
   rotulo: Riscos e pontos de atenção
+  descricao: risco ou ponto de atenção citado
   termos:
   - risco
 - nome: guidance
   rotulo: Guidance e perspectivas
+  descricao: perspectiva ou projeção
   termos:
   - guidance
   - perspectiva
@@ -302,6 +305,7 @@ categorias:
 # "contingência", com a nota de provisões de qualquer demonstração.
 - nome: evento_relevante
   rotulo: Eventos relevantes
+  descricao: aquisição, reestruturação, contingência, mudança contábil
   termos:
   - evento subsequente
   - eventos subsequentes
@@ -310,6 +314,7 @@ categorias:
   - recuperação judicial
 - nome: tom
   rotulo: Tom geral da administração
+  descricao: o tom geral da administração
 
 perguntas:
 - id: p1

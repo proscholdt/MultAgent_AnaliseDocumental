@@ -62,16 +62,16 @@ def _celula(coluna, periodo="3T25"):
 
 
 async def test_documento_trimestral_grava_o_trimestre_e_o_comparavel(governance, trimestral):
-    result = await governance.call_tool(headers("extrator"), "salvar_indicador",
+    result = await governance.call_tool(headers("extrator"), "salvar_campo",
                                         _celula("Consolidado - 01/07/2025 a 30/09/2025"))
     body = payload(result)
     assert not result.is_error, body
     assert body["salvo"]["periodo"] == "3T2025"
-    assert body["ano_anterior_gravado_pelo_servidor"]["periodo"] == "3T2024"
-    assert body["ano_anterior_gravado_pelo_servidor"]["valor"] == "350.200"
+    assert body["comparavel_gravado_pelo_servidor"]["periodo"] == "3T2024"
+    assert body["comparavel_gravado_pelo_servidor"]["valor"] == "350.200"
 
 
 async def test_documento_trimestral_recusa_ano_fora_do_periodo(governance, trimestral):
-    result = await governance.call_tool(headers("extrator"), "salvar_indicador",
+    result = await governance.call_tool(headers("extrator"), "salvar_campo",
                                         _celula("Consolidado - 01/07/2025 a 30/09/2025", periodo="2025"))
     assert result.is_error and "3T2025" in payload(result)["erro"]

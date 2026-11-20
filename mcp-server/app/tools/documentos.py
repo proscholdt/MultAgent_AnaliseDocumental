@@ -44,12 +44,12 @@ class ListarDocumentos(Args):
 
 
 @tool("listar_documentos", "rag", """
-    Lista os documentos indexados do usuário: doc_id, arquivo, empresa, período, tipo e número de
+    Lista os documentos indexados do usuário: doc_id, arquivo, $entidade, $recorte, tipo e número de
     páginas. É por aqui que se descobre o doc_id para as outras tools.""")
 async def listar_documentos(call: Call, args: ListarDocumentos) -> dict[str, Any]:
     documents = await call.deps.indexer.documents(call.caller.user_token, call.caller.colecao_id)
     return {"documentos": [
-        {"doc_id": d["doc_id"], "arquivo": d["file_name"], "empresa": d.get("company"),
+        {"doc_id": d["doc_id"], "arquivo": d["file_name"], "entidade": d.get("company"),
          "periodo": d.get("period"), "tipo": d.get("doc_type"), "paginas": d.get("page_count")}
         for d in documents if d.get("status") == "indexed"]}
 
@@ -78,7 +78,7 @@ async def buscar_trechos(call: Call, args: BuscarTrechos) -> dict[str, Any]:
         call.caller.user_token, query=args.consulta, limit=min(args.limite or 6, settings.search_limit_max),
         doc_id=args.doc_id, chunk_type=_TYPES.get(args.tipo or ""), page_from=args.pagina_de,
         page_to=args.pagina_ate, colecao_id=call.caller.colecao_id)
-    return {"trechos": [{"arquivo": hit.get("file_name"), "empresa": hit.get("company"),
+    return {"trechos": [{"arquivo": hit.get("file_name"), "entidade": hit.get("company"),
                          **chunk_view(hit, max_chars=settings.search_text_chars)} for hit in hits]}
 
 

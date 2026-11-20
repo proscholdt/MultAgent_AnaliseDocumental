@@ -80,7 +80,7 @@ def held_reason(mine: list[dict[str, Any]], ready: list[dict[str, Any]]) -> str:
     waits = list(dict.fromkeys(item["aguarda"] for item in mine if item.get("aguarda")))
     text = "não delegado: chegou antes da hora. Antes disso falta: " + "; ".join(waits) + "."
     if ready:
-        options = [f"{item['agente']}: {item['o_que_falta']}" + (f" ({item['empresa']})" if item.get("empresa") else "")
+        options = [f"{item['agente']}: {item['o_que_falta']}" + (f" ({item['entidade']})" if item.get("entidade") else "")
                    for item in ready[:_READY_IN_REASON]]
         text += " O que já pode ser delegado: " + "; ".join(options) + "."
     return text

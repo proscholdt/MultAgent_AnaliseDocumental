@@ -54,7 +54,7 @@ O mesmo trabalho em ondas, só daquela empresa:
 
 1. Chame `pendencias` com o `doc_id` dela. A lista não tem as perguntas comparativas: elas são do relatório consolidado.
 2. Delegue os itens com `liberada: true`, cada um com o `doc_id` da empresa.
-3. Por último, o redator, com o `doc_id` e a tarefa "Monte o relatório da empresa (montar_relatorio_empresa)".
+3. Por último, o redator, com o `doc_id` e a tarefa "Monte o relatório da empresa (montar_relatorio_documento)".
 
 O que já está gravado da empresa não é refeito: se a lista só tem a montagem, a única delegação é a do redator.
 

@@ -74,7 +74,7 @@ def test_answers_need_the_expected_content_and_the_expected_source():
 
 
 def snapshot(light_margin, alerts):
-    return {"documentos": [{"doc_id": "a87339d097478f1c", "arquivo": "Light.pdf", "alertas": alerts, "extracao": {"indicadores": {
+    return {"documentos": [{"doc_id": "a87339d097478f1c", "arquivo": "Light.pdf", "alertas": alerts, "extracao": {"campos": {
         "receita_liquida": informed(13253286.0, "R$ mil", 20, previous=14897920.0),
         "margem_ebitda": light_margin}}}],
         "respostas": [{"pergunta_id": "p3", "resposta": "A Light, com 3,32x.", "fontes": ["Light.pdf, p. 10"]}],
@@ -152,7 +152,7 @@ def test_the_shipped_answer_key_is_complete_and_consistent():
 
 def test_only_documents_with_a_key_are_evaluated_and_questions_need_exactly_the_key_documents():
     """O documento é reconhecido pelo conteúdo (doc_id), não pelo nome; sem gabarito, fica de fora."""
-    other = {"doc_id": "ffffffffffffffff", "arquivo": "Light.pdf", "alertas": [], "extracao": {"indicadores": {}}}
+    other = {"doc_id": "ffffffffffffffff", "arquivo": "Light.pdf", "alertas": [], "extracao": {"campos": {}}}
     only_other = {**snapshot(not_found(), []), "documentos": [other]}
     report = evaluate(KEY, only_other)
     assert report["avaliados"] == [] and report["sem_gabarito"] == ["Light.pdf"]  # mesmo nome, outro PDF

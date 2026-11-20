@@ -52,7 +52,7 @@ def test_invalid_agent_file_says_what_is_wrong(change, reason):
 def test_the_file_cannot_grant_itself_tools():
     """Permissão é do servidor MCP. Uma chave 'tools' no arquivo é erro, não é ignorada em silêncio."""
     with pytest.raises(AgentFileError, match="chave desconhecida no cabeçalho: tools"):
-        parse_agent(GOOD.replace("raciocinio: medium", "tools: [salvar_indicador]"), "extrator.md")
+        parse_agent(GOOD.replace("raciocinio: medium", "tools: [salvar_campo]"), "extrator.md")
 
 
 def bump(path) -> None:

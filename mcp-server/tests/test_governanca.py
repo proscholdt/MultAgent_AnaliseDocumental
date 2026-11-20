@@ -9,6 +9,7 @@ from app.governanca.catalogo import load_tools, strict_schema
 from app.governanca.erros import AuthError, IndexerAuthError
 from app.governanca.identidade import identify, verify_agent_token
 from app.governanca.politica import PolicyError, parse_policy
+from app.regras.campos import no_vocabulario
 from tests.conftest import ANA, BRUNO, DOC_ANA, SECRET, agent_token, headers, payload
 
 # --- o que cada agente vê e chama ---------------------------------------------------------
@@ -107,11 +108,11 @@ def test_shipped_policy_is_valid_and_keeps_one_owner_per_writing_tool():
 
     tools = load_tools()
     policy = parse_policy((Path(__file__).parents[1] / "config" / "policy.yaml").read_text(encoding="utf-8"), set(tools))
-    owners = {"salvar_indicador": "extrator", "salvar_nao_encontrado": "extrator", "fechar_extracao": "extrator",
+    owners = {"salvar_campo": "extrator", "salvar_nao_encontrado": "extrator", "fechar_extracao": "extrator",
               "registrar_alerta": "validador", "concluir_revisao": "validador",
               "salvar_item_analise": "analista", "registrar_ausencia_analise": "analista",
               "salvar_resposta": "pesquisador", "salvar_resumo": "redator", "montar_relatorio": "redator",
-              "montar_relatorio_empresa": "redator"}
+              "montar_relatorio_documento": "redator"}
     for tool_name, owner in owners.items():
         assert [agent for agent in policy.agents if policy.allows(agent, tool_name)] == [owner], tool_name
     # Toda tool do catálogo que grava tem dono declarado aqui, e toda tool está liberada para alguém.
@@ -176,7 +177,7 @@ def test_every_tool_schema_is_flat_and_strict():
         for field, definition in schema["properties"].items():
             assert definition.get("type") != "object", f"{name}.{field}: argumento aninhado"
             assert definition.get("description"), f"{name}.{field}: sem descrição para o modelo"
-        assert spec.definition().description == spec.description and "\n" not in spec.description
+        assert spec.definition().description == no_vocabulario(spec.description) and "\n" not in spec.description
 
 
 def test_adjustments_apply_when_the_file_changes_and_a_bad_file_keeps_the_last_good_one(tmp_path):

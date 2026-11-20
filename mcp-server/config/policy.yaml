@@ -22,7 +22,7 @@ agentes:
 
   extrator:
     tools: [listar_documentos, buscar_trechos, ler_chunk, ler_pagina,
-            salvar_indicador, salvar_nao_encontrado, fechar_extracao, ler_extracao]
+            salvar_campo, salvar_nao_encontrado, fechar_extracao, ler_extracao]
     limites:
       chamadas_por_execucao: 250
 
@@ -40,14 +40,14 @@ agentes:
 
   pesquisador:
     tools: [listar_documentos, buscar_trechos, ler_chunk, ler_pagina, ler_extracao, ler_analise,
-            ler_alertas, comparar_indicadores, salvar_resposta, ler_respostas]
+            ler_alertas, comparar_campos, salvar_resposta, ler_respostas]
     limites:
       chamadas_por_execucao: 150
 
   redator:
     tools: [listar_documentos, ler_extracao, ler_analise, ler_alertas, ler_respostas,
-            salvar_resumo, montar_relatorio, ler_relatorio, montar_relatorio_empresa,
-            ler_relatorio_empresa, pendencias]
+            salvar_resumo, montar_relatorio, ler_relatorio, montar_relatorio_documento,
+            ler_relatorio_documento, pendencias]
     limites:
       chamadas_por_execucao: 80
 
@@ -55,4 +55,4 @@ agentes:
   # confere as pendências e lê o resultado para devolver ao usuário. Só leitura.
   sistema:
     tools: [listar_documentos, pendencias, ler_extracao, ler_analise, ler_alertas, ler_respostas,
-            ler_relatorio, ler_relatorio_empresa]
+            ler_relatorio, ler_relatorio_documento]

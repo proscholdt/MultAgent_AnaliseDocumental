@@ -140,7 +140,7 @@ def conferir_fechamento(document: IndexedDocument, extraction: Extraction, apoio
     if uncomputable and not apoio_ausente:
         raise ToolRejected(
             "Faltam valores de apoio. Sem eles o servidor não calcula o que a empresa não informa nem confere o "
-            "EBITDA que ela informa. Grave-os com salvar_indicador e feche de novo. Se o documento não os traz, "
+            "EBITDA que ela informa. Grave-os com salvar_campo e feche de novo. Se o documento não os traz, "
             "feche de novo explicando em 'apoio_ausente'.",
             problemas=[f"{campo}: faltam {_SUPPORT[campo]}" for campo in uncomputable])
     if uncomputable:
@@ -157,6 +157,6 @@ def conferir_fechamento(document: IndexedDocument, extraction: Extraction, apoio
                                      + (f" e em mais {len(rows) - 1} página(s)" if len(rows) > 1 else ""))
         if there:
             raise ToolRejected(
-                "O documento traz as linhas de apoio: grave-as com salvar_indicador (origem='tabela') e feche de "
+                "O documento traz as linhas de apoio: grave-as com salvar_campo (origem='tabela') e feche de "
                 "novo. 'apoio_ausente' só vale quando o documento realmente não as tem.", problemas=there)
     return uncomputable

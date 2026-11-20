@@ -6,7 +6,7 @@ os valores por fórmula, nem a variação calculada pelos dois períodos, nem os
 do agente (que falam do documento, mas não são texto dele). Tudo isso continua no JSON completo.
 
     {
-      "empresa": "...", "documento": "Light.pdf",
+      "<entidade do pacote>": "...", "documento": "Light.pdf",
       "periodo_referencia": "2022", "periodo_comparavel": "2021",
       "receita_liquida": {"status": "encontrado", "valor": ..., "unidade": ...,
                           "origem": {"pagina": ..., "trecho": ...},
@@ -16,7 +16,7 @@ do agente (que falam do documento, mas não são texto dele). Tudo isso continua
       ...
     }
 
-A variação contra o período comparável aparece como a empresa a escreve (`variacao_informada`),
+A variação contra o período comparável aparece como o documento a escreve (`variacao_informada`),
 quando escreve; e o valor do período comparável, como está no documento, vai ao lado, para quem
 quiser fazer a conta.
 """
@@ -70,9 +70,10 @@ def compact_field(block: dict[str, Any]) -> dict[str, Any]:
 
 def compact(payload: dict[str, Any]) -> dict[str, Any]:
     """O JSON enxuto de um documento, a partir do JSON completo publicado."""
-    meta, indicators = payload["documento"], payload["indicadores"]
+    meta, indicators = payload["documento"], payload["campos"]
     result: dict[str, Any] = {
-        "empresa": meta.get("empresa"), "documento": meta.get("arquivo"),
+        # A chave é o nome da entidade no pacote ("empresa", "paciente"): o formato de entrega é do domínio.
+        atual().pacote.entidade.nome: meta.get("entidade"), "documento": meta.get("arquivo"),
         "periodo_referencia": meta.get("periodo_referencia"), "periodo_comparavel": meta.get("periodo_comparavel"),
     }
     # Os campos que o plugin do domínio pede, na ordem dele; sem plugin, os principais do pacote.

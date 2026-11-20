@@ -51,6 +51,6 @@ async def check_company_report(run: Run, identity: Identity, deps: Deps) -> tupl
         except mcp.McpError as error:  # doc_id que não existe: o orquestrador escolhe de novo
             run.doc_id = None
             return False, [{"o_que_falta": f"escolher a empresa de novo: {error}", "agente": ORCHESTRATOR}], {}
-        report = await session.call("ler_relatorio_empresa", {"doc_id": run.doc_id}) if not pending else {}
+        report = await session.call("ler_relatorio_documento", {"doc_id": run.doc_id}) if not pending else {}
     return not pending, pending, {"relatorio": report.get("relatorio"), "gerado_em": report.get("gerado_em"),
                                   "doc_id": run.doc_id}
