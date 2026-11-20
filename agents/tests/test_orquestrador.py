@@ -586,34 +586,34 @@ async def test_a_chat_message_asking_for_one_company_gets_that_company_report(ht
     """"Análise completa da Brasal" trazia o relatório consolidado de novo: o tipo era um só."""
     company_team(world, model)
     model.scripts["orquestrador"] = [
-        [decide(delegation("redator", "Monte o relatório da empresa.", DOC), intencao="relatorio_empresa", empresa=DOC)],
-        [decide(terminado=True, mensagem="Relatório da Brasal pronto.", intencao="relatorio_empresa", empresa=DOC)],
+        [decide(delegation("redator", "Monte o relatório da empresa.", DOC), intencao="relatorio_documento", documento=DOC)],
+        [decide(terminado=True, mensagem="Relatório da Brasal pronto.", intencao="relatorio_documento", documento=DOC)],
     ]
     conversation = (await http.post("/api/conversas", headers=auth())).json()["conversa_id"]
     run = (await http.post(f"/api/conversas/{conversation}/mensagens",
                            json={"texto": "faça uma análise completa da Brasal e gere um relatório"},
                            headers=auth())).json()
-    assert (run["estado"], run["tipo"]) == ("completa", "relatorio_empresa"), run["erro"]
+    assert (run["estado"], run["tipo"]) == ("completa", "relatorio_documento"), run["erro"]
     assert run["resultado"]["relatorio"] == "# Relatório de análise: Brasal\n\n..."
     system = [(tool, arguments) for who, tool, arguments, _ in world.calls if who == "sistema"]
     assert system[-2:] == [("pendencias", {"doc_id": DOC}), ("ler_relatorio_documento", {"doc_id": DOC})]
     assert "ler_relatorio" not in world.called("sistema")  # o consolidado nem é lido
     turn = (await http.get(f"/api/conversas/{conversation}", headers=auth())).json()["turnos"][0]
-    assert (turn["tipo"], turn["relatorio"]) == ("relatorio_empresa", "# Relatório de análise: Brasal\n\n...")
+    assert (turn["tipo"], turn["relatorio"]) == ("relatorio_documento", "# Relatório de análise: Brasal\n\n...")
 
 
 async def test_a_company_report_without_the_company_goes_back_to_the_orchestrator(http, world, model):
     company_team(world, model)
     model.scripts["orquestrador"] = [
-        [decide(terminado=True, intencao="relatorio_empresa")],  # esqueceu de dizer qual empresa
-        [decide(delegation("redator", "Monte o relatório da empresa.", DOC), intencao="relatorio_empresa", empresa=DOC)],
-        [decide(terminado=True, intencao="relatorio_empresa", empresa=DOC)],
+        [decide(terminado=True, intencao="relatorio_documento")],  # esqueceu de dizer qual empresa
+        [decide(delegation("redator", "Monte o relatório da empresa.", DOC), intencao="relatorio_documento", documento=DOC)],
+        [decide(terminado=True, intencao="relatorio_documento", documento=DOC)],
     ]
     conversation = (await http.post("/api/conversas", headers=auth())).json()["conversa_id"]
     run = (await http.post(f"/api/conversas/{conversation}/mensagens", json={"texto": "relatório da Brasal"},
                            headers=auth())).json()
-    assert (run["estado"], run["tipo"]) == ("completa", "relatorio_empresa"), run["erro"]
-    assert "o doc_id em `empresa`" in model.first_input("orquestrador", 1)
+    assert (run["estado"], run["tipo"]) == ("completa", "relatorio_documento"), run["erro"]
+    assert "o doc_id em `documento`" in model.first_input("orquestrador", 1)
 
 
 async def test_a_finished_report_gets_its_grade_and_a_question_does_not(settings, engine, specialists_app, checkpointer,

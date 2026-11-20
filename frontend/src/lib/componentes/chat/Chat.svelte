@@ -221,7 +221,7 @@
 			<div class="boas-vindas">
 				<h1>O que você quer saber dos documentos?</h1>
 				<p>
-					Pergunte, compare ou peça um relatório: o consolidado ou o de uma empresa. As respostas vêm dos documentos indexados, com a página de
+					Pergunte, compare ou peça um relatório: o consolidado ou o de um documento. As respostas vêm dos documentos indexados, com a página de
 					origem, e o que não estiver neles aparece como não encontrado.
 				</p>
 			</div>

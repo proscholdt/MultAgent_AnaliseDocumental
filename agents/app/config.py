@@ -42,9 +42,10 @@ class Settings(BaseSettings):
     # O texto das mensagens (prompts, respostas, resultado das tools) nos traces do Tempo, como no
     # LangSmith. Leva trechos dos documentos para a observabilidade.
     traces_com_conteudo: bool = False
-    # Ao fim de cada relatório, a nota contra o gabarito (só para os documentos que têm gabarito).
+    # Ao fim de cada relatório, a nota contra o gabarito do domínio (dominios/<id>/avaliacao/gabarito.json;
+    # só para os documentos que têm gabarito). `gabarito_path` troca o do domínio padrão.
     avaliar_relatorios: bool = True
-    gabarito_path: Path = Path("avaliacao/gabarito.json")
+    gabarito_path: Path | None = None
 
     # Servidor MCP: a única porta dos agentes para tools e RAG. O segredo é o mesmo do servidor.
     mcp_url: str = "http://localhost:8100/mcp"
@@ -76,8 +77,9 @@ class Settings(BaseSettings):
     # buscas no meio do caminho).
     min_minutos_token: int = 15
 
-    # Rotas do roteamento semântico da intenção do chat (frases de exemplo, limiar, margem).
-    intencoes_path: Path = Path("config/intencoes.yaml")
+    # Rotas do roteamento semântico da intenção do chat (frases de exemplo, limiar, margem): as do
+    # pacote de cada domínio (dominios/<id>/intencoes.yaml). Este troca as do domínio padrão.
+    intencoes_path: Path | None = None
 
     agentes_dir: Path = Path("agentes")
     data_dir: Path = Path("data")

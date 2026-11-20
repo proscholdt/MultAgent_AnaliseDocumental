@@ -6,7 +6,7 @@
 #   investimento é fora do escopo, mesmo citando uma empresa; mais de uma empresa no relatório é o
 #   consolidado.
 # - `anterior`: o pedido anterior da conversa, para as mensagens de seguimento.
-# - `empresa`: o arquivo da empresa, só em relatorio_empresa.
+# - `empresa`: o arquivo da empresa, só em relatorio_documento.
 #
 # As mensagens foram escritas por quem fez o sistema, não colhidas de usuários: medem as regras,
 # não o uso real.
@@ -24,8 +24,8 @@ mensagens:
   - {conjunto: ajuste, texto: "Me mostra o lucro líquido da Millet e a variação", esperado: pergunta}
   - {conjunto: ajuste, texto: "Gera o relatório completo, por favor", esperado: relatorio}
   - {conjunto: ajuste, texto: "Quero o relatório consolidado das três empresas", esperado: relatorio}
-  - {conjunto: ajuste, texto: "Relatório só da Light", esperado: relatorio_empresa, empresa: Light.pdf}
-  - {conjunto: ajuste, texto: "Faz uma análise completa da Millet e me dá o relatório", esperado: relatorio_empresa, empresa: Millet.pdf}
+  - {conjunto: ajuste, texto: "Relatório só da Light", esperado: relatorio_documento, empresa: Light.pdf}
+  - {conjunto: ajuste, texto: "Faz uma análise completa da Millet e me dá o relatório", esperado: relatorio_documento, empresa: Millet.pdf}
   - {conjunto: ajuste, texto: "oi", esperado: fora_do_escopo}
   - {conjunto: ajuste, texto: "Muito obrigado, ajudou bastante", esperado: fora_do_escopo}
   - {conjunto: ajuste, texto: "Vai chover hoje em São Paulo?", esperado: fora_do_escopo}
@@ -54,11 +54,11 @@ mensagens:
   - {conjunto: teste, texto: "Faz o relatório comparando Light, Brasal e Millet", esperado: relatorio}
   - {conjunto: teste, texto: "Atualiza o relatório", esperado: relatorio}
   - {conjunto: teste, texto: "quero ver o relatório consolidado", esperado: relatorio}
-  - {conjunto: teste, texto: "Gera o relatório individual da Brasal", esperado: relatorio_empresa, empresa: Brasal.pdf}
-  - {conjunto: teste, texto: "Quero o relatório da Light S.A.", esperado: relatorio_empresa, empresa: Light.pdf}
-  - {conjunto: teste, texto: "Análise completa da Millet, por favor", esperado: relatorio_empresa, empresa: Millet.pdf}
-  - {conjunto: teste, texto: "Monta o relatório da Brasal de novo", esperado: relatorio_empresa, empresa: Brasal.pdf}
-  - {conjunto: teste, texto: "faz um relatório só com a Millet", esperado: relatorio_empresa, empresa: Millet.pdf}
+  - {conjunto: teste, texto: "Gera o relatório individual da Brasal", esperado: relatorio_documento, empresa: Brasal.pdf}
+  - {conjunto: teste, texto: "Quero o relatório da Light S.A.", esperado: relatorio_documento, empresa: Light.pdf}
+  - {conjunto: teste, texto: "Análise completa da Millet, por favor", esperado: relatorio_documento, empresa: Millet.pdf}
+  - {conjunto: teste, texto: "Monta o relatório da Brasal de novo", esperado: relatorio_documento, empresa: Brasal.pdf}
+  - {conjunto: teste, texto: "faz um relatório só com a Millet", esperado: relatorio_documento, empresa: Millet.pdf}
   - {conjunto: teste, texto: "Boa tarde!", esperado: fora_do_escopo}
   - {conjunto: teste, texto: "Me recomenda uma ação para comprar", esperado: fora_do_escopo}
   - {conjunto: teste, texto: "Escreve um e-mail para o meu chefe", esperado: fora_do_escopo}
@@ -69,6 +69,6 @@ mensagens:
   - {conjunto: teste, texto: "você é humano?", esperado: fora_do_escopo}
   - {conjunto: teste, anterior: "Quais riscos a Brasal cita?", texto: "explique melhor o segundo", esperado: pergunta}
   - {conjunto: teste, anterior: "Qual a dívida líquida da Light?", texto: "por que aumentou?", esperado: pergunta}
-  - {conjunto: teste, anterior: "Gere o relatório da Light", texto: "e da Brasal?", esperado: relatorio_empresa, empresa: Brasal.pdf}
+  - {conjunto: teste, anterior: "Gere o relatório da Light", texto: "e da Brasal?", esperado: relatorio_documento, empresa: Brasal.pdf}
   - {conjunto: teste, anterior: "Qual empresa teve o maior lucro?", texto: "e o menor prejuízo?", esperado: pergunta}
   - {conjunto: teste, anterior: "Qual o EBITDA da Millet?", texto: "valeu", esperado: fora_do_escopo}

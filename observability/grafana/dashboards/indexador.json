@@ -3,7 +3,7 @@
   "title": "Indexador",
   "description": "Ingestão: etapas, filas, páginas, chunks, custo e a API. Escolha uma conversa no alto para ver o que ela pediu ao indexador.",
   "tags": [
-    "demonstracoes",
+    "documentos",
     "indexador"
   ],
   "timezone": "browser",
@@ -52,7 +52,7 @@
       "title": "Painéis",
       "type": "dashboards",
       "tags": [
-        "demonstracoes"
+        "documentos"
       ],
       "asDropdown": false,
       "includeVars": true,

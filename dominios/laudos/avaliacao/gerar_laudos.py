@@ -122,20 +122,20 @@ GABARITO = {
     "_como_foi_feito": "Laudos fictícios gerados por gerar_laudos.py: os valores nascem no gerador, e o gabarito "
                        "também. Valor em número, na unidade do pacote; página do arquivo PDF.",
     "documentos": {
-        "laudo-maria.pdf": {"indicadores": _campos({"glicose": 92, "hemoglobina_glicada": 5.4, "colesterol_total": 231,
+        "laudo-maria.pdf": {"campos": _campos({"glicose": 92, "hemoglobina_glicada": 5.4, "colesterol_total": 231,
                                                     "hdl": 48, "ldl": 158, "triglicerideos": 125}),
                             "inconsistencias_na_fonte_esperadas": []},
-        "laudo-joao.pdf": {"indicadores": _campos({"glicose": 118, "hemoglobina_glicada": 6.3, "creatinina": 1.05,
+        "laudo-joao.pdf": {"campos": _campos({"glicose": 118, "hemoglobina_glicada": 6.3, "creatinina": 1.05,
                                                    "triglicerideos": 210}),
                            "inconsistencias_na_fonte_esperadas": [{"pagina": 1, "contem": "04/06/2024"}]},
-        "laudo-ana.pdf": {"indicadores": _campos({"glicose": 85, "colesterol_total": 178, "hdl": 62, "ldl": 96,
+        "laudo-ana.pdf": {"campos": _campos({"glicose": 85, "colesterol_total": 178, "hdl": 62, "ldl": 96,
                                                   "triglicerideos": 98, "creatinina": 0.78, "hemoglobina": 11.2}),
                           "inconsistencias_na_fonte_esperadas": []},
         # Um documento público que não é laudo: o consenso da SBAC sobre o laudo do perfil lipídico
         # (https://www.sbac.org.br/wp-content/uploads/2017/09/ConsensoOficial_PerfilLipidico_2016_v13.pdf,
         # não versionado aqui). Tem tabelas de valores de referência e nenhum resultado de paciente:
         # tudo tem de sair "não encontrado", sem tirar resultado das tabelas de referência.
-        "consenso-perfil-lipidico-sbac.pdf": {"doc_id": "34f35b0636d713dd", "indicadores": _campos({}),
+        "consenso-perfil-lipidico-sbac.pdf": {"doc_id": "34f35b0636d713dd", "campos": _campos({}),
                                               "inconsistencias_na_fonte_esperadas": []},
     },
     "perguntas": {

@@ -76,7 +76,8 @@ async def _execute(run: Run, user_token: str, deps: Deps) -> Run:
         trace.add("especialistas", agentes=[entry["nome"] for entry in catalog["agentes"]], digest=catalog["digest"],
                   **({"fora_do_ar": catalog["fora_do_ar"]} if catalog.get("fora_do_ar") else {}))
         # O domínio primeiro: o prompt do pacote (até no modo substitui) e depois a lista da equipe.
-        execution.spec = with_team(with_domain(snapshot.orchestrator, execution.identity.dominio), catalog)
+        execution.spec = with_team(with_domain(snapshot.orchestrator, execution.identity.dominio), catalog,
+                                   execution.identity.dominio)
         execution.team = {entry["nome"] for entry in catalog["agentes"]}
 
         config = {"configurable": {"thread_id": run.conversa_id or run.id},

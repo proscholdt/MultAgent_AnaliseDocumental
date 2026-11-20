@@ -35,6 +35,7 @@ from app.regras.numeros import (
     contains_number,
     number_tokens,
     parse_number,
+    reais_sem_escala,
     unit_in_text,
     unit_of_number,
 )
@@ -162,7 +163,9 @@ def _from_table(args: SalvarCampo, chunk: dict[str, Any]) -> dict[str, Any]:
         "number": number, "trecho": f"{cell.header_text}\n{cell.row_text}", "linha": cell.row_label,
         "coluna": cell.column_label, "escopo": scope, "periodo_confirmado": confirmed,
         "alternativa_consolidada": plugin.escopo_alternativo(scope, table.header),
-        "unidade": chunk.get("unit"), "unidade_origem": chunk.get("unit_source"),
+        # Sem a escala no chunk, uma célula "R$ 120.000,00" é um valor em reais.
+        "unidade": chunk.get("unit") or ("R$" if "R$" in (cell.text or "") else None),
+        "unidade_origem": chunk.get("unit_source") or ("trecho" if "R$" in (cell.text or "") else None),
         "table": table, "row_index": cell.row_index, "column_index": cell.column_index}
 
 
@@ -196,7 +199,10 @@ def _from_text(args: SalvarCampo, chunk: dict[str, Any]) -> dict[str, Any]:
         # documento, e a data dele não costuma estar na frase do resultado.
         "periodo_confirmado": args.periodo in number_tokens(snippet) if _por_periodo() else True,
         "alternativa_consolidada": False,
-        "unidade": unit or chunk.get("unit"), "unidade_origem": "trecho" if unit else chunk.get("unit_source"),
+        # Sem escala no trecho nem no chunk, "R$ 120.000,00" é um valor em reais.
+        "unidade": unit or chunk.get("unit") or ("R$" if reais_sem_escala(snippet, tokens[0]) else None),
+        "unidade_origem": "trecho" if unit or (not chunk.get("unit") and reais_sem_escala(snippet, tokens[0]))
+        else chunk.get("unit_source"),
         # "-R$5.673 milhões" (e o que o plugin disser, como "prejuízo de R$ 5.672 milhões"): o número
         # vem positivo, e o valor é negativo.
         "loss": bool(said.get("negativo"))

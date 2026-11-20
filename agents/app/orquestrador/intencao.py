@@ -6,7 +6,7 @@ São três peças, porque o roteamento sozinho não resolve tudo:
 - **Rotas** (`config/intencoes.yaml`): frases de exemplo para `relatorio`, `pergunta` e
   `fora_do_escopo`. A mensagem vira um embedding e ganha a rota da frase mais parecida, se a
   semelhança passar do limiar e ficar à frente da segunda rota pela margem. Senão: sem decisão.
-- **Empresa**: "relatório da Millet" é `relatorio_empresa` com o doc_id da Millet. Quem acha a
+- **Empresa**: "relatório da Millet" é `relatorio_documento` com o doc_id da Millet. Quem acha a
   empresa é uma regra: as palavras da mensagem contra os nomes dos documentos do usuário
   (empresa e arquivo, sem as palavras genéricas como "Participações" e "Holding"). Uma empresa
   citada: relatório dela; nenhuma ou mais de uma: o consolidado.
@@ -35,9 +35,9 @@ Embedder = Callable[[list[str], str], Awaitable[tuple[list[list[float]], int]]]
 _SEGUIMENTO = re.compile(
     r"^\s*(?:e|mas|tamb[eé]m|por\s*qu[eê]|porque|explique|explica|detalhe|detalha|compare|e\s+quanto|e\s+sobre)\b",
     re.IGNORECASE)
-# Palavras de nome de empresa que não identificam a empresa.
-_GENERICAS = {"participacoes", "holding", "companhia", "empresa", "empresas", "grupo", "brasil", "brasilia",
-              "energia", "servicos", "comercio", "industria", "industrial", "investimentos", "pdf"}
+# Palavras de um nome que não identificam o documento. As do domínio (nas demonstrações,
+# "Participações", "Holding") vêm de `palavras_genericas` no intencoes.yaml do pacote.
+_GENERICAS = frozenset({"pdf", "documento", "documentos", "arquivo"})
 
 
 def plain(text: str) -> str:
@@ -49,16 +49,17 @@ def _palavras(text: str) -> set[str]:
     return set(re.findall(r"[a-z0-9]+", plain(text)))
 
 
-def apelidos(documento: dict[str, Any]) -> set[str]:
-    """As palavras que identificam a empresa de um documento: do nome dela e do nome do arquivo."""
+def apelidos(documento: dict[str, Any], genericas: frozenset[str] = frozenset()) -> set[str]:
+    """As palavras que identificam a entidade de um documento: do nome dela e do nome do arquivo."""
     nome = f"{documento.get('entidade') or ''} {Path(documento.get('arquivo') or '').stem}"
-    return {p for p in _palavras(nome) if len(p) >= 4 and p not in _GENERICAS}
+    return {p for p in _palavras(nome) if len(p) >= 4 and p not in _GENERICAS and p not in genericas}
 
 
-def empresas_citadas(mensagem: str, documentos: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Os documentos cuja empresa a mensagem cita pelo nome."""
+def entidades_citadas(mensagem: str, documentos: list[dict[str, Any]],
+                      genericas: frozenset[str] = frozenset()) -> list[dict[str, Any]]:
+    """Os documentos cuja entidade a mensagem cita pelo nome."""
     palavras = _palavras(mensagem)
-    return [doc for doc in documentos if apelidos(doc) & palavras]
+    return [doc for doc in documentos if apelidos(doc, genericas) & palavras]
 
 
 def seguimento(mensagem: str, anterior: str | None, max_palavras: int) -> bool:
@@ -74,6 +75,7 @@ class Rotas:
     max_palavras_seguimento: int
     modelo: str
     ligado: bool = True
+    genericas: frozenset[str] = frozenset()  # palavras de nome que não identificam a entidade
 
 
 def ler_rotas(path: Path) -> Rotas:
@@ -89,12 +91,13 @@ def ler_rotas(path: Path) -> Rotas:
                  limiar=float(data.get("limiar", 0.6)), margem=float(data.get("margem", 0.05)),
                  max_palavras_seguimento=int(data.get("max_palavras_seguimento", 8)),
                  modelo=str(data.get("modelo_embedding", "text-embedding-3-small")),
-                 ligado=bool(data.get("ligado", True)))
+                 ligado=bool(data.get("ligado", True)),
+                 genericas=frozenset(plain(str(p)) for p in data.get("palavras_genericas") or []))
 
 
 @dataclass(frozen=True)
 class Escolha:
-    intencao: str | None  # pergunta | relatorio | relatorio_empresa | fora_do_escopo; None: o LLM decide
+    intencao: str | None  # pergunta | relatorio | relatorio_documento | fora_do_escopo; None: o LLM decide
     doc_id: str | None
     rota: str | None  # a rota mais parecida, mesmo quando não decidiu
     semelhanca: float
@@ -103,7 +106,7 @@ class Escolha:
     exemplo: str  # a frase de exemplo mais parecida
     texto: str  # o que foi comparado: a mensagem, ou o pedido anterior e a mensagem
     seguimento: bool
-    empresas: list[str] = field(default_factory=list)
+    entidades: list[str] = field(default_factory=list)
     motivo: str = ""  # por que não decidiu
     tokens: int = 0
     modelo: str = ""
@@ -176,11 +179,11 @@ class Roteador:
         rota, segunda = ordem[0], ordem[1]
         semelhanca, exemplo = melhores[rota]
         margem = semelhanca - melhores[segunda][0]
-        # A empresa da própria mensagem vale mais: "e da Millet?" depois de "relatório da Light" é a Millet.
-        citadas = empresas_citadas(mensagem, documentos) or (
-            empresas_citadas(anterior or "", documentos) if e_seguimento else [])
+        # A entidade da própria mensagem vale mais: "e da Millet?" depois de "relatório da Light" é a Millet.
+        citadas = entidades_citadas(mensagem, documentos, rotas.genericas) or (
+            entidades_citadas(anterior or "", documentos, rotas.genericas) if e_seguimento else [])
         base = {"rota": rota, "semelhanca": semelhanca, "margem": margem, "segunda": segunda, "exemplo": exemplo,
-                "texto": texto, "seguimento": e_seguimento, "empresas": [d.get("entidade") or d.get("arquivo")
+                "texto": texto, "seguimento": e_seguimento, "entidades": [d.get("entidade") or d.get("arquivo")
                                                                          for d in citadas],
                 "tokens": tokens + gasto, "modelo": rotas.modelo}
         if semelhanca < rotas.limiar:
@@ -188,7 +191,7 @@ class Roteador:
         if margem < rotas.margem:
             return Escolha(None, None, motivo=f"{rota} e {segunda} empatados (margem {margem:.2f})", **base)
         if rota == "relatorio" and len(citadas) == 1:
-            return Escolha("relatorio_empresa", citadas[0]["doc_id"], **base)
+            return Escolha("relatorio_documento", citadas[0]["doc_id"], **base)
         return Escolha(rota, None, **base)
 
 

@@ -50,9 +50,11 @@ def test_the_package_completes_or_replaces_the_prompt_of_an_agent(dominios):
     assert with_domain(_agent("extrator"), "laudos").prompt == "Você extrai exames de laudos."
     assert with_domain(_agent("validador"), "laudos").prompt == ("Método do agente: aponte a origem de cada valor, cite a página e não invente nada.\n\n"
                                                                 "Neste domínio, confira a faixa de referência.")
-    # Sem arquivo no pacote, ou sem domínio, o agente fica como está.
+    # Sem arquivo no pacote, o agente fica como está.
     assert with_domain(_agent("redator"), "laudos").prompt == "Método do agente: aponte a origem de cada valor, cite a página e não invente nada."
-    assert with_domain(_agent("extrator"), None).prompt == "Método do agente: aponte a origem de cada valor, cite a página e não invente nada."
+    # Sem domínio, vale o padrão: o método do agente mais o complemento do financeiro.
+    padrao = with_domain(_agent("extrator"), None).prompt
+    assert padrao.startswith("Método do agente") and "demonstrações financeiras" in padrao
     (dominios / "redator.md").write_text("---\nmodo: troca\n---\nx\n", encoding="utf-8")
     with pytest.raises(AgentFileError, match="troca"):
         with_domain(_agent("redator"), "laudos")
@@ -70,7 +72,7 @@ def test_the_team_list_survives_a_replaced_orchestrator_prompt(dominios):
     # e não pode apagar a lista (modo substitui) nem repetir o complemento.
     (dominios / "orquestrador.md").write_text("---\nmodo: substitui\n---\nVocê coordena laudos.\n", encoding="utf-8")
     catalog = {"agentes": [{"nome": "extrator", "descricao": "Extrai os exames."}]}
-    spec = with_team(with_domain(_agent("orquestrador"), "laudos"), catalog)
+    spec = with_team(with_domain(_agent("orquestrador"), "laudos"), catalog, "laudos")
     again = with_domain(spec, "laudos")
     assert again.prompt.startswith("Você coordena laudos.") and "- `extrator`: Extrai os exames." in again.prompt
     (dominios / "validador.md").write_text("Confira a faixa de referência.\n", encoding="utf-8")

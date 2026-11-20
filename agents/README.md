@@ -26,9 +26,9 @@ flowchart LR
   como relato `nao_delegado`, dizendo o que delegar no lugar.
 - **Pergunta**: termina assim que a resposta está gravada, sem chamar o orquestrador de novo; o
   redator não é delegado, e o pesquisador grava como `livre` (veja [Perguntas](#perguntas)).
-- **Intenção**: no chat, cada mensagem é `pergunta`, `relatorio`, `relatorio_empresa` ou
+- **Intenção**: no chat, cada mensagem é `pergunta`, `relatorio`, `relatorio_documento` ou
   `fora_do_escopo`, e o tipo decide o que a conferência cobra: `pergunta` exige resposta gravada
-  com fonte; `relatorio`, o consolidado montado; `relatorio_empresa`, as pendências e o relatório
+  com fonte; `relatorio`, o consolidado montado; `relatorio_documento`, as pendências e o relatório
   daquela empresa; `fora_do_escopo` não executa nada e devolve um texto fixo com as opções. Quem
   decide, nesta ordem (veja [Intenção](#intenção)):
   1. o **roteador semântico**, quando tem certeza (embedding da mensagem contra frases de exemplo);
@@ -97,7 +97,7 @@ flowchart LR
     R -->|semelhança ≥ limiar<br/>e margem ≥ mínima| D[intenção decidida]
     R -->|senão| L[orquestrador LLM<br/>decide, como antes]
     D -->|relatorio| C{empresas citadas<br/>pelo nome}
-    C -->|uma| RE[relatorio_empresa<br/>+ doc_id]
+    C -->|uma| RE[relatorio_documento<br/>+ doc_id]
     C -->|nenhuma ou várias| RC[relatorio]
     D -->|fora_do_escopo| F[texto fixo,<br/>sem chamar o LLM]
 ```
@@ -105,7 +105,7 @@ flowchart LR
 | Peça | Como | Por quê |
 |---|---|---|
 | **Rotas** | `config/intencoes.yaml`: frases de exemplo de `relatorio`, `pergunta` e `fora_do_escopo`, limiar e margem. Relido sem reiniciar | O que é claro sai em ~0,4 s e por centésimos de centavo, sem LLM |
-| **Empresa** | Regra: as palavras da mensagem contra os nomes dos documentos do usuário (sem as genéricas, como "Participações" e "Holding"). Uma empresa citada: `relatorio_empresa` com o `doc_id` dela; nenhuma ou várias: `relatorio` | Embedding não diz qual empresa; o nome está escrito na mensagem |
+| **Empresa** | Regra: as palavras da mensagem contra os nomes dos documentos do usuário (sem as genéricas, como "Participações" e "Holding"). Uma empresa citada: `relatorio_documento` com o `doc_id` dela; nenhuma ou várias: `relatorio` | Embedding não diz qual empresa; o nome está escrito na mensagem |
 | **Seguimento** | Mensagem de até 8 palavras que começa como continuação ("e", "por que", "explique"…) é comparada junto com o pedido anterior. A empresa da própria mensagem vale mais que a do pedido anterior | "e a menor?" sozinho não diz nada |
 | **Dúvida** | Semelhança abaixo do limiar, ou duas rotas quase empatadas: o tipo fica `auto`, e o orquestrador classifica com o histórico da conversa | O LLM continua com os casos difíceis |
 

@@ -144,7 +144,6 @@ services:
       - ./agentes:/app/agentes:ro
       - ./config:/app/config:ro
       - ../dominios:/app/dominios:ro # pacotes de domínio (dominios/<id>/dominio.yaml)
-      - ./avaliacao:/app/avaliacao:ro # o gabarito da nota ao fim de cada relatório
       - agents-data:/data # execuções, traces, mensagens dos agentes e o checkpoint das conversas
       - ../chaves/orquestrador:/run/chaves/propria:ro
       - ../chaves/publicas:/run/chaves/publicas:ro

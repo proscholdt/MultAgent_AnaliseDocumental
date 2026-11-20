@@ -21,7 +21,7 @@ from app import pacotes
 log = logging.getLogger("agentes.trace")
 _LOG_CHARS = 300
 
-KINDS = ("livre", "pergunta", "relatorio", "relatorio_empresa", "auto", "fora_do_escopo")  # auto: mensagem de conversa, até o orquestrador dizer o que é
+KINDS = ("livre", "pergunta", "relatorio", "relatorio_documento", "auto", "fora_do_escopo")  # auto: mensagem de conversa, até o orquestrador dizer o que é
 RUNNING = ("na_fila", "em_andamento")
 
 
@@ -39,9 +39,9 @@ def now() -> str:
 class Run:
     id: str
     user_id: str
-    tipo: str  # livre | pergunta | relatorio | relatorio_empresa | auto (vira um dos outros na primeira decisão)
+    tipo: str  # livre | pergunta | relatorio | relatorio_documento | auto (vira um dos outros na primeira decisão)
     pedido: str
-    doc_id: str | None = None  # no relatório de uma empresa: o documento dela
+    doc_id: str | None = None  # no relatório de um documento: o doc_id dele
     # A coleção do pedido e o domínio dela (dominios/<id>/). Sem coleção: o domínio padrão e todos os
     # documentos do usuário, como antes dos pacotes de domínio.
     colecao_id: str | None = None

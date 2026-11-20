@@ -27,7 +27,8 @@
 		dominios.find((d) => d.id === colecao?.dominio) ?? dominios.find((d) => d.padrao) ?? null
 	);
 	// Os atalhos do chat: os do config/ajustes.yaml no domínio padrão; nos outros, os do pacote.
-	const sugestoes = $derived(dominio && !dominio.padrao ? dominio.textos.opcoes.map((o) => o.exemplo) : data.sugestoes);
+	// Os atalhos do domínio da coleção (textos.opcoes do pacote); sem domínio, os do config/ajustes.yaml.
+	const sugestoes = $derived(dominio ? dominio.textos.opcoes.map((o) => o.exemplo) : data.sugestoes);
 
 	function lerColecao(): string | null {
 		try {

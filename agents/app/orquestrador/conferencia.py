@@ -23,7 +23,7 @@ async def check(run: Run, identity: Identity, deps: Deps, finished: bool) -> tup
     o pedido está completo, o que falta e o resultado para o usuário."""
     if run.tipo == "fora_do_escopo":
         return True, [], {"fora_do_escopo": True, "opcoes": out_of_scope(run.dominio)[1]}
-    if run.tipo == "relatorio_empresa":
+    if run.tipo == "relatorio_documento":
         return await check_company_report(run, identity, deps)
     async with deps.engine.connect(mcp.SYSTEM, identity) as session:
         pending = (await session.call("pendencias"))["pendencias"]
@@ -41,16 +41,16 @@ async def check(run: Run, identity: Identity, deps: Deps, finished: bool) -> tup
     return finished, pending, {"respostas": new} if new else {}
 
 async def check_company_report(run: Run, identity: Identity, deps: Deps) -> tuple[bool, list[dict[str, Any]], dict]:
-    """O relatório de uma empresa: as pendências DELA vazias e o relatório dela montado."""
+    """O relatório de um documento: as pendências DELE vazias e o relatório dele montado."""
     if not run.doc_id:
-        return False, [{"o_que_falta": "dizer de qual empresa é o relatório: o doc_id em `empresa`, de "
+        return False, [{"o_que_falta": "dizer de qual documento é o relatório: o doc_id em `documento`, de "
                                        "listar_documentos", "agente": ORCHESTRATOR}], {}
     async with deps.engine.connect(mcp.SYSTEM, identity) as session:
         try:
             pending = (await session.call("pendencias", {"doc_id": run.doc_id}))["pendencias"]
         except mcp.McpError as error:  # doc_id que não existe: o orquestrador escolhe de novo
             run.doc_id = None
-            return False, [{"o_que_falta": f"escolher a empresa de novo: {error}", "agente": ORCHESTRATOR}], {}
+            return False, [{"o_que_falta": f"escolher o documento de novo: {error}", "agente": ORCHESTRATOR}], {}
         report = await session.call("ler_relatorio_documento", {"doc_id": run.doc_id}) if not pending else {}
     return not pending, pending, {"relatorio": report.get("relatorio"), "gerado_em": report.get("gerado_em"),
                                   "doc_id": run.doc_id}

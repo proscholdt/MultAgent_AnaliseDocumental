@@ -1,4 +1,4 @@
-"""Mede a classificação de intenção do chat contra mensagens rotuladas (avaliacao/intencoes.yaml).
+"""Mede a classificação de intenção do chat contra mensagens rotuladas (dominios/<id>/avaliacao/intencoes.yaml).
 
     uv run python scripts/avaliar_intencao.py              # o roteador semântico (centésimos de centavo)
     uv run python scripts/avaliar_intencao.py --com-llm    # e o LLM com as regras do orquestrador (~US$ 0,01)
@@ -28,9 +28,10 @@ sys.path.insert(0, str(ROOT))
 from app.config import get_settings
 from app.orquestrador.intencao import Roteador, embedder_openai, empresas_citadas
 
-CONJUNTO = ROOT / "avaliacao" / "intencoes.yaml"
+CONJUNTO = ROOT.parent / "dominios" / "financeiro" / "avaliacao" / "intencoes.yaml"
+ROTAS = ROOT.parent / "dominios" / "financeiro" / "intencoes.yaml"
 ORQUESTRADOR = ROOT / "agentes" / "orquestrador" / "orquestrador.md"
-INTENCOES = ["pergunta", "relatorio", "relatorio_empresa", "fora_do_escopo"]
+INTENCOES = ["pergunta", "relatorio", "relatorio_documento", "fora_do_escopo"]
 
 
 def decisao(escolha, mensagem: dict, documentos: list[dict], limiar: float, margem: float):
@@ -41,18 +42,18 @@ def decisao(escolha, mensagem: dict, documentos: list[dict], limiar: float, marg
         return escolha.rota, None
     citadas = empresas_citadas(mensagem["texto"], documentos) or (
         empresas_citadas(mensagem.get("anterior") or "", documentos) if escolha.seguimento else [])
-    return ("relatorio_empresa", citadas[0]["doc_id"]) if len(citadas) == 1 else ("relatorio", None)
+    return ("relatorio_documento", citadas[0]["doc_id"]) if len(citadas) == 1 else ("relatorio", None)
 
 
 def certo(intencao, empresa, mensagem: dict) -> bool:
-    return intencao == mensagem["esperado"] and (intencao != "relatorio_empresa" or empresa == mensagem.get("empresa"))
+    return intencao == mensagem["esperado"] and (intencao != "relatorio_documento" or empresa == mensagem.get("empresa"))
 
 
 async def classificar_llm(client, modelo: str, esforco: str | None, regras: str, documentos: list[dict],
                           mensagem: dict) -> tuple[str, str | None, int, int, float]:
-    lista = "\n".join(f"- {d['doc_id']}: {d['empresa']}" for d in documentos)
+    lista = "\n".join(f"- {d['doc_id']}: {d.get('entidade') or d.get('empresa')}" for d in documentos)
     sistema = (f"{regras}\n\nDocumentos do usuário (doc_id: empresa):\n{lista}\n\n"
-               "Devolva a intenção da mensagem atual e, só em relatorio_empresa, o doc_id da empresa em `empresa`.")
+               "Devolva a intenção da mensagem atual e, só em relatorio_documento, o doc_id da empresa em `empresa`.")
     pedido = mensagem["texto"]
     if mensagem.get("anterior"):
         pedido = f"## Conversa até aqui\n- Pedido: {mensagem['anterior']}\n\n## Pedido atual\n{pedido}"
@@ -92,7 +93,7 @@ async def main() -> None:
     settings = get_settings()
     dados = yaml.safe_load(CONJUNTO.read_text(encoding="utf-8"))
     documentos, mensagens = dados["documentos"], dados["mensagens"]
-    roteador = Roteador(settings.intencoes_path, embedder_openai(settings.openai_api_key))
+    roteador = Roteador(settings.intencoes_path or ROTAS, embedder_openai(settings.openai_api_key))
     rotas, _ = await roteador.rotas()
 
     tokens_roteador, tempos = 0, []

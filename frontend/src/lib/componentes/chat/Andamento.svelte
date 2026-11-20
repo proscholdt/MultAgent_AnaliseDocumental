@@ -6,7 +6,8 @@
 	const ROTULO = {
 		pergunta: 'pergunta',
 		relatorio: 'relatório consolidado',
-		relatorio_empresa: 'relatório de uma empresa',
+		relatorio_documento: 'relatório de um documento',
+		relatorio_empresa: 'relatório de um documento', // conversas de antes do nome genérico
 		fora_do_escopo: 'fora do escopo'
 	} as const;
 

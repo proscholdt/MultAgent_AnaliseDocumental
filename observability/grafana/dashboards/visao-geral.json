@@ -3,7 +3,7 @@
   "title": "Visão geral",
   "description": "Os quatro serviços: tráfego, erros, latência, mapa e logs. Escolha uma conversa no alto para ver só ela.",
   "tags": [
-    "demonstracoes"
+    "documentos"
   ],
   "timezone": "browser",
   "schemaVersion": 41,
@@ -73,7 +73,7 @@
       "title": "Painéis",
       "type": "dashboards",
       "tags": [
-        "demonstracoes"
+        "documentos"
       ],
       "asDropdown": false,
       "includeVars": true,

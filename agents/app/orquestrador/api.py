@@ -19,7 +19,7 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from opentelemetry import trace
 from pydantic import BaseModel, Field
 
-from app import telemetria
+from app import pacotes, telemetria
 from app.config import Settings, get_settings
 from app.ferramentas.avaliacao_automatica import avaliar as avaliar_relatorio
 from app.ferramentas.avaliacao_automatica import zerar_metricas as zerar_metricas_avaliacao
@@ -42,13 +42,13 @@ _CONVERSA = Field(default=None, description="Continua esta conversa (o orquestra
 
 class Pedido(BaseModel):
     pedido: str = Field(min_length=5, max_length=2000, description="O que você quer, em texto livre.",
-                        examples=["Extraia os indicadores da Light e revise as fontes."])
+                        examples=["Extraia os campos do documento e revise as fontes."])
     conversa_id: str | None = _CONVERSA
     colecao_id: str | None = Field(default=None, description="A coleção (e com ela o domínio) do pedido. Numa conversa, sem ela vale a do pedido anterior; sem nenhuma, o domínio padrão.")
 
 
 class Pergunta(BaseModel):
-    pergunta: str = Field(min_length=5, max_length=1000, examples=["Qual empresa teve o maior lucro líquido em 2022?"])
+    pergunta: str = Field(min_length=5, max_length=1000, examples=["Qual documento traz o maior valor?"])
     aguardar: bool = Field(default=True, description="Esperar a resposta nesta chamada. false devolve só o "
                            "execucao_id, para consultar depois.")
     conversa_id: str | None = _CONVERSA
@@ -64,7 +64,7 @@ class Relatorio(BaseModel):
 
 class Mensagem(BaseModel):
     texto: str = Field(min_length=2, max_length=2000, description="O que você quer, em texto livre.",
-                       examples=["Qual empresa teve a maior margem EBITDA?", "E a menor?"])
+                       examples=["Qual documento traz o maior valor?", "E o menor?"])
     aguardar: bool = Field(default=True, description="Esperar a resposta nesta chamada.")
     colecao_id: str | None = Field(default=None, description="A coleção (e com ela o domínio) do pedido. Numa conversa, sem ela vale a do pedido anterior; sem nenhuma, o domínio padrão.")
 
@@ -128,7 +128,7 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
 
     app = FastAPI(
         title="Agentes — orquestrador",
-        description="Orquestrador e especialistas para análise de demonstrações financeiras. O orquestrador é um "
+        description="Orquestrador e especialistas para análise de documentos, por domínio. O orquestrador é um "
                     "grafo (LangGraph) com agentes PydanticAI; chama os especialistas por A2A, e todos usam as "
                     "ferramentas pelo servidor MCP.",
         lifespan=lifespan)
@@ -310,4 +310,6 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
 
 def app_factory() -> FastAPI:
     settings = get_settings()
-    return create_app(settings, roteador=Roteador(settings.intencoes_path, embedder_openai(settings.openai_api_key)))
+    path = settings.intencoes_path or pacotes.arquivo_do_pacote(pacotes.PADRAO, "intencoes.yaml")
+    roteador = Roteador(path, embedder_openai(settings.openai_api_key)) if path else None
+    return create_app(settings, roteador=roteador)

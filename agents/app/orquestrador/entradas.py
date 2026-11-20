@@ -4,7 +4,7 @@ import json
 from typing import Any
 
 from app import pacotes
-from app.nucleo.agentes import AgentFile
+from app.nucleo.agentes import AgentFile, descricao_no_dominio
 from app.orquestrador.estado import Estado
 from app.orquestrador.execucoes import Run
 
@@ -24,32 +24,17 @@ def conversation_so_far(turns: list[dict]) -> str:
         lines += [f"- Pedido: {turn['pedido']}", f"  Resposta: {answer or '(sem resposta)'} [{turn.get('estado')}]"]
     return "\n".join(lines)
 
-def _domain_input(run: Run) -> str | None:
-    """O pedido nos domínios que não são o padrão: com a entidade e as perguntas do pacote."""
-    if run.dominio == pacotes.PADRAO:
-        return None
-    pacote = pacotes.pacote(run.dominio)
-    entidade = pacote.entidade
-    if run.tipo == "relatorio":
-        return (f"Produza o relatório consolidado completo dos documentos desta coleção ({pacote.nome}): "
-                f"extração, revisão das fontes, análise qualitativa, as {len(pacote.perguntas)} perguntas do "
-                "relatório, os resumos e a montagem do relatório.")
-    if run.tipo == "relatorio_empresa":
-        return (f"Produza o relatório de um só documento ({entidade.rotulo.lower()}), como o usuário pediu: "
-                f"«{run.pedido}». Documento: {run.doc_id or 'diga em `empresa` o doc_id dele'}. Use `pendencias` "
-                "com esse doc_id.")
-    return None
-
-
 def first_input(run: Run, turns: list[dict] | None = None) -> str:
-    if (domain_text := _domain_input(run)) is not None:
-        text = domain_text
-    elif run.tipo == "relatorio":
+    """O pedido, nas palavras do domínio da execução: as perguntas e a entidade vêm do pacote."""
+    pacote = pacotes.pacote(run.dominio or pacotes.PADRAO)
+    if run.tipo == "relatorio":
         text = ("Produza o relatório consolidado completo dos documentos do usuário: extração, revisão das "
-                "fontes, análise qualitativa, as cinco perguntas, os resumos e a montagem do relatório.")
-    elif run.tipo == "relatorio_empresa":
-        text = (f"Produza o relatório de UMA empresa, como o usuário pediu: «{run.pedido}». Empresa: "
-                f"{run.doc_id or 'diga em `empresa` o doc_id dela'}. Use `pendencias` com esse doc_id.")
+                f"fontes, análise qualitativa, as {len(pacote.perguntas)} perguntas, os resumos e a montagem do "
+                "relatório.")
+    elif run.tipo == "relatorio_documento":
+        text = (f"Produza o relatório de UM documento ({pacote.entidade.rotulo.lower()}), como o usuário pediu: "
+                f"«{run.pedido}». Documento: {run.doc_id or 'diga em `documento` o doc_id dele'}. Use `pendencias` "
+                "com esse doc_id.")
     elif run.tipo == "pergunta":
         text = f"Responda à pergunta do usuário, com as fontes. Pergunta: «{run.pedido}»"
     elif run.tipo == "auto":
@@ -73,10 +58,11 @@ def reports_input(reports: list[dict]) -> str:
             + json.dumps(reports, ensure_ascii=False, indent=1)
             + "\n\nDecida a próxima onda. Chame `pendencias` se o pedido envolve o relatório.")
 
-def with_team(spec: AgentFile, catalog: dict[str, Any]) -> AgentFile:
+def with_team(spec: AgentFile, catalog: dict[str, Any], dominio: str | None = None) -> AgentFile:
     """O prompt do orquestrador mais a lista dos especialistas no ar, com a descrição de cada um
-    (vem do arquivo do agente, pelo catálogo A2A)."""
-    team = "\n".join(f"- `{entry['nome']}`: {entry['descricao']}" for entry in catalog["agentes"])
+    (vem do arquivo do agente, pelo catálogo A2A), nas palavras do domínio."""
+    team = "\n".join(f"- `{entry['nome']}`: {descricao_no_dominio(entry['nome'], entry['descricao'], dominio)}"
+                     for entry in catalog["agentes"])
     return dataclasses.replace(spec, prompt=f"{spec.prompt}\n\n## Especialistas disponíveis\n\n{team}")
 
 def turn_answer(run: Run, state: Estado) -> str:
@@ -86,6 +72,6 @@ def turn_answer(run: Run, state: Estado) -> str:
         return " ".join(answer["resposta"] for answer in answers)
     if run.tipo == "relatorio" and state.get("completo"):
         return "Relatório consolidado montado."
-    if run.tipo == "relatorio_empresa" and state.get("completo"):
-        return f"Relatório da empresa {run.doc_id} montado."
+    if run.tipo == "relatorio_documento" and state.get("completo"):
+        return f"Relatório do documento {run.doc_id} montado."
     return state.get("mensagem") or ""

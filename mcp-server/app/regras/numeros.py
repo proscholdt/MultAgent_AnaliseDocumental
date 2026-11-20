@@ -111,6 +111,16 @@ def unit_of_number(text: str, number: str) -> str | None:
     return None
 
 
+def reais_sem_escala(text: str, number: str) -> bool:
+    """O número vem logo depois de "R$", sem escala ("R$ 120.000,00"): é um valor em reais. Só
+    vale quando nem o trecho nem o chunk declaram uma escala (mil, milhões), que tem precedência."""
+    for match in _NUMBER.finditer(text):
+        if same_number(match.group().rstrip(".,"), number) and re.search(r"R\$\s*$", text[:match.start()]):
+            end = match.end() - (len(match.group()) - len(match.group().rstrip(".,")))
+            return not _UNIT_AFTER_NUMBER.match(text, end)
+    return False
+
+
 def in_reais(value: Decimal, unit: str | None) -> Decimal | None:
     """O valor em reais, para comparar dois valores de unidades diferentes. None se a unidade
     não é monetária conhecida."""

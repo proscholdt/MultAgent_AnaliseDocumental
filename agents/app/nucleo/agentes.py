@@ -21,6 +21,7 @@ import hashlib
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from string import Template
 from typing import Any
 
 import yaml
@@ -61,29 +62,69 @@ class AgentFile:
     com_dominio: bool = False
 
 
-def with_domain(spec: AgentFile, dominio: str | None) -> AgentFile:
-    """O agente com o que o pacote do domínio diz a ele (`dominios/<id>/prompts/<agente>.md`).
+def vocabulario(pacote: pacotes.Pacote) -> dict[str, str]:
+    """As palavras do domínio que os prompts usam por marcador ($entidade, $campos...). O prompt
+    base de cada agente é o método; o que ele diz sobre o domínio vem daqui e do complemento."""
+    ids = [pergunta.id for pergunta in pacote.perguntas]
+    campos = []
+    for campo in pacote.campos:
+        if campo.principal:
+            extra = f", em {campo.unidade}" if campo.unidade else ""
+            campos.append(f"- `{campo.nome}`: {campo.rotulo} ({campo.tipo}{extra})")
+    categorias = [f"| `{c.nome}` | {c.descricao or c.rotulo} |" for c in pacote.categorias]
+    return {
+        "documentos": pacote.nome[:1].lower() + pacote.nome[1:],
+        "entidade": pacote.entidade.rotulo.lower(), "entidades": pacote.entidade.plural.lower(),
+        "recorte": pacote.recorte.rotulo.lower(), "n_perguntas": str(len(ids)),
+        "perguntas": f"`{ids[0]}` a `{ids[-1]}`" if len(ids) > 1 else f"`{ids[0]}`",
+        "n_categorias": str(len(pacote.categorias)),
+        "campos": "\n".join(campos),
+        "categorias": "| categoria | o que procurar |\n|---|---|\n" + "\n".join(categorias),
+    }
 
-    O arquivo do pacote tem um cabeçalho opcional entre linhas '---' com `modo`:
-    - `complemento` (padrão): o texto entra no fim do prompt do agente;
-    - `substitui`: o texto é o prompt deste agente neste domínio (modelo, turnos e raciocínio
-      continuam os do arquivo do agente). É o que um domínio muito diferente usa quando o prompt
-      base fala do domínio padrão.
-    Sem domínio, vale o padrão. Sem arquivo no pacote, o agente fica como está."""
+
+def descricao_no_dominio(nome: str, descricao: str, dominio: str | None) -> str:
+    """O que o orquestrador lê sobre um especialista: a `descricao` do prompt dele no pacote, se o
+    pacote der uma; senão, a do arquivo do agente, nas palavras do domínio."""
+    pacote = pacotes.pacote(dominio or pacotes.PADRAO)
+    path = pacotes.arquivo_do_pacote(pacote.id, f"prompts/{nome}.md")
+    if path is not None and (match := _HEADER.match(path.read_text(encoding="utf-8").lstrip(_BOM))):
+        descricao = str((yaml.safe_load(match.group(1)) or {}).get("descricao") or descricao)
+    return Template(descricao).safe_substitute(vocabulario(pacote))
+
+
+def with_domain(spec: AgentFile, dominio: str | None) -> AgentFile:
+    """O agente no domínio: o prompt base (o método) com as palavras do domínio no lugar dos
+    marcadores, mais o que o pacote diz a ele (`dominios/<id>/prompts/<agente>.md`).
+
+    O arquivo do pacote tem um cabeçalho opcional entre linhas '---' com:
+    - `modo`: `complemento` (padrão: o texto entra no fim do prompt do agente) ou `substitui` (o
+      texto é o prompt deste agente neste domínio; modelo, turnos e raciocínio continuam os do
+      arquivo do agente);
+    - `descricao`: o que o orquestrador lê sobre o agente neste domínio.
+    Sem domínio, vale o padrão. Os marcadores ($entidade, $documentos, $campos, $categorias,
+    $n_perguntas, $perguntas, $recorte) valem no prompt base e no do pacote; os marcadores dos
+    valores ({{doc_id.campo}}) e o "R$" não são tocados."""
     if spec.com_dominio:
         return spec
-    path = pacotes.arquivo_do_pacote(dominio or pacotes.PADRAO, f"prompts/{spec.nome}.md")
-    if path is None:
-        return dataclasses.replace(spec, com_dominio=True)
-    text = path.read_text(encoding="utf-8").lstrip(_BOM)
-    mode, body = "complemento", text
-    if match := _HEADER.match(text):
-        header = yaml.safe_load(match.group(1)) or {}
-        mode, body = str(header.get("modo", "complemento")), match.group(2)
-    if mode not in ("complemento", "substitui"):
-        raise AgentFileError(f"{path}: modo {mode!r} desconhecido (use complemento ou substitui)")
-    prompt = body.strip() if mode == "substitui" else f"{spec.prompt.rstrip()}\n\n{body.strip()}"
-    return dataclasses.replace(spec, prompt=prompt, com_dominio=True)
+    pacote = pacotes.pacote(dominio or pacotes.PADRAO)
+    palavras = vocabulario(pacote)
+    path = pacotes.arquivo_do_pacote(pacote.id, f"prompts/{spec.nome}.md")
+    mode, body, descricao = "complemento", "", spec.descricao
+    if path is not None:
+        text = path.read_text(encoding="utf-8").lstrip(_BOM)
+        body = text
+        if match := _HEADER.match(text):
+            header = yaml.safe_load(match.group(1)) or {}
+            mode, body = str(header.get("modo", "complemento")), match.group(2)
+            descricao = str(header.get("descricao") or descricao)
+        if mode not in ("complemento", "substitui"):
+            raise AgentFileError(f"{path}: modo {mode!r} desconhecido (use complemento ou substitui)")
+    base = Template(spec.prompt).safe_substitute(palavras)
+    extra = Template(body.strip()).safe_substitute(palavras)
+    prompt = extra if mode == "substitui" else (f"{base.rstrip()}\n\n{extra}" if extra else base)
+    return dataclasses.replace(spec, prompt=prompt, descricao=Template(descricao).safe_substitute(palavras),
+                               com_dominio=True)
 
 
 _BOM = "\N{ZERO WIDTH NO-BREAK SPACE}"  # arquivo salvo no Windows pode começar com ele

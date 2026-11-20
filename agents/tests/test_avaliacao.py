@@ -54,6 +54,19 @@ def test_not_informed_field_saved_as_informed_counts_as_invention():
     assert no_math["status_certo"] and no_math["calculado_certo"] is False
 
 
+def test_text_and_date_fields_are_compared_by_what_the_document_writes():
+    def block(valor, pagina=1):
+        return {"informado": {"status": "encontrado", "valor": valor, "valor_numerico": None, "unidade": None,
+                              "origem": {"pagina": pagina}}}
+
+    foro = check_field({"status": "informado", "texto": "Belo Horizonte", "paginas": [2]},
+                       block("Comarca de  Belo Horizonte/MG", 2))
+    assert (foro["valor_certo"], foro["pagina_certa"], foro["encontrado"]) == (True, True, "Comarca de Belo Horizonte/MG")
+    data = check_field({"status": "informado", "data": "31/01/2025", "paginas": [1]}, block("31/01/2025"))
+    assert data["valor_certo"] and not check_field({"status": "informado", "data": "31/01/2025", "paginas": [1]},
+                                                   block("01/02/2024"))["valor_certo"]
+
+
 def test_alternative_answer_in_the_answer_key_is_accepted():
     expected = {"status": "nao_encontrado", "calculado": 1470292, "unidade": "R$ mil",
                 "tambem_aceito": {"status": "informado", "valor": 1506, "unidade": "R$ milhões", "paginas": [10]}}
@@ -83,7 +96,7 @@ def snapshot(light_margin, alerts):
 
 KEY = {"documentos": {"Light.pdf": {
     "doc_id": "a87339d097478f1c",
-    "indicadores": {
+    "campos": {
         "receita_liquida": {"status": "informado", "valor": 13253286, "unidade": "R$ mil", "paginas": [20],
                             "comparavel": 14897920},
         "margem_ebitda": {"status": "nao_encontrado"}},
@@ -127,13 +140,13 @@ def test_stability_compares_status_and_values_between_two_runs():
 
 def test_the_shipped_answer_key_is_complete_and_consistent():
     """O gabarito do repositório: os 8 indicadores para os 3 documentos, e as 5 perguntas."""
-    key = json.loads((Path(__file__).parents[1] / "avaliacao" / "gabarito.json").read_text(encoding="utf-8"))
+    key = json.loads((Path(__file__).parents[2] / "dominios" / "financeiro" / "avaliacao" / "gabarito.json").read_text(encoding="utf-8"))
     fields = {"receita_liquida", "ebitda", "margem_ebitda", "lucro_liquido", "divida_liquida", "alavancagem",
               "fluxo_caixa_operacional", "capex"}
     assert set(key["documentos"]) == {"Brasal.pdf", "Millet.pdf", "Light.pdf"}
     for file_name, document in key["documentos"].items():
-        assert set(document["indicadores"]) == fields, file_name
-        for campo, expected in document["indicadores"].items():
+        assert set(document["campos"]) == fields, file_name
+        for campo, expected in document["campos"].items():
             assert expected["status"] in ("informado", "nao_encontrado"), (file_name, campo)
             if expected["status"] == "informado":
                 assert {"valor", "unidade", "paginas"} <= set(expected), (file_name, campo)
@@ -141,13 +154,13 @@ def test_the_shipped_answer_key_is_complete_and_consistent():
                 assert "valor" not in expected, (file_name, campo)
     assert {q for q in key["perguntas"] if not q.startswith("_")} == {"p1", "p2", "p3", "p4", "p5"}
     # As contas do gabarito fecham com os valores que ele mesmo cita.
-    brasal = key["documentos"]["Brasal.pdf"]["indicadores"]
+    brasal = key["documentos"]["Brasal.pdf"]["campos"]
     assert brasal["ebitda"]["calculado"] == 192840 + 29014 and brasal["divida_liquida"]["calculado"] == 1849 + 1568 - 96453
     assert round(brasal["ebitda"]["calculado"] / brasal["receita_liquida"]["valor"] * 100, 2) == brasal["margem_ebitda"]["calculado"]
-    millet = key["documentos"]["Millet.pdf"]["indicadores"]
+    millet = key["documentos"]["Millet.pdf"]["campos"]
     assert millet["ebitda"]["calculado"] == 25298 + 18248 and millet["capex"]["calculado"] == 6263 + 11469
     assert round(millet["divida_liquida"]["valor"] / millet["ebitda"]["calculado"], 2) == millet["alavancagem"]["calculado"]
-    assert key["documentos"]["Light.pdf"]["indicadores"]["capex"]["calculado"] == 307759 + 1162533
+    assert key["documentos"]["Light.pdf"]["campos"]["capex"]["calculado"] == 307759 + 1162533
 
 
 def test_only_documents_with_a_key_are_evaluated_and_questions_need_exactly_the_key_documents():

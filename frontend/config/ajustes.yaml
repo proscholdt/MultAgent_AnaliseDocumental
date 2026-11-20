@@ -3,13 +3,10 @@
 #
 # Os endereços do indexador e dos agentes ficam no docker-compose; segredos, no .env.
 
-# Atalhos acima da caixa do chat (até 8).
+# Atalhos acima da caixa do chat (até 8), quando o domínio da coleção não é conhecido. Com
+# domínio, valem os do pacote (dominios/<id>/dominio.yaml, textos.opcoes).
 sugestoes:
   - Gere o relatório consolidado completo
-  - Gere o relatório da Brasal
-  - Qual empresa teve a maior margem EBITDA?
-  - Compare o lucro líquido das empresas
-  - Quais riscos as empresas destacam?
 
 # De quanto em quanto tempo o chat pergunta o andamento de uma execução (milissegundos).
 intervalo_ms: 1500

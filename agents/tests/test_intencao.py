@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from app.orquestrador.intencao import Roteador, apelidos, empresas_citadas, plain, seguimento
+from app.orquestrador.intencao import Roteador, apelidos, entidades_citadas, ler_rotas, plain, seguimento
 from tests.conftest import DOC, auth, call, decide, delegation, say
 from tests.test_orquestrador import answering_researcher, company_team
 
@@ -45,10 +45,13 @@ def rotas(tmp_path: Path) -> Path:
 
 
 def test_the_company_is_found_by_its_own_words_not_by_the_generic_ones():
-    assert apelidos(DOCUMENTOS[0]) == {"brasal"} and apelidos(DOCUMENTOS[2]) == {"millet"}
-    assert [d["doc_id"] for d in empresas_citadas("relatório da MILLET", DOCUMENTOS)] == ["d-millet"]
-    assert [d["doc_id"] for d in empresas_citadas("compare a Light e a Brasal", DOCUMENTOS)] == ["d-brasal", "d-light"]
-    assert empresas_citadas("relatório da holding de Brasília", DOCUMENTOS) == []
+    # As palavras genéricas de nome são do domínio (palavras_genericas no intencoes.yaml do pacote).
+    genericas = ler_rotas(Path(__file__).parents[2] / "dominios" / "financeiro" / "intencoes.yaml").genericas
+    assert apelidos(DOCUMENTOS[0], genericas) == {"brasal"} and apelidos(DOCUMENTOS[2], genericas) == {"millet"}
+    assert [d["doc_id"] for d in entidades_citadas("relatório da MILLET", DOCUMENTOS, genericas)] == ["d-millet"]
+    assert [d["doc_id"] for d in entidades_citadas("compare a Light e a Brasal", DOCUMENTOS, genericas)] == \
+        ["d-brasal", "d-light"]
+    assert entidades_citadas("relatório da holding de Brasília", DOCUMENTOS, genericas) == []
 
 
 def test_a_follow_up_starts_like_a_continuation_and_is_short():
@@ -71,7 +74,7 @@ async def test_a_clear_message_is_decided_by_the_router(rotas):
 async def test_a_report_names_one_company_or_it_is_the_consolidated_one(rotas):
     roteador = Roteador(rotas, palavras)
     one = await roteador.escolher("gere o relatório da Millet", None, DOCUMENTOS)
-    assert (one.intencao, one.doc_id, one.empresas) == ("relatorio_empresa", "d-millet", ["Millet Participações S.A."])
+    assert (one.intencao, one.doc_id, one.entidades) == ("relatorio_documento", "d-millet", ["Millet Participações S.A."])
     two = await roteador.escolher("gere o relatório da Light e da Brasal", None, DOCUMENTOS)
     assert (two.intencao, two.doc_id) == ("relatorio", None)
     none = await roteador.escolher("gere o relatório consolidado", None, DOCUMENTOS)
@@ -95,7 +98,7 @@ async def test_a_follow_up_is_read_with_the_previous_request(rotas):
     assert escolha.texto == "qual empresa teve maior margem ebitda e a menor?"
     # A empresa da própria mensagem vale mais que a do pedido anterior.
     outra = await roteador.escolher("e da Millet?", "gere o relatório da Light", DOCUMENTOS)
-    assert (outra.intencao, outra.doc_id) == ("relatorio_empresa", "d-millet")
+    assert (outra.intencao, outra.doc_id) == ("relatorio_documento", "d-millet")
 
 
 async def test_the_routes_file_is_read_again_when_it_changes_and_a_broken_one_keeps_the_last(rotas):
@@ -141,9 +144,9 @@ async def test_a_report_of_one_company_is_routed_with_the_company_found_by_the_r
     conversation = (await http.post("/api/conversas", headers=auth())).json()["conversa_id"]
     run = (await http.post(f"/api/conversas/{conversation}/mensagens", json={"texto": "gere o relatório da Brasal"},
                            headers=auth())).json()
-    assert (run["estado"], run["tipo"]) == ("completa", "relatorio_empresa"), run["erro"]
+    assert (run["estado"], run["tipo"]) == ("completa", "relatorio_documento"), run["erro"]
     assert run["resultado"]["doc_id"] == DOC
-    assert "Produza o relatório de UMA empresa" in model.first_input("orquestrador")
+    assert "Produza o relatório de UM documento" in model.first_input("orquestrador")
     assert [s["fonte"] for s in run["passos"] if s["tipo"] == "intencao"] == ["roteador"]
 
 

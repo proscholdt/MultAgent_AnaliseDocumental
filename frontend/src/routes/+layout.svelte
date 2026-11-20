@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-	<title>Análise de Demonstrações</title>
+	<title>Análise de documentos</title>
 </svelte:head>
 
 {@render children()}

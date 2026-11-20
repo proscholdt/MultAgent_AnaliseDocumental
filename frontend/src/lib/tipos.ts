@@ -71,7 +71,8 @@ export interface Opcao {
 export interface Turno {
 	execucao_id: string;
 	pedido: string;
-	tipo: 'pergunta' | 'relatorio' | 'relatorio_empresa' | 'fora_do_escopo' | 'livre' | 'auto';
+	// relatorio_empresa: o nome de antes, em conversas antigas.
+	tipo: 'pergunta' | 'relatorio' | 'relatorio_documento' | 'relatorio_empresa' | 'fora_do_escopo' | 'livre' | 'auto';
 	estado: EstadoExecucao;
 	mensagem: string;
 	erro: string | null;

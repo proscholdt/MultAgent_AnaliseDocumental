@@ -6,7 +6,7 @@
       "doc_id": "5905cd3412e40fea",
       "empresa": "Brasal",
       "periodo": "2022",
-      "indicadores": {
+      "campos": {
         "receita_liquida": {
           "status": "informado",
           "valor": 1325059,
@@ -77,7 +77,7 @@
       "doc_id": "42589e4b7ad3999b",
       "empresa": "Millet",
       "periodo": "2022",
-      "indicadores": {
+      "campos": {
         "receita_liquida": {
           "status": "informado",
           "valor": 462127,
@@ -159,7 +159,7 @@
       "doc_id": "a87339d097478f1c",
       "empresa": "Light",
       "periodo": "2022",
-      "indicadores": {
+      "campos": {
         "receita_liquida": {
           "status": "informado",
           "valor": 13253286,

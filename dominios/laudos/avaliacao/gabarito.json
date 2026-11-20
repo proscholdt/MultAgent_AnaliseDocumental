@@ -3,7 +3,7 @@
   "documentos": {
     "laudo-maria.pdf": {
       "doc_id": "df89e5b72f021aa6",
-      "indicadores": {
+      "campos": {
         "glicose": {
           "status": "informado",
           "valor": 92,
@@ -63,7 +63,7 @@
     },
     "laudo-joao.pdf": {
       "doc_id": "ab44024ba75dc363",
-      "indicadores": {
+      "campos": {
         "glicose": {
           "status": "informado",
           "valor": 118,
@@ -118,7 +118,7 @@
     },
     "laudo-ana.pdf": {
       "doc_id": "efbecb04edf3e7c9",
-      "indicadores": {
+      "campos": {
         "glicose": {
           "status": "informado",
           "valor": 85,
@@ -183,7 +183,7 @@
     },
     "consenso-perfil-lipidico-sbac.pdf": {
       "doc_id": "34f35b0636d713dd",
-      "indicadores": {
+      "campos": {
         "glicose": {
           "status": "nao_encontrado"
         },

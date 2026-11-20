@@ -1,7 +1,7 @@
 """As regras do relatório e das perguntas que o orquestrador aplica, fora do grafo.
 
 O grafo (`app/orquestrador/grafo.py`) só decide, delega e confere. O que é específico deste
-domínio (quais intenções existem, o que é só do relatório, como uma das cinco perguntas é
+domínio (quais intenções existem, o que é só do relatório, como uma das perguntas do relatório é
 reconhecida, quando uma delegação chega antes da hora) mora aqui, em funções puras.
 """
 import re
@@ -14,25 +14,25 @@ from app import pacotes
 # diz o que a conferência final cobra: pergunta exige resposta gravada com fonte; relatório exige
 # o relatório montado. O resto está fora do escopo: o código não executa nada e responde com um
 # texto fixo e as opções. Nenhum texto livre do orquestrador chega ao usuário como resposta.
-INTENT_TYPE = {"pergunta": "pergunta", "relatorio": "relatorio", "relatorio_empresa": "relatorio_empresa",
+INTENT_TYPE = {"pergunta": "pergunta", "relatorio": "relatorio", "relatorio_documento": "relatorio_documento",
                "fora_do_escopo": "fora_do_escopo"}
-REPORT_TYPES = ("relatorio", "relatorio_empresa")
+REPORT_TYPES = ("relatorio", "relatorio_documento")
 
 # Numa pergunta, o que é só do relatório: o texto que vem depois de tudo pronto. Validador e
-# analista podem servir a uma pergunta ("a empresa tem inconsistências?", "quais riscos..."), e
+# analista podem servir a uma pergunta ("o documento tem inconsistências?", "quais riscos..."), e
 # ficam a critério do orquestrador.
 REPORT_ONLY = {"redator": "os resumos e a montagem do relatório"}
 ANSWERED = "Pergunta respondida, com as fontes."
 
-# Uma das cinco perguntas do relatório é definida pelo id, não pelo texto que o orquestrador
+# Uma das perguntas do relatório é definida pelo id, não pelo texto que o orquestrador
 # escreve: com o texto livre, o pesquisador chegou a responder a outra pergunta e gravar com o id
-# de uma das cinco. Uma pergunta do chat igual a uma das cinco é gravada como 'livre', para não
+# de uma delas. Uma pergunta do chat igual a uma delas é gravada como 'livre', para não
 # puxar a análise inteira (a p1 só é aceita com a extração e a análise de todos os documentos).
 # Quais ids existem vem do servidor MCP (`ler_respostas`, que lê o pacote de domínio, dominios/<id>/dominio.yaml):
 # aqui só se reconhece a forma "p<número>", e `official_task` descarta o id que não existe.
 REPORT_QUESTION = re.compile(r"\bp(\d{1,2})\b", re.IGNORECASE)
 FOR_THE_CHAT = ("\n\nÉ uma pergunta do usuário, não do relatório: grave com pergunta_id 'livre', mesmo que o texto "
-                "seja igual ao de uma das cinco perguntas do relatório.")
+                "seja igual ao de uma das perguntas do relatório.")
 
 def out_of_scope(dominio: str | None = None) -> tuple[str, list[dict[str, str]]]:
     """A resposta fixa a uma mensagem fora do escopo e as opções, as do pacote do domínio."""
@@ -109,7 +109,7 @@ def report_question_ids(task: str) -> list[str]:
 
 
 def official_task(item: dict[str, Any], questions: dict[str, str]) -> dict[str, Any]:
-    """A tarefa do pesquisador que cita uma das cinco perguntas passa a ser o enunciado oficial
+    """A tarefa do pesquisador que cita uma das perguntas do relatório passa a ser o enunciado oficial
     dela. Com mais de uma citada, os enunciados vão junto da tarefa."""
     known = [(question_id, questions[question_id]) for question_id in report_question_ids(item["tarefa"])
              if question_id in questions]

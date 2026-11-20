@@ -13,7 +13,7 @@
 </script>
 
 <svelte:head>
-	<title>Entrar · Análise de Demonstrações</title>
+	<title>Entrar · Análise de documentos</title>
 </svelte:head>
 
 <main class="pagina">

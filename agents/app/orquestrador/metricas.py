@@ -25,7 +25,7 @@ def zerar_metricas(agentes: list[str], modelos: list[str]) -> None:
     """Cria as séries dos contadores em zero, na subida. Um contador do OpenTelemetry só passa a
     existir no primeiro incremento, e o Prometheus nunca vê o zero de antes: increase() perde o
     primeiro evento. Com as séries conhecidas já em zero, a conta fecha."""
-    for tipo in ("pergunta", "relatorio", "relatorio_empresa", "livre", "fora_do_escopo"):
+    for tipo in ("pergunta", "relatorio", "relatorio_documento", "livre", "fora_do_escopo"):
         for estado in ("completa", "incompleta", "falhou"):
             _EXECUCOES.add(0, {"tipo": tipo, "estado": estado})
     for agente in agentes:

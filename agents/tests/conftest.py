@@ -64,7 +64,7 @@ class Decide:
     terminado: bool = False
     mensagem: str = "Feito."
     intencao: str = "pergunta"
-    empresa: str | None = None
+    documento: str | None = None
 
 
 def delegation(agente: str, tarefa: str, doc_id: str | None = None) -> dict:
@@ -72,8 +72,8 @@ def delegation(agente: str, tarefa: str, doc_id: str | None = None) -> dict:
 
 
 def decide(*delegacoes: dict, terminado: bool = False, mensagem: str = "Feito.",
-           intencao: str = "pergunta", empresa: str | None = None) -> Decide:
-    return Decide(list(delegacoes), terminado, mensagem, intencao, empresa)
+           intencao: str = "pergunta", documento: str | None = None) -> Decide:
+    return Decide(list(delegacoes), terminado, mensagem, intencao, documento)
 
 
 class ScriptedModel:
@@ -102,7 +102,7 @@ class ScriptedModel:
             if isinstance(item, Decide):
                 parts.append(ToolCallPart(info.output_tools[0].name, {
                     "delegacoes": item.delegacoes, "terminado": item.terminado, "mensagem": item.mensagem,
-                    "intencao": item.intencao, "empresa": item.empresa}))
+                    "intencao": item.intencao, "documento": item.documento}))
             elif isinstance(item, ToolCallPart):  # cada chamada precisa de um id próprio, mesmo repetida
                 parts.append(ToolCallPart(item.tool_name, item.args))
             else:

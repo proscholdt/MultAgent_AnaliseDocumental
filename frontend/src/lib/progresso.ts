@@ -20,7 +20,7 @@ export interface Andamento {
 	frase: string;
 	ativos: Ativo[];
 	/** O que o orquestrador entendeu do pedido, quando já decidiu. */
-	intencao: 'pergunta' | 'relatorio' | 'relatorio_empresa' | 'fora_do_escopo' | null;
+	intencao: 'pergunta' | 'relatorio' | 'relatorio_documento' | 'fora_do_escopo' | null;
 }
 
 const SEGUNDOS_PARADO = 8;
@@ -77,7 +77,7 @@ function fase(ultimo: Passo | undefined): string {
 
 /**
  * @param passos os passos da execução, na ordem
- * @param nomes doc_id → nome para mostrar (a empresa ou o arquivo)
+ * @param nomes doc_id → nome para mostrar (a entidade do documento ou o arquivo)
  * @param segundosSemMudanca há quanto tempo a lista de passos não cresce
  */
 export function andamento(passos: Passo[], nomes: Record<string, string> = {}, segundosSemMudanca = 0): Andamento {

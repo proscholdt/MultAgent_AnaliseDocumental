@@ -98,18 +98,18 @@ class Execution:
         """Antes do orquestrador: o roteador decide a intenção da mensagem, se tiver certeza.
         Sem certeza (ou sem roteador), o tipo continua "auto" e o orquestrador decide."""
         roteador = self.deps.roteador
-        if roteador is not None and self.run.colecao_id:
+        if roteador is not None and (self.run.dominio or pacotes.PADRAO) != pacotes.PADRAO:
             # As frases de exemplo são do domínio: as do pacote, se ele as traz. Num domínio sem
-            # frases próprias, decide o orquestrador.
+            # frases próprias, decide o orquestrador. As do padrão são as do roteador da aplicação.
             path = pacotes.arquivo_do_pacote(self.run.dominio, "intencoes.yaml")
-            roteador = roteador.para(path) if path else (roteador if self.run.dominio == pacotes.PADRAO else None)
+            roteador = roteador.para(path) if path else None
         if roteador is None or self.run.tipo != "auto":
             return
         try:
             async with self.deps.engine.connect(mcp.SYSTEM, self.identity) as session:
                 documentos = (await session.call("listar_documentos"))["documentos"]
         except mcp.McpError:
-            documentos = []  # sem a lista, o roteador não acha a empresa: relatório vira o consolidado
+            documentos = []  # sem a lista, o roteador não acha o documento: relatório vira o consolidado
         anterior = turns[-1].get("pedido") if turns else None
         try:
             escolha = await roteador.escolher(self.run.pedido, anterior, documentos)
@@ -158,8 +158,8 @@ class Execution:
         decision: Decisao = outcome.saida
         if self.run.tipo == "auto":  # mensagem de conversa: a primeira decisão diz o que ela é
             self.run.tipo = INTENT_TYPE[decision.intencao]
-            if self.run.tipo == "relatorio_empresa":
-                self.run.doc_id = decision.empresa
+            if self.run.tipo == "relatorio_documento":
+                self.run.doc_id = decision.documento
             self.trace.add("intencao", intencao=decision.intencao, tipo_execucao=self.run.tipo, doc_id=self.run.doc_id,
                            fonte="llm")
             _INTENCOES.add(1, {"intencao": decision.intencao, "fonte": "llm"})
@@ -167,8 +167,8 @@ class Execution:
             if self.run.tipo == "fora_do_escopo":
                 # Nada é delegado, e a mensagem do orquestrador não vai ao usuário: o texto é fixo.
                 return {**update, "mensagem": out_of_scope(self.run.dominio)[0], "decisao": {"delegacoes": [], "terminado": True}}
-        elif self.run.tipo == "relatorio_empresa" and not self.run.doc_id and decision.empresa:
-            self.run.doc_id = decision.empresa  # a conferência pediu a empresa de novo
+        elif self.run.tipo == "relatorio_documento" and not self.run.doc_id and decision.documento:
+            self.run.doc_id = decision.documento  # a conferência pediu o documento de novo
             self.trace.add("intencao", intencao=decision.intencao, tipo_execucao=self.run.tipo, doc_id=self.run.doc_id)
             self.deps.runs.save(self.run)
         # Delegação a quem não existe vira relato de erro, que o orquestrador recebe na onda seguinte.
@@ -213,7 +213,7 @@ class Execution:
         return go, held
 
     async def _ready_now(self, delegations: list[dict]) -> tuple[list[dict], list[dict]]:
-        arguments = {"doc_id": self.run.doc_id} if self.run.tipo == "relatorio_empresa" and self.run.doc_id else {}
+        arguments = {"doc_id": self.run.doc_id} if self.run.tipo == "relatorio_documento" and self.run.doc_id else {}
         try:
             async with self.deps.engine.connect(mcp.SYSTEM, self.identity) as session:
                 pending = (await session.call("pendencias", arguments))["pendencias"]

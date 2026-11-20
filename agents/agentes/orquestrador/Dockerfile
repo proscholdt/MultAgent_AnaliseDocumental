@@ -16,6 +16,5 @@ COPY config ./config
 # Os agentes vão na imagem como padrão; o compose monta a pasta por cima, para que editar um
 # agente valha na hora, sem reconstruir.
 COPY agentes ./agentes
-COPY avaliacao/gabarito.json ./avaliacao/gabarito.json
 EXPOSE 8200
 CMD ["uvicorn", "app.orquestrador.api:app_factory", "--factory", "--host", "0.0.0.0", "--port", "8200"]

@@ -18,6 +18,9 @@ margem: 0.03
 # Mensagem que começa como continuação ("e", "por que", "explique"...) e tem até este número de
 # palavras é comparada junto com o pedido anterior da conversa.
 max_palavras_seguimento: 8
+# Palavras do nome de uma empresa que não a identificam: "relatório da holding" não é o da Brasal.
+palavras_genericas: [participações, holding, companhia, empresa, empresas, grupo, brasil, brasília, energia,
+                     serviços, comércio, indústria, industrial, investimentos]
 
 rotas:
   relatorio:

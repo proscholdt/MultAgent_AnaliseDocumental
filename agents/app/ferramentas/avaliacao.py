@@ -58,6 +58,17 @@ def check_field(expected: dict[str, Any], block: dict[str, Any] | None) -> dict[
                            # Invenção: a empresa não informa, e o sistema gravou um valor como informado.
                            "inventado": expected["status"] == "nao_encontrado" and status == "informado"}
     informed = (block or {}).get("informado") or {}
+    if expected["status"] == "informado" and ("texto" in expected or "data" in expected):
+        # Campo de texto: o valor gravado contém o esperado (sem caixa nem espaços a mais). Data: a
+        # mesma, em dd/mm/aaaa.
+        shown = " ".join(str(informed.get("valor") or "").split())
+        if "data" in expected:
+            row["valor_certo"] = status == "informado" and shown == expected["data"]
+        else:
+            row["valor_certo"] = status == "informado" and expected["texto"].casefold() in shown.casefold()
+        row["pagina_certa"] = status == "informado" and informed["origem"]["pagina"] in expected["paginas"]
+        row["encontrado"] = shown or None
+        return row
     if expected["status"] == "informado":
         unit = expected["unidade"]
         found = in_reais(informed.get("valor_numerico"), informed.get("unidade")) if status == "informado" else None
@@ -135,7 +146,7 @@ def evaluate(gabarito: dict[str, Any], snapshot: dict[str, Any], doc_ids: set[st
             continue  # documento do gabarito que não está nesta base (ou fora deste relatório)
         doc = documents[file_name]
         indicators = campos_do(doc)
-        for campo, expected in expected_doc["indicadores"].items():
+        for campo, expected in (expected_doc.get("campos") or expected_doc.get("indicadores") or {}).items():
             rows.append({"arquivo": file_name, "campo": campo, **check_field(expected, indicators.get(campo))})
         alerts = doc.get("alertas") or []
         for expected in expected_doc.get("alertas_automaticos_esperados", []):

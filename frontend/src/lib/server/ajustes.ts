@@ -14,7 +14,8 @@ export interface Ajustes {
 }
 
 export const PADRAO: Ajustes = {
-	sugestoes: ['Gere o relatório consolidado completo', 'Qual empresa teve a maior margem EBITDA?'],
+	// Os atalhos são os do pacote do domínio (textos.opcoes); estes só valem sem domínio conhecido.
+	sugestoes: ['Gere o relatório consolidado completo'],
 	intervalo_ms: 1500,
 	minutos_minimos: 16
 };

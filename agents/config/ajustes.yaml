@@ -36,11 +36,12 @@ execucao:
 traces_com_conteudo: true
 
 # Ao fim de cada relatório, a nota contra o gabarito conferido à mão: fica na execução e vira
-# métrica no painel "Agentes". Só os documentos que têm gabarito (reconhecidos pelo conteúdo)
-# são avaliados; os outros aparecem como "sem gabarito". Não chama modelo: só leitura e conta.
+# métrica no painel "Agentes". O gabarito é o do domínio da coleção
+# (dominios/<id>/avaliacao/gabarito.json); `gabarito:` troca o do domínio padrão. Só os documentos
+# que têm gabarito (reconhecidos pelo conteúdo) são avaliados; os outros aparecem como "sem
+# gabarito". Não chama modelo: só leitura e conta.
 avaliacao:
   ao_fim_do_relatorio: true
-  gabarito: avaliacao/gabarito.json
 
 # Teto, em tokens estimados, do histórico de um especialista numa conversa.
 memoria_max_tokens: 40000

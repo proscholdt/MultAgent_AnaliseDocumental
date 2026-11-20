@@ -3,7 +3,7 @@
   "title": "Agentes",
   "description": "Execuções, custo, tokens, ferramentas, portões e os passos de cada agente. Escolha uma conversa no alto para ver só ela.",
   "tags": [
-    "demonstracoes",
+    "documentos",
     "agentes"
   ],
   "timezone": "browser",
@@ -52,7 +52,7 @@
       "title": "Painéis",
       "type": "dashboards",
       "tags": [
-        "demonstracoes"
+        "documentos"
       ],
       "asDropdown": false,
       "includeVars": true,
@@ -557,7 +557,7 @@
       "id": 11,
       "type": "stat",
       "title": "Valores inventados",
-      "description": "Indicadores que a empresa NÃO informa e que foram gravados como informados. Tem de ser 0.",
+      "description": "Campos que o documento NÃO informa e que foram gravados como informados. Tem de ser 0.",
       "datasource": {
         "type": "tempo",
         "uid": "tempo"
@@ -725,7 +725,7 @@
       "id": 14,
       "type": "timeseries",
       "title": "Nota ao longo do tempo (todas as conversas)",
-      "description": "Cada degrau é um relatório avaliado. relatorio = consolidado; relatorio_empresa = uma empresa. Vem do Prometheus (15 dias) e não filtra.",
+      "description": "Cada degrau é um relatório avaliado. relatorio = consolidado; relatorio_documento = um documento. Vem do Prometheus (15 dias) e não filtra.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"

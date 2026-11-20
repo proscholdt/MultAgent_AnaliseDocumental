@@ -54,12 +54,13 @@ def _publish(summary: dict[str, Any], tipo: str) -> None:
 
 
 def gabarito_path(settings: Settings, dominio: str | None) -> Path:
-    """O gabarito é do domínio: o do pacote (dominios/<id>/avaliacao/gabarito.json) ou, no padrão,
-    o configurado."""
-    if dominio and dominio != pacotes.PADRAO:
-        return pacotes.arquivo_do_pacote(dominio, "avaliacao/gabarito.json") or \
-            Path(f"dominios/{dominio}/avaliacao/gabarito.json")
-    return settings.gabarito_path
+    """O gabarito é do domínio: o do pacote (dominios/<id>/avaliacao/gabarito.json). No padrão, o
+    configurado em `avaliacao.gabarito`, se houver."""
+    dominio = dominio or pacotes.PADRAO
+    if dominio == pacotes.PADRAO and settings.gabarito_path is not None:
+        return settings.gabarito_path
+    return pacotes.arquivo_do_pacote(dominio, "avaliacao/gabarito.json") or \
+        pacotes.pasta_dos_dominios() / dominio / "avaliacao" / "gabarito.json"
 
 
 async def avaliar(settings: Settings, identity: Identity, tipo: str, doc_id: str | None) -> dict[str, Any] | None:

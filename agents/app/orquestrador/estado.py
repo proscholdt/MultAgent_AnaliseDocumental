@@ -28,12 +28,12 @@ class Decisao(BaseModel):
     terminado: bool = Field(description="true quando o pedido está atendido (ou não há mais o que fazer).")
     mensagem: str = Field(description="Para o usuário, em duas ou três frases: o que foi feito e o que ficou pendente. "
                           "Sem valores dos documentos.")
-    intencao: Literal["pergunta", "relatorio", "relatorio_empresa", "fora_do_escopo"] = Field(
+    intencao: Literal["pergunta", "relatorio", "relatorio_documento", "fora_do_escopo"] = Field(
         description="O que o pedido atual do usuário é: 'pergunta' (quer saber algo do conteúdo dos documentos), "
-                    "'relatorio' (quer o relatório consolidado, de todas as empresas), 'relatorio_empresa' (quer o "
-                    "relatório ou a análise completa de UMA empresa) ou 'fora_do_escopo' (qualquer outra coisa).")
-    empresa: str | None = Field(
-        description="Só em 'relatorio_empresa': o doc_id da empresa pedida, como vem em listar_documentos. "
+                    "'relatorio' (quer o relatório consolidado, de todos os documentos), 'relatorio_documento' (quer o "
+                    "relatório ou a análise completa de UM documento) ou 'fora_do_escopo' (qualquer outra coisa).")
+    documento: str | None = Field(
+        description="Só em 'relatorio_documento': o doc_id do documento pedido, como vem em listar_documentos. "
                     "null nas outras intenções.")
 
 @dataclass
