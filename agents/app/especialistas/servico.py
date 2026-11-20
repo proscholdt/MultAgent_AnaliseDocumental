@@ -141,7 +141,8 @@ class SpecialistExecutor(AgentExecutor):
         try:
             state = context.call_context.state
             claims, token = state["claims"], state["headers"].get("x-user-token")
-            identity = Identity(run_id=claims["run_id"], user_id=claims["usr"], user_token=token)
+            identity = Identity(run_id=claims["run_id"], user_id=claims["usr"], user_token=token,
+                                dominio=claims.get("dom"), colecao_id=claims.get("col"))
             report = await self.service.work(self.nome, read_request(context), identity)
             await updater.add_artifact([helpers.new_data_part(report)], name="relato")
             await updater.complete()
@@ -274,7 +275,8 @@ class Specialists:
         claims = verify_a2a_token(self.settings, headers.get("authorization"), target)
         if not headers.get("x-user-token"):
             raise AuthError("Falta o token do usuário (X-User-Token).")
-        return claims, Identity(claims["run_id"], claims["usr"], headers["x-user-token"])
+        return claims, Identity(claims["run_id"], claims["usr"], headers["x-user-token"],
+                                dominio=claims.get("dom"), colecao_id=claims.get("col"))
 
     def _app(self, spec: AgentFile) -> ASGIApp:
         cached = self._apps.get(spec.nome)

@@ -44,6 +44,7 @@ class Pedido(BaseModel):
     pedido: str = Field(min_length=5, max_length=2000, description="O que você quer, em texto livre.",
                         examples=["Extraia os indicadores da Light e revise as fontes."])
     conversa_id: str | None = _CONVERSA
+    colecao_id: str | None = Field(default=None, description="A coleção (e com ela o domínio) do pedido. Numa conversa, sem ela vale a do pedido anterior; sem nenhuma, o domínio padrão.")
 
 
 class Pergunta(BaseModel):
@@ -51,18 +52,21 @@ class Pergunta(BaseModel):
     aguardar: bool = Field(default=True, description="Esperar a resposta nesta chamada. false devolve só o "
                            "execucao_id, para consultar depois.")
     conversa_id: str | None = _CONVERSA
+    colecao_id: str | None = Field(default=None, description="A coleção (e com ela o domínio) do pedido. Numa conversa, sem ela vale a do pedido anterior; sem nenhuma, o domínio padrão.")
 
 
 class Relatorio(BaseModel):
     aguardar: bool = Field(default=False, description="Esperar o relatório nesta chamada (pode levar vários "
                            "minutos). O padrão devolve o execucao_id.")
     conversa_id: str | None = _CONVERSA
+    colecao_id: str | None = Field(default=None, description="A coleção (e com ela o domínio) do pedido. Numa conversa, sem ela vale a do pedido anterior; sem nenhuma, o domínio padrão.")
 
 
 class Mensagem(BaseModel):
     texto: str = Field(min_length=2, max_length=2000, description="O que você quer, em texto livre.",
                        examples=["Qual empresa teve a maior margem EBITDA?", "E a menor?"])
     aguardar: bool = Field(default=True, description="Esperar a resposta nesta chamada.")
+    colecao_id: str | None = Field(default=None, description="A coleção (e com ela o domínio) do pedido. Numa conversa, sem ela vale a do pedido anterior; sem nenhuma, o domínio padrão.")
 
 
 def view(run: Run, steps: list[dict[str, Any]] | None = None) -> dict[str, Any]:
@@ -151,13 +155,22 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
                                 "terminar para mandar o próximo.")
         return conversa_id
 
+    async def scope_of(token: str, colecao_id: str | None, conversa_id: str) -> tuple[str | None, str | None]:
+        """A coleção e o domínio do pedido. Sem coleção, numa conversa: os do pedido anterior dela."""
+        if colecao_id:
+            return colecao_id, (await users.collection(token, colecao_id))["dominio"]
+        previous = [run for run in deps.runs.of_conversation(conversa_id) if run.colecao_id] if conversa_id else []
+        return (previous[-1].colecao_id, previous[-1].dominio) if previous else (None, None)
+
     async def start(user: tuple[str, str], tipo: str, pedido: str, wait: bool,
-                    conversa_id: str | None = None) -> dict[str, Any]:
+                    conversa_id: str | None = None, colecao_id: str | None = None) -> dict[str, Any]:
         user_id, token = user
         if settings.problem:
             raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, settings.problem)
         users.require_time(token)
-        run = deps.runs.create(user_id, tipo, pedido, conversation_of(user_id, conversa_id))
+        conversa = conversation_of(user_id, conversa_id)
+        colecao, dominio = await scope_of(token, colecao_id, conversa)
+        run = deps.runs.create(user_id, tipo, pedido, conversa, colecao_id=colecao, dominio=dominio)
         task = asyncio.create_task(execute(run, token, deps))
         running.add(task)
         task.add_done_callback(running.discard)
@@ -221,14 +234,16 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
         # A requisição chega antes de a conversa ir para o baggage: marcada aqui, ela também conta
         # na visão geral filtrada por conversa.
         trace.get_current_span().set_attribute(telemetria.CONVERSA, conversa_id)
-        return await start(user, "auto", body.texto, wait=body.aguardar, conversa_id=conversa_id)
+        return await start(user, "auto", body.texto, wait=body.aguardar, conversa_id=conversa_id,
+                           colecao_id=body.colecao_id)
 
     # --- execuções ----------------------------------------------------------------------------
 
     @app.post("/api/execucoes", tags=["Execuções"], status_code=status.HTTP_202_ACCEPTED,
               summary="Pedido em texto livre: o orquestrador decide o que fazer")
     async def create_run(body: Pedido, user: Caller) -> dict[str, Any]:
-        return await start(user, "livre", body.pedido, wait=False, conversa_id=body.conversa_id)
+        return await start(user, "livre", body.pedido, wait=False, conversa_id=body.conversa_id,
+                           colecao_id=body.colecao_id)
 
     @app.get("/api/execucoes", tags=["Execuções"], summary="Execuções do usuário, da mais nova para a mais antiga")
     async def list_runs(user: Caller) -> list[dict[str, Any]]:
@@ -252,12 +267,14 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None,
 
     @app.post("/api/perguntas", tags=["Atalhos"], summary="Uma pergunta sobre os documentos, respondida com fontes")
     async def ask(body: Pergunta, user: Caller) -> dict[str, Any]:
-        return await start(user, "pergunta", body.pergunta, wait=body.aguardar, conversa_id=body.conversa_id)
+        return await start(user, "pergunta", body.pergunta, wait=body.aguardar, conversa_id=body.conversa_id,
+                           colecao_id=body.colecao_id)
 
     @app.post("/api/relatorios", tags=["Atalhos"], summary="O relatório consolidado completo dos documentos")
     async def report(user: Caller, body: Relatorio | None = None) -> dict[str, Any]:
         return await start(user, "relatorio", "Relatório consolidado completo.", wait=bool(body and body.aguardar),
-                           conversa_id=body.conversa_id if body else None)
+                           conversa_id=body.conversa_id if body else None,
+                           colecao_id=body.colecao_id if body else None)
 
     @app.get("/api/agentes", tags=["Agentes"],
              summary="Agentes carregados dos arquivos e as tools que a política do servidor MCP dá a cada um")

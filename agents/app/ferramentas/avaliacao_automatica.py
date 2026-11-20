@@ -6,9 +6,10 @@ documento com gabarito, não há nota, e a execução diz por quê.
 """
 import json
 import logging
+from pathlib import Path
 from typing import Any
 
-from app import telemetria
+from app import pacotes, telemetria
 from app.config import Settings
 from app.ferramentas.avaliacao import evaluate
 from app.ferramentas.retrato import snapshot
@@ -56,11 +57,17 @@ async def avaliar(settings: Settings, identity: Identity, tipo: str, doc_id: str
     """A nota do relatório que acabou de terminar, ou None se a avaliação está desligada."""
     if not settings.avaliar_relatorios:
         return None
+    # O gabarito é do domínio: o do pacote (dominios/<id>/avaliacao/gabarito.json) ou, no padrão, o
+    # configurado.
+    path = settings.gabarito_path
+    if identity.dominio and identity.dominio != pacotes.PADRAO:
+        path = pacotes.arquivo_do_pacote(identity.dominio, "avaliacao/gabarito.json") or \
+            Path(f"dominios/{identity.dominio}/avaliacao/gabarito.json")
     try:
-        gabarito = json.loads(settings.gabarito_path.read_text(encoding="utf-8"))
+        gabarito = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
         _AVALIACOES.add(1, {"resultado": "sem_gabarito"})
-        return {"avaliado": False, "motivo": f"gabarito não encontrado em {settings.gabarito_path}"}
+        return {"avaliado": False, "motivo": f"gabarito não encontrado em {path}"}
     try:
         retrato = await snapshot(settings, identity)
         report = evaluate(gabarito, retrato, {doc_id} if doc_id else None)

@@ -8,6 +8,8 @@ import re
 import unicodedata
 from typing import Any
 
+from app import pacotes
+
 # A intenção que o orquestrador dá a uma mensagem de conversa vira o tipo da execução, e o tipo
 # diz o que a conferência final cobra: pergunta exige resposta gravada com fonte; relatório exige
 # o relatório montado. O resto está fora do escopo: o código não executa nada e responde com um
@@ -32,16 +34,14 @@ REPORT_QUESTION = re.compile(r"\bp(\d{1,2})\b", re.IGNORECASE)
 FOR_THE_CHAT = ("\n\nÉ uma pergunta do usuário, não do relatório: grave com pergunta_id 'livre', mesmo que o texto "
                 "seja igual ao de uma das cinco perguntas do relatório.")
 
-OUT_OF_SCOPE = ("Isso está fora do escopo deste sistema. Ele responde perguntas sobre as demonstrações financeiras "
-                "enviadas, sempre com a página de origem, e gera relatórios: o consolidado ou o de uma empresa. "
-                "Escolha uma das opções ou escreva a sua pergunta.")
-OPTIONS = [
-    {"titulo": "Perguntar sobre um indicador", "exemplo": "Qual empresa teve a maior margem EBITDA?"},
-    {"titulo": "Comparar as empresas", "exemplo": "Compare o lucro líquido das empresas"},
-    {"titulo": "Entender o resultado", "exemplo": "Quais riscos as empresas destacam?"},
-    {"titulo": "Gerar o relatório de uma empresa", "exemplo": "Gere o relatório da Brasal"},
-    {"titulo": "Gerar o relatório consolidado", "exemplo": "Gere o relatório consolidado completo"},
-]
+def out_of_scope(dominio: str | None = None) -> tuple[str, list[dict[str, str]]]:
+    """A resposta fixa a uma mensagem fora do escopo e as opções, as do pacote do domínio."""
+    textos = pacotes.pacote(dominio).textos
+    return " ".join(textos.fora_do_escopo.split()), [opcao.model_dump() for opcao in textos.opcoes]
+
+
+# As do domínio padrão, com os nomes de antes dos pacotes.
+OUT_OF_SCOPE, OPTIONS = out_of_scope()
 
 _READY_IN_REASON = 6
 

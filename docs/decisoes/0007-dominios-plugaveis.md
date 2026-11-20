@@ -45,6 +45,13 @@ máxima no gabarito.
 | 4 | Frontend: coleções, escolha do domínio, textos e rótulos do pacote |
 | 5 | A prova: o pacote `laudos` (exames laboratoriais), com laudos fictícios gerados e PDFs de exemplo baixados da internet, e um gabarito |
 
+**Prompts por domínio (fase 3).** O arquivo `dominios/<id>/prompts/<agente>.md` tem dois modos:
+`complemento` (padrão: entra no fim do prompt do agente) e `substitui` (é o prompt do agente
+naquele domínio; modelo, turnos e raciocínio continuam os do agente). Os prompts dos agentes
+continuam sendo os do domínio financeiro: separá-los em "método" e "vocabulário" mexeria no texto
+que dá a nota máxima no gabarito, e só uma rodada paga diria se piorou. O domínio de laudos traz os
+seus prompts no modo `substitui`. A separação fina fica para quando houver um terceiro domínio.
+
 **O que ficou de fora, de propósito.** Os títulos de demonstração (balanço, DRE, DFC), o rodapé
 "as notas explicativas são parte integrante" e a detecção de R$ no corte em chunks continuam no
 código do indexador, para todo domínio: são regex que só disparam em texto financeiro. Num laudo

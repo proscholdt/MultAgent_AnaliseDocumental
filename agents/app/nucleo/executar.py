@@ -34,7 +34,7 @@ from pydantic_ai.usage import UsageLimits
 
 from app.config import Settings
 from app.nucleo import mcp
-from app.nucleo.agentes import AgentFile
+from app.nucleo.agentes import AgentFile, with_domain
 from app.nucleo.tokens import Identity
 
 _ARGS_IN_TRACE = 300
@@ -226,6 +226,7 @@ async def run_agent(spec: AgentFile, entrada: str, *, identity: Identity, engine
                     output_type: Any = str, history: list[dict[str, Any]] | None = None,
                     allow_without_tools: bool = False) -> AgentRun:
     started = time.monotonic()
+    spec = with_domain(spec, identity.dominio)  # o que o pacote do domínio diz a este agente
     run = AgentRun(agente=spec.nome, estado="erro")
     agent_run = None
     try:

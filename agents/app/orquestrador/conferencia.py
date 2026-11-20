@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from app.dominio.relatorio import (
-    OPTIONS,
+    out_of_scope,
 )
 from app.nucleo import mcp
 from app.nucleo.agentes import ORCHESTRATOR
@@ -22,7 +22,7 @@ async def check(run: Run, identity: Identity, deps: Deps, finished: bool) -> tup
     """A conferência final, feita pelo código com as tools de leitura do "sistema". Devolve se
     o pedido está completo, o que falta e o resultado para o usuário."""
     if run.tipo == "fora_do_escopo":
-        return True, [], {"fora_do_escopo": True, "opcoes": OPTIONS}
+        return True, [], {"fora_do_escopo": True, "opcoes": out_of_scope(run.dominio)[1]}
     if run.tipo == "relatorio_empresa":
         return await check_company_report(run, identity, deps)
     async with deps.engine.connect(mcp.SYSTEM, identity) as session:

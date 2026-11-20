@@ -32,6 +32,14 @@ class Identity:
     run_id: str
     user_id: str
     user_token: str
+    # O domínio e a coleção da execução (dominios/<id>/). Sem coleção: o domínio padrão e todos os
+    # documentos do usuário, como antes dos pacotes de domínio.
+    dominio: str | None = None
+    colecao_id: str | None = None
+
+    def claims(self) -> dict[str, str]:
+        """O que os tokens levam do escopo da execução: o servidor MCP lê `dom` e `col`."""
+        return {key: value for key, value in (("dom", self.dominio), ("col", self.colecao_id)) if value}
 
 
 @dataclass(frozen=True)
@@ -70,7 +78,8 @@ def _sign(settings: Settings, claims: dict, secret: str, ttl: int) -> str:
 
 
 def mcp_token(settings: Settings, agent: str, identity: Identity) -> str:
-    return _sign(settings, {"agent": agent, "run_id": identity.run_id, "usr": identity.user_id, "aud": settings.mcp_audience},
+    return _sign(settings, {"agent": agent, "run_id": identity.run_id, "usr": identity.user_id, "aud": settings.mcp_audience,
+                            **identity.claims()},
                  settings.mcp_agent_secret, settings.execucao_max_segundos + 300)
 
 
@@ -79,7 +88,8 @@ def mcp_headers(settings: Settings, agent: str, identity: Identity) -> dict[str,
 
 
 def a2a_token(settings: Settings, target: str, identity: Identity) -> str:
-    return _sign(settings, {"agent": ORCHESTRATOR, "run_id": identity.run_id, "usr": identity.user_id, "aud": f"a2a:{target}"},
+    return _sign(settings, {"agent": ORCHESTRATOR, "run_id": identity.run_id, "usr": identity.user_id, "aud": f"a2a:{target}",
+                            **identity.claims()},
                  settings.a2a_secret, settings.execucao_max_segundos + 300)
 
 

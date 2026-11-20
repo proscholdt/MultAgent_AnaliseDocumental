@@ -25,17 +25,17 @@ from typing import Any
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
 
-from app import telemetria
+from app import pacotes, telemetria
 from app.dominio.relatorio import (
     ANSWERED,
     FOR_THE_CHAT,
     INTENT_TYPE,
-    OUT_OF_SCOPE,
     REPORT_TYPES,
     hold_early,
     hold_report_only,
     latin_only,
     official_task,
+    out_of_scope,
     report_question_ids,
 )
 from app.nucleo import mcp
@@ -68,7 +68,8 @@ class Execution:
         self.run, self.deps, self.settings = run, deps, deps.settings
         self.settings.reload()  # o config/ajustes.yaml de agora vale para esta execução inteira
         atualizar_instrumentacao(self.settings)
-        self.identity = Identity(run.id, run.user_id, user_token)
+        self.identity = Identity(run.id, run.user_id, user_token,
+                                 dominio=run.dominio if run.colecao_id else None, colecao_id=run.colecao_id)
         self.budget = Budget(self.settings.execucao_max_tokens, self.settings.execucao_max_segundos)
         self.ledger = Ledger(self.settings.precos)
         self.trace: Trace = deps.runs.trace(run.id)
@@ -97,6 +98,11 @@ class Execution:
         """Antes do orquestrador: o roteador decide a intenção da mensagem, se tiver certeza.
         Sem certeza (ou sem roteador), o tipo continua "auto" e o orquestrador decide."""
         roteador = self.deps.roteador
+        if roteador is not None and self.run.colecao_id:
+            # As frases de exemplo são do domínio: as do pacote, se ele as traz. Num domínio sem
+            # frases próprias, decide o orquestrador.
+            path = pacotes.arquivo_do_pacote(self.run.dominio, "intencoes.yaml")
+            roteador = roteador.para(path) if path else (roteador if self.run.dominio == pacotes.PADRAO else None)
         if roteador is None or self.run.tipo != "auto":
             return
         try:
@@ -126,7 +132,7 @@ class Execution:
         if self.run.tipo == "fora_do_escopo" and not state.get("historico"):
             # O roteador já decidiu que está fora do escopo: nada a delegar, e o LLM nem é chamado.
             return {"historico": [], "entrada": None, "ondas": state.get("ondas", 0) + 1,
-                    "relatos": {"substituir": []}, "mensagem": OUT_OF_SCOPE,
+                    "relatos": {"substituir": []}, "mensagem": out_of_scope(self.run.dominio)[0],
                     "decisao": {"delegacoes": [], "terminado": True}}
         if await self.answered(state):
             # A resposta já está na base: o resto da lista do relatório não é deste pedido. Sem
@@ -160,7 +166,7 @@ class Execution:
             self.deps.runs.save(self.run)
             if self.run.tipo == "fora_do_escopo":
                 # Nada é delegado, e a mensagem do orquestrador não vai ao usuário: o texto é fixo.
-                return {**update, "mensagem": OUT_OF_SCOPE, "decisao": {"delegacoes": [], "terminado": True}}
+                return {**update, "mensagem": out_of_scope(self.run.dominio)[0], "decisao": {"delegacoes": [], "terminado": True}}
         elif self.run.tipo == "relatorio_empresa" and not self.run.doc_id and decision.empresa:
             self.run.doc_id = decision.empresa  # a conferência pediu a empresa de novo
             self.trace.add("intencao", intencao=decision.intencao, tipo_execucao=self.run.tipo, doc_id=self.run.doc_id)

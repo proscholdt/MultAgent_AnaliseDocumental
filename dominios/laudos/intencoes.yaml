@@ -1,0 +1,53 @@
+# Frases de exemplo do roteador de intenção no domínio de laudos (o formato e a calibração estão no
+# agents/config/intencoes.yaml, o do domínio padrão). Relido sem reiniciar. A empresa citada vira o
+# paciente citado: o roteador acha o nome dele nos documentos da coleção.
+ligado: true
+modelo_embedding: text-embedding-3-small
+limiar: 0.45
+margem: 0.03
+max_palavras_seguimento: 8
+
+rotas:
+  relatorio:
+  - Gere o relatório
+  - Gere o relatório consolidado dos exames
+  - Quero o relatório completo da coleção
+  - Monte o relatório de todos os pacientes
+  - Faça a análise completa dos laudos
+  - Gere o relatório da Maria
+  - Quero o relatório só do exame do João
+  - Monte o relatório de novo
+  - Relatório completo dos exames, por favor
+  - Produza o relatório dos laudos enviados
+
+  pergunta:
+  - Algum resultado está fora da faixa de referência?
+  - Qual paciente tem a maior glicose?
+  - Qual é o colesterol LDL da Maria?
+  - O triglicerídeo do João está alto?
+  - Compare o colesterol total dos pacientes
+  - Qual a hemoglobina glicada de cada paciente?
+  - O laboratório fez alguma observação sobre a amostra?
+  - Qual o perfil lipídico de cada paciente?
+  - A creatinina está dentro da referência?
+  - Quais exames estão abaixo da faixa de referência?
+  - Quem precisa repetir o exame, segundo o laudo?
+  - Qual foi o método usado na glicose?
+  - Quando foi a coleta do exame da Ana?
+  - Qual a hemoglobina no hemograma do João?
+
+  fora_do_escopo:
+  - olá, tudo bem?
+  - obrigado!
+  - me conta uma piada
+  - qual a previsão do tempo?
+  - estou doente?
+  - que remédio devo tomar para o colesterol?
+  - isso é diabetes?
+  - devo procurar um médico?
+  - me indica uma dieta
+  - quem é você?
+  - bom dia
+  - valeu
+  - qual o melhor laboratório da cidade?
+  - escreva um poema

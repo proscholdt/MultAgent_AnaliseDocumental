@@ -16,6 +16,7 @@ formato antigo) também fica de fora, com o lugar certo no motivo.
 
 O que o arquivo NÃO define é o que o agente pode chamar: isso é a política do servidor MCP.
 """
+import dataclasses
 import hashlib
 import re
 from dataclasses import dataclass, field
@@ -23,6 +24,8 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+
+from app import pacotes
 
 # A mesma regra de nome do servidor MCP, sem hífen: o nome também vira nome de tool do orquestrador.
 NAME = re.compile(r"[a-z][a-z0-9_]{1,39}")
@@ -53,6 +56,32 @@ class AgentFile:
     digest: str
     # Esforço de raciocínio deste agente: None = o padrão do ajustes.yaml; "" = sem raciocínio.
     raciocinio: str | None = None
+
+
+def with_domain(spec: AgentFile, dominio: str | None) -> AgentFile:
+    """O agente com o que o pacote do domínio diz a ele (`dominios/<id>/prompts/<agente>.md`).
+
+    O arquivo do pacote tem um cabeçalho opcional entre linhas '---' com `modo`:
+    - `complemento` (padrão): o texto entra no fim do prompt do agente;
+    - `substitui`: o texto é o prompt deste agente neste domínio (modelo, turnos e raciocínio
+      continuam os do arquivo do agente). É o que um domínio muito diferente usa quando o prompt
+      base fala do domínio padrão.
+    Sem arquivo no pacote, o agente fica como está."""
+    path = pacotes.arquivo_do_pacote(dominio, f"prompts/{spec.nome}.md") if dominio else None
+    if path is None:
+        return spec
+    text = path.read_text(encoding="utf-8").lstrip(_BOM)
+    mode, body = "complemento", text
+    if match := _HEADER.match(text):
+        header = yaml.safe_load(match.group(1)) or {}
+        mode, body = str(header.get("modo", "complemento")), match.group(2)
+    if mode not in ("complemento", "substitui"):
+        raise AgentFileError(f"{path}: modo {mode!r} desconhecido (use complemento ou substitui)")
+    prompt = body.strip() if mode == "substitui" else f"{spec.prompt.rstrip()}\n\n{body.strip()}"
+    return dataclasses.replace(spec, prompt=prompt)
+
+
+_BOM = "\N{ZERO WIDTH NO-BREAK SPACE}"  # arquivo salvo no Windows pode começar com ele
 
 
 def parse_agent(text: str, file_name: str) -> AgentFile:

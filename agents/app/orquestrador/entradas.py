@@ -3,6 +3,7 @@ import dataclasses
 import json
 from typing import Any
 
+from app import pacotes
 from app.nucleo.agentes import AgentFile
 from app.orquestrador.estado import Estado
 from app.orquestrador.execucoes import Run
@@ -23,8 +24,27 @@ def conversation_so_far(turns: list[dict]) -> str:
         lines += [f"- Pedido: {turn['pedido']}", f"  Resposta: {answer or '(sem resposta)'} [{turn.get('estado')}]"]
     return "\n".join(lines)
 
-def first_input(run: Run, turns: list[dict] | None = None) -> str:
+def _domain_input(run: Run) -> str | None:
+    """O pedido nos domínios que não são o padrão: com a entidade e as perguntas do pacote."""
+    if run.dominio == pacotes.PADRAO:
+        return None
+    pacote = pacotes.pacote(run.dominio)
+    entidade = pacote.entidade
     if run.tipo == "relatorio":
+        return (f"Produza o relatório consolidado completo dos documentos desta coleção ({pacote.nome}): "
+                f"extração, revisão das fontes, análise qualitativa, as {len(pacote.perguntas)} perguntas do "
+                "relatório, os resumos e a montagem do relatório.")
+    if run.tipo == "relatorio_empresa":
+        return (f"Produza o relatório de um só documento ({entidade.rotulo.lower()}), como o usuário pediu: "
+                f"«{run.pedido}». Documento: {run.doc_id or 'diga em `empresa` o doc_id dele'}. Use `pendencias` "
+                "com esse doc_id.")
+    return None
+
+
+def first_input(run: Run, turns: list[dict] | None = None) -> str:
+    if (domain_text := _domain_input(run)) is not None:
+        text = domain_text
+    elif run.tipo == "relatorio":
         text = ("Produza o relatório consolidado completo dos documentos do usuário: extração, revisão das "
                 "fontes, análise qualitativa, as cinco perguntas, os resumos e a montagem do relatório.")
     elif run.tipo == "relatorio_empresa":

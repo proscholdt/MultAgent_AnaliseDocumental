@@ -31,6 +31,23 @@ class Users:
                                 f"O indexador respondeu {response.status_code} ao conferir o usuário.")
         return response.json()["user_id"]
 
+    async def collection(self, token: str, colecao_id: str) -> dict:
+        """A coleção do usuário (com o domínio dela). Coleção de outro usuário, ou que não existe: 404."""
+        try:
+            async with httpx.AsyncClient(base_url=self.settings.indexer_url, transport=self.transport,
+                                         timeout=15) as http:
+                response = await http.get("/api/colecoes", headers={"Authorization": f"Bearer {token}"})
+        except httpx.HTTPError as error:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE,
+                                f"Indexador fora do ar ({type(error).__name__}).") from error
+        if response.status_code != 200:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE,
+                                f"O indexador respondeu {response.status_code} ao listar as coleções.")
+        found = next((c for c in response.json() if c.get("id") == colecao_id), None)
+        if found is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Coleção não encontrada.")
+        return found
+
     def require_time(self, token: str) -> None:
         """Recusa começar uma execução com o token perto de vencer: as buscas falhariam no meio.
         O `exp` é lido sem conferir a assinatura (isso o indexador já fez)."""

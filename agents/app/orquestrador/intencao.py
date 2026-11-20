@@ -131,6 +131,13 @@ class Roteador:
         self._vetores: dict[str, list[tuple[str, list[float]]]] = {}
         self.erro: str | None = None  # arquivo inválido: continua valendo a versão anterior
 
+    def para(self, path: Path) -> "Roteador":
+        """O roteador de outras frases de exemplo (as de um domínio), com o mesmo embedder."""
+        cache = self.__dict__.setdefault("_outros", {})
+        if path not in cache:
+            cache[path] = Roteador(path, self._embed)
+        return cache[path]
+
     async def rotas(self) -> tuple[Rotas | None, int]:
         """As rotas e os vetores das frases de exemplo, relidos se o arquivo mudou."""
         try:

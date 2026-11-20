@@ -16,6 +16,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from app import pacotes
+
 log = logging.getLogger("agentes.trace")
 _LOG_CHARS = 300
 
@@ -40,6 +42,10 @@ class Run:
     tipo: str  # livre | pergunta | relatorio | relatorio_empresa | auto (vira um dos outros na primeira decisão)
     pedido: str
     doc_id: str | None = None  # no relatório de uma empresa: o documento dela
+    # A coleção do pedido e o domínio dela (dominios/<id>/). Sem coleção: o domínio padrão e todos os
+    # documentos do usuário, como antes dos pacotes de domínio.
+    colecao_id: str | None = None
+    dominio: str = "financeiro"
     conversa_id: str = ""  # a conversa do usuário a que este pedido pertence
     estado: str = "na_fila"  # na_fila | em_andamento | completa | incompleta | falhou | interrompida
     criada_em: str = field(default_factory=now)
@@ -93,9 +99,10 @@ class Runs:
         (self.folder / f"{run.id}.json").write_text(json.dumps(asdict(run), ensure_ascii=False, indent=1),
                                                     encoding="utf-8")
 
-    def create(self, user_id: str, tipo: str, pedido: str, conversa_id: str = "") -> Run:
+    def create(self, user_id: str, tipo: str, pedido: str, conversa_id: str = "", colecao_id: str | None = None,
+               dominio: str | None = None) -> Run:
         run = Run(id=f"exec-{uuid.uuid4().hex[:12]}", user_id=user_id, tipo=tipo, pedido=pedido,
-                  conversa_id=conversa_id)
+                  conversa_id=conversa_id, colecao_id=colecao_id, dominio=dominio or pacotes.PADRAO)
         self._runs[run.id] = run
         self._write(run)
         return run
@@ -231,9 +238,10 @@ class PostgresRuns(Runs):
             rows = connection.execute(f"SELECT dados FROM execucoes WHERE {where} ORDER BY {order}", args).fetchall()
         return [Run(**row[0]) for row in rows]
 
-    def create(self, user_id: str, tipo: str, pedido: str, conversa_id: str = "") -> Run:
+    def create(self, user_id: str, tipo: str, pedido: str, conversa_id: str = "", colecao_id: str | None = None,
+               dominio: str | None = None) -> Run:
         run = Run(id=f"exec-{uuid.uuid4().hex[:12]}", user_id=user_id, tipo=tipo, pedido=pedido,
-                  conversa_id=conversa_id)
+                  conversa_id=conversa_id, colecao_id=colecao_id, dominio=dominio or pacotes.PADRAO)
         self._write(run)
         return run
 
