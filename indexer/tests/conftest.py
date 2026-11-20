@@ -133,3 +133,11 @@ def parsed_doc() -> ParsedDocument:
     ]
     return ParsedDocument(doc_id="abcdef0123456789", file_name="exemplo.pdf", page_count=3,
                           parser="teste", pipeline_version=PIPELINE_VERSION, items=items, pages=pages)
+
+
+def financeiro():
+    """O plugin do indexador do domínio financeiro (dominios/financeiro/plugin/indexador.py), para os
+    testes das regras das demonstrações. O carregamento é o do indexador: pelo pacote."""
+    from app.plugins.carregar import do_dominio
+
+    return do_dominio("financeiro")

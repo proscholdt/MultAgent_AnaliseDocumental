@@ -16,6 +16,7 @@ from pydantic import BaseModel, create_model
 
 from app import pacotes
 from app.indexacao.llm import LLMClient
+from app.plugins.carregar import do_dominio
 from app.schemas import ParsedDocument
 
 UNIT_THOUSAND = "R$ mil"
@@ -137,13 +138,6 @@ _INSTRUCOES = (
 # Nomes de antes dos pacotes (formulário, PATCH, cache): o metadado com aquele papel.
 _PAPEL_ANTIGO = {"company": "entidade", "period": "recorte", "doc_type": "tipo_documento"}
 
-# Reserva por regex: só no domínio financeiro (razão social S.A./Ltda, data de encerramento).
-_MONTH_TO_QUARTER = {"março": "1T", "marco": "1T", "junho": "2T", "setembro": "3T"}
-_COMPANY_LINE = re.compile(r"^[A-ZÀ-Ú][\wÀ-ú .,&'’/-]{1,80}?\s(?:S\.\s?A\.?|S/A|Ltda\.?)$")
-_DATE = re.compile(r"(\d{1,2})\s+de\s+(janeiro|fevereiro|mar[cç]o|abril|maio|junho|julho|agosto"
-                   r"|setembro|outubro|novembro|dezembro)\s+de\s+(\d{4})", re.IGNORECASE)
-
-
 class FieldEvidence(BaseModel):
     value: str | None
     page: int | None
@@ -221,38 +215,9 @@ def is_grounded(metadado: pacotes.Metadado, evidence: FieldEvidence, parsed: Par
 
 
 def regex_metadata(parsed: ParsedDocument, pacote: pacotes.Pacote) -> dict[str, str | None]:
-    """Reserva determinística sobre as três primeiras páginas: só no domínio financeiro."""
-    if pacote.plugin != "financeiro":
-        return {}
-    first_pages = [p.native_text for p in sorted(parsed.pages, key=lambda p: p.page)[:3]]
-    text = "\n".join(first_pages)
-
-    candidates: Counter[str] = Counter()
-    for line in text.splitlines():
-        line = line.strip()
-        if _COMPANY_LINE.match(line):
-            candidates[line] += 1
-    company = candidates.most_common(1)[0][0] if candidates else None
-
-    period = None
-    match = _DATE.search(text)
-    if match:
-        day, month, year = int(match.group(1)), match.group(2).lower(), match.group(3)
-        if month == "dezembro" and day == 31:
-            period = year
-        elif month in _MONTH_TO_QUARTER:
-            period = f"{_MONTH_TO_QUARTER[month]}{year[2:]}"
-
-    lowered = text.lower()
-    doc_type = None
-    if "informações trimestrais" in lowered or "informacoes trimestrais" in lowered:
-        doc_type = "Informações trimestrais"
-    elif "release de resultados" in lowered:
-        doc_type = "Release de resultados"
-    elif "demonstrações financeiras" in lowered or "demonstracoes financeiras" in lowered:
-        doc_type = "Demonstrações financeiras"
-    by_role = {"entidade": company, "recorte": period, "tipo_documento": doc_type}
-    return {m.nome: by_role[m.papel] for m in pacote.metadados if m.papel in by_role}
+    """Reserva por regra, quando o LLM não acha ou não prova: a do plugin do domínio (nas
+    demonstrações, a razão social e a data de encerramento). Sem plugin, nenhuma."""
+    return do_dominio(pacote.id).metadados_reserva(parsed, pacote)
 
 
 async def llm_metadata(parsed: ParsedDocument, llm: LLMClient, pacote: pacotes.Pacote) -> dict[str, Any]:

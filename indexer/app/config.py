@@ -58,7 +58,7 @@ class Settings(BaseSettings):
     # --- Qdrant ---
     qdrant_url: str = "http://localhost:6333"
     qdrant_api_key: str | None = None
-    qdrant_collection: str = "financial_docs"
+    qdrant_collection: str = "documentos"
 
     # --- Embeddings / LLM ---
     # "fake" roda o pipeline inteiro sem chamar a OpenAI (vetor denso sem significado,

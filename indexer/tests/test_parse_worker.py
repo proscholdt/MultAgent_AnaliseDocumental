@@ -29,7 +29,7 @@ class FakeParser:
     def warmup(self) -> None:
         pass
 
-    def parse(self, pdf_path, doc_id, file_name, out_dir, on_progress=None) -> ParsedDocument:
+    def parse(self, pdf_path, doc_id, file_name, out_dir, on_progress=None, plugin=None) -> ParsedDocument:
         self.parse_calls += 1
         if self.error:
             raise self.error

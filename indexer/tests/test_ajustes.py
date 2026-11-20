@@ -26,7 +26,7 @@ def test_adjustments_apply_when_the_file_changes_and_a_bad_file_keeps_the_last_g
 
     write(path, "qdrant_collection: outra\n", 3)  # infraestrutura não se ajusta aqui
     settings.reload()
-    assert settings.qdrant_collection == "financial_docs" and "qdrant_collection" in settings.config_error
+    assert settings.qdrant_collection == "documentos" and "qdrant_collection" in settings.config_error
 
 
 def test_the_shipped_adjustments_file_is_valid():

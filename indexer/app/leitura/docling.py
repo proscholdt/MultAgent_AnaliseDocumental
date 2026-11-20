@@ -34,6 +34,7 @@ from docling_core.types.doc import (
 from app.config import PIPELINE_VERSION, Settings
 from app.leitura.ocr import FigureOcr, read_figures
 from app.leitura.parsing import MIN_NATIVE_CHARS, ProgressCallback, check_system_fonts, native_pages
+from app.plugins.interface import PluginIndexador
 from app.schemas import ParsedDocument, ParsedItem
 
 log = logging.getLogger(__name__)
@@ -89,7 +90,8 @@ class DoclingParser:
         return read_figures(parsed, out_dir, self._ocr, self._settings.figure_min_area_ratio)
 
     def parse(self, pdf_path: Path, doc_id: str, file_name: str, out_dir: Path,
-              on_progress: ProgressCallback | None = None) -> ParsedDocument:
+              on_progress: ProgressCallback | None = None, plugin: PluginIndexador | None = None) -> ParsedDocument:
+        # O Docling não depende do domínio: o que o plugin reconhece entra no corte em trechos.
         pages = native_pages(pdf_path)
         ocr_pages = [p.page for p in pages if len(p.native_text.strip()) < MIN_NATIVE_CHARS]
         converter = self._converter(ocr=bool(ocr_pages))

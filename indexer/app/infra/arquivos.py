@@ -45,12 +45,21 @@ def parse_dir(user_id: str, doc_id: str, parser: str) -> Path:
     return doc_dir(user_id, doc_id) / "parse" / parser
 
 
-def parsed_path(user_id: str, doc_id: str, parser: str) -> Path:
-    return parse_dir(user_id, doc_id, parser) / "parsed.json"
+def _variante(nome: str, variante: str | None) -> str:
+    """O arquivo de um domínio que muda o resultado (`parsed-laudos.json`); sem variante, o de sempre."""
+    if variante is None:
+        return f"{nome}.json"
+    if not _SAFE_PARSER.match(variante):
+        raise ValueError("Variante inválida.")
+    return f"{nome}-{variante}.json"
 
 
-def figures_cache_path(user_id: str, doc_id: str, parser: str) -> Path:
-    return parse_dir(user_id, doc_id, parser) / "figures.json"
+def parsed_path(user_id: str, doc_id: str, parser: str, variante: str | None = None) -> Path:
+    return parse_dir(user_id, doc_id, parser) / _variante("parsed", variante)
+
+
+def figures_cache_path(user_id: str, doc_id: str, parser: str, variante: str | None = None) -> Path:
+    return parse_dir(user_id, doc_id, parser) / _variante("figures", variante)
 
 
 def metadata_cache_path(user_id: str, doc_id: str) -> Path:

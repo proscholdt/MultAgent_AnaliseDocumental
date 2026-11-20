@@ -25,7 +25,14 @@ from app.infra.kafka import (
     wait_for_kafka,
     zerar_metricas,
 )
-from app.leitura.parsing import DocumentParser, ParserError, build_parser, unconfirmed_table_numbers
+from app.leitura.parsing import (
+    DocumentParser,
+    ParserError,
+    build_parser,
+    unconfirmed_table_numbers,
+    variante_do_parse,
+)
+from app.plugins.carregar import do_dominio
 from app.schemas import IndexRequested, ParsedDocument, ParseRequested
 from app.workers.common import make_callbacks, setup_logging
 
@@ -52,7 +59,7 @@ async def handle_parse(message: ParseRequested, *, parser: DocumentParser, publi
             log.info("Documento %s removido antes do parse; mensagem descartada.", message.doc_id)
             return
         document.status = "processing"
-        file_name = document.file_name
+        file_name, dominio = document.file_name, document.dominio
         await repo.update_job(session, message.job_id, status="parsing", stage="parse",
                               attempts=message.attempt, error=None, failed_stage=None)
 
@@ -62,7 +69,9 @@ async def handle_parse(message: ParseRequested, *, parser: DocumentParser, publi
     # Cada parser tem a sua pasta: trocar de parser não apaga o que o outro já fez.
     out_dir = storage.parse_dir(message.user_id, message.doc_id, parser.name)
     out_dir.mkdir(parents=True, exist_ok=True)
-    parsed_file = storage.parsed_path(message.user_id, message.doc_id, parser.name)
+    parsed_file = storage.parsed_path(message.user_id, message.doc_id, parser.name,
+                                      variante_do_parse(parser.name, dominio))
+    plugin = do_dominio(dominio)
 
     started = time.perf_counter()
     parsed = load_parsed(parsed_file)
@@ -72,7 +81,8 @@ async def handle_parse(message: ParseRequested, *, parser: DocumentParser, publi
             # Parse novo: os recortes são refeitos e podem mudar de nome, então as transcrições
             # guardadas dos recortes antigos deixam de valer.
             shutil.rmtree(out_dir / "figures", ignore_errors=True)
-            storage.figures_cache_path(message.user_id, message.doc_id, parser.name).unlink(missing_ok=True)
+            for cache in out_dir.glob("figures*.json"):  # as de todos os domínios: os recortes mudaram
+                cache.unlink(missing_ok=True)
             loop = asyncio.get_running_loop()
 
             def on_progress(done: int, total: int) -> None:
@@ -82,7 +92,7 @@ async def handle_parse(message: ParseRequested, *, parser: DocumentParser, publi
             # O parse é síncrono (e, no Docling, pesado): roda em thread para o consumidor
             # continuar mandando heartbeat ao Kafka.
             parsed = await asyncio.to_thread(parser.parse, pdf_path, message.doc_id, file_name,
-                                             out_dir, on_progress)
+                                             out_dir, on_progress, plugin)
         # Texto de dentro dos gráficos, com posição: segunda fonte para conferir os números.
         # Também completa um parsed.json em cache feito antes de essa leitura existir.
         figures_read = await asyncio.to_thread(parser.read_figures, parsed, out_dir)

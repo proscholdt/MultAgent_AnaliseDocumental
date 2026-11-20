@@ -23,6 +23,7 @@ from app.infra import repo
 from app.infra.banco import session_scope
 from app.infra.kafka import KafkaPublisher, Publisher, run_consumer, wait_for_kafka, zerar_metricas
 from app.infra.modelos import utcnow
+from app.leitura.parsing import variante_das_figuras, variante_do_parse
 from app.schemas import DocumentEvent, IndexRequested, ParseRequested
 from app.workers.common import make_callbacks, setup_logging
 
@@ -47,7 +48,8 @@ async def handle_index(message: IndexRequested, *, store: VectorStore, dense: De
     # O parse-worker diz qual parser produziu o parsed.json. Quando a API manda reindexar
     # (PATCH, retry), vale o parser configurado aqui.
     parser = message.parser or settings.parser
-    parsed = load_parsed(storage.parsed_path(message.user_id, message.doc_id, parser))
+    parsed = load_parsed(storage.parsed_path(message.user_id, message.doc_id, parser,
+                                             variante_do_parse(parser, dominio)))
     if parsed is None:
         # Sem parse em cache para este parser (ou de versão antiga do pipeline): devolve para
         # a fila de parse.
@@ -67,7 +69,8 @@ async def handle_index(message: IndexRequested, *, store: VectorStore, dense: De
     result = await index_document(
         user_id=message.user_id, doc_id=message.doc_id, file_name=file_name, overrides=overrides,
         parsed=parsed, parser=parser, doc_dir=storage.parse_dir(message.user_id, message.doc_id, parser),
-        figures_cache=storage.figures_cache_path(message.user_id, message.doc_id, parser),
+        figures_cache=storage.figures_cache_path(message.user_id, message.doc_id, parser,
+                                                 variante_das_figuras(dominio)),
         metadata_cache=storage.metadata_cache_path(message.user_id, message.doc_id),
         store=store, dense=dense, sparse=sparse, llm=llm, settings=settings, on_stage=on_stage,
         dominio=dominio, collection_id=collection_id,

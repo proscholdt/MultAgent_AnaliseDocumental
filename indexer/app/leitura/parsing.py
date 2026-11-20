@@ -18,7 +18,9 @@ from typing import Protocol
 
 from pypdf import PdfReader
 
+from app import pacotes
 from app.config import Settings
+from app.plugins.interface import PluginIndexador
 from app.schemas import ParsedDocument, ParsedPage
 
 log = logging.getLogger(__name__)
@@ -48,11 +50,23 @@ class DocumentParser(Protocol):
         """Carrega o que for pesado antes do primeiro job."""
 
     def parse(self, pdf_path: Path, doc_id: str, file_name: str, out_dir: Path,
-              on_progress: ProgressCallback | None = None) -> ParsedDocument:
-        """Lê o PDF e grava os recortes de figura em `out_dir`/figures."""
+              on_progress: ProgressCallback | None = None, plugin: PluginIndexador | None = None) -> ParsedDocument:
+        """Lê o PDF e grava os recortes de figura em `out_dir`/figures. `plugin`: o do domínio do
+        documento, para o parser que separa títulos na leitura (o do Azure)."""
 
     def read_figures(self, parsed: ParsedDocument, out_dir: Path) -> int:
         """Completa o texto das figuras (com posição) que ainda não foi lido. Devolve quantas leu."""
+
+
+def variante_do_parse(parser: str, dominio: str | None) -> str | None:
+    """O JSON do parse depende do domínio só no parser que separa títulos na leitura (o Azure, pelo
+    plugin do domínio); o do Docling vale para qualquer domínio. O do domínio padrão é o de sempre."""
+    return dominio if parser == "azure" and dominio and dominio != pacotes.PADRAO else None
+
+
+def variante_das_figuras(dominio: str | None) -> str | None:
+    """As transcrições das figuras dependem do domínio (o prompt diz de que documentos elas são)."""
+    return dominio if dominio and dominio != pacotes.PADRAO else None
 
 
 def build_parser(settings: Settings) -> DocumentParser:

@@ -51,8 +51,10 @@ _PART_MIN_CHARS = 3  # menor pedaço de um rótulo escrito em mais de uma linha
 _PART_COVERAGE = 0.6  # fração do rótulo que os pedaços achados precisam cobrir
 _MIN_AGREEMENT = 0.75  # acordo mínimo entre a região do rótulo e os números ligados a ele
 
+# A primeira frase diz de que documentos são as figuras: vem do plugin do domínio.
+_WHAT = "Você transcreve figuras de documentos."
 _SYSTEM = (
-    "Você transcreve figuras de relatórios financeiros. Transcreva apenas o que está visível "
+    "Transcreva apenas o que está visível "
     "na imagem, exatamente como escrito (mantenha vírgulas, pontos, % e unidades). "
     "Para cada valor numérico escrito na figura devolva um item em `valores`, com o valor e, "
     "em `rotulos`, os textos da própria figura que dizem a que ele se refere (categoria, "
@@ -521,6 +523,7 @@ async def transcribe_figures(
     cache_path: Path,
     llm: LLMClient | None,
     settings: Settings,
+    instrucao: str | None = None,
 ) -> dict[str, FigureResult]:
     """Devolve {image_path: resultado conferido}. As transcrições brutas ficam em cache
     (figures.json) para que retry e reindexação não paguem a chamada de novo."""
@@ -537,7 +540,7 @@ async def transcribe_figures(
             async with semaphore:
                 try:
                     result = await llm.parse(
-                        system=_SYSTEM,
+                        system=f"{instrucao or _WHAT} {_SYSTEM}",
                         user="Transcreva a figura a seguir.",
                         schema=FigureTranscription,
                         image=doc_dir / image_path,

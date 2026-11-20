@@ -50,7 +50,17 @@ def tenant_filter(user_id: str, doc_id: str | None = None, *, chunk_type: str | 
     return models.Filter(must=must)
 
 
+LEGACY_COLLECTION = "financial_docs"  # o nome de antes: vira alias de `documentos`
+
+
 class VectorStore:
+    async def _is_alias(self, name: str) -> bool:
+        try:
+            aliases = (await self._client.get_aliases()).aliases
+        except Exception:  # noqa: BLE001 - cliente sem aliases (o de memória, nos testes)
+            return False
+        return any(alias.alias_name == name for alias in aliases)
+
     def __init__(self, client: AsyncQdrantClient, settings: Settings) -> None:
         self._client = client
         self._collection = settings.qdrant_collection
@@ -72,7 +82,14 @@ class VectorStore:
             return False
 
     async def ensure_collection(self) -> None:
-        if await self._client.collection_exists(self._collection):
+        if await self._client.collection_exists(self._collection) or await self._is_alias(self._collection):
+            return
+        if await self._client.collection_exists(LEGACY_COLLECTION):
+            # O índice de antes dos domínios plugáveis se chamava financial_docs: em vez de
+            # reindexar, o nome novo vira um alias dele.
+            await self._client.update_collection_aliases(change_aliases_operations=[models.CreateAliasOperation(
+                create_alias=models.CreateAlias(collection_name=LEGACY_COLLECTION, alias_name=self._collection))])
+            log.info("Coleção %s: alias de %s", self._collection, LEGACY_COLLECTION)
             return
         try:
             await self._client.create_collection(

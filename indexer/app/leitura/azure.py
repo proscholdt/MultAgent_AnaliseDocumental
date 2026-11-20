@@ -39,7 +39,6 @@ from azure.core.exceptions import ClientAuthenticationError, HttpResponseError
 from pypdf import PdfReader, PdfWriter
 
 from app.config import PIPELINE_VERSION, Settings
-from app.indexacao.trechos import STATEMENT_TITLE
 from app.leitura.parsing import (
     MIN_NATIVE_CHARS,
     ParserError,
@@ -47,6 +46,7 @@ from app.leitura.parsing import (
     check_system_fonts,
     native_pages,
 )
+from app.plugins.interface import PluginGenerico, PluginIndexador
 from app.schemas import OcrWord, ParsedDocument, ParsedItem
 
 log = logging.getLogger(__name__)
@@ -67,13 +67,6 @@ _SELECTION_MARKS = (":selected:", ":unselected:")
 # entre parênteses, sem dígitos. "(não auditado)", "(reapresentado)". "(1.551)" é um valor.
 _HEADER_NOTE = re.compile(r"(?:\([^()\d]{3,40}\)\s*)+")
 _NOTE = re.compile(r"\([^()]+\)")
-# Linha que diz o período ou a unidade de uma tabela, e não o assunto de uma seção.
-_PERIOD_LINE = re.compile(
-    r"(?:para\s+os?\s+)?(?:exerc[íi]cios?|per[íi]odos?|trimestres?|semestres?)\s+(?:findos?|encerrados?)\s+em\b"
-    r"|em\s+\d{1,2}\s+de\s+[a-zç]+\s+de\s+\d{4}\b"
-    r"|\((?:em|valores\s+expressos\s+em)\s+(?:milhares|milhões|reais|R\$)",
-    re.IGNORECASE,
-)
 _TITLE_BLOCK_MAX_LINES = 6
 _TITLE_MAX_CHARS = 120
 _NOT_A_TITLE = re.compile(r"\d{4}|www\.|@", re.IGNORECASE)  # CEP, telefone, site: é timbre
@@ -416,8 +409,10 @@ class _Running:
         return found[1] - _BAND_TOLERANCE <= center <= found[2] + _BAND_TOLERANCE
 
 
-def _statement_title_parts(lines: list[str], role: str | None, running: _Running) -> list[tuple[str, str]] | None:
-    """Bloco de título de uma demonstração que o serviço devolveu como um parágrafo só:
+def _statement_title_parts(lines: list[str], role: str | None, running: _Running,
+                           plugin: PluginIndexador) -> list[tuple[str, str]] | None:
+    """Bloco de título de uma seção de nome fixo (o plugin do domínio sabe quais são: nas
+    demonstrações, "Balanços patrimoniais") que o serviço devolveu como um parágrafo só:
     empresa, título, período e unidade ("LIGHT S.A." / "BALANÇOS PATRIMONIAIS" / "EM 31 DE
     DEZEMBRO DE 2022 E DE 2021" / "(Em milhares de reais)"). Devolve as partes em (tipo, texto),
     como o resto do pipeline espera: o título abre a seção, e o que vem depois dele é texto,
@@ -428,7 +423,7 @@ def _statement_title_parts(lines: list[str], role: str | None, running: _Running
     pela largura da página, e nada é separado."""
     if not 2 <= len(lines) <= _TITLE_BLOCK_MAX_LINES:
         return None
-    index = next((i for i, line in enumerate(lines) if STATEMENT_TITLE.match(line)), None)
+    index = next((i for i, line in enumerate(lines) if plugin.titulo_de_secao(line)), None)
     if index is None or any(not (line[0].isupper() or line[0] in "(\"“") for line in lines[index + 1:]):
         return None
     # Parágrafo comum: só é bloco de título se o título vem logo no começo e nada, do título em
@@ -447,14 +442,17 @@ def _statement_title_parts(lines: list[str], role: str | None, running: _Running
 
 
 def convert_layout(result: dict[str, Any], *, crop: Crop, min_area_ratio: float,
-                   small_min_area_ratio: float, text_layer: TextLayer | None = None) -> list[ParsedItem]:
+                   small_min_area_ratio: float, text_layer: TextLayer | None = None,
+                   plugin: PluginIndexador | None = None) -> list[ParsedItem]:
     """Parágrafos, tabelas e figuras do serviço, na ordem de leitura, no esquema do projeto.
 
     `result` é a resposta no formato da API REST (chaves em camelCase). `crop` grava o recorte
     de uma figura e é chamado só para as que vão ao modelo de visão: as que passam de
     `min_area_ratio` e as pequenas (a partir de `small_min_area_ratio`) em que o serviço leu
     números, que são gráficos pequenos. O resto são logotipos e ícones. `text_layer` lê a
-    camada de texto do PDF na região de cada figura recortada."""
+    camada de texto do PDF na região de cada figura recortada. `plugin`: o do domínio do
+    documento, que reconhece os títulos de nome fixo e as linhas de subtítulo de tabela."""
+    plugin = plugin or PluginGenerico()
     pages = {page["pageNumber"]: page for page in result.get("pages") or []}
     tables, figures = result.get("tables") or [], result.get("figures") or []
     paragraphs = result.get("paragraphs") or []
@@ -518,7 +516,7 @@ def convert_layout(result: dict[str, Any], *, crop: Crop, min_area_ratio: float,
         rare = [line for line in lines.of(paragraph, page) if not running.repeats(line)]
         if not rare:
             return []
-        statement = next((i for i, line in enumerate(rare) if STATEMENT_TITLE.match(line)), None)
+        statement = next((i for i, line in enumerate(rare) if plugin.titulo_de_secao(line)), None)
         if statement is not None:
             rest = " ".join(rare[statement + 1:])
             return [("heading", rare[statement]), *([("text", rest)] if rest else [])]
@@ -547,8 +545,8 @@ def convert_layout(result: dict[str, Any], *, crop: Crop, min_area_ratio: float,
         else:
             # Linha de período ou de unidade rotulada como título ("Exercício findo em 31 de
             # dezembro de 2021") é o subtítulo de uma tabela: vai como texto, para o alto dela.
-            heading = role in _HEADING_ROLES and not _PERIOD_LINE.match(text)
-            parts = (_statement_title_parts(lines.of(paragraph, page), role, running)
+            heading = role in _HEADING_ROLES and not plugin.linha_de_subtitulo(text)
+            parts = (_statement_title_parts(lines.of(paragraph, page), role, running, plugin)
                      or [("heading" if heading else "text", text)])
         for kind, piece in parts:
             if kind == "heading":
@@ -744,7 +742,7 @@ class AzureParser:
         temporary.replace(path)  # troca atômica, como no parsed.json
 
     def parse(self, pdf_path: Path, doc_id: str, file_name: str, out_dir: Path,
-              on_progress: ProgressCallback | None = None) -> ParsedDocument:
+              on_progress: ProgressCallback | None = None, plugin: PluginIndexador | None = None) -> ParsedDocument:
         pages = native_pages(pdf_path)
         total = len(pages)
         if on_progress:
@@ -765,7 +763,8 @@ class AzureParser:
         try:
             items = convert_layout(result, crop=cropper, text_layer=cropper.text_layer,
                                    min_area_ratio=self._settings.figure_min_area_ratio,
-                                   small_min_area_ratio=self._settings.figure_small_min_area_ratio)
+                                   small_min_area_ratio=self._settings.figure_small_min_area_ratio,
+                                   plugin=plugin)
         finally:
             cropper.close()
         if on_progress:

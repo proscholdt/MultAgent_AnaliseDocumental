@@ -14,6 +14,7 @@ from typing import Literal
 from app.config import Settings
 from app.indexacao.metadados import detect_declared_unit, page_units, resolve_unit, scope_units
 from app.leitura.figuras import FigureResult
+from app.plugins.interface import PluginGenerico, PluginIndexador
 from app.schemas import ParsedDocument, ParsedItem
 
 ChunkType = Literal["text", "table", "figure"]
@@ -38,23 +39,9 @@ _CONTINUATION = re.compile(r"\s*(?:[-–—]{1,2}\s*continua[cç][aã]o|\(contin
 # espaço e o primeiro caractere do título.
 _NUMBERED = re.compile(r"^(\d{1,2}(?:\.\d{1,2}){0,3})(\.?)(\s*)(\S)")
 _TITLE_OPENERS = "\"“'(["
-# As demonstrações primárias têm nome fixo. Quando o layout rotula o título como texto comum,
-# é por esse nome que ele é reconhecido. O parser da Azure usa a mesma lista para separar o
-# título do bloco em que o serviço o devolve (empresa, título, período e unidade juntos).
-STATEMENT_TITLE = re.compile(
-    r"^(?:balanços?\s+patrimonia(?:l|is)"
-    r"|demonstraç(?:ão|ões)\s+d[aeo]s?\s+(?:resultados?(?:\s+abrangentes?)?|fluxos?\s+de\s+caixa"
-    r"|mutaç(?:ão|ões)\s+d[eo]\s+patrimônio\s+líquido|valor(?:es)?\s+adicionados?))\b",
-    re.IGNORECASE,
-)
-_STATEMENT_TITLE_MAX_CHARS = 200
-# Rodapé fixo das demonstrações primárias. O critério de repetição não o pega quando ele
-# aparece em menos de cinco páginas (a Millet tem quatro demonstrações de uma página).
-_STATEMENT_FOOTER = re.compile(
-    r"^as\s+notas\s+explicativas\s+(?:da\s+administração\s+)?são\s+parte\s+integrante\s+d[ae]s(?:tas)?\s+"
-    r"demonstrações\s+(?:financeiras|contábeis)(?:\s+(?:individuais|consolidadas|e))*\s*\.?$",
-    re.IGNORECASE,
-)
+# Linha curta, sem quebra e sem pontuação de frase no fim: só uma linha assim pode ser o nome
+# fixo de uma seção que o plugin do domínio reconhece (ex.: "Balanços patrimoniais").
+_FIXED_TITLE_MAX_CHARS = 200
 _MERGED_TITLE_MAX_CHARS = 240
 _TOC_LEADER = re.compile(r"\.{5,}")
 _TOC_MIN_LINES = 5
@@ -292,10 +279,12 @@ def build_context_header(company: str | None, period: str | None, unit: str | No
 
 
 class _Builder:
-    def __init__(self, parsed: ParsedDocument, figures: dict[str, FigureResult], settings: Settings):
+    def __init__(self, parsed: ParsedDocument, figures: dict[str, FigureResult], settings: Settings,
+                 plugin: PluginIndexador):
         self.parsed = parsed
         self.figures = figures
         self.settings = settings
+        self.plugin = plugin
         self.units_by_page = page_units(parsed)
         self.scope_by_page = scope_units(parsed)
         self.chunks: list[Chunk] = []
@@ -498,7 +487,7 @@ class _Builder:
         text = text.strip()
         if len(text) < 2:  # letra solta de um logotipo ou de um sumário
             return
-        if _STATEMENT_FOOTER.match(text):  # rodapé fixo das demonstrações: não é conteúdo
+        if self.plugin.rodape_conhecido(text):  # rodapé fixo deste tipo de documento: não é conteúdo
             return
         if self.is_note_heading(text):
             self.add_heading(text, page)
@@ -516,10 +505,10 @@ class _Builder:
                 table.token_count = count_tokens(table.text)
                 table.page_end = max(table.page_end, end)
                 return
-        if (len(text) <= _STATEMENT_TITLE_MAX_CHARS and "\n" not in text and text[-1] not in ".;:,"
-                and STATEMENT_TITLE.match(text)):
-            # "Balanços patrimoniais Em 31 de dezembro de 2022 e 2021" rotulado como texto comum:
-            # abre a seção da demonstração e continua no texto, como título da tabela.
+        if (len(text) <= _FIXED_TITLE_MAX_CHARS and "\n" not in text and text[-1] not in ".;:,"
+                and self.plugin.titulo_de_secao(text)):
+            # O nome fixo de uma seção rotulado como texto comum ("Balanços patrimoniais Em 31 de
+            # dezembro de 2022 e 2021"): abre a seção e continua no texto, como título da tabela.
             self.add_heading(text, page)
         self.fresh = False
         tokens = count_tokens(text)
@@ -572,8 +561,10 @@ class _Builder:
         self.emit("figure", "vision_llm", text, page, page, result)
 
 
-def chunk_document(parsed: ParsedDocument, figures: dict[str, FigureResult], settings: Settings) -> list[Chunk]:
-    builder = _Builder(parsed, figures, settings)
+def chunk_document(parsed: ParsedDocument, figures: dict[str, FigureResult], settings: Settings,
+                   plugin: PluginIndexador | None = None) -> list[Chunk]:
+    """Os trechos do documento. `plugin`: o do domínio dele (sem ele, só as regras do núcleo)."""
+    builder = _Builder(parsed, figures, settings, plugin or PluginGenerico())
     builder.items = drop_running_headers(parsed.items, parsed.page_count)
     for position, item in enumerate(builder.items):
         builder.position = position

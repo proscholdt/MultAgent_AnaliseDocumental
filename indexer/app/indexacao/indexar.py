@@ -26,6 +26,7 @@ from app.indexacao.metadados import (
 from app.indexacao.qdrant import VectorStore
 from app.indexacao.trechos import Chunk, build_context_header, chunk_document
 from app.leitura.figuras import transcribe_figures
+from app.plugins.carregar import do_dominio
 from app.schemas import ParsedDocument
 
 StageCallback = Callable[[str], Awaitable[None]]
@@ -124,8 +125,9 @@ async def index_document(
             await on_stage(name)
         return time.perf_counter()
 
+    plugin = do_dominio(dominio)
     started = await stage("figures")
-    figures = await transcribe_figures(parsed, doc_dir, figures_cache, llm, settings)
+    figures = await transcribe_figures(parsed, doc_dir, figures_cache, llm, settings, plugin.instrucao_figuras())
     timings["figures_s"] = round(time.perf_counter() - started, 2)
 
     started = await stage("metadata")
@@ -135,7 +137,7 @@ async def index_document(
     timings["metadata_s"] = round(time.perf_counter() - started, 2)
 
     started = await stage("chunking")
-    chunks = await asyncio.to_thread(chunk_document, parsed, figures, settings)
+    chunks = await asyncio.to_thread(chunk_document, parsed, figures, settings, plugin)
     indexed_at = datetime.now(UTC).isoformat()
     payloads = [build_payload(c, file_name=file_name, meta=meta, indexed_at=indexed_at, parser=parser,
                               collection_id=collection_id, pacote=pacote) for c in chunks]

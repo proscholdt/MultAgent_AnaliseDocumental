@@ -25,6 +25,7 @@ from app.leitura.figuras import (
 )
 from app.leitura.parsing import ParserError, build_parser, unconfirmed_table_numbers
 from app.schemas import OcrWord, ParsedDocument, ParsedItem, ParsedPage
+from tests.conftest import financeiro
 
 PAGE = (8.5, 11.0)  # polegadas, como o serviço informa para PDF
 PX = 144.0  # pixels por polegada do recorte (escala 2)
@@ -150,9 +151,9 @@ def layout() -> Layout:
     return doc
 
 
-def convert(layout: Layout, calls: list | None = None) -> list[ParsedItem]:
+def convert(layout: Layout, calls: list | None = None, plugin=None) -> list[ParsedItem]:
     return convert_layout(layout.result(), crop=fake_crop([] if calls is None else calls),
-                          min_area_ratio=0.04, small_min_area_ratio=0.02)
+                          min_area_ratio=0.04, small_min_area_ratio=0.02, plugin=plugin)
 
 
 # --- texto e ordem de leitura -------------------------------------------------
@@ -211,7 +212,11 @@ def test_statement_title_block_is_split_and_a_title_tagged_as_page_header_is_kep
     # Parágrafo comum que começa pelo nome de uma demonstração: é frase, não bloco de título.
     doc.block(["Balanço patrimonial e demonstração do resultado são apresentados de forma", "Condensada, a seguir."],
               2, (1, 5.0, 7, 5.4))
-    items = convert(doc)
+    # Sem o plugin das demonstrações, o núcleo não sabe que "Demonstrações do resultado" é um nome
+    # fixo de seção: o bloco fica como o serviço o devolveu.
+    generic = [i.text for i in convert(doc) if i.type == "heading"]
+    assert "Demonstrações do resultado" not in generic
+    items = convert(doc, plugin=financeiro())
     assert [(i.type, i.page, i.text) for i in items if i.type != "table"] == [
         ("heading", 1, "Demonstrações do resultado"),  # a linha da empresa é cabeçalho corrido: sai
         ("text", 1, "Exercícios findos em 31 de dezembro de 2022 e 2021 (em milhares de reais)"),
@@ -223,7 +228,7 @@ def test_statement_title_block_is_split_and_a_title_tagged_as_page_header_is_kep
     ]
     parsed = ParsedDocument(doc_id="d", file_name="f.pdf", page_count=2, parser="azure", pipeline_version="x",
                             items=items, pages=[ParsedPage(page=1), ParsedPage(page=2)])
-    first, second = [c for c in chunk_document(parsed, {}, settings) if c.chunk_type == "table"]
+    first, second = [c for c in chunk_document(parsed, {}, settings, financeiro()) if c.chunk_type == "table"]
     assert first.section_path == ["Demonstrações do resultado"] and second.section_path == ["Demonstrações dos fluxos de caixa"]
     assert first.text.startswith("Exercícios findos em 31 de dezembro de 2022 e 2021 (em milhares de reais)")
     assert first.unit == "R$ mil"

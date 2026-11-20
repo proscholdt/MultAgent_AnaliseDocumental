@@ -7,6 +7,7 @@ from app.indexacao.trechos import (
 )
 from app.leitura.figuras import FigureResult
 from app.schemas import ParsedDocument, ParsedItem, ParsedPage
+from tests.conftest import financeiro
 
 
 def make_doc(items, pages=None) -> ParsedDocument:
@@ -293,7 +294,7 @@ def test_statement_title_labelled_as_text_opens_its_section(settings):
         # Frase que só começa com o nome de uma demonstração não é título.
         ParsedItem(type="text", text="Demonstrações dos fluxos de caixa são preparadas pelo método indireto.", page=7),
     ])
-    auditor, balance, sentence = chunk_document(doc, {}, settings)
+    auditor, balance, sentence = chunk_document(doc, {}, settings, financeiro())
     assert auditor.section_path == ["Responsabilidades do auditor"]
     assert balance.chunk_type == "table"
     assert balance.section_path == ["Balanços patrimoniais Em 31 de dezembro de 2022 e 2021"]
@@ -356,7 +357,7 @@ def test_statement_footer_is_dropped_even_when_it_repeats_on_few_pages(settings)
         ParsedItem(type="text", text="Conforme as notas explicativas, que são parte integrante das demonstrações "
                                      "financeiras, a Companhia atua no varejo.", page=2),
     ])
-    chunks = chunk_document(doc, {}, settings)
+    chunks = chunk_document(doc, {}, settings, financeiro())
     assert [c.chunk_type for c in chunks] == ["table", "text"]
     assert "parte integrante" not in chunks[0].text
     assert "parte integrante" in chunks[1].text  # a mesma expressão dentro de um parágrafo fica

@@ -1,0 +1,42 @@
+# Perguntas de busca com página conhecida nas demonstrações da Brasal, da Millet e da Light, para
+# medir a busca híbrida (indexer/scripts/eval_search.py). O chunk certo cobre uma das páginas e
+# contém o trecho.
+casos:
+- {arquivo: Brasal.pdf, pergunta: "Qual foi a receita operacional líquida da Brasal em 2022?", paginas: [8], trecho: "1.325.059"}
+- {arquivo: Brasal.pdf, pergunta: "demonstração do resultado lucro líquido do exercício", paginas: [8], trecho: "177.244"}
+- {arquivo: Brasal.pdf, pergunta: "balanço patrimonial total do ativo", paginas: [6], trecho: "Total do ativo"}
+- {arquivo: Brasal.pdf, pergunta: "balanço patrimonial empréstimos e financiamentos passivo circulante", paginas: [7], trecho: "Empréstimos e financiamentos"}
+- {arquivo: Brasal.pdf, pergunta: "fluxo de caixa das atividades operacionais", paginas: [11], trecho: "atividades operacionais"}
+- {arquivo: Brasal.pdf, pergunta: "aquisição de imobilizado capex investimentos", paginas: [11], trecho: "imobilizado"}
+- {arquivo: Brasal.pdf, pergunta: "composição dos empréstimos e financiamentos taxa de juros vencimento", paginas: [37, 38, 39], trecho: ""}
+- {arquivo: Brasal.pdf, pergunta: "risco de liquidez risco de crédito gestão de riscos", paginas: [49, 50, 51], trecho: "isco"}
+- {arquivo: Brasal.pdf, pergunta: "eventos subsequentes", paginas: [51], trecho: ""}
+- {arquivo: Brasal.pdf, pergunta: "contexto operacional atividade da companhia", paginas: [12], trecho: "Companhia"}
+- {arquivo: Millet.pdf, pergunta: "Qual foi a receita operacional líquida da Millet em 2022?", paginas: [7], trecho: "462.127"}
+- {arquivo: Millet.pdf, pergunta: "lucro líquido do exercício", paginas: [7], trecho: "14.743"}
+- {arquivo: Millet.pdf, pergunta: "balanço patrimonial total do ativo", paginas: [6], trecho: "Total do ativo"}
+- {arquivo: Millet.pdf, pergunta: "fluxo de caixa das atividades operacionais", paginas: [10], trecho: "atividades operacionais"}
+- {arquivo: Millet.pdf, pergunta: "aquisição de imobilizado", paginas: [10], trecho: "imobilizado"}
+- {arquivo: Millet.pdf, pergunta: "dívida líquida gestão de capital", paginas: [42], trecho: "13.520"}
+- {arquivo: Millet.pdf, pergunta: "contexto operacional constituição da companhia", paginas: [11], trecho: "constituída"}
+- {arquivo: Millet.pdf, pergunta: "risco de crédito risco de liquidez", paginas: [40, 41, 42], trecho: "isco"}
+- {arquivo: Millet.pdf, pergunta: "receita operacional líquida composição impostos sobre vendas", paginas: [38, 39], trecho: "eceita"}
+- {arquivo: Millet.pdf, pergunta: "eventos subsequentes", paginas: [43], trecho: ""}
+- {arquivo: Light.pdf, pergunta: "Qual foi a receita operacional líquida da Light em 2022?", paginas: [9], trecho: "12.107"}
+- {arquivo: Light.pdf, pergunta: "demonstração do resultado receita líquida consolidado", paginas: [20], trecho: "Receita líquida"}
+- {arquivo: Light.pdf, pergunta: "Qual foi o EBITDA da Light em 2022?", paginas: [9, 10], trecho: "1.180"}
+- {arquivo: Light.pdf, pergunta: "resultado líquido prejuízo do exercício", paginas: [10, 20], trecho: "líquido"}
+- {arquivo: Light.pdf, pergunta: "dívida líquida e alavancagem Dívida Líquida/EBITDA", paginas: [10], trecho: "3,32x"}
+- {arquivo: Light.pdf, pergunta: "investimentos capex no ano", paginas: [10], trecho: "1.506"}
+- {arquivo: Light.pdf, pergunta: "demonstração dos fluxos de caixa atividades operacionais", paginas: [23], trecho: "atividades operacionais"}
+- {arquivo: Light.pdf, pergunta: "balanço patrimonial total do ativo", paginas: [18], trecho: "ATIVO"}
+- {arquivo: Light.pdf, pergunta: "continuidade operacional renovação da concessão incerteza", paginas: [25, 26, 27, 28], trecho: "concessão"}
+- {arquivo: Light.pdf, pergunta: "Lei 14.385 créditos de PIS e COFINS", paginas: [28, 29], trecho: "14.385"}
+- {arquivo: Light.pdf, pergunta: "risco de liquidez", paginas: [101, 102], trecho: "liquidez"}
+- {arquivo: Light.pdf, pergunta: "risco de taxa de câmbio", paginas: [98, 99], trecho: "câmbio"}
+- {arquivo: Light.pdf, pergunta: "covenants cláusulas de vencimento antecipado", paginas: [26, 27, 66, 70], trecho: "ovenant"}
+- {arquivo: Light.pdf, pergunta: "eventos subsequentes", paginas: [105, 106, 107, 108], trecho: ""}
+- {arquivo: Light.pdf, pergunta: "mensagem da administração", paginas: [2, 3], trecho: ""}
+- {arquivo: Light.pdf, pergunta: "perdas não técnicas", paginas: [5, 6], trecho: ""}
+- {arquivo: Light.pdf, pergunta: "reconhecimento de receitas política contábil", paginas: [42, 43], trecho: "eceita"}
+- {arquivo: Light.pdf, pergunta: "provisões para contingências cíveis trabalhistas", paginas: [75, 76, 77, 78, 79, 80], trecho: "rovis"}

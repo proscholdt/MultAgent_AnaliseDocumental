@@ -7,6 +7,7 @@ from app.infra import arquivos as storage
 from app.infra import repo
 from app.infra.modelos import Job
 from app.infra.seguranca import CurrentUser
+from app.leitura.parsing import variante_do_parse
 from app.schemas import IndexRequested, JobOut, ParseRequested
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
@@ -40,7 +41,8 @@ async def retry_job(job_id: str, user: CurrentUser, session: SessionDep, publish
     if document is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Documento não encontrado.")
 
-    parsed_file = storage.parsed_path(user.id, job.doc_id, settings.parser)
+    parsed_file = storage.parsed_path(user.id, job.doc_id, settings.parser,
+                                      variante_do_parse(settings.parser, document.dominio))
     needs_parse = job.failed_stage == "parse" or not parsed_file.exists()
     job.status, job.stage, job.error, job.failed_stage = "queued", None, None, None
     job.attempts, job.finished_at = 0, None
