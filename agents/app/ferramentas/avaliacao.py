@@ -20,12 +20,15 @@ RATIO_TOLERANCE = 0.006  # percentual e múltiplo, em valor absoluto
 
 
 def in_reais(value: float | None, unit: str | None) -> float | None:
-    """Dinheiro em reais; percentual e múltiplo ficam na própria escala."""
+    """Dinheiro em reais; percentual, múltiplo e as unidades de outros domínios (mg/dL) ficam na
+    própria escala. Dinheiro sem unidade declarada não tem como ser comparado: None."""
     if value is None:
         return None
     if unit in ("%", "x"):
         return float(value)
-    return float(value) * _SCALE[unit] if unit in _SCALE else None
+    if unit in _SCALE:
+        return float(value) * _SCALE[unit]
+    return float(value) if unit and not unit.startswith("R$") else None
 
 
 def same(found: float | None, expected: float | None, unit: str | None) -> bool:

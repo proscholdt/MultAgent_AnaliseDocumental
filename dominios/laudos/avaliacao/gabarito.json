@@ -1,0 +1,231 @@
+{
+  "_como_foi_feito": "Laudos fictícios gerados por gerar_laudos.py: os valores nascem no gerador, e o gabarito também. Valor em número, na unidade do pacote; página do arquivo PDF.",
+  "documentos": {
+    "laudo-maria.pdf": {
+      "indicadores": {
+        "glicose": {
+          "status": "informado",
+          "valor": 92,
+          "unidade": "mg/dL",
+          "paginas": [
+            1
+          ]
+        },
+        "hemoglobina_glicada": {
+          "status": "informado",
+          "valor": 5.4,
+          "unidade": "%",
+          "paginas": [
+            1
+          ]
+        },
+        "colesterol_total": {
+          "status": "informado",
+          "valor": 231,
+          "unidade": "mg/dL",
+          "paginas": [
+            1
+          ]
+        },
+        "hdl": {
+          "status": "informado",
+          "valor": 48,
+          "unidade": "mg/dL",
+          "paginas": [
+            1
+          ]
+        },
+        "ldl": {
+          "status": "informado",
+          "valor": 158,
+          "unidade": "mg/dL",
+          "paginas": [
+            1
+          ]
+        },
+        "triglicerideos": {
+          "status": "informado",
+          "valor": 125,
+          "unidade": "mg/dL",
+          "paginas": [
+            1
+          ]
+        },
+        "creatinina": {
+          "status": "nao_encontrado"
+        },
+        "hemoglobina": {
+          "status": "nao_encontrado"
+        }
+      },
+      "inconsistencias_na_fonte_esperadas": []
+    },
+    "laudo-joao.pdf": {
+      "indicadores": {
+        "glicose": {
+          "status": "informado",
+          "valor": 118,
+          "unidade": "mg/dL",
+          "paginas": [
+            1
+          ]
+        },
+        "hemoglobina_glicada": {
+          "status": "informado",
+          "valor": 6.3,
+          "unidade": "%",
+          "paginas": [
+            1
+          ]
+        },
+        "colesterol_total": {
+          "status": "nao_encontrado"
+        },
+        "hdl": {
+          "status": "nao_encontrado"
+        },
+        "ldl": {
+          "status": "nao_encontrado"
+        },
+        "triglicerideos": {
+          "status": "informado",
+          "valor": 210,
+          "unidade": "mg/dL",
+          "paginas": [
+            1
+          ]
+        },
+        "creatinina": {
+          "status": "informado",
+          "valor": 1.05,
+          "unidade": "mg/dL",
+          "paginas": [
+            1
+          ]
+        },
+        "hemoglobina": {
+          "status": "nao_encontrado"
+        }
+      },
+      "inconsistencias_na_fonte_esperadas": [
+        {
+          "pagina": 1,
+          "contem": "04/06/2024"
+        }
+      ]
+    },
+    "laudo-ana.pdf": {
+      "indicadores": {
+        "glicose": {
+          "status": "informado",
+          "valor": 85,
+          "unidade": "mg/dL",
+          "paginas": [
+            1
+          ]
+        },
+        "hemoglobina_glicada": {
+          "status": "nao_encontrado"
+        },
+        "colesterol_total": {
+          "status": "informado",
+          "valor": 178,
+          "unidade": "mg/dL",
+          "paginas": [
+            1
+          ]
+        },
+        "hdl": {
+          "status": "informado",
+          "valor": 62,
+          "unidade": "mg/dL",
+          "paginas": [
+            1
+          ]
+        },
+        "ldl": {
+          "status": "informado",
+          "valor": 96,
+          "unidade": "mg/dL",
+          "paginas": [
+            1
+          ]
+        },
+        "triglicerideos": {
+          "status": "informado",
+          "valor": 98,
+          "unidade": "mg/dL",
+          "paginas": [
+            1
+          ]
+        },
+        "creatinina": {
+          "status": "informado",
+          "valor": 0.78,
+          "unidade": "mg/dL",
+          "paginas": [
+            1
+          ]
+        },
+        "hemoglobina": {
+          "status": "informado",
+          "valor": 11.2,
+          "unidade": "g/dL",
+          "paginas": [
+            1
+          ]
+        }
+      },
+      "inconsistencias_na_fonte_esperadas": []
+    }
+  },
+  "perguntas": {
+    "p1": {
+      "deve_conter": [
+        "Maria",
+        "João",
+        "Ana"
+      ],
+      "fontes_de": [
+        "laudo-maria.pdf",
+        "laudo-joao.pdf",
+        "laudo-ana.pdf"
+      ],
+      "por_que": "fora da faixa: colesterol total e LDL (Maria); glicose, HbA1c e triglicerídeos (João); hemoglobina (Ana)"
+    },
+    "p2": {
+      "deve_conter": [
+        "João",
+        "118"
+      ],
+      "fontes_de": [
+        "laudo-joao.pdf"
+      ],
+      "por_que": "a maior glicose é a do João"
+    },
+    "p3": {
+      "deve_conter": [
+        "Maria",
+        "Ana",
+        "231",
+        "178"
+      ],
+      "fontes_de": [
+        "laudo-maria.pdf",
+        "laudo-ana.pdf"
+      ],
+      "por_que": "o perfil lipídico completo está nos laudos da Maria e da Ana; o do João só tem triglicerídeos"
+    },
+    "p4": {
+      "deve_conter_um_de": [
+        "lipêmica",
+        "jejum",
+        "segunda dosagem"
+      ],
+      "fontes_de": [
+        "laudo-maria.pdf"
+      ],
+      "por_que": "amostra lipêmica e repetir em jejum (Maria); jejum de 8 horas (João); segunda dosagem (Ana)"
+    }
+  }
+}

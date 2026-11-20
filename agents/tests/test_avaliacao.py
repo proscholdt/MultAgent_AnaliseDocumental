@@ -20,7 +20,9 @@ def not_found(computed=None, unit="R$ mil"):
 
 def test_amounts_are_compared_in_reais_with_a_small_tolerance():
     assert in_reais(9032, "R$ milhões") == 9_032_000_000 and in_reais(3.32, "x") == 3.32
-    assert in_reais(10, "unidade desconhecida") is None
+    # Dinheiro em escala que não se conhece não se compara; a unidade de outro domínio fica como está.
+    assert in_reais(10, "R$ trilhões") is None and in_reais(10, None) is None
+    assert in_reais(92, "mg/dL") == 92.0
     # O mesmo valor escrito em milhões no texto e em milhares na nota.
     assert same(in_reais(9032, "R$ milhões"), in_reais(9032236, "R$ mil"), "R$ mil")
     assert not same(in_reais(1817, "R$ milhões"), in_reais(1180, "R$ milhões"), "R$ milhões")
