@@ -13,8 +13,8 @@ from app.regras.numeros import (
     unit_in_text,
     unit_of_number,
 )
-from app.regras.tabelas import parse_table, read_cell, scope_of
-from tests.conftest import DRE
+from app.regras.tabelas import parse_table, read_cell
+from tests.conftest import DRE, financeiro
 
 # --- números ------------------------------------------------------------------------------
 
@@ -73,6 +73,8 @@ def test_cell_is_read_by_row_and_column_labels_ignoring_title_lines_and_case():
     assert cell.header_text.startswith("|  | Notas | Controladora - 2022 | Controladora - 2021 - (não auditado)")
     # A coluna de 2021 é outra célula: pedir 2022 nunca devolve o valor de 2021.
     assert read_cell(DRE, "Receita operacional líquida", "Consolidado - 2021 - (não auditado)").text == "1.061.410"
+    # O escopo (consolidado ou controladora) é do plugin financeiro, não da leitura da tabela.
+    scope_of = financeiro().fonte.escopo_da_coluna
     assert scope_of(cell.column_label) == "consolidado" and scope_of("Controladora - 2022") == "controladora"
     assert scope_of("31/12/2022") is None
 

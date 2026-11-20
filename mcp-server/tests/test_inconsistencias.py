@@ -2,7 +2,7 @@
 estão no gabarito) e sobre frases certas parecidas, que não podem ser marcadas."""
 from decimal import Decimal
 
-from app.regras.inconsistencias import Indicator, find, year_of
+from app.regras.inconsistencias import find, year_of
 from tests.conftest import ANA, DOC_ANA, chunk, payload
 from tests.test_extracao import call, fill
 
@@ -79,14 +79,26 @@ def test_correct_sentences_and_tables_are_not_candidates():
     assert find(chunks_of(*CERTOS), "2022") == []
 
 
+class _Extracao:
+    """A extração como a regra de variação a enxerga: o valor em reais de cada campo e período."""
+
+    reference, comparable = "2022", "2021"
+
+    def __init__(self, amounts: dict) -> None:
+        self._amounts = amounts
+
+    def amount(self, campo: str, periodo: str | None) -> Decimal | None:
+        return self._amounts.get((campo, periodo))
+
+
 def test_a_change_in_the_text_is_checked_against_the_two_periods_of_the_extraction():
-    ebitda = Indicator("EBITDA", ("ebitda",), atual=Decimal(1180000000), anterior=Decimal(1821411000))
-    found = find(chunks_of(("text", LIGHT_P9)), "2022", [ebitda])
+    ebitda = _Extracao({("ebitda", "2022"): Decimal(1180000000), ("ebitda", "2021"): Decimal(1821411000)})
+    found = find(chunks_of(("text", LIGHT_P9)), "2022", ebitda)
     assert rules(found) == [(0, "variacao_contra_extracao")]
     assert "diferença de R$ -641 milhões" in found[0].motivo and "redução de R$3.001 milhões" in found[0].motivo
     # A mesma frase com a variação certa não é candidata; sem a extração, a regra não tem com o que comparar.
     right = LIGHT_P9.replace("R$3.001 milhões", "R$641 milhões")
-    assert find(chunks_of(("text", right)), "2022", [ebitda]) == []
+    assert find(chunks_of(("text", right)), "2022", ebitda) == []
     assert find(chunks_of(("text", LIGHT_P9)), "2022") == []
 
 

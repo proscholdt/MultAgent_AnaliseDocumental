@@ -119,12 +119,26 @@ class Opcao(_Bloco):
     exemplo: str
 
 
+class TextosDoRelatorio(_Bloco):
+    """Como o relatório em Markdown fala neste domínio. Sem eles, os textos genéricos."""
+    titulo: str | None = None  # o título do consolidado; sem ele, "Relatório de análise: <nome do domínio>"
+    como_ler: str = ("Todo número deste relatório foi lido do documento pelo código (célula de tabela ou trecho "
+                     "conferido), com a unidade do documento. O que o documento não traz aparece como \"não "
+                     "encontrado\", com os termos procurados. As páginas (\"p.\") são as do arquivo PDF, contadas "
+                     "da primeira folha.")
+    campo: str = "Campo"  # o cabeçalho da coluna dos campos
+    secao_campos: str = "Resultados"  # a seção 2 do relatório de um documento
+    secao_comparados: str = "Resultados comparados"  # a seção 2 do consolidado
+    todos_encontrados: str = "Todos os campos foram encontrados no documento."
+
+
 class Textos(_Bloco):
     """O que a interface e o chat dizem neste domínio."""
     titulo: str  # nome do sistema na tela
     envio: str  # o convite para enviar PDFs
     fora_do_escopo: str  # a resposta fixa a uma mensagem fora do domínio
     opcoes: list[Opcao]  # sugestões mostradas com o fora do escopo e na conversa vazia
+    relatorio: TextosDoRelatorio = TextosDoRelatorio()
 
 
 class Pacote(_Bloco):

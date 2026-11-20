@@ -43,22 +43,9 @@ def _not_found(block: dict[str, Any]) -> str | None:
     return f"**{block['rotulo']}: não encontrado.** {informed.get('motivo') or ''} (Procurado: {searched}.{where})"
 
 
-_HOW_TO_READ = ("Todo número deste relatório foi lido do documento pelo código (célula de tabela ou trecho "
-                "conferido) ou calculado por fórmula fixa a partir desses valores. O que a empresa não informa "
-                "aparece como \"não informado\", e o que foi calculado vem marcado como calculado. As páginas "
-                "(\"p.\") são as do arquivo PDF, contadas da primeira folha, e não a numeração impressa no "
-                "documento, que costuma recomeçar nas demonstrações financeiras.")
-
-
-def _how_to_read() -> str:
-    """Como ler o relatório. No domínio financeiro, o texto de sempre; nos outros, sem empresa e
-    sem demonstrações."""
-    if atual().financeiro:
-        return _HOW_TO_READ
-    return ("Todo número deste relatório foi lido do documento pelo código (célula de tabela ou trecho "
-            "conferido), com a unidade do documento. O que o documento não traz aparece como \"não "
-            "encontrado\", com os termos procurados. As páginas (\"p.\") são as do arquivo PDF, contadas da "
-            "primeira folha.")
+def _textos() -> Any:
+    """Como o relatório fala no domínio da chamada (textos.relatorio do pacote)."""
+    return atual().pacote.textos.relatorio
 
 
 def _name(doc: dict[str, Any]) -> str:
@@ -95,8 +82,7 @@ def _analysis_lines(doc: dict[str, Any]) -> list[str]:
 def _alert_lines(doc: dict[str, Any]) -> list[str]:
     """O que a empresa não informa e os alertas, os de atenção primeiro."""
     missing = [line for block in doc["extracao"]["indicadores"].values() if (line := _not_found(block))]
-    complete = "- Todos os indicadores foram informados pela empresa." if atual().financeiro \
-        else "- Todos os campos foram encontrados no documento."
+    complete = f"- {_textos().todos_encontrados}"
     out = [f"- {line}" for line in missing] or [complete]
     out.append("")
     alerts = doc["alertas"]
@@ -118,10 +104,9 @@ def build_company_report(doc: dict[str, Any], generated_at: datetime) -> str:
     when = (f"Período {meta['periodo_referencia']}, comparado com {meta['periodo_comparavel']}."
             if meta.get("periodo_comparavel") else f"{recorte.rotulo}: {meta['periodo_referencia']}.")
     heading = f"Gerado em {generated_at:%d/%m/%Y %H:%M} UTC. Documento: {meta['arquivo']}. {when}"
-    out = [f"# Relatório de análise: {name}", "", heading, "", _how_to_read(), ""]
+    out = [f"# Relatório de análise: {name}", "", heading, "", _textos().como_ler, ""]
     out += ["## 1. Resumo executivo", "", doc["resumo"] or "_Resumo não gerado._", ""]
-    label = "Indicador" if atual().financeiro else "Campo"
-    out += ["## 2. Indicadores" if atual().financeiro else "## 2. Resultados", "", f"| {label} | Valor |", "|---|---|"]
+    out += [f"## 2. {_textos().secao_campos}", "", f"| {_textos().campo} | Valor |", "|---|---|"]
     for campo in MAIN_FIELDS:
         out.append(f"| {FIELDS[campo].label} | {_cell(doc['extracao']['indicadores'][campo])} |")
     legend = (f"Valores de {meta['periodo_referencia']}; \"var.\" é a variação contra {meta['periodo_comparavel']}, "
@@ -140,20 +125,18 @@ def build_report(documents: list[dict[str, Any]], answers: list[dict[str, Any]],
     extração, a análise por categoria, os alertas e o resumo já renderizado."""
     names = [_name(doc) for doc in documents]
     pacote = atual().pacote
-    title = "# Relatório de análise das demonstrações financeiras" if atual().financeiro \
-        else f"# Relatório de análise: {pacote.nome}"
+    title = f"# {_textos().titulo or f'Relatório de análise: {pacote.nome}'}"
     out = [title, "",
            f"Gerado em {generated_at:%d/%m/%Y %H:%M} UTC. {pacote.entidade.plural}: {'; '.join(names)}."
-           .replace("..", "."), "", _how_to_read(), ""]
+           .replace("..", "."), "", _textos().como_ler, ""]
 
     out += ["## 1. Resumo executivo", ""]
     for name, doc in zip(names, documents, strict=True):
         meta = doc["extracao"]["documento"]
         out += [f"### {name} ({meta['periodo_referencia']})", "", doc["resumo"] or "_Resumo não gerado._", ""]
 
-    label = "Indicador" if atual().financeiro else "Campo"
-    out += ["## 2. Indicadores comparados" if atual().financeiro else "## 2. Resultados comparados", "",
-            f"| {label} | " + " | ".join(names) + " |", "|---|" + "---|" * len(names)]
+    out += [f"## 2. {_textos().secao_comparados}", "",
+            f"| {_textos().campo} | " + " | ".join(names) + " |", "|---|" + "---|" * len(names)]
     for campo in MAIN_FIELDS:
         cells = [_cell(doc["extracao"]["indicadores"][campo]) for doc in documents]
         out.append(f"| {FIELDS[campo].label} | " + " | ".join(cells) + " |")

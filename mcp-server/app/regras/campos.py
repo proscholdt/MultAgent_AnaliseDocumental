@@ -23,15 +23,8 @@ from pydantic import AfterValidator
 from pydantic import Field as PydanticField
 
 from app import pacotes
-
-# Os operandos e resultados das fórmulas do plugin financeiro (app/regras/formulas.py): sem eles,
-# as fórmulas não fecham. Só valem para pacote com `plugin: financeiro`.
-CAMPOS_DAS_FORMULAS = frozenset({
-    "receita_liquida", "ebitda", "margem_ebitda", "lucro_liquido", "divida_liquida", "alavancagem",
-    "fluxo_caixa_operacional", "capex", "resultado_antes_financeiro", "depreciacao_amortizacao",
-    "emprestimos_circulante", "emprestimos_nao_circulante", "caixa_equivalentes", "capex_imobilizado",
-    "capex_intangivel", "capex_imobilizado_e_intangivel",
-})
+from app.plugins.carregar import carregar as carregar_plugin
+from app.plugins.interface import PluginMCP
 
 
 @dataclass(frozen=True)
@@ -47,17 +40,14 @@ class Field:
     unit: str | None = None
 
 
-def conferir(pacote: pacotes.Pacote) -> pacotes.Pacote:
+def conferir(pacote: pacotes.Pacote, plugin: PluginMCP | None = None) -> pacotes.Pacote:
     """As exigências que o plugin de um pacote faz aos campos dele."""
-    if pacote.plugin == "financeiro":
-        faltam = sorted(CAMPOS_DAS_FORMULAS - {campo.nome for campo in pacote.campos})
-        if faltam:
-            raise pacotes.PacoteInvalido(f"{pacote.id}: faltam os campos usados pelas fórmulas: {', '.join(faltam)}")
+    (plugin or carregar_plugin(pacote)).validar_pacote(pacote)
     return pacote
 
 
 def carregar(dominio: str | None = None) -> pacotes.Pacote:
-    """O pacote do domínio, com as exigências dos plugins deste servidor."""
+    """O pacote do domínio, com as exigências do plugin deste servidor."""
     return conferir(pacotes.pacote(dominio))
 
 
@@ -69,14 +59,12 @@ class Dominio:
     main_fields: tuple[str, ...]
     categories: dict[str, tuple[str, tuple[str, ...]]]
     questions: dict[str, str]
+    # O código do domínio (dominios/<id>/plugin/mcp): sem plugin, o neutro, que só tem os portões do núcleo.
+    plugin: PluginMCP
 
     @property
     def id(self) -> str:
         return self.pacote.id
-
-    @property
-    def financeiro(self) -> bool:
-        return self.pacote.plugin == "financeiro"
 
     def opcoes(self, tipo: str) -> list[str]:
         return {"campos": list(self.fields), "campos_principais": list(self.main_fields),
@@ -85,7 +73,9 @@ class Dominio:
 
 @cache
 def dominio(dominio_id: str | None = None) -> Dominio:
-    pacote = carregar(dominio_id)
+    pacote = pacotes.pacote(dominio_id)
+    plugin = carregar_plugin(pacote)
+    conferir(pacote, plugin)
     fields = [Field(name=c.nome, label=c.rotulo, kind=c.tipo, main=c.principal, terms=tuple(c.termos),
                     section=c.secao, mention=tuple(c.mencao), statement=c.demonstracao, unit=c.unidade)
               for c in pacote.campos]
@@ -95,7 +85,8 @@ def dominio(dominio_id: str | None = None) -> Dominio:
         # Categorias da análise e os termos procurados quando o agente diz que o documento não as traz.
         categories={c.nome: (c.rotulo, tuple(c.termos)) for c in pacote.categorias},
         # As perguntas do relatório. As respostas a elas entram no relatório.
-        questions={p.id: p.enunciado for p in pacote.perguntas})
+        questions={p.id: p.enunciado for p in pacote.perguntas},
+        plugin=plugin)
 
 
 # O domínio do processo (fora de chamada) e o da chamada atual.

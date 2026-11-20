@@ -22,7 +22,7 @@ from app.dados.documentos import Documents
 from app.dados.indexador import IndexerClient
 from app.governanca.identidade import Caller
 from app.regras.formulas import Extraction
-from app.regras.inconsistencias import find, indicators_of
+from app.regras.inconsistencias import find
 from app.tools.extracao import periods, to_value
 
 _WIDTH = 100
@@ -62,7 +62,7 @@ async def run(user: str, password: str, wanted: str | None) -> int:
             reference, comparable = periods(document)
             rows = await store.values(user_id, document.doc_id, document.fingerprint)
             extraction = Extraction([to_value(row) for row in rows], reference, comparable)
-            found = find(document.chunks, document.period, indicators_of(extraction))
+            found = find(document.chunks, document.period, extraction)
             print(f"\n{document.company or document.file_name} ({document.file_name}, {document.doc_id}): "
                   f"{len(found)} candidato(s); extração na base: {'sim' if rows else 'não'}")
             for candidate in found:

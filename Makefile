@@ -184,7 +184,7 @@ testes-frontend:
 
 lint:
 	cd indexer && uv run ruff check .
-	cd mcp-server && uv run ruff check .
+	cd mcp-server && uv run ruff check . ../dominios
 	cd agents && uv run ruff check . ../ferramentas
 
 comum:

@@ -11,7 +11,8 @@ import pytest
 import yaml
 
 from app import pacotes
-from app.regras.campos import CAMPOS_DAS_FORMULAS, carregar, conferir
+from app.regras.campos import carregar, conferir, dominio
+from tests.conftest import financeiro
 
 RAIZ = Path(__file__).resolve().parents[1]
 
@@ -29,11 +30,13 @@ def _copia(tmp_path: Path, mudar=None, dominio: str = "financeiro") -> Path:
 
 
 def test_o_pacote_financeiro_do_repositorio_e_valido():
-    dominio = carregar()
-    assert dominio.id == "financeiro" and dominio.plugin == "financeiro"
-    assert CAMPOS_DAS_FORMULAS <= {campo.nome for campo in dominio.campos}
-    assert [p.id for p in dominio.perguntas] == ["p1", "p2", "p3", "p4", "p5"]
-    assert (dominio.metadado("entidade").nome, dominio.metadado("recorte").nome) == ("empresa", "periodo")
+    pacote = carregar()
+    assert pacote.id == "financeiro" and pacote.plugin == "financeiro"
+    assert financeiro().formulas.CAMPOS_DAS_FORMULAS <= {campo.nome for campo in pacote.campos}
+    assert [p.id for p in pacote.perguntas] == ["p1", "p2", "p3", "p4", "p5"]
+    assert (pacote.metadado("entidade").nome, pacote.metadado("recorte").nome) == ("empresa", "periodo")
+    # O código do domínio é o plugin do pacote (dominios/financeiro/plugin/mcp).
+    assert dominio("financeiro").plugin.nome == "financeiro"
 
 
 def test_indicador_novo_so_com_yaml_chega_ao_esquema_das_tools(tmp_path):
@@ -80,7 +83,8 @@ def test_o_pacote_laudos_do_repositorio_carrega_sem_plugin():
     assert laudos.plugin is None and laudos.metadado("entidade").nome == "paciente"
     assert laudos.recorte.tipo == "data" and laudos.metadado("recorte").nome == "data_coleta"
     assert {c.unidade for c in laudos.campos} >= {"mg/dL", "g/dL", "%"}
-    assert not CAMPOS_DAS_FORMULAS & {c.nome for c in laudos.campos}
+    assert not financeiro().formulas.CAMPOS_DAS_FORMULAS & {c.nome for c in laudos.campos}
+    assert dominio("laudos").plugin.nome == "generico"  # sem plugin: só os portões do núcleo
 
 
 def test_sem_o_pacote_padrao_nada_sobe(tmp_path):

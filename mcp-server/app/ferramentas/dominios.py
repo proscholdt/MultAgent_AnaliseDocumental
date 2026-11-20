@@ -10,6 +10,14 @@ from app import pacotes
 from app.regras.campos import conferir
 
 
+def _plugin(pasta, pacote) -> str:
+    """O plugin declarado e os sistemas que têm código nele (dominios/<id>/plugin/<sistema>)."""
+    if not pacote.plugin:
+        return "nenhum"
+    sistemas = sorted(p.stem for p in (pasta / pacote.id / "plugin").glob("*") if not p.name.startswith("_"))
+    return f"{pacote.plugin} ({', '.join(sistemas) or 'sem código'})"
+
+
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8")
     pasta = pacotes.pasta_dos_dominios()
@@ -24,7 +32,7 @@ def main() -> int:
         extras = [nome for nome in ("prompts", "intencoes.yaml", "avaliacao") if (pasta / pacote.id / nome).exists()]
         print(f"\n{pacote.id}{' (padrão)' if pacote.id == pacotes.PADRAO else ''}: {pacote.nome}")
         print(f"  entidade: {pacote.entidade.rotulo} · recorte: {pacote.recorte.rotulo} ({pacote.recorte.tipo})"
-              f" · plugin: {pacote.plugin or 'nenhum'}")
+              f" · plugin: {_plugin(pasta, pacote)}")
         print(f"  metadados: {', '.join(m.nome for m in pacote.metadados)}")
         print(f"  campos: {sum(c.principal for c in pacote.campos)} principais, {len(pacote.campos)} no total"
               f" · categorias: {len(pacote.categorias)} · perguntas: {len(pacote.perguntas)}")

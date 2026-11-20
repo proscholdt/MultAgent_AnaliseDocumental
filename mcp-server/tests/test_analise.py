@@ -48,7 +48,9 @@ async def test_numbers_in_the_statement_must_be_written_in_the_quote(governance)
 def test_going_concern_is_not_guidance():
     """A conclusão de continuidade operacional (Light, p. 3) não entra como guidance; um plano que
     "dá continuidade" a algo entra."""
-    from app.regras.texto import GOING_CONCERN as _GOING_CONCERN
+    from tests.conftest import financeiro
+
+    _GOING_CONCERN = financeiro().analise.GOING_CONCERN
 
     for text in ["a Companhia possui condições de dar continuidade a suas operações para os próximos 12 meses",
                  "não há incerteza relevante sobre a continuidade operacional da Companhia",

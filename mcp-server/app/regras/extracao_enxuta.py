@@ -24,9 +24,6 @@ from typing import Any
 
 from app.regras.campos import MAIN_FIELDS, atual
 
-# Os campos do item 2 do teste, na ordem em que ele os lista.
-FIELDS = ("receita_liquida", "ebitda", "margem_ebitda", "lucro_liquido", "divida_liquida", "alavancagem",
-          "fluxo_caixa_operacional", "capex")
 NOT_FOUND = "não encontrado"
 
 
@@ -78,7 +75,7 @@ def compact(payload: dict[str, Any]) -> dict[str, Any]:
         "empresa": meta.get("empresa"), "documento": meta.get("arquivo"),
         "periodo_referencia": meta.get("periodo_referencia"), "periodo_comparavel": meta.get("periodo_comparavel"),
     }
-    # No financeiro, os campos do item 2 do teste, na ordem dele; nos outros domínios, os principais do pacote.
-    for campo in (FIELDS if atual().financeiro else MAIN_FIELDS):
+    # Os campos que o plugin do domínio pede, na ordem dele; sem plugin, os principais do pacote.
+    for campo in (atual().plugin.campos_enxutos() or MAIN_FIELDS):
         result[campo] = compact_field(indicators[campo])
     return result

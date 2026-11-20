@@ -26,16 +26,8 @@ from app.dominio.periodo import Periodo
 from app.governanca.catalogo import Args, Call, tool
 from app.governanca.erros import ToolRejected
 from app.regras.campos import DOMINIO, FIELDS, MAIN_FIELDS, Campo, CampoPrincipal, atual
-from app.regras.evidencias import (
-    _CAPEX_ROW,
-    _squash,
-    _statement_tables,
-    informed_evidence,
-    mentions,
-    occurrences,
-    reconciling_ebitda,
-    support_rows,
-)
+from app.regras.evidencias import occurrences, statement_tables
+from app.regras.evidencias import squash_spaces as _squash
 from app.regras.extracao_enxuta import compact
 from app.regras.formulas import AlertDraft, Extraction, Value
 from app.regras.numeros import (
@@ -45,20 +37,10 @@ from app.regras.numeros import (
     unit_in_text,
     unit_of_number,
 )
-from app.regras.tabelas import normalize, parse_table, read_cell, scope_of, sibling_column
+from app.regras.tabelas import parse_table, read_cell, sibling_column
 from app.regras.texto import check_script, plain
 
 _MINUS_BEFORE = r"[-−–]\s*R\$\s*"  # "-R$5.673 milhões": o sinal vem antes da moeda, não do número
-# Palavras que indicam o valor de uma parte do grupo, e não o da companhia (sem acento).
-_PARTS = ("distribuidora", "geradora", "comercializadora", "controlada", "subsidiaria", "segmento",
-          "unidade de negocio")
-# Linhas que repartem o lucro entre os controladores e os demais acionistas.
-_MINORITY = re.compile(r"minoritari|nao controlador|atribui")
-# Linha de total ou de classificação: num quadro de composição (nota de caixa, nota de
-# empréstimos), o rótulo dela não repete o assunto, que está no título da seção.
-_SUBTOTAL = re.compile(r"^(total|circulante|nao circulante)\b")
-# A linha única de capex e os dois campos separados se excluem: gravar um apaga o outro.
-_CAPEX_SINGLE, _CAPEX_SPLIT = "capex_imobilizado_e_intangivel", ("capex_imobilizado", "capex_intangivel")
 
 
 def _por_periodo() -> bool:
@@ -173,12 +155,12 @@ def _from_table(args: SalvarIndicador, chunk: dict[str, Any]) -> dict[str, Any]:
     if refusal:
         raise ToolRejected(refusal)
     table = parse_table(chunk["text"])
-    scope = scope_of(cell.column_label) if atual().financeiro else None
+    plugin = atual().plugin
+    scope = plugin.escopo_da_coluna(cell.column_label)
     return {
         "number": number, "trecho": f"{cell.header_text}\n{cell.row_text}", "linha": cell.row_label,
         "coluna": cell.column_label, "escopo": scope, "periodo_confirmado": confirmed,
-        "alternativa_consolidada": scope == "controladora" and any(
-            scope_of(label) == "consolidado" for label in table.header),
+        "alternativa_consolidada": plugin.escopo_alternativo(scope, table.header),
         "unidade": chunk.get("unit"), "unidade_origem": chunk.get("unit_source"),
         "table": table, "row_index": cell.row_index, "column_index": cell.column_index}
 
@@ -205,18 +187,18 @@ def _from_text(args: SalvarIndicador, chunk: dict[str, Any]) -> dict[str, Any]:
         raise ToolRejected(f"'{args.valor}' não é um número só. Informe o valor como está escrito no trecho.")
     if not contains_number(snippet, tokens[0]):
         raise ToolRejected(f"O número {tokens[0]} não está no trecho citado.")
-    folded = snippet.casefold()
     unit = unit_of_number(snippet, tokens[0]) or unit_in_text(snippet)
+    said = atual().plugin.ler_trecho(args.campo, snippet, tokens[0])
     return {
-        "number": number, "trecho": snippet, "linha": None, "coluna": None,
-        "escopo": "consolidado" if "consolidad" in folded else "controladora" if "controladora" in folded else None,
+        "number": number, "trecho": snippet, "linha": None, "coluna": None, "escopo": said.get("escopo"),
         # Só o recorte por período tem o que conferir no trecho (o ano). Num laudo, o valor é do
         # documento, e a data dele não costuma estar na frase do resultado.
         "periodo_confirmado": args.periodo in number_tokens(snippet) if _por_periodo() else True,
         "alternativa_consolidada": False,
         "unidade": unit or chunk.get("unit"), "unidade_origem": "trecho" if unit else chunk.get("unit_source"),
-        # "prejuízo de R$ 5.672 milhões" e "-R$5.673 milhões": o número vem positivo, e o valor é negativo.
-        "loss": (args.campo == "lucro_liquido" and "prejuízo" in folded and "lucro" not in folded)
+        # "-R$5.673 milhões" (e o que o plugin disser, como "prejuízo de R$ 5.672 milhões"): o número
+        # vem positivo, e o valor é negativo.
+        "loss": bool(said.get("negativo"))
         or bool(re.search(_MINUS_BEFORE + re.escape(tokens[0]) + r"(?![\d.,]*\d)", snippet))}
 
 
@@ -269,11 +251,10 @@ async def salvar_indicador(call: Call, args: SalvarIndicador) -> dict[str, Any]:
     if kind == "multiplo" and number.kind != "multiplo" and args.origem == "texto" and "vez" not in plain(found["trecho"]):
         raise ToolRejected(f"{info.label} é um múltiplo (ex.: 3,32x), e o número citado ({number.text}) não é: se a "
                            "empresa não escreve o múltiplo, use salvar_nao_encontrado.")
-    if atual().financeiro:
-        _check_source(args, info, found, chunk, document)
+    atual().plugin.conferir_fonte(args, info, found, chunk, document)
     if args.nota:
         check_script(args.nota, "A nota")
-    replaced = (_CAPEX_SPLIT if args.campo == _CAPEX_SINGLE else (_CAPEX_SINGLE,) if args.campo in _CAPEX_SPLIT else ())
+    replaced = atual().plugin.campos_que_se_excluem(args.campo)
     if args.origem == "tabela" and args.medida == "valor":
         await _check_cell_is_free(call, args, document, found, replaced)
     for other in replaced:
@@ -305,88 +286,11 @@ async def salvar_indicador(call: Call, args: SalvarIndicador) -> dict[str, Any]:
         warnings.append("A fonte não declara a unidade deste valor (mil, milhões).")
     if not found["periodo_confirmado"]:
         warnings.append(f"A fonte citada não escreve o período {args.periodo}: confira se o valor é desse período.")
-    if found["alternativa_consolidada"]:
-        warnings.append("Foi usada a coluna da controladora, e a tabela tem a do consolidado. Prefira o consolidado.")
+    warnings += atual().plugin.avisos_do_valor(found)
     return {"salvo": {"campo": args.campo, "periodo": args.periodo, "medida": args.medida, "valor": number.text,
                       "valor_numerico": float(value), "unidade": unit, "escopo": found["escopo"],
                       "pagina": chunk["page_start"], "linha": found["linha"], "coluna": found["coluna"]},
             "ano_anterior_gravado_pelo_servidor": previous, "avisos": warnings}
-
-
-def _check_source(args: SalvarIndicador, info: Any, found: dict[str, Any], chunk: dict[str, Any],
-                  document: IndexedDocument) -> None:
-    """A fonte apontada tem de ser do indicador pedido, e da companhia inteira."""
-    table = args.origem == "tabela"
-    source = plain(found["linha"] if table else found["trecho"])
-    section = plain(" > ".join(chunk.get("section_path") or []))
-    if args.campo in ("emprestimos_circulante", "emprestimos_nao_circulante") and table and "balanco" not in section \
-            and "circulante" not in plain(f"{found['linha']} {found['coluna']} {section}"):
-        # A separação entre curto e longo prazo está no balanço. Uma nota com uma linha só de
-        # empréstimos traz o total: gravado como circulante, somava de novo o não circulante (na
-        # Brasal, 3.417 = 1.849 + 1.568 entrou como circulante, e a dívida líquida saiu errada).
-        raise ToolRejected(
-            f"{info.label}: a tabela apontada ('{' > '.join(chunk.get('section_path') or [])}') não separa circulante "
-            "de não circulante: o valor dela é o total dos empréstimos. Aponte a linha no balanço patrimonial "
-            "(passivo circulante e passivo não circulante), ou numa tabela que diga qual dos dois é.")
-    if info.statement and table and info.section and plain(info.section) not in section:
-        # A mesma linha aparece em outras tabelas (mutações do patrimônio, valor adicionado), sem as
-        # colunas por ano: o valor entra, mas sem o ano anterior. Vale a demonstração do próprio campo.
-        pages = sorted({other["page_start"] for other in _statement_tables(document, info.section)})
-        if pages:
-            raise ToolRejected(
-                f"{info.label} vem da demonstração de {info.section} (p. {', '.join(map(str, pages[:6]))}), e a "
-                f"tabela apontada é de '{' > '.join(chunk.get('section_path') or [])}'. Aponte a linha na "
-                "demonstração: é nela que estão as colunas do ano e do ano anterior.")
-    # Num quadro de composição, a linha do total não repete o assunto: vale o título da seção.
-    in_its_note = table and bool(_SUBTOTAL.match(source)) and mentions(info, section)
-    if info.mention and not info.main and not mentions(info, source) and not in_its_note:
-        raise ToolRejected(
-            f"{info.label}: a linha apontada ('{found['linha'] if table else args.trecho}') não é a deste valor. O "
-            f"rótulo tem de mencionar {' ou '.join(repr(term.replace('+', ' e ')) for term in info.mention)}. Num "
-            "quadro de composição, aponte a linha do total, não a de um componente; nas demonstrações, a linha "
-            "com o nome do próprio valor.")
-    if info.statement and info.mention and not mentions(info, source):
-        raise ToolRejected(
-            f"{info.label}: a {'linha' if table else 'frase'} apontada ('{found['linha'] if table else args.trecho}') "
-            f"não é a deste valor. O rótulo tem de mencionar "
-            f"{' ou '.join(repr(term.replace('+', ' e ')) for term in info.mention)}: aponte a linha do total da "
-            "demonstração, com o nome do próprio valor.")
-    if args.campo == "lucro_liquido" and table:
-        # A demonstração do resultado consolidada repete o rótulo: o lucro do exercício e, depois da
-        # participação dos minoritários, a parte dos controladores. O indicador é o total. Numa
-        # repetição da execução final, o lucro da Millet veio da segunda linha (14.743 de 18.891).
-        rows, index = found["table"].rows, found["row_index"]
-        earlier = [i for i in range(index) if normalize(rows[i][0]) == normalize(rows[index][0])]
-        if earlier and any(_MINORITY.search(plain(rows[i][0])) for i in range(earlier[-1] + 1, index)):
-            raise ToolRejected(
-                f"A linha apontada é a {len(earlier) + 1}ª com o rótulo '{found['linha']}' e vem depois da participação "
-                "dos minoritários (não controladores): é a parte do lucro atribuída aos controladores. O lucro "
-                "líquido do exercício é o total, que vem antes: aponte a 1ª ocorrência (ocorrencia_linha=1).")
-    if args.campo == "capex" and table and not _CAPEX_ROW.match(source):
-        raise ToolRejected(
-            f"Capex: a linha apontada ('{found['linha']}') não é um total de investimentos da empresa. O capex "
-            "informado vem de uma linha ou frase de investimentos; as linhas de aquisição do fluxo de caixa vão nos "
-            "campos de apoio (capex_imobilizado, capex_intangivel ou capex_imobilizado_e_intangivel), e o campo "
-            "capex fica como não encontrado.")
-    if info.mention and info.main and not mentions(info, source):
-        raise ToolRejected(
-            f"{info.label}: a {'linha' if table else 'frase'} apontada não menciona "
-            f"{' nem '.join(repr(term) for term in info.mention)}. Índices de nome parecido (por exemplo "
-            "'alavancagem' como dívida sobre patrimônio ou sobre capital) são outra conta. Se a empresa não informa "
-            "este indicador, use salvar_nao_encontrado, descartando esta página e dizendo no motivo qual índice ela "
-            "informa.")
-    if info.statement and not table and args.medida == "valor" and not args.nota:
-        raise ToolRejected(
-            f"{info.label} vem da demonstração financeira, que é uma tabela: aponte a linha e a coluna dela "
-            "(origem='tabela'). O texto do relatório arredonda e pode omitir o sinal. Se o documento não traz a "
-            "demonstração em tabela, salve de novo dizendo isso em 'nota'.")
-    if info.main and not table and not args.nota:
-        part = next((word for word in _PARTS if word in source), None)
-        if part:
-            raise ToolRejected(
-                f"O trecho fala em '{part}': parece o valor de uma parte do grupo, e o campo é o da companhia "
-                "(consolidado). Leia a página inteira: o valor consolidado costuma vir depois dos segmentos. Se a "
-                "empresa só informa este, salve de novo dizendo em 'nota' o que o valor representa.")
 
 
 async def _check_cell_is_free(call: Call, args: SalvarIndicador, document: IndexedDocument, found: dict[str, Any],
@@ -400,10 +304,8 @@ async def _check_cell_is_free(call: Call, args: SalvarIndicador, document: Index
                  and row.coluna == found["coluna"]), None)
     if twin is None:
         return
-    capex = {args.campo, twin.campo} <= set(_CAPEX_SPLIT)
-    hint = (f"Se a linha junta imobilizado e intangível, grave-a no campo '{_CAPEX_SINGLE}' (ele substitui os dois "
-            "campos separados)." if capex else
-            f"Se o campo certo é '{args.campo}', grave antes '{twin.campo}' de novo, apontando a célula correta.")
+    hint = atual().plugin.dica_celula_repetida(args.campo, twin.campo) or \
+        f"Se o campo certo é '{args.campo}', grave antes '{twin.campo}' de novo, apontando a célula correta."
     raise ToolRejected(f"Esta célula já está gravada como '{twin.campo}'. Uma célula é um valor só: em dois campos, "
                        f"ela seria contada duas vezes. {hint}")
 
@@ -430,7 +332,7 @@ async def _save_comparable(call: Call, row: StoredValue, found: dict[str, Any], 
         campo=row.campo, periodo=comparable, medida="valor", status="encontrado", origem="tabela",
         chunk_index=row.chunk_index, pagina=row.pagina, pagina_final=row.pagina_final, secao=row.secao,
         linha=row.linha, coluna=label, trecho=row.trecho, texto_valor=number.text, valor=str(number.value),
-        tipo=kind, unidade=row.unidade, unidade_origem=row.unidade_origem, escopo=scope_of(label),
+        tipo=kind, unidade=row.unidade, unidade_origem=row.unidade_origem, escopo=atual().plugin.escopo_da_coluna(label),
         alternativa_consolidada=row.alternativa_consolidada, periodo_confirmado=True))
     return {"periodo": comparable, "valor": number.text, "coluna": label}
 
@@ -456,14 +358,14 @@ async def salvar_nao_encontrado(call: Call, args: SalvarNaoEncontrado) -> dict[s
     info = FIELDS[args.campo]
     check_script(args.motivo, "O motivo")
     if info.statement:
-        pages = sorted({chunk["page_start"] for chunk in _statement_tables(document, info.section)})
+        pages = sorted({chunk["page_start"] for chunk in statement_tables(document, info.section)})
         if pages:
             raise ToolRejected(
                 f"{info.label} é uma linha da demonstração financeira, e o documento tem essa demonstração (p. "
                 f"{', '.join(map(str, pages[:6]))}): o valor está nela. Abra a tabela com ler_chunk e copie o rótulo "
                 "da linha como está escrito (a linha do total do grupo, não o título). Se a célula não puder ser "
                 "lida, use origem='texto' com uma nota dizendo isso.")
-    evidence = informed_evidence(document, args.campo)
+    evidence = atual().plugin.evidencia_de_valor(document, args.campo)
     if evidence:
         raise ToolRejected(
             f"O documento traz {info.label} com valor: não é 'não encontrado'. Grave com salvar_indicador a linha "
@@ -494,19 +396,6 @@ class FecharExtracao(Args):
         default=None, max_length=400, description="Normalmente null. Preencha só se a chamada foi recusada por "
         "falta de valores de apoio e o documento realmente não os traz (ex.: não há fluxo de caixa): diga quais "
         "faltam e por quê.")
-
-
-# O que cada indicador calculável precisa ter gravado quando a empresa não o informa.
-_SUPPORT = {
-    "ebitda": "resultado_antes_financeiro e depreciacao_amortizacao",
-    "divida_liquida": "emprestimos_circulante, emprestimos_nao_circulante e caixa_equivalentes",
-    "capex": "capex_imobilizado e capex_intangivel (ou capex_imobilizado_e_intangivel, se for uma linha só)",
-}
-_SUPPORT_FIELDS = {
-    "ebitda": ("resultado_antes_financeiro", "depreciacao_amortizacao"),
-    "divida_liquida": ("emprestimos_circulante", "emprestimos_nao_circulante", "caixa_equivalentes"),
-    "capex": ("capex_imobilizado", "capex_intangivel"),
-}
 
 
 async def build_extraction(call: Call, document: IndexedDocument) -> tuple[Extraction, list[StoredValue]]:
@@ -546,44 +435,7 @@ async def fechar_extracao(call: Call, args: FecharExtracao) -> dict[str, Any]:
             "(salvar_indicador) ou de "
             "um registro de não encontrado (salvar_nao_encontrado).",
             problemas=[f"{campo}: {FIELDS[campo].label}" for campo in missing])
-    better = reconciling_ebitda(document, extraction) if atual().financeiro else None
-    if better:
-        raise ToolRejected(
-            "O EBITDA gravado não bate com a demonstração (resultado antes do resultado financeiro mais depreciação "
-            "e amortização), e o documento tem outra frase de EBITDA cujo valor bate, em módulo. A gravada é "
-            "provavelmente de uma parte do grupo ou de outro critério. Grave a frase abaixo no campo 'ebitda' e "
-            "feche de novo.", problemas=[better])
-    # Indicador não informado e sem os valores de apoio: o relatório sairia sem o número, e a
-    # falta passaria por "a empresa não informa". O agente grava o apoio, ou diz por que não há.
-    # O EBITDA entra na lista mesmo quando a empresa o informa: é com os operandos que o servidor
-    # confere o informado. Numa execução real o extrator gravou o EBITDA da Light e pulou os
-    # operandos, e o alerta do sinal omitido no texto não disparou.
-    uncomputable = [campo for campo in _SUPPORT
-                    if extraction.calculated(campo, extraction.reference) is None
-                    and (campo == "ebitda" or extraction.found(campo, extraction.reference) is None)] \
-        if atual().financeiro else []
-    if uncomputable and not args.apoio_ausente:
-        raise ToolRejected(
-            "Faltam valores de apoio. Sem eles o servidor não calcula o que a empresa não informa nem confere o "
-            "EBITDA que ela informa. Grave-os com salvar_indicador e feche de novo. Se o documento não os traz, "
-            "feche de novo explicando em 'apoio_ausente'.",
-            problemas=[f"{campo}: faltam {_SUPPORT[campo]}" for campo in uncomputable])
-    if uncomputable:
-        # "O documento não traz" também precisa de prova: se há linha de apoio nas demonstrações, ela
-        # tem de ser gravada. Na 3ª execução real o agente usou esta saída com as linhas na p. 10.
-        there = []
-        for campo in uncomputable:
-            for support in _SUPPORT_FIELDS[campo]:
-                if extraction.found(support, extraction.reference) is None:
-                    rows = support_rows(document, support)
-                    if rows:
-                        page, label = next(iter(sorted(rows.items())))
-                        there.append(f"{support}: há linha que serve na p. {page} ('{label}')"
-                                     + (f" e em mais {len(rows) - 1} página(s)" if len(rows) > 1 else ""))
-        if there:
-            raise ToolRejected(
-                "O documento traz as linhas de apoio: grave-as com salvar_indicador (origem='tabela') e feche de "
-                "novo. 'apoio_ausente' só vale quando o documento realmente não as tem.", problemas=there)
+    uncomputable = atual().plugin.conferir_fechamento(document, extraction, args.apoio_ausente)
     extraction.alerts.clear()  # a conferência acima já passou pelas fórmulas: os alertas saem de indicators()
     indicators = extraction.indicators()
     if uncomputable:

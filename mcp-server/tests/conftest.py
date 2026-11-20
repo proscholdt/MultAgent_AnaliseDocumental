@@ -2,6 +2,7 @@
 de agente e as peças do servidor montadas sem rede."""
 import json
 import os
+import sys
 import time
 import uuid
 from pathlib import Path
@@ -356,3 +357,12 @@ def _limpa_bancos_de_teste():
             await connection.close()
 
     asyncio.run(limpar())
+
+
+def financeiro() -> Any:
+    """O módulo do plugin financeiro (dominios/financeiro/plugin/mcp), para testar as regras dele por
+    dentro. O carregamento é o do servidor: pelo pacote."""
+    from app.regras.campos import dominio
+
+    dominio("financeiro")
+    return sys.modules["plugin_financeiro_mcp"]

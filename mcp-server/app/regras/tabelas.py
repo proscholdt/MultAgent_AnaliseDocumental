@@ -14,7 +14,6 @@ from app.dominio.erros import ToolRejected
 
 _SEPARATOR = re.compile(r"^\s*\|?\s*:?-{2,}")
 _CELL_BREAK = re.compile(r"(?<!\\)\|")
-_SCOPES = {"consolidado": "consolidado", "controladora": "controladora"}
 _MAX_OPTIONS = 12
 
 
@@ -74,12 +73,6 @@ def closest(wanted: str, labels: list[str]) -> list[str]:
     words = set(normalize(wanted).split())
     sharing = [label for label in unique if words & set(normalize(label).split()) and normalize(label) not in near]
     return ([by_key[key] for key in near] + sharing)[:_MAX_OPTIONS] or unique[:_MAX_OPTIONS]
-
-
-def scope_of(column_label: str) -> str | None:
-    """Controladora ou consolidado, pelo cabeçalho da coluna."""
-    folded = column_label.casefold()
-    return next((scope for word, scope in _SCOPES.items() if word in folded), None)
 
 
 def _pick(kind: str, wanted: str, labels: list[str], occurrence: int | None) -> int:

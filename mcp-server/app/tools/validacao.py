@@ -7,7 +7,7 @@ from app.dominio.documento import IndexedDocument
 from app.governanca.catalogo import Args, Call, tool
 from app.governanca.erros import ToolRejected
 from app.regras.formulas import AlertDraft
-from app.regras.inconsistencias import Candidate, find, indicators_of
+from app.regras.inconsistencias import Candidate, find
 from app.regras.pendencias import DISCARDED, REVIEW_DONE
 from app.regras.texto import (
     check_quote,
@@ -73,7 +73,7 @@ async def candidatos_inconsistencia(call: Call, args: CandidatosInconsistencia) 
 async def _candidates(call: Call, document: IndexedDocument) -> list[Candidate]:
     """Os candidatos do documento, com a extração publicada para a regra que compara com ela."""
     extraction, _ = await build_extraction(call, document)
-    return find(document.chunks, document.period, indicators_of(extraction))
+    return find(document.chunks, document.period, extraction)
 
 
 def _judged(candidate: Candidate, alerts: list[Any]) -> bool:

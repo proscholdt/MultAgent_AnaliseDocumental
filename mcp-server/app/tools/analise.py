@@ -11,10 +11,9 @@ from pydantic import Field
 from app.dados.modelos import AnalysisItem
 from app.governanca.catalogo import Args, Call, tool
 from app.governanca.erros import ToolRejected
-from app.regras.campos import CATEGORIES, Categoria
+from app.regras.campos import CATEGORIES, Categoria, atual
 from app.regras.evidencias import occurrences
 from app.regras.texto import (
-    GOING_CONCERN,
     check_quote,
     check_script,
     denies_existence,
@@ -73,10 +72,7 @@ async def salvar_item_analise(call: Call, args: SalvarItemAnalise) -> dict[str, 
                            "documento não traz esta categoria, use registrar_ausencia_analise, que confere e guarda "
                            "a evidência da busca.")
     _numbers_backed(statement, quote, "A afirmação")
-    if args.categoria == "guidance" and GOING_CONCERN.search(quote):
-        raise ToolRejected("Continuidade operacional não é guidance: é a conclusão da administração sobre um risco. "
-                           "Grave este trecho na categoria 'risco'. Guidance é o que a administração diz que vai "
-                           "fazer ou espera: planos, estratégia, investimentos, metas.")
+    atual().plugin.conferir_item_analise(args.categoria, quote)
     sections = chunk.get("section_path") or []
     row = AnalysisItem(
         user_id=call.caller.user_id, doc_id=args.doc_id, fingerprint=document.fingerprint,

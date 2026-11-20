@@ -6,31 +6,31 @@ número do texto está escrito numa citação ou veio de um marcador preenchido 
 """
 import re
 import unicodedata
+from functools import cache
 
 from app.dominio.erros import ToolRejected
+from app.regras.campos import atual
 from app.regras.numeros import contains_number, number_tokens, to_decimal
 
 _YEAR = re.compile(r"(?:19|20)\d{2}")
-_NUMBERED_NOTE = re.compile(r"\d{1,2}(?:\.\d{1,2})*\.?\s")
 _SUFFIXED = re.compile(r"(\d[\d.,]*\d|\d)\s*(%|x\b|p\.p\.)")
 
 
 # Uma afirmação que começa negando a existência ("O documento não traz guidance") não é um
-# achado: é uma ausência, e ausência tem tool própria, que guarda a evidência da busca.
-_DENIAL = re.compile(
-    r"^(?:(?:o|a|as|os)\s+(?:documento|relatório|texto|nota|empresa|companhia|administração|demonstrações"
-    r"(?:\s+financeiras)?)\s+)?(?:também\s+)?não\s+(?:traz|trouxe|apresenta|informa|divulga|menciona|contém|"
-    r"detalha|há|(?:foi|foram)\s+(?:identificad|encontrad|localizad))", re.IGNORECASE)
+# achado: é uma ausência, e ausência tem tool própria, que guarda a evidência da busca. Os sujeitos
+# do núcleo valem para qualquer documento; o plugin do domínio acrescenta os seus ("a empresa").
+_SUBJECTS = ("documento", "relatório", "texto", "nota")
+_DENIAL_VERB = (r"(?:também\s+)?não\s+(?:traz|trouxe|apresenta|informa|divulga|menciona|contém|"
+                r"detalha|há|(?:foi|foram)\s+(?:identificad|encontrad|localizad))")
+
+
+@cache
+def _denial(subjects: tuple[str, ...]) -> re.Pattern:
+    alternatives = "|".join(re.escape(subject).replace(r"\ ", r"\s+") for subject in subjects)
+    return re.compile(rf"^(?:(?:o|a|as|os)\s+(?:{alternatives})\s+)?{_DENIAL_VERB}", re.IGNORECASE)
+
+
 _OTHER_LETTERS = "ªºµ"  # letras que não são do alfabeto latino e são normais em português
-
-# A declaração de continuidade operacional ("condições de dar continuidade a suas operações pelos
-# próximos 12 meses") é a conclusão da administração sobre um risco, exigida pela norma contábil,
-# não um plano. Gravada como guidance, ela tomava o lugar da perspectiva de verdade na resposta à
-# pergunta do guidance (visto na Light, p. 3, em duas execuções). A gravação recusa; a leitura
-# mostra em risco o que foi gravado como guidance antes da regra.
-GOING_CONCERN = re.compile(r"continuidade (?:operacional|d[ea]s? (?:suas )?opera[çc][õo]es|a (?:suas )?opera[çc][õo]es)"
-                           r"|continuar (?:operando|suas opera[çc][õo]es)", re.IGNORECASE)
-
 
 def squash(text: str) -> str:
     return " ".join(text.split())
@@ -52,7 +52,7 @@ def check_script(text: str, what: str) -> None:
 
 
 def denies_existence(statement: str) -> bool:
-    return bool(_DENIAL.match(statement.strip()))
+    return bool(_denial((*_SUBJECTS, *atual().plugin.sujeitos_de_negacao)).match(statement.strip()))
 
 
 def check_quote(quote: str, chunk: dict, *, min_chars: int) -> str:
@@ -85,13 +85,6 @@ def unbacked_numbers(text: str, sources: list[str]) -> list[str]:
 
 
 def source_kind(section_path: list[str]) -> str:
-    """De que parte do documento o trecho vem, pela seção do chunk. É uma regra simples: nota
-    numerada, parecer do auditor, demonstração; o resto é texto do relatório."""
-    joined = " > ".join(section_path).casefold()
-    if "auditor" in joined:
-        return "parecer do auditor"
-    if "notas explicativas" in joined or any(_NUMBERED_NOTE.match(section) for section in section_path):
-        return "nota explicativa"
-    if "balanço" in joined or "demonstraç" in joined:
-        return "demonstração financeira"
-    return "relatório"
+    """De que parte do documento o trecho vem, pela seção do chunk: o plugin do domínio sabe (nota
+    explicativa, parecer do auditor); sem ele, "documento"."""
+    return atual().plugin.tipo_de_fonte(section_path) or "documento"
