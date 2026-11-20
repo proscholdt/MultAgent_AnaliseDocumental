@@ -36,6 +36,24 @@ flowchart LR
 | Worker | 4,3 GB, de 2 a 4 GB de RAM | 825 MB |
 | Nota no gabarito, relatório do zero | máxima em tudo | máxima em tudo |
 
+## Domínios e coleções
+
+O indexador lê qualquer PDF; o que muda por domínio vem do pacote
+([`dominios/<id>/dominio.yaml`](../dominios/README.md)):
+
+- **Coleções.** `POST /api/colecoes` cria uma coleção de um domínio, `GET /api/colecoes` lista as do
+  usuário e `GET /api/dominios`, os pacotes. O envio aceita `colecao_id`; sem ele, o documento vai
+  para a primeira coleção do domínio padrão. A busca e a listagem filtram por coleção.
+- **Metadados pelo pacote.** O prompt e o esquema da resposta do LLM saem dos `metadados` do
+  domínio (empresa e período; paciente, data da coleta e laboratório). O valor só vale com o
+  trecho da página que o prova, conferido pelo tipo: período pelos anos, data por dia, mês e ano.
+  A reserva por regex (S.A., 31 de dezembro) é só do domínio financeiro. `company`, `period` e
+  `doc_type` continuam na API, preenchidos pelos papéis do pacote (entidade, recorte, tipo).
+- **Sugestão de domínio.** As frases `reconhecer` de cada pacote são contadas nas primeiras
+  páginas; quando o PDF parece de outro domínio, o documento ganha `aviso_dominio`.
+- **Base antiga.** A subida acrescenta as colunas novas (Postgres e SQLite), e o documento de antes
+  fica no domínio padrão.
+
 ## Chunks
 
 O corte segue a estrutura do documento, não um tamanho fixo

@@ -7,7 +7,8 @@ diz). O núcleo dos sistemas é o mesmo para todos. A decisão e as fases estão
 
 | Pacote | Documentos |
 |---|---|
-| [`financeiro/`](financeiro/dominio.yaml) (padrão) | Demonstrações financeiras de empresas |
+| [`financeiro/`](financeiro/dominio.yaml) (padrão) | Demonstrações financeiras de empresas. Plugin em Python: fórmulas, validações e inconsistências da fonte |
+| [`laudos/`](laudos/dominio.yaml) | Laudos de exames laboratoriais (fictícios). Só YAML e prompts, sem plugin: a prova de que o núcleo é genérico |
 
 ## Criar um domínio
 
@@ -24,9 +25,17 @@ diz). O núcleo dos sistemas é o mesmo para todos. A decisão e as fases estão
    - `campos`: o que os agentes extraem, com o tipo (`valor` em dinheiro, `percentual`,
      `multiplo`, `numero` com `unidade`, `data`, `texto`);
    - `categorias` da análise, `perguntas` padrão do relatório e `textos` da interface.
-3. `make dominios` valida todos os pacotes e mostra o que cada um define. Um pacote inválido
+3. Opcionais, ao lado do `dominio.yaml`:
+   - `prompts/<agente>.md`: o que cada agente precisa saber deste domínio. Cabeçalho `modo:
+     complemento` (padrão: entra no fim do prompt do agente) ou `modo: substitui` (é o prompt
+     daquele agente neste domínio; modelo e turnos continuam os do agente). Os de
+     [`laudos/prompts/`](laudos/prompts/) são exemplos de `substitui`;
+   - `intencoes.yaml`: as frases de exemplo do roteador do chat, no formato de
+     `agents/config/intencoes.yaml`. Sem elas, quem decide a intenção é o orquestrador;
+   - `avaliacao/gabarito.json`: a nota automática ao fim de cada relatório.
+4. `make dominios` valida todos os pacotes e mostra o que cada um define. Um pacote inválido
    impede a subida dos sistemas, com o motivo.
-4. Contas e regras que não cabem em YAML (fórmulas, inconsistências): um plugin em Python no
+5. Contas e regras que não cabem em YAML (fórmulas, inconsistências): um plugin em Python no
    sistema que as usa, apontado por `plugin`. Sem plugin, o domínio usa só os portões genéricos:
    citação literal, número só por marcador ou citação, ausência com prova.
 

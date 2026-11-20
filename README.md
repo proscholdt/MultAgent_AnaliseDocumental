@@ -1,7 +1,10 @@
-# Análise de demonstrações financeiras com agentes
+# Análise de documentos com agentes, por domínio
 
-PDFs de demonstrações financeiras viram indicadores com a origem de cada valor, análise
-qualitativa com citação, respostas a perguntas e um relatório consolidado. O sistema é dividido
+PDFs viram dados com a origem de cada valor, análise com citação, respostas a perguntas e um
+relatório consolidado. O que muda de um tipo de documento para outro fica num **pacote de
+domínio** ([`dominios/`](dominios/README.md)): demonstrações financeiras de empresas, o primeiro e
+o mais medido, e laudos de exames laboratoriais, o segundo, feito só com YAML e prompts para provar
+que o núcleo é genérico. O sistema é dividido
 em quatro serviços independentes, cada um com Docker, testes e README próprios, mais uma pilha de
 observabilidade que junta traces, métricas e logs de todos e uma sala que mostra os agentes
 trabalhando em tempo real.
@@ -33,11 +36,39 @@ inconsistências e os não encontrados (5), o [relatório consolidado](resultado
 (6), a nota contra o gabarito e o tempo, os tokens e o custo da execução. Para gerar de novo:
 `make resultados USUARIO=... SENHA=... RODAR=sim`.
 
-[Arquitetura](#arquitetura) · [Decisões e trade-offs](#decisões-e-trade-offs) ·
+[Domínios](#domínios) · [Arquitetura](#arquitetura) · [Decisões e trade-offs](#decisões-e-trade-offs) ·
 [Combate à alucinação](#combate-à-alucinação) · [Avaliação de qualidade](#avaliação-de-qualidade) ·
 [Custo e desempenho](#custo-e-desempenho) · [Segurança](#segurança) ·
 [Limitações](#limitações) · [Caminho para produção no Azure](#caminho-para-produção-no-azure) ·
 [Como subir](#como-subir)
+
+## Domínios
+
+Um domínio é uma pasta em [`dominios/`](dominios/README.md), e o núcleo não sabe qual está
+rodando. O `dominio.yaml` diz que documentos o domínio trata, de quem é cada documento (a
+entidade: empresa, paciente), o recorte no tempo (período contábil, data da coleta), os metadados
+que o indexador extrai, os campos que os agentes extraem, as categorias da análise, as perguntas
+padrão e os textos da tela. Ao lado: os prompts dos agentes naquele domínio, as frases do
+roteador do chat e o gabarito. O que não cabe em YAML (as fórmulas e as regras de inconsistência
+das demonstrações) é plugin em Python. Decisão e fases em
+[docs/decisoes/0007](docs/decisoes/0007-dominios-plugaveis.md).
+
+O usuário escolhe o domínio por **coleção**: cria uma coleção de um domínio e envia os PDFs nela.
+Relatórios e perguntas rodam dentro da coleção; o token de cada agente leva a coleção e o domínio
+ao servidor MCP, que mostra ao modelo só os campos, as categorias e as perguntas daquele domínio e
+só os documentos daquela coleção. No envio, o indexador compara o PDF com as frases típicas de cada
+domínio e avisa quando ele parece de outro.
+
+| | Financeiro (`financeiro`) | Laudos (`laudos`) |
+|---|---|---|
+| Entidade · recorte | empresa · período (com o anterior como comparável) | paciente · data da coleta |
+| Campos | 8 indicadores e 8 valores de apoio, em dinheiro, % e x | 8 exames, número com a unidade (mg/dL, g/dL, %) |
+| Regras em código | fórmulas, validações, inconsistências da fonte (plugin) | nenhuma: só YAML e prompts |
+| Portões | os mesmos: citação literal, número só por marcador ou citação, ausência com prova, unidade conferida | |
+
+Laudo é dado sensível: os documentos de teste do domínio de laudos são fictícios, gerados por
+[`gerar_laudos.py`](dominios/laudos/avaliacao/gerar_laudos.py), e o sistema não faz diagnóstico
+nem recomenda tratamento.
 
 ## Arquitetura
 
@@ -378,6 +409,7 @@ funciona no Git Bash e no PowerShell):
 | `make bancos` | Copia os SQLite (base do MCP, conversas e memória dos agentes) para `bancos/`, para abrir no DBeaver, e mostra as tabelas com o número de linhas. Com o sistema no ar; troca as cópias antigas (desconecte-as no DBeaver antes). O Postgres do indexador abre direto em `localhost:5432` (banco, usuário e senha `indexer`) |
 | `make zerar CONFIRMA=sim` | Apaga tudo: documentos, usuários, base, memória e traces |
 | `make zerar-base CONFIRMA=sim` | Apaga só a base do MCP e a memória dos agentes; os PDFs indexados ficam |
+| `make dominios` | Valida os pacotes de domínio e mostra o que cada um define |
 | `make testes`, `make lint`, `make validar-agentes` | Os testes dos quatro sistemas (sem rede e sem custo), o ruff e os arquivos dos agentes |
 | `make pergunta USUARIO=u SENHA=s TEXTO="..." [CONVERSA=conv-...]` | Uma mensagem no chat pelo terminal, pelo mesmo caminho do frontend: quem decidiu a intenção, as ondas, a resposta com as fontes, o tempo e o custo; com `CONVERSA`, continua a conversa ("e a menor?") |
 | `make avaliar-intencao` | O roteador de intenção contra as 52 mensagens rotuladas (só embeddings, frações de centavo) |
@@ -397,7 +429,9 @@ Em todos os sistemas, a mesma divisão:
 | Onde | O quê | Quando vale |
 |---|---|---|
 | `<sistema>/config/ajustes.yaml` | o que se ajusta: parser, chunks, preços, limites, atalhos do chat | no próximo pedido, sem build nem restart |
-| `agents/config/intencoes.yaml` | frases de exemplo, limiar e margem do roteador da intenção | na próxima mensagem |
+| `dominios/<id>/dominio.yaml` | o domínio: documentos, entidade, recorte, metadados, campos, categorias, perguntas, textos | ao recriar os contêineres (o esquema das tools sai dele) |
+| `dominios/<id>/prompts/<agente>.md` | o que cada agente precisa saber do domínio (`complemento` ou `substitui`) | no próximo pedido |
+| `agents/config/intencoes.yaml` | frases de exemplo, limiar e margem do roteador da intenção (por domínio: `dominios/<id>/intencoes.yaml`) | na próxima mensagem |
 | `agents/agentes/<nome>/<nome>.md` | modelo, raciocínio, turnos e prompt de cada agente (o Dockerfile do serviço dele fica na mesma pasta) | quando o arquivo muda |
 | `mcp-server/config/policy.yaml` | o que cada agente vê e chama | quando o arquivo muda |
 | `<sistema>/.env` | só chaves e segredos | ao recriar o contêiner |

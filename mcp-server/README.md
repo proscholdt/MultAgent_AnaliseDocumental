@@ -24,6 +24,22 @@ flowchart LR
   acesso. Cada tool que grava tem um dono; o orquestrador não lê trecho de documento.
 - **Auditoria**: toda chamada, com argumentos, resultado e hash da política (`GET /auditoria`).
 
+## Domínios
+
+Um servidor atende vários domínios ao mesmo tempo. O token de cada agente traz o domínio e a
+coleção da execução (`dom`, `col`; sem eles, o domínio padrão e todos os documentos):
+
+- **O que o modelo vê.** No `tools/list`, os argumentos `campo`, `categoria` e `pergunta_id` vêm com
+  a lista fechada do domínio de quem pede; a chamada confere o valor contra o domínio e devolve as
+  opções no erro. Para o financeiro, o esquema é o de antes (`tests/contratos/tools.json`).
+- **O que ele alcança.** Listagem, busca, pendências e acesso a documento ficam na coleção.
+- **O que vale.** Os portões genéricos valem para todos. As regras das demonstrações (período na
+  coluna, escopo, valores de apoio, fórmulas, validações, as inconsistências de dinheiro) só no
+  pacote com `plugin: financeiro`. Um campo `numero` lê "92 mg/dL" da célula e recusa outra
+  unidade: o servidor não converte.
+- `make dominios` valida os pacotes com as exigências daqui (o plugin financeiro exige os campos das
+  fórmulas).
+
 ## Portões
 
 | Gravação | O que é conferido |

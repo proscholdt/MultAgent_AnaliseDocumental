@@ -31,6 +31,14 @@ flowchart LR
   opções clicáveis. Todo Markdown passa pelo DOMPurify.
 - **Documentos**: envio de vários PDFs, progresso do job, remoção com confirmação.
 
+## Domínios e coleções
+
+A lateral tem a coleção ativa (lembrada no navegador) e a criação de uma coleção, com nome e
+domínio. Os documentos listados e enviados são os da coleção ativa, e o aviso de quando um PDF
+parece de outro domínio aparece no documento. O chat manda a coleção com cada mensagem; o título,
+o convite de envio e os atalhos vêm do pacote do domínio (no padrão, os atalhos continuam os do
+`config/ajustes.yaml`). O proxy libera `GET api/dominios` e `GET/POST api/colecoes` do indexador.
+
 ## Rodar
 
 ```bash

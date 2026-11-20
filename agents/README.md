@@ -65,6 +65,20 @@ sem reiniciar) e o `Dockerfile` do serviço dele. A
 permissão é uma entrada em `mcp-server/config/policy.yaml`: quem escreve o agente não concede a própria
 permissão.
 
+## Domínios
+
+Cada pedido (mensagem, pergunta, relatório) aceita `colecao_id`: o orquestrador resolve o domínio
+da coleção no indexador, e numa conversa a mensagem sem coleção herda a do pedido anterior. A
+identidade da execução leva o domínio e a coleção no token do servidor MCP e no token A2A, e o
+especialista os lê de volta.
+
+O pacote fala com cada agente por `dominios/<id>/prompts/<agente>.md`: `modo: complemento` entra no
+fim do prompt, `modo: substitui` é o prompt daquele agente no domínio (modelo e turnos continuam os
+do agente). Os prompts em `agentes/` são os do domínio financeiro, o padrão; os de laudos ficam em
+[`dominios/laudos/prompts/`](../dominios/laudos/prompts/). O texto de fora do escopo, as opções, as
+frases do roteador (`dominios/<id>/intencoes.yaml`) e o gabarito da nota automática também são do
+domínio.
+
 ## Intenção
 
 Antes do orquestrador, o roteador ([app/orquestrador/intencao.py](app/orquestrador/intencao.py))
